@@ -1,0 +1,72 @@
+package tui
+
+import "strings"
+
+func (m model) toggleDetailedTranscript() model {
+	m.transcriptDetailed = !m.transcriptDetailed
+	m.clearSuggestions()
+	if m.picker != nil && m.picker.kind == pickerTheme {
+		// Dropping a theme picker mid-preview must undo the live palette, or the
+		// previewed theme would stick while m.themeMode still holds the old one.
+		m.restoreCommittedTheme()
+	}
+	m.picker = nil
+	return m
+}
+
+func (m model) detailedTranscriptView() string {
+	width := chatWidth(m.width)
+	rc := buildRowContext(m.transcript)
+	renderer := m
+	renderer.pending = false
+	renderer.activeRunID = 0
+
+	var builder strings.Builder
+	builder.WriteString(detailedTranscriptHeader(width))
+	builder.WriteString("\n")
+	builder.WriteString(zeroTheme.line.Render(strings.Repeat("-", width)))
+	builder.WriteString("\n")
+
+	shownAny := false
+	var previousKind rowKind
+	for _, row := range m.transcript {
+		if rc.skip(row) {
+			continue
+		}
+		rendered := ""
+		if row.kind == rowWelcome {
+			rendered = fitStyledLine(zeroTheme.faint.Render(row.text), width)
+		} else {
+			rendered = renderer.renderRowDetailed(row, width, rc)
+		}
+		if rendered == "" {
+			continue
+		}
+		if shownAny && startsTurn(row.kind) {
+			builder.WriteString("\n")
+		}
+		if shownAny && previousKind == rowUser && row.kind == rowReasoning {
+			builder.WriteString("\n")
+		}
+		builder.WriteString(rendered)
+		builder.WriteString("\n")
+		shownAny = true
+		previousKind = row.kind
+	}
+
+	if !shownAny {
+		builder.WriteString(zeroTheme.faint.Render("No transcript rows."))
+		builder.WriteString("\n")
+	}
+
+	builder.WriteString(zeroTheme.line.Render(strings.Repeat("-", width)))
+	builder.WriteString("\n")
+	builder.WriteString(fitStyledLine(zeroTheme.faint.Render("Esc close | Ctrl+O toggle"), width))
+	return builder.String()
+}
+
+func detailedTranscriptHeader(width int) string {
+	title := zeroTheme.ink.Bold(true).Render("Transcript")
+	hint := zeroTheme.faint.Render("detailed")
+	return fitStyledLine(joinHeaderLine(title, hint, width), width)
+}
