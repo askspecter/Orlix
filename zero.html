@@ -88,7 +88,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
 /* ASCII + welcome */
-.ascii-logo{color:var(--fg);line-height:1.1;font-size:14px;white-space:pre;margin-bottom:8px;text-align:center;letter-spacing:0}
+.ascii-logo{color:var(--fg);line-height:1.15;font-size:11px;white-space:pre;margin-bottom:6px;text-align:center;letter-spacing:.5px}
 .ascii-logo .hi{color:var(--lime)}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
 .welcome-line{margin:2px 0;font-size:13px;text-align:center}
@@ -150,6 +150,39 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .gear-btn:active{background:var(--dim2);color:var(--fg)}
 .gear-btn svg{width:16px;height:16px}
 
+/* ══════ SETTINGS PANEL ══════ */
+.settings-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px}
+.settings-overlay.open{display:flex}
+.settings-panel{background:var(--bg2);border:1px solid var(--dim2);border-radius:10px;width:min(400px,92vw);max-height:85vh;overflow-y:auto;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.sp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.sp-title{font-size:14px;font-weight:700;color:var(--fg);text-transform:uppercase;letter-spacing:.1em}
+.sp-ver{font-size:9px;color:var(--dim);background:var(--bg3);padding:2px 8px;border-radius:10px;margin-left:8px}
+.sp-close{background:none;border:none;color:var(--dim);font-family:inherit;font-size:20px;cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .1s}
+.sp-close:hover{color:var(--fg);background:var(--bg3)}
+.sp-section{margin-bottom:14px}
+.sp-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.sp-font-row{display:flex;align-items:center;gap:8px}
+.sp-font-btn{width:34px;height:34px;border-radius:6px;border:1px solid var(--dim2);background:var(--bg3);color:var(--fg);font-family:inherit;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s}
+.sp-font-btn:active{background:var(--dim2)}
+.sp-font-val{font-size:13px;color:var(--fg);min-width:44px;text-align:center}
+.sp-font-reset{margin-left:auto;font-family:inherit;font-size:10px;color:var(--dim);background:none;border:1px solid var(--dim2);border-radius:4px;padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.sp-font-reset:hover{color:var(--fg);border-color:var(--dim)}
+.sp-divider{border:none;border-top:1px solid var(--dim2);margin:14px 0}
+.sp-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--dim2);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--fg);cursor:pointer;transition:all .1s}
+.sp-item:hover{border-color:var(--dim);background:var(--bg3)}
+.sp-item .sp-icon{width:20px;text-align:center;flex-shrink:0;font-size:13px}
+.sp-item .sp-dot{width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:auto;flex-shrink:0}
+.sp-item.hi{border-color:var(--accent);background:rgba(191,255,0,.04)}
+.sp-item .arrow{margin-left:auto;color:var(--dim);font-size:10px}
+.sp-theme-row{display:flex;align-items:center;gap:8px;padding:11px 14px;border:1px solid var(--dim2);border-radius:8px;cursor:pointer;transition:all .1s}
+.sp-theme-row:hover{border-color:var(--dim);background:var(--bg3)}
+.sp-theme-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sp-theme-name{flex:1;font-size:12px;color:var(--fg)}
+.sp-theme-arrow{color:var(--dim);font-size:12px}
+.sp-credit{font-size:10px;color:var(--dim);padding:4px 0}
+.sp-credit a{color:var(--dim);text-decoration:none}
+.sp-credit a:hover{color:var(--fg);text-decoration:underline}
+
 @media(max-width:768px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:80;width:240px;margin-left:-240px!important}
   .sidebar.open{margin-left:0!important}
@@ -157,13 +190,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
   .sb-overlay.open{display:block}
   .mobile-keys{display:flex}
   .gear-btn{display:flex}
-  .ascii-logo{font-size:9px}
+  .ascii-logo{font-size:7px}
   .term-output{padding:10px 10px 6px}
   .input-area{padding:5px 10px}
   .status-bar{padding:3px 10px}
 }
 @media(max-width:360px){
-  .ascii-logo{font-size:7px}
+  .ascii-logo{font-size:5.5px}
   .sug-chip{font-size:10px;padding:3px 7px}
 }
 </style>
@@ -260,15 +293,19 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
       <span class="mk-spacer"></span>
       <button class="mk wide" data-action="copy">COPY</button>
       <button class="mk wide" data-action="paste">PASTE</button>
+      <button class="mk wide" data-action="mic">MIC</button>
       <button class="mk wide accent" data-action="kbd">KBD</button>
       <button class="mk" data-action="esc">ESC</button>
       <button class="mk" data-action="ctrl">CTRL</button>
+      <button class="mk" data-action="alt">ALT</button>
       <button class="mk" data-action="tab">TAB</button>
       <button class="mk" data-action="enter">RETN</button>
       <span class="mk-spacer"></span>
       <button class="mk" data-action="backspace">&lsaquo;x</button>
+      <button class="mk" data-arrow="left">&larr;</button>
       <button class="mk" data-arrow="up">&uarr;</button>
       <button class="mk" data-arrow="down">&darr;</button>
+      <button class="mk" data-arrow="right">&rarr;</button>
     </div>
   </div>
 </div>
@@ -276,6 +313,59 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 <!-- gear button -->
 <div class="gear-btn" id="gearBtn">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+</div>
+
+<!-- settings panel -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-panel">
+    <div class="sp-header">
+      <div><span class="sp-title">Zero</span><span class="sp-ver">v1.0.0</span></div>
+      <button class="sp-close" id="spClose">&times;</button>
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-label">Font Size</div>
+      <div class="sp-font-row">
+        <button class="sp-font-btn" id="fontDec">&minus;</button>
+        <span class="sp-font-val" id="fontVal">13 pt</span>
+        <button class="sp-font-btn" id="fontInc">+</button>
+        <button class="sp-font-reset" id="fontReset">&#x21BA; Reset</button>
+      </div>
+    </div>
+
+    <hr class="sp-divider">
+
+    <div class="sp-section">
+      <div class="sp-label">Theme</div>
+      <div class="sp-theme-row" id="spThemeRow">
+        <div class="sp-theme-dot" id="spThemeDot"></div>
+        <span class="sp-theme-name" id="spThemeName">Dark</span>
+        <span class="sp-theme-arrow">&#x21B5;</span>
+      </div>
+    </div>
+
+    <hr class="sp-divider">
+
+    <div class="sp-section">
+      <div class="sp-label">Workspace</div>
+      <div class="sp-item" id="spPermItem"><span class="sp-icon">&#x1F512;</span><span>Permission Mode</span><span class="sp-dot"></span></div>
+      <div class="sp-item" id="spBootItem"><span class="sp-icon">&#x26A1;</span><span>Boot Script</span><span class="sp-dot"></span></div>
+      <div class="sp-item" id="spAdvItem"><span class="sp-icon">&#x2699;</span><span>Advanced Settings</span></div>
+      <div class="sp-item hi" id="spKbdItem"><span class="sp-icon">&#x2328;</span><span id="spKbdLabel">Keyboard Preference: Auto</span></div>
+    </div>
+
+    <hr class="sp-divider">
+
+    <div class="sp-section">
+      <div class="sp-label">Author</div>
+      <div class="sp-item" onclick="window.open('/','_self')"><span>Orlix AI (orlix.xyz)</span><span class="arrow">&#x2197;</span></div>
+    </div>
+
+    <div class="sp-section">
+      <div class="sp-label">Based On</div>
+      <div class="sp-credit">Gitlawb/zero (by Max Kupriianov)</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -367,15 +457,12 @@ function initShell(){
 
   // ASCII welcome
   var ascii=
-'██████████████  ██████████████  ████████████    <span class="hi">  ██████████  </span>\n'+
-'██████████████  ██████████████  ██████████████  <span class="hi">██████████████</span>\n'+
-'          ████  ████            ████      ████  <span class="hi">████      ████</span>\n'+
-'        ████    ████            ████      ████  <span class="hi">████      ████</span>\n'+
-'      ████      ██████████      ████████████    <span class="hi">████      ████</span>\n'+
-'    ████        ████            ████    ████    <span class="hi">████      ████</span>\n'+
-'  ████          ████            ████      ████  <span class="hi">████      ████</span>\n'+
-'██████████████  ██████████████  ████      ████  <span class="hi">██████████████</span>\n'+
-'██████████████  ██████████████  ████      ████  <span class="hi">  ██████████  </span>';
+'███████╗███████╗██████╗  <span class="hi">██████╗ </span>\n'+
+'╚══███╔╝██╔════╝██╔══██╗<span class="hi">██╔═══██╗</span>\n'+
+'  ███╔╝ █████╗  ██████╔╝<span class="hi">██║   ██║</span>\n'+
+' ███╔╝  ██╔══╝  ██╔══██╗<span class="hi">██║   ██║</span>\n'+
+'███████╗███████╗██║  ██║<span class="hi">╚██████╔╝</span>\n'+
+'╚══════╝╚══════╝╚═╝  ╚═╝<span class="hi"> ╚═════╝ </span>';
   var pre=document.createElement('pre');pre.className='ascii-logo';pre.innerHTML=ascii;ww.appendChild(pre);
 
   var t1=document.createElement('div');t1.className='welcome-line tag';t1.innerHTML='Any model. Every tool. Zero limits.';ww.appendChild(t1);
@@ -421,7 +508,7 @@ function initShell(){
   // sidebar
   document.getElementById('sbClose').addEventListener('click',closeSidebar);
   document.getElementById('sbOverlay').addEventListener('click',closeSidebar);
-  document.getElementById('gearBtn').addEventListener('click',toggleSidebar);
+  document.getElementById('gearBtn').addEventListener('click',openSettings);
   document.querySelectorAll('.sb-item[data-cmd]').forEach(function(el){
     el.addEventListener('click',function(){runCmd(el.dataset.cmd);closeSidebar();});
   });
@@ -549,7 +636,11 @@ function updateModelLabel(){
   document.getElementById('modelLabel').textContent=currentModel;
   var sel=document.getElementById('sbModelSel');if(sel)sel.value=currentModel;
 }
-function updateUsage(){document.getElementById('usageLabel').textContent=totalTokens.toLocaleString()+' tokens';}
+function updateUsage(){
+  var maxCtx=1000000;var k=totalTokens>=1000?(totalTokens/1000).toFixed(1)+'K':totalTokens;
+  var pct=Math.min(100,Math.round(totalTokens/maxCtx*100));
+  document.getElementById('usageLabel').innerHTML='&#x23F1; '+k+'/1000K &middot; '+pct+'%';
+}
 function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);document.getElementById('termSize').textContent=w+'x'+h;}
 
 /* ══════ RUN COMMAND ══════ */
@@ -785,6 +876,57 @@ function sendMessage(){
     chatHistory.pop();isStreaming=false;inputField.placeholder='describe a task for zero...';
   });
 }
+
+/* ══════ SETTINGS PANEL ══════ */
+var fontSize=parseInt(localStorage.getItem('zero_fontsize')||'13');
+
+function openSettings(){
+  var ov=document.getElementById('settingsOverlay');
+  ov.classList.add('open');
+  updateSettingsUI();
+}
+function closeSettings(){document.getElementById('settingsOverlay').classList.remove('open');}
+
+function updateSettingsUI(){
+  document.getElementById('fontVal').textContent=fontSize+' pt';
+  var curTheme=localStorage.getItem('zero_theme')||'dark';
+  var t=THEMES.find(function(x){return x.id===curTheme;})||THEMES[0];
+  document.getElementById('spThemeName').textContent=t.n;
+  var dotColors={dark:'#c8c8c8',green:'#33ff33',amber:'#ffb833',dracula:'#bd93f9',nord:'#88c0d0',gruvbox:'#b8bb26',tokyo:'#7aa2f7',rose:'#ebbcba'};
+  document.getElementById('spThemeDot').style.background=dotColors[curTheme]||'#c8c8c8';
+  document.getElementById('spPermItem').querySelector('span:nth-child(2)').textContent='Permission Mode: '+PERM_MODES[permModeIdx];
+}
+
+function applyFontSize(s){
+  fontSize=Math.max(8,Math.min(24,s));
+  localStorage.setItem('zero_fontsize',fontSize);
+  document.querySelector('.term-output').style.fontSize=fontSize+'px';
+  document.querySelector('.input-field').style.fontSize=fontSize+'px';
+  document.querySelector('.line,.term-output').style.fontSize=fontSize+'px';
+  document.getElementById('fontVal').textContent=fontSize+' pt';
+}
+
+function cycleThemeForward(){
+  var curTheme=localStorage.getItem('zero_theme')||'dark';
+  var idx=THEMES.findIndex(function(t){return t.id===curTheme;});
+  idx=(idx+1)%THEMES.length;
+  applyTheme(THEMES[idx].id);
+  updateSettingsUI();
+}
+
+(function(){
+  document.getElementById('spClose').addEventListener('click',closeSettings);
+  document.getElementById('settingsOverlay').addEventListener('click',function(e){if(e.target===this)closeSettings();});
+  document.getElementById('fontDec').addEventListener('click',function(){applyFontSize(fontSize-1);});
+  document.getElementById('fontInc').addEventListener('click',function(){applyFontSize(fontSize+1);});
+  document.getElementById('fontReset').addEventListener('click',function(){applyFontSize(13);});
+  document.getElementById('spThemeRow').addEventListener('click',cycleThemeForward);
+  document.getElementById('spPermItem').addEventListener('click',function(){cyclePermMode();updateSettingsUI();});
+  document.getElementById('spAdvItem').addEventListener('click',function(){closeSettings();runCmd('/config');});
+  document.getElementById('spBootItem').addEventListener('click',function(){closeSettings();runCmd('/doctor');});
+  var fs=localStorage.getItem('zero_fontsize');
+  if(fs){fontSize=parseInt(fs);setTimeout(function(){applyFontSize(fontSize);},100);}
+})();
 
 function formatOutput(text){
   if(!text)return'';
