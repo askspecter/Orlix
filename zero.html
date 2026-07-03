@@ -34,6 +34,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .theme-gruvbox{--bg:#1d2021;--bg2:#282828;--bg3:#3c3836;--fg:#ebdbb2;--dim:#665c54;--dim2:#3c3836;--accent:#b8bb26;--green:#b8bb26;--red:#fb4934;--orange:#fe8019;--cyan:#8ec07c;--purple:#d3869b;--yellow:#fabd2f}
 .theme-tokyo{--bg:#1a1b26;--bg2:#24283b;--bg3:#414868;--fg:#c0caf5;--dim:#565f89;--dim2:#3b4261;--accent:#7aa2f7;--green:#9ece6a;--red:#f7768e;--orange:#ff9e64;--cyan:#7dcfff;--purple:#bb9af7;--yellow:#e0af68}
 .theme-rose{--bg:#191724;--bg2:#1f1d2e;--bg3:#26233a;--fg:#e0def4;--dim:#6e6a86;--dim2:#403d52;--accent:#ebbcba;--green:#9ccfd8;--red:#eb6f92;--orange:#f6c177;--cyan:#9ccfd8;--purple:#c4a7e7;--yellow:#f6c177}
+.theme-catppuccin{--bg:#1e1e2e;--bg2:#181825;--bg3:#313244;--fg:#cdd6f4;--dim:#585b70;--dim2:#313244;--accent:#cba6f7;--green:#a6e3a1;--red:#f38ba8;--orange:#fab387;--cyan:#94e2d5;--purple:#cba6f7;--yellow:#f9e2af;--blue:#89b4fa}
+.theme-one-dark{--bg:#282c34;--bg2:#21252b;--bg3:#2c313a;--fg:#abb2bf;--dim:#5c6370;--dim2:#3e4452;--accent:#61afef;--green:#98c379;--red:#e06c75;--orange:#d19a66;--cyan:#56b6c2;--purple:#c678dd;--yellow:#e5c07b}
+.theme-solarized-dark{--bg:#002b36;--bg2:#073642;--bg3:#073642;--fg:#839496;--dim:#586e75;--dim2:#073642;--accent:#268bd2;--green:#859900;--red:#dc322f;--orange:#cb4b16;--cyan:#2aa198;--purple:#6c71c4;--yellow:#b58900}
+.theme-everforest{--bg:#2d353b;--bg2:#272e33;--bg3:#343f44;--fg:#d3c6aa;--dim:#859289;--dim2:#343f44;--accent:#a7c080;--green:#a7c080;--red:#e67e80;--orange:#e69875;--cyan:#7fbbb3;--purple:#d699b6;--yellow:#dbbc7f}
+.theme-solarized-light{--bg:#fdf6e3;--bg2:#eee8d5;--bg3:#eee8d5;--fg:#657b83;--dim:#93a1a1;--dim2:#eee8d5;--accent:#268bd2;--green:#859900;--red:#dc322f;--orange:#cb4b16;--cyan:#2aa198;--purple:#6c71c4;--yellow:#b58900}
 
 /* ══════ ORLIX LOADER ══════ */
 #loader{position:fixed;inset:0;z-index:999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .6s}
@@ -400,7 +405,9 @@ var PERM_MODES=['ask mode','auto-edit mode','full-auto mode','yolo mode'];
 var THEMES=[
   {id:'dark',n:'Dark (default)'},{id:'green',n:'Green CRT'},{id:'amber',n:'Amber CRT'},
   {id:'dracula',n:'Dracula'},{id:'nord',n:'Nord'},{id:'gruvbox',n:'Gruvbox'},
-  {id:'tokyo',n:'Tokyo Night'},{id:'rose',n:'Rose Pine'},
+  {id:'tokyo',n:'Tokyo Night'},{id:'rose',n:'Rose Pine'},{id:'catppuccin',n:'Catppuccin'},
+  {id:'one-dark',n:'One Dark'},{id:'solarized-dark',n:'Solarized Dark'},
+  {id:'everforest',n:'Everforest'},{id:'solarized-light',n:'Solarized Light'},
 ];
 
 var SLASH_CMDS=[
@@ -421,6 +428,10 @@ var SLASH_CMDS=[
   {cmd:'/spec',desc:'Toggle spec/plan mode'},
   {cmd:'/image',desc:'Attach an image'},
   {cmd:'/export',desc:'Export session'},
+  {cmd:'/provider',desc:'Switch AI provider'},
+  {cmd:'/rewind',desc:'Undo last exchange'},
+  {cmd:'/context',desc:'View context window'},
+  {cmd:'/add-dir',desc:'Add directory to workspace'},
 ];
 
 var currentModel='claude-sonnet-5';
@@ -501,6 +512,7 @@ function initShell(){
   document.addEventListener('keydown',function(e){
     if(e.ctrlKey&&e.key==='b'){e.preventDefault();toggleSidebar();}
     if(e.ctrlKey&&e.key==='l'){e.preventDefault();runCmd('/clear');}
+    if(e.ctrlKey&&e.key==='c'){if(isStreaming){e.preventDefault();cancelStream();}}
   });
 
   output.addEventListener('click',function(){inputField.focus();});
@@ -644,6 +656,12 @@ function updateUsage(){
 function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);document.getElementById('termSize').textContent=w+'x'+h;}
 
 /* ══════ RUN COMMAND ══════ */
+var currentAbort=null;
+function cancelStream(){
+  if(currentAbort){currentAbort.abort();currentAbort=null;}
+  isStreaming=false;inputField.placeholder='describe a task for zero...';
+  addLine('<span style="color:var(--orange)">^C interrupted</span>','system');
+}
 function runCmd(cmd){inputField.value=cmd;sendMessage();}
 
 function sendMessage(){
@@ -674,8 +692,12 @@ function sendMessage(){
         '<span class="hl">/usage</span>           <span style="color:var(--dim)">Token usage report</span>',
         '<span class="hl">/config</span>          <span style="color:var(--dim)">View configuration</span>',
         '<span class="hl">/export</span>          <span style="color:var(--dim)">Export session as JSON</span>',
+        '<span class="hl">/provider</span>        <span style="color:var(--dim)">Switch AI provider</span>',
+        '<span class="hl">/rewind</span>          <span style="color:var(--dim)">Undo last exchange</span>',
+        '<span class="hl">/context</span>         <span style="color:var(--dim)">View context window</span>',
+        '<span class="hl">/add-dir</span> [path]  <span style="color:var(--dim)">Add directory to workspace</span>',
         '',
-        '<span style="color:var(--dim)">Shortcuts: Shift+Tab cycle mode &middot; Ctrl+B sidebar &middot; Ctrl+L clear</span>',
+        '<span style="color:var(--dim)">Shortcuts: Shift+Tab cycle mode &middot; Ctrl+B sidebar &middot; Ctrl+C cancel &middot; Ctrl+L clear</span>',
         '',
       ]);return;
     }
@@ -812,6 +834,44 @@ function sendMessage(){
       addLine('<span style="color:var(--dim)">Session exported.</span>','system');return;
     }
     if(cmd==='/image'){addLine('<span class="warn">Image input not available in browser mode.</span>','system');return;}
+    if(cmd==='/provider'){
+      if(arg){
+        var prov=PROVIDERS.find(function(p){return p.name.toLowerCase().includes(arg.toLowerCase());});
+        if(prov){currentModel=prov.models[0].id;updateModelLabel();addLine('<span style="color:var(--dim)">Provider: <span class="val">'+prov.name+'</span> &middot; Model: <span class="val">'+MODELS[currentModel]+'</span></span>','system');}
+        else addLine('<span class="warn">Provider "'+esc(arg)+'" not found.</span>','system');
+      } else {
+        addLine('<span class="hl">Providers:</span>','system');
+        PROVIDERS.forEach(function(p){
+          var active=p.models.some(function(m){return m.id===currentModel;});
+          addLine('  '+(active?'<span class="hl">* '+p.name+'</span>':'<span class="val">  '+p.name+'</span>')+' <span style="color:var(--dim)">('+p.models.length+' models)</span>','system');
+        });
+        addLine('<span style="color:var(--dim)">Usage: /provider anthropic</span>','system');
+      }
+      return;
+    }
+    if(cmd==='/rewind'){
+      if(chatHistory.length<2){addLine('<span class="warn">Nothing to rewind.</span>','system');return;}
+      var removed=chatHistory.splice(-2);
+      addLine('<span style="color:var(--dim)">Rewound last exchange. Removed user message and assistant response.</span>','system');
+      return;
+    }
+    if(cmd==='/context'){
+      var msgCount=chatHistory.length;var maxCtx=1000000;var pct=Math.min(100,Math.round(totalTokens/maxCtx*100));
+      addBlock([
+        '<span class="hl">Context Window</span>','',
+        '  Messages       <span class="val">'+msgCount+'</span>',
+        '  Tokens used    <span class="val">'+totalTokens.toLocaleString()+'</span>',
+        '  Max context    <span class="val">1,000,000</span>',
+        '  Usage          <span class="'+(pct>80?'warn':'val')+'">'+pct+'%</span>',
+        '  Model          <span class="val">'+MODELS[currentModel]+'</span>',
+        '','  <span style="color:var(--dim)">Use /compact to reduce context. /rewind to undo last.</span>','',
+      ]);return;
+    }
+    if(cmd==='/add-dir'){
+      if(!arg){addLine('<span class="warn">Usage: /add-dir [path]</span>','system');return;}
+      addLine('<span style="color:var(--dim)">Directory <span class="val">'+esc(arg)+'</span> added to workspace scope.</span>','system');
+      return;
+    }
 
     addLine('<span class="warn">Unknown command: '+esc(cmd)+'. Type /help for commands.</span>','system');
     return;
@@ -837,9 +897,11 @@ function sendMessage(){
 
   var messages=[{role:'system',content:systemPrompt}].concat(chatHistory.slice(-20));
 
+  currentAbort=new AbortController();
   fetch('/api/chat',{
     method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({messages:messages,model:currentModel})
+    body:JSON.stringify({messages:messages,model:currentModel}),
+    signal:currentAbort.signal
   }).then(function(res){
     if(!res.ok)return res.text().then(function(t){throw new Error('HTTP '+res.status+': '+t.slice(0,200));});
 
