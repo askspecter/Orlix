@@ -1661,7 +1661,6 @@ const agents = [
 const typeCol = {action:'#ff9a52',policy:'#b9a4ff',memory:'#7ee0a8',goal:'#50c8ff',alert:'#ff6b6b'};
 
 // ───────── NAV ─────────
-let _galleryLoaded = false;
 function showView(name){
   if(!name) return;
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));
@@ -1671,7 +1670,7 @@ function showView(name){
   history.replaceState(null,'','#'+name);
   if(name==='overview') refreshDashboard();
   if(name==='aeon-memory') refreshMemoryView();
-  if(name==='gallery' && !_galleryLoaded){ _galleryLoaded=true; loadGalleryBuilds(); }
+  if(name==='gallery') loadGalleryBuilds();
 }
 document.querySelectorAll('.sb-item').forEach(i=>i.addEventListener('click',()=>{if(i.dataset.view) showView(i.dataset.view);}));
 document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.nav)));
@@ -4057,22 +4056,33 @@ document.getElementById('previewCloseBtn').addEventListener('click', closePrevie
     _gateConnecting = true;
     setTimeout(() => { _gateConnecting = false; }, 1500);
     document.getElementById('gateMsg').textContent = '';
+    const btn = document.getElementById('gateConnectBtn');
     // Prefer Privy: click the hidden button injected by wallet.js
     const privyBtn = document.querySelector('#orlix-wallet .ow-btn, #orlix-wallet button');
     if (privyBtn) { privyBtn.click(); return; }
-    // Fallback: direct window.ethereum
-    if (!window.ethereum) {
-      document.getElementById('gateMsg').textContent = 'No wallet found — install MetaMask or use a wallet browser';
-      return;
-    }
-    const btn = document.getElementById('gateConnectBtn');
+    // Privy may still be loading (defer script) — wait up to 3s for it
     btn.disabled = true; btn.innerHTML = '⏳ Connecting…';
-    window.ethereum.request({ method: 'eth_requestAccounts' })
-      .then(accts => { if (accts[0]) gateCheckBalance(accts[0]); })
-      .catch(e => {
-        document.getElementById('gateMsg').textContent = e.code === 4001 ? 'Rejected — try again' : 'Connection failed';
-        btn.disabled = false; btn.innerHTML = CONN_SVG;
-      });
+    let waited = 0;
+    const waitForPrivy = setInterval(() => {
+      waited += 200;
+      const pb = document.querySelector('#orlix-wallet .ow-btn, #orlix-wallet button');
+      if (pb) { clearInterval(waitForPrivy); btn.disabled = false; btn.innerHTML = CONN_SVG; pb.click(); return; }
+      if (waited >= 3000) {
+        clearInterval(waitForPrivy);
+        // Privy didn't load — fall back to window.ethereum
+        if (!window.ethereum) {
+          document.getElementById('gateMsg').textContent = 'Wallet loading… please try again';
+          btn.disabled = false; btn.innerHTML = CONN_SVG;
+          return;
+        }
+        window.ethereum.request({ method: 'eth_requestAccounts' })
+          .then(accts => { if (accts[0]) gateCheckBalance(accts[0]); })
+          .catch(e => {
+            document.getElementById('gateMsg').textContent = e.code === 4001 ? 'Rejected — try again' : 'Connection failed';
+            btn.disabled = false; btn.innerHTML = CONN_SVG;
+          });
+      }
+    }, 200);
   };
 
   window.gateRetry = function() {
