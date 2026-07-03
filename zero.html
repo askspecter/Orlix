@@ -861,60 +861,32 @@ function initShell(){
     }
   }
 
-  // 2) trace border chars into continuous paths
-  var BP={'═':'lr','║':'tb','╔':'rb','╗':'lb','╚':'tr','╝':'lt'};
-  var OPP={l:'r',r:'l',t:'b',b:'t'};
-  var DR={l:[0,-1],r:[0,1],t:[-1,0],b:[1,0]};
-  var BI={};
+  // 2) draw box-drawing chars as double-line rectangles (pixel-perfect, no gaps)
+  var ba=3,bt=2,bb=7;
   for(var r=0;r<Rows;r++)for(var c=0;c<Cols;c++){
     var ch=c<AL[r].length?AL[r][c]:' ';
-    if(BP[ch])BI[r+','+c]={ch:ch,p:BP[ch],o:c>=oCol,v:false};
-  }
-
-  function traceChain(sr,sc){
-    var inf=BI[sr+','+sc];if(!inf||inf.v)return null;
-    var p0=inf.p[0],p1=inf.p[1];
-    var d0=DR[p0],d1=DR[p1];
-    var n0=BI[(sr+d0[0])+','+(sc+d0[1])],n1=BI[(sr+d1[0])+','+(sc+d1[1])];
-    var h0=n0&&n0.p.indexOf(OPP[p0])>=0,h1=n1&&n1.p.indexOf(OPP[p1])>=0;
-    var ent=!h0?p0:!h1?p1:p0;
-    var pts=[],r=sr,c=sc;
-    while(true){
-      var k=r+','+c,bi=BI[k];
-      if(!bi||bi.v)break;
-      bi.v=true;
-      var x=c*cU,y=r*cU,mx=x+cU/2,my=y+cU/2,ep;
-      switch(bi.ch){
-        case '═':ep=ent==='l'?[[x,my],[x+cU,my]]:[[x+cU,my],[x,my]];break;
-        case '║':ep=ent==='t'?[[mx,y],[mx,y+cU]]:[[mx,y+cU],[mx,y]];break;
-        case '╔':ep=ent==='r'?[[x+cU,my],[mx,my],[mx,y+cU]]:[[mx,y+cU],[mx,my],[x+cU,my]];break;
-        case '╗':ep=ent==='l'?[[x,my],[mx,my],[mx,y+cU]]:[[mx,y+cU],[mx,my],[x,my]];break;
-        case '╚':ep=ent==='t'?[[mx,y],[mx,my],[x+cU,my]]:[[x+cU,my],[mx,my],[mx,y]];break;
-        case '╝':ep=ent==='l'?[[x,my],[mx,my],[mx,y]]:[[mx,y],[mx,my],[x,my]];break;
-      }
-      ep.forEach(function(p){var L=pts.length?pts[pts.length-1]:null;if(!L||L[0]!==p[0]||L[1]!==p[1])pts.push(p);});
-      var exit=bi.p[0]===ent?bi.p[1]:bi.p[0];
-      var d=DR[exit];r+=d[0];c+=d[1];ent=OPP[exit];
+    if(ch===' '||ch==='█')continue;
+    cx.fillStyle=c>=oCol?'#caff3f':'#ececee';
+    var x=c*cU,y=r*cU;
+    switch(ch){
+      case '═':
+        cx.fillRect(x,y+ba,cU,bt);cx.fillRect(x,y+bb,cU,bt);break;
+      case '║':
+        cx.fillRect(x+ba,y,bt,cU);cx.fillRect(x+bb,y,bt,cU);break;
+      case '╔':
+        cx.fillRect(x+ba,y+ba,cU-ba,bt);cx.fillRect(x+ba,y+ba,bt,cU-ba);
+        cx.fillRect(x+bb,y+bb,cU-bb,bt);cx.fillRect(x+bb,y+bb,bt,cU-bb);break;
+      case '╗':
+        cx.fillRect(x,y+ba,cU-ba,bt);cx.fillRect(x+cU-ba-bt,y+ba,bt,cU-ba);
+        cx.fillRect(x,y+bb,cU-bb,bt);cx.fillRect(x+cU-bb-bt,y+bb,bt,cU-bb);break;
+      case '╚':
+        cx.fillRect(x+ba,y,bt,cU-ba);cx.fillRect(x+ba,y+cU-ba-bt,cU-ba,bt);
+        cx.fillRect(x+bb,y,bt,cU-bb);cx.fillRect(x+bb,y+cU-bb-bt,cU-bb,bt);break;
+      case '╝':
+        cx.fillRect(x,y+cU-ba-bt,cU-ba,bt);cx.fillRect(x+cU-ba-bt,y,bt,cU-ba);
+        cx.fillRect(x,y+cU-bb-bt,cU-bb,bt);cx.fillRect(x+cU-bb-bt,y,bt,cU-bb);break;
     }
-    return {pts:pts,o:inf.o};
   }
-
-  var chains=[];
-  Object.keys(BI).forEach(function(k){
-    if(BI[k].v)return;
-    var p=k.split(',');
-    var ch=traceChain(parseInt(p[0]),parseInt(p[1]));
-    if(ch&&ch.pts.length>1)chains.push(ch);
-  });
-
-  cx.lineWidth=1.5;cx.lineCap='square';cx.lineJoin='miter';
-  chains.forEach(function(ch){
-    cx.strokeStyle=ch.o?'#caff3f':'#ececee';
-    cx.beginPath();
-    cx.moveTo(ch.pts[0][0],ch.pts[0][1]);
-    for(var i=1;i<ch.pts.length;i++)cx.lineTo(ch.pts[i][0],ch.pts[i][1]);
-    cx.stroke();
-  });
 
   var logoImg=document.createElement('img');
   logoImg.src=cvs.toDataURL();
