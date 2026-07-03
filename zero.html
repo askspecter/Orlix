@@ -107,8 +107,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
 /* logo + welcome */
-.ascii-logo{display:block;margin:0 auto 12px;font-family:'Courier New',Courier,monospace;font-size:14px;line-height:1;letter-spacing:-1px;white-space:pre;text-align:center;color:var(--fg);font-weight:bold;user-select:none;text-shadow:0.5px 0 0 currentColor,-0.5px 0 0 currentColor}
-.ascii-logo .g{color:var(--green)}
+.ascii-logo{display:block;margin:0 auto 12px;font-family:'Courier New',Courier,monospace;font-size:14px;line-height:1;letter-spacing:-0.5px;white-space:pre;text-align:center;color:#ececee;font-weight:bold;user-select:none;-webkit-text-stroke:0.4px currentColor;paint-order:stroke fill}
+.ascii-logo .g{color:#caff3f;-webkit-text-stroke-color:#caff3f}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
 
 /* thinking indicator */
@@ -839,12 +839,12 @@ function initShell(){
   // ASCII art logo
   var logo=document.createElement('pre');logo.className='ascii-logo';
   logo.innerHTML=
-    '<span class="g">███████╗</span>███████╗██████╗  <span class="g">██████╗</span>\n'+
-    '<span class="g">╚══███╔╝</span>██╔════╝██╔══██╗<span class="g">██╔═══██╗</span>\n'+
-    '<span class="g">  ███╔╝</span> █████╗  ██████╔╝<span class="g">██║   ██║</span>\n'+
-    '<span class="g"> ███╔╝</span>  ██╔══╝  ██╔══██╗<span class="g">██║   ██║</span>\n'+
-    '<span class="g">███████╗</span>███████╗██║  ██║<span class="g">╚██████╔╝</span>\n'+
-    '<span class="g">╚══════╝</span>╚══════╝╚═╝  ╚═╝ <span class="g">╚═════╝</span>';
+    '███████╗███████╗██████╗  <span class="g">██████╗</span>\n'+
+    '╚══███╔╝██╔════╝██╔══██╗<span class="g">██╔═══██╗</span>\n'+
+    '  ███╔╝ █████╗  ██████╔╝<span class="g">██║   ██║</span>\n'+
+    ' ███╔╝  ██╔══╝  ██╔══██╗<span class="g">██║   ██║</span>\n'+
+    '███████╗███████╗██║  ██║<span class="g">╚██████╔╝</span>\n'+
+    '╚══════╝╚══════╝╚═╝  ╚═╝ <span class="g">╚═════╝</span>';
   ww.appendChild(logo);
 
   var t1=document.createElement('div');t1.className='welcome-line tag';t1.innerHTML='Any model. Every tool. Zero limits.';ww.appendChild(t1);
