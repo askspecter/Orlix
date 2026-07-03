@@ -88,8 +88,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
 /* ASCII + welcome */
-.ascii-logo{color:var(--fg);line-height:1.15;font-size:11px;white-space:pre;margin-bottom:6px;letter-spacing:.5px;text-align:center}
-.ascii-logo .hi{color:var(--green)}
+.ascii-logo{color:var(--fg);line-height:1.1;font-size:14px;white-space:pre;margin-bottom:8px;text-align:center;letter-spacing:0}
+.ascii-logo .hi{color:var(--lime)}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
 .welcome-line{margin:2px 0;font-size:13px;text-align:center}
 .welcome-line.tag{color:var(--dim);font-size:14px;letter-spacing:.08em}
@@ -157,13 +157,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
   .sb-overlay.open{display:block}
   .mobile-keys{display:flex}
   .gear-btn{display:flex}
-  .ascii-logo{font-size:8px}
+  .ascii-logo{font-size:9px}
   .term-output{padding:10px 10px 6px}
   .input-area{padding:5px 10px}
   .status-bar{padding:3px 10px}
 }
 @media(max-width:360px){
-  .ascii-logo{font-size:6px}
+  .ascii-logo{font-size:7px}
   .sug-chip{font-size:10px;padding:3px 7px}
 }
 </style>
@@ -367,13 +367,15 @@ function initShell(){
 
   // ASCII welcome
   var ascii=
-'████████  ████████  ███████   <span class="hi"> ██████ </span>\n'+
-'     ██   ██        ██    ██  <span class="hi">██    ██</span>\n'+
-'    ██    ██        ██    ██  <span class="hi">██    ██</span>\n'+
-'   ██     ██████    ███████   <span class="hi">██    ██</span>\n'+
-'  ██      ██        ██   ██   <span class="hi">██    ██</span>\n'+
-' ██       ██        ██    ██  <span class="hi">██    ██</span>\n'+
-'████████  ████████  ██    ██  <span class="hi"> ██████ </span>';
+'██████████████  ██████████████  ████████████    <span class="hi">  ██████████  </span>\n'+
+'██████████████  ██████████████  ██████████████  <span class="hi">██████████████</span>\n'+
+'          ████  ████            ████      ████  <span class="hi">████      ████</span>\n'+
+'        ████    ████            ████      ████  <span class="hi">████      ████</span>\n'+
+'      ████      ██████████      ████████████    <span class="hi">████      ████</span>\n'+
+'    ████        ████            ████    ████    <span class="hi">████      ████</span>\n'+
+'  ████          ████            ████      ████  <span class="hi">████      ████</span>\n'+
+'██████████████  ██████████████  ████      ████  <span class="hi">██████████████</span>\n'+
+'██████████████  ██████████████  ████      ████  <span class="hi">  ██████████  </span>';
   var pre=document.createElement('pre');pre.className='ascii-logo';pre.innerHTML=ascii;ww.appendChild(pre);
 
   var t1=document.createElement('div');t1.className='welcome-line tag';t1.innerHTML='Any model. Every tool. Zero limits.';ww.appendChild(t1);
