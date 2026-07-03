@@ -107,8 +107,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
 /* logo + welcome */
-.ascii-logo{display:block;margin:0 auto 12px;font-family:'Courier New',Courier,monospace;font-size:14px;line-height:1;letter-spacing:-0.5px;white-space:pre;text-align:center;color:#ececee;font-weight:bold;user-select:none;-webkit-text-stroke:0.4px currentColor;paint-order:stroke fill}
-.ascii-logo .g{color:#caff3f;-webkit-text-stroke-color:#caff3f}
+.ascii-logo{display:block;margin:0 auto 12px;width:550px;max-width:90%;height:auto}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
 
 /* thinking indicator */
@@ -330,13 +329,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
   .sb-overlay.open{display:block}
   .mobile-keys{display:flex}
   .gear-btn{display:flex}
-  .ascii-logo{font-size:9px}
+  .ascii-logo{width:420px}
   .term-output{padding:10px 10px 6px}
   .input-area{padding:5px 10px}
   .status-bar{padding:3px 10px}
 }
 @media(max-width:360px){
-  .ascii-logo{font-size:7px}
+  .ascii-logo{width:280px}
   .sug-chip{font-size:10px;padding:3px 7px}
 }
 </style>
@@ -836,16 +835,43 @@ function initShell(){
   // welcome wrap (centered)
   var ww=document.createElement('div');ww.className='welcome-wrap';output.appendChild(ww);
 
-  // ASCII art logo
-  var logo=document.createElement('pre');logo.className='ascii-logo';
-  logo.innerHTML=
-    '███████╗███████╗██████╗  <span class="g">██████╗</span>\n'+
-    '╚══███╔╝██╔════╝██╔══██╗<span class="g">██╔═══██╗</span>\n'+
-    '  ███╔╝ █████╗  ██████╔╝<span class="g">██║   ██║</span>\n'+
-    ' ███╔╝  ██╔══╝  ██╔══██╗<span class="g">██║   ██║</span>\n'+
-    '███████╗███████╗██║  ██║<span class="g">╚██████╔╝</span>\n'+
-    '╚══════╝╚══════╝╚═╝  ╚═╝ <span class="g">╚═════╝</span>';
-  ww.appendChild(logo);
+  // ASCII logo rendered via canvas (gap-free solid blocks)
+  var AL=[
+    '███████╗███████╗██████╗  ██████╗',
+    '╚══███╔╝██╔════╝██╔══██╗██╔═══██╗',
+    '  ███╔╝ █████╗  ██████╔╝██║   ██║',
+    ' ███╔╝  ██╔══╝  ██╔══██╗██║   ██║',
+    '███████╗███████╗██║  ██║╚██████╔╝',
+    '╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝'
+  ];
+  var oCol=24,cfs=22,dpr=window.devicePixelRatio||1;
+  var cvs=document.createElement('canvas');
+  var cx=cvs.getContext('2d');
+  cx.font='bold '+cfs+'px "Courier New",monospace';
+  var cw=cx.measureText('█').width;
+  var lh=cfs*1.15;
+  var maxL=0;AL.forEach(function(l){if(l.length>maxL)maxL=l.length;});
+  var pw=Math.ceil(cw*maxL),ph=Math.ceil(lh*AL.length);
+  cvs.width=pw*dpr;cvs.height=ph*dpr;
+  cx.scale(dpr,dpr);
+  cx.font='bold '+cfs+'px "Courier New",monospace';
+  cx.textBaseline='top';
+  AL.forEach(function(line,row){
+    for(var i=0;i<line.length;i++){
+      var ch=line[i];if(ch===' ')continue;
+      var col=i>=oCol?'#caff3f':'#ececee';
+      cx.fillStyle=col;
+      if(ch==='█'){
+        cx.fillRect(i*cw,row*lh,cw+0.5,lh);
+      }else{
+        cx.fillText(ch,i*cw,row*lh);
+      }
+    }
+  });
+  var logoImg=document.createElement('img');
+  logoImg.src=cvs.toDataURL();
+  logoImg.className='ascii-logo';logoImg.alt='ZERO';
+  ww.appendChild(logoImg);
 
   var t1=document.createElement('div');t1.className='welcome-line tag';t1.innerHTML='Any model. Every tool. Zero limits.';ww.appendChild(t1);
   var sp1=document.createElement('div');sp1.innerHTML='';sp1.style.height='8px';ww.appendChild(sp1);
