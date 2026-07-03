@@ -141,13 +141,13 @@ img {
    ================================================ */
 .hero {
   position: relative;
-  min-height: 100vh;
+  min-height: 70vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 120px 24px 80px;
+  padding: 120px 24px 60px;
   overflow: hidden;
 }
 
@@ -163,18 +163,7 @@ img {
   mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
 }
 
-/* Orange orb */
-.hero::after {
-  content: '';
-  position: absolute;
-  top: -200px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 800px;
-  height: 600px;
-  background: radial-gradient(ellipse, rgba(240,120,48,0.15) 0%, transparent 70%);
-  pointer-events: none;
-}
+/* Orange orb — removed for terminal theme */
 
 .hero-content {
   position: relative;
@@ -200,31 +189,16 @@ img {
 }
 
 .hero h1 {
-  font-size: clamp(3rem, 7vw, 5.5rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.05;
+  font-size: clamp(2.4rem, 5.5vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   color: var(--text-1);
   margin-bottom: 24px;
-  cursor: default;
-  transition: transform 0.45s cubic-bezier(.34,1.56,.64,1), filter 0.45s ease;
-  will-change: transform;
-}
-.hero h1:hover {
-  transform: translateY(-6px);
-  filter: drop-shadow(0 20px 48px rgba(240,120,48,0.18));
-}
-.hero h1:active {
-  transform: translateY(-10px) scale(1.012);
-  filter: drop-shadow(0 28px 64px rgba(240,120,48,0.28));
-  transition-duration: 0.12s;
 }
 
 .hero h1 .gradient-text {
-  background: linear-gradient(135deg, var(--orange) 0%, var(--purple) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--orange);
 }
 
 .hero-sub {
@@ -1940,88 +1914,31 @@ footer {
      ================================================ -->
 <section class="hero">
   <div class="hero-content">
-    <div class="hero-eyebrow fade-up">Personal AI Operating System</div>
+    <div class="hero-eyebrow fade-up">// system_init</div>
 
     <h1 class="fade-up fade-up-d1">
-      The command layer<br>
-      for your <span class="gradient-text">digital life.</span>
+      Orlix <span class="gradient-text">AI</span>
     </h1>
 
     <p class="hero-sub fade-up fade-up-d2">
-      One interface to run 19 frontier AI models alongside onchain intelligence — token analysis, wallet monitoring, and a Telegram bot all in one place.
+      19 frontier AI models. Multi-chain analytics. Token analysis. Wallet tracking. Telegram bot. One terminal.
     </p>
 
     <div class="hero-ctas fade-up fade-up-d3">
-      <a href="app.html" class="btn-primary">Get Access →</a>
-      <a href="#features" class="btn-ghost">See how it works</a>
+      <a href="app.html" class="btn-primary">Launch Terminal →</a>
+      <a href="#features" class="btn-ghost">Explore</a>
     </div>
 
     <div class="hero-stats fade-up fade-up-d4">
       <span>19 models</span>
       <div class="dot"></div>
-      <span>Base network</span>
+      <span>Base + Robinhood</span>
       <div class="dot"></div>
-      <span>0 setup</span>
+      <span>Token-gated</span>
     </div>
 
   </div>
 
-  <div class="scroll-indicator">
-    <div class="scroll-mouse">
-      <div class="scroll-dot"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================================================
-     MODEL MARQUEE
-     ================================================ -->
-<section class="marquee-section">
-  <p class="marquee-label">19 AI models across all major providers</p>
-  <div class="marquee-track-wrap">
-    <div class="marquee-track" id="marqueeTrack">
-      <!-- Items duplicated for seamless loop via JS -->
-      <div class="model-chip"><span class="chip-dot" style="background:#FF8060"></span>Claude Opus 4.8</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF8060"></span>Claude Sonnet 5</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF8060"></span>Claude Haiku 4.5</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#7ee0a8"></span>Mimo 2.5 Pro</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#74AA9C"></span>GPT-5.4</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#74AA9C"></span>GPT-5 Nano</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#74AA9C"></span>GPT-5.2 Codex</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#4285F4"></span>Gemini 3.1 Pro</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#4285F4"></span>Gemini 3 Flash</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#AAAAAA"></span>Grok 4.20</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#AAAAAA"></span>Grok 4.1 Fast</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#4BC3FF"></span>DeepSeek V3.2</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#A78BFA"></span>Kimi K2.7 Code</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#A78BFA"></span>Kimi K2.6</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF6400"></span>Qwen3 Coder</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF6400"></span>Qwen3.7 Plus</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF6400"></span>Qwen3.6 Flash</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#64748b"></span>GLM-5.1</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#64748b"></span>GLM-5 Turbo</div>
-      <!-- Duplicate set for seamless loop -->
-      <div class="model-chip"><span class="chip-dot" style="background:#FF8060"></span>Claude Opus 4.8</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF8060"></span>Claude Sonnet 5</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF8060"></span>Claude Haiku 4.5</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#7ee0a8"></span>Mimo 2.5 Pro</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#74AA9C"></span>GPT-5.4</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#74AA9C"></span>GPT-5 Nano</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#74AA9C"></span>GPT-5.2 Codex</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#4285F4"></span>Gemini 3.1 Pro</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#4285F4"></span>Gemini 3 Flash</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#AAAAAA"></span>Grok 4.20</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#AAAAAA"></span>Grok 4.1 Fast</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#4BC3FF"></span>DeepSeek V3.2</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#A78BFA"></span>Kimi K2.7 Code</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#A78BFA"></span>Kimi K2.6</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF6400"></span>Qwen3 Coder</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF6400"></span>Qwen3.7 Plus</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#FF6400"></span>Qwen3.6 Flash</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#64748b"></span>GLM-5.1</div>
-      <div class="model-chip"><span class="chip-dot" style="background:#64748b"></span>GLM-5 Turbo</div>
-    </div>
-  </div>
 </section>
 
 <!-- ================================================
@@ -2029,9 +1946,9 @@ footer {
      ================================================ -->
 <section class="bento-section" id="features">
   <div style="max-width:1200px;margin:0 auto 48px">
-    <div class="section-eyebrow fade-up">Everything you need</div>
-    <h2 class="section-title fade-up fade-up-d1">One OS. Infinite intelligence.</h2>
-    <p class="section-desc fade-up fade-up-d2">From frontier AI chat to real-time onchain data — Orlix brings every tool into a single, beautifully unified interface.</p>
+    <div class="section-eyebrow fade-up">// features</div>
+    <h2 class="section-title fade-up fade-up-d1">Built-in modules</h2>
+    <p class="section-desc fade-up fade-up-d2">AI chat, onchain analytics, wallet monitoring, and deployment tools — all in one interface.</p>
   </div>
 
   <div class="bento-grid">
@@ -2238,117 +2155,6 @@ footer {
 <!-- ================================================
      FEATURE HIGHLIGHTS (Alternating)
      ================================================ -->
-<section class="features-section">
-  <div class="features-inner">
-
-    <!-- Feature 1: Multi-model AI -->
-    <div class="feature-item fade-up">
-      <div class="feature-text">
-        <div class="feature-eyebrow">Multi-model AI</div>
-        <h3 class="feature-title">Switch models mid-conversation. Instantly.</h3>
-        <p class="feature-desc">
-          Orlix routes your queries to the best available model in real time. Need raw speed? Switch to Haiku. Tackling something complex? Drop into Opus or o3. One interface, total flexibility.
-        </p>
-        <ul class="feature-points">
-          <li>19 frontier models from 10 leading providers</li>
-          <li>Model switching without losing context</li>
-          <li>Streaming responses with sub-second first tokens</li>
-          <li>No API keys needed — just sign in and go</li>
-        </ul>
-      </div>
-      <div class="feature-visual">
-        <div class="terminal-visual">
-          <div class="terminal-bar">
-            <div class="terminal-dots">
-              <span class="tdot-r"></span>
-              <span class="tdot-y"></span>
-              <span class="tdot-g"></span>
-            </div>
-            <div class="terminal-title">orlix — model switcher</div>
-          </div>
-          <div class="terminal-body">
-            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">&nbsp;orlix chat --model claude-opus</span></div>
-            <div class="t-line"><span class="t-output" style="color:var(--text-3)">▸ Connected to <span class="t-model">claude-opus-4.8</span></span></div>
-            <div class="t-line">&nbsp;</div>
-            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">&nbsp;/switch gpt-4o</span></div>
-            <div class="t-line"><span class="t-output" style="color:var(--text-3)">▸ Switched to <span class="t-model">gpt-4o</span> · context preserved</span></div>
-            <div class="t-line">&nbsp;</div>
-            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">&nbsp;/switch gemini-2.5-pro</span></div>
-            <div class="t-line"><span class="t-output" style="color:var(--text-3)">▸ Now using <span class="t-model">gemini-2.5-pro</span></span></div>
-            <div class="t-line">&nbsp;</div>
-            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">&nbsp;What do you think about this codebase?</span></div>
-            <div class="t-line"><span class="t-output">▸ Analyzing… <span class="t-cursor"></span></span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feature 2: Onchain Tools -->
-    <div class="feature-item reverse fade-up">
-      <div class="feature-text">
-        <div class="feature-eyebrow">Onchain Intelligence</div>
-        <h3 class="feature-title">Real-time Base network data, AI-interpreted.</h3>
-        <p class="feature-desc">
-          Orlix fuses live onchain data with frontier AI so you can ask natural language questions about wallets, tokens, and transactions — and get answers that actually make sense.
-        </p>
-        <ul class="feature-points">
-          <li>Token analyzer with AI-powered verdict system</li>
-          <li>Wallet watcher with real-time transaction alerts</li>
-          <li>Natural language onchain queries</li>
-          <li>Base network native — L2 speed, L1 security</li>
-        </ul>
-      </div>
-      <div class="feature-visual">
-        <div class="wallet-visual">
-          <div class="wallet-visual-header">
-            <div class="wallet-visual-title">Active Wallets</div>
-            <div class="wv-status">
-              <span class="wv-status-dot"></span>
-              Monitoring 3 wallets
-            </div>
-          </div>
-          <div class="wallet-tx-list">
-            <div class="wv-tx">
-              <div class="wv-tx-icon tx-in">↓</div>
-              <div class="wv-info">
-                <div class="wv-name">Received $BRETT</div>
-                <div class="wv-sub">0xd8dA…6045 · 2 min ago</div>
-              </div>
-              <div class="wv-val">
-                <div class="wv-amount" style="color:var(--green)">+84,200</div>
-                <div class="wv-usd">≈ $15,540</div>
-              </div>
-            </div>
-            <div class="wv-tx">
-              <div class="wv-tx-icon tx-out">↑</div>
-              <div class="wv-info">
-                <div class="wv-name">Swapped ETH → USDC</div>
-                <div class="wv-sub">0x742d…35Cc · 7 min ago</div>
-              </div>
-              <div class="wv-val">
-                <div class="wv-amount" style="color:var(--red)">-1.5 ETH</div>
-                <div class="wv-usd">≈ $5,715</div>
-              </div>
-            </div>
-            <div class="wv-tx">
-              <div class="wv-tx-icon" style="background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,0.15)">⟳</div>
-              <div class="wv-info">
-                <div class="wv-name">LP Position Added</div>
-                <div class="wv-sub">0x1a4b…9f12 · 14 min ago</div>
-              </div>
-              <div class="wv-val">
-                <div class="wv-amount" style="color:var(--purple)">+LP</div>
-                <div class="wv-usd">$3,200 range</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
 <!-- ================================================
      MODELS GRID
      ================================================ -->
@@ -2356,11 +2162,10 @@ footer {
   <div style="max-width:1200px;margin:0 auto">
     <div class="section-header center" style="margin-bottom:48px">
       <div class="section-eyebrow" style="justify-content:center">
-        <span style="width:16px;height:2px;background:var(--orange);border-radius:2px;display:inline-block"></span>
-        Model library
+        // models
       </div>
-      <h2 class="section-title fade-up">19 frontier models. All in one place.</h2>
-      <p class="section-desc fade-up fade-up-d1">Every leading AI model — no juggling accounts, no separate subscriptions. Pick the right model for every task.</p>
+      <h2 class="section-title fade-up">Model library</h2>
+      <p class="section-desc fade-up fade-up-d1">19 frontier models from 10 providers. Switch mid-conversation.</p>
     </div>
 
     <div class="models-grid">
@@ -2543,11 +2348,11 @@ footer {
 <section class="cta-section">
   <div class="cta-inner">
     <div class="cta-card fade-up">
-      <h2 class="cta-title">Ready to upgrade how<br>you use AI?</h2>
-      <p class="cta-sub">Hold 10,000,000 $ORLIX on Base and unlock the full Orlix AI platform — 19 frontier models, wallet tracking, and onchain intelligence in one tab.</p>
+      <h2 class="cta-title">Ready?</h2>
+      <p class="cta-sub">Hold 10,000,000 $ORLIX on Base to unlock. No signup, no API keys.</p>
       <div class="cta-buttons">
-        <a href="app.html" class="btn-primary">Get Access →</a>
-        <a href="docs.html" class="btn-ghost">Read the docs</a>
+        <a href="app.html" class="btn-primary">Launch Terminal →</a>
+        <a href="docs.html" class="btn-ghost">Docs</a>
       </div>
     </div>
   </div>
