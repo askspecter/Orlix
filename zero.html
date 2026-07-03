@@ -42,6 +42,32 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .load-pct{color:#4ADE80;font-weight:700}
 .load-sub{font-size:9px;color:#222;letter-spacing:.15em;margin-top:10px}
 
+/* ══════ TITLE BAR ══════ */
+.title-bar{display:flex;align-items:center;gap:8px;padding:4px 14px;font-size:10px;color:var(--dim);border-bottom:1px solid var(--dim2);flex-shrink:0;user-select:none;overflow:hidden;white-space:nowrap}
+.title-bar .tb-branch{color:var(--accent);font-weight:500}
+.title-bar .tb-dir{color:var(--dim)}
+.title-bar .tb-spacer{flex:1}
+.title-bar .tb-model{color:var(--fg);font-weight:500}
+.title-bar .tb-ctx{color:var(--dim)}
+
+/* ══════ WORKING STATUS ══════ */
+.working-line{display:none;align-items:center;gap:8px;padding:4px 14px;font-size:11px;color:var(--dim);border-top:1px solid var(--dim2);flex-shrink:0}
+.working-line.active{display:flex}
+.working-text{font-weight:600;letter-spacing:.03em}
+.working-elapsed{color:var(--dim);font-size:10px}
+.working-tokens{color:var(--dim);font-size:10px}
+.working-spacer{flex:1}
+.working-hint{color:var(--dim);font-size:9px;opacity:.6}
+@keyframes ripple{0%{color:var(--dim)}50%{color:var(--accent)}100%{color:var(--dim)}}
+.ripple-char{display:inline-block;animation:ripple 1.6s ease-in-out infinite}
+
+/* cursor block */
+.cursor-block{display:inline-block;width:8px;height:14px;background:var(--green);vertical-align:text-bottom;margin:0 2px;animation:cb .6s step-end infinite}
+
+/* kbd preference toast */
+.kbd-toast{position:fixed;bottom:180px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--dim2);border-radius:20px;padding:8px 20px;font-size:12px;color:var(--fg);font-family:inherit;z-index:200;display:none;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap}
+.kbd-toast.show{display:flex}
+
 /* ══════ APP LAYOUT ══════ */
 #shell{display:none;height:100%;height:100dvh;background:var(--bg)}
 #shell.active{display:flex}
@@ -81,7 +107,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
 /* ASCII + welcome */
-.ascii-logo{color:var(--fg);line-height:1.15;font-size:11px;white-space:pre;margin-bottom:6px;text-align:center;letter-spacing:.5px}
+.ascii-logo{color:var(--fg);line-height:1.05;font-size:11px;white-space:pre;margin-bottom:6px;text-align:center;letter-spacing:-1px;text-shadow:0.6px 0 0 currentColor,-0.6px 0 0 currentColor,0 0.3px 0 currentColor,0 -0.3px 0 currentColor}
 .ascii-logo .hi{color:var(--lime)}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
 .welcome-line{margin:2px 0;font-size:13px;text-align:center}
@@ -330,7 +356,23 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 
   <!-- main -->
   <div class="main">
+    <div class="title-bar">
+      <span class="tb-branch" id="tbBranch">main</span>
+      <span class="tb-dir" id="tbDir">~/workspace</span>
+      <span class="tb-spacer"></span>
+      <span class="tb-model" id="tbModel">claude-sonnet-5</span>
+      <span class="tb-ctx" id="tbCtx"></span>
+    </div>
     <div class="term-output" id="output"></div>
+
+    <div class="working-line" id="workingLine">
+      <span class="working-text" id="workingText">Working</span>
+      <span class="working-elapsed" id="workingElapsed">0s</span>
+      <span style="color:var(--dim)">·</span>
+      <span class="working-tokens" id="workingTokens">0 tok</span>
+      <span class="working-spacer"></span>
+      <span class="working-hint">Ctrl+C to cancel</span>
+    </div>
 
     <div class="status-bar">
       <div class="status-dot"></div>
@@ -379,6 +421,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 <div class="gear-btn" id="gearBtn">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
 </div>
+
+<!-- kbd toast -->
+<div class="kbd-toast" id="kbdToast">Keyboard Preference: <span id="kbdState">On</span></div>
 
 <!-- settings panel -->
 <div class="settings-overlay" id="settingsOverlay">
@@ -729,6 +774,7 @@ function initShell(){
   addEventListener('resize',updateTermSize);
   loadTheme();
   renderSessions();
+  updateTitleBar();
 
   // ── keyboard ──
   inputField.addEventListener('keydown',function(e){
@@ -772,9 +818,12 @@ function initShell(){
     else if(action==='backspace'){inputField.value=inputField.value.slice(0,-1);inputField.focus();}
     else if(action==='copy'){var sel=getSelection().toString();if(sel)navigator.clipboard.writeText(sel);}
     else if(action==='paste'){navigator.clipboard.readText().then(function(t){inputField.value+=t;inputField.focus();});}
-    else if(action==='kbd')inputField.focus();
+    else if(action==='kbd'){toggleKbd();}
+    else if(action==='mic'){toggleMic();}
     else if(action==='esc'){inputField.value='';closeSlashMenu();inputField.focus();}
     else if(action==='tab'){cyclePermMode();}
+    else if(action==='ctrl'){ctrlMode=!ctrlMode;e.target.closest('.mk').style.background=ctrlMode?'var(--accent)':'';e.target.closest('.mk').style.color=ctrlMode?'#000':'';}
+    else if(action==='alt'){altMode=!altMode;e.target.closest('.mk').style.background=altMode?'var(--accent)':'';e.target.closest('.mk').style.color=altMode?'#000':''}
   });
 
   // permission mode click
@@ -888,6 +937,7 @@ function loadTheme(){var t=localStorage.getItem('zero_theme');if(t)applyTheme(t)
 function updateModelLabel(){
   document.getElementById('modelLabel').textContent=currentModel;
   var sel=document.getElementById('sbModelSel');if(sel)sel.value=currentModel;
+  updateTitleBar();
 }
 function updateUsage(){
   var maxCtx=1000000;var k=totalTokens>=1000?(totalTokens/1000).toFixed(1)+'K':totalTokens;
@@ -896,11 +946,41 @@ function updateUsage(){
 }
 function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);document.getElementById('termSize').textContent=w+'x'+h;}
 
+/* ══════ WORKING STATUS ══════ */
+var workingTimer=null,workingStart=0,streamedChars=0;
+function startWorking(){
+  workingStart=Date.now();streamedChars=0;
+  var wl=document.getElementById('workingLine');wl.classList.add('active');
+  rippleWorking();
+  workingTimer=setInterval(function(){
+    var elapsed=Math.round((Date.now()-workingStart)/1000);
+    var fmt=elapsed>=60?Math.floor(elapsed/60)+'m'+String(elapsed%60).padStart(2,'0')+'s':elapsed+'s';
+    document.getElementById('workingElapsed').textContent=fmt;
+    var tok=streamedChars>=1000?Math.round(streamedChars/1000)+'K':streamedChars;
+    document.getElementById('workingTokens').textContent=tok+' tok';
+    rippleWorking();
+  },150);
+}
+function stopWorking(){
+  if(workingTimer){clearInterval(workingTimer);workingTimer=null;}
+  document.getElementById('workingLine').classList.remove('active');
+}
+function rippleWorking(){
+  var word='Working';var phase=Date.now()/200;
+  var html='';
+  for(var i=0;i<word.length;i++){
+    var wave=Math.cos((i-phase)*1.0)*0.5+0.5;
+    var opacity=0.3+wave*0.7;
+    html+='<span style="color:var(--accent);opacity:'+opacity.toFixed(2)+'">'+word[i]+'</span>';
+  }
+  document.getElementById('workingText').innerHTML=html;
+}
+
 /* ══════ RUN COMMAND ══════ */
 var currentAbort=null;
 function cancelStream(){
   if(currentAbort){currentAbort.abort();currentAbort=null;}
-  isStreaming=false;inputField.placeholder='describe a task for zero...';
+  isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';
   addLine('<span style="color:var(--orange)">^C interrupted</span>','system');
 }
 function runCmd(cmd){inputField.value=cmd;sendMessage();}
@@ -1126,9 +1206,10 @@ function sendMessage(){
 
   addLine('<span class="prompt">></span> '+esc(text),'user');
   chatHistory.push({role:'user',content:text});
-  isStreaming=true;inputField.placeholder='thinking...';
+  isStreaming=true;inputField.placeholder='';
+  startWorking();
 
-  var responseLine=addLine('<span style="color:var(--dim);font-style:italic">thinking...</span>','assistant');
+  var responseLine=addLine('<span class="cursor-block"></span>','assistant');
 
   var systemPrompt='You are Zero, an AI terminal coding agent integrated with Orlix AI (orlix.xyz). '+
     'You help with code, terminal commands, debugging, and development. '+
@@ -1154,12 +1235,12 @@ function sendMessage(){
           if(r.done){
             responseLine.innerHTML=formatOutput(fullText);
             if(fullText){chatHistory.push({role:'assistant',content:fullText});totalTokens+=Math.ceil(fullText.length/4);updateUsage();saveSession();}
-            isStreaming=false;inputField.placeholder='describe a task for zero...';inputField.focus();return;
+            isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';inputField.focus();return;
           }
           var data=decoder.decode(r.value,{stream:true});
           data.split('\n').forEach(function(line){
             if(!line.startsWith('data: '))return;var p=line.slice(6);if(p==='[DONE]')return;
-            try{var j=JSON.parse(p);var d=j.choices?.[0]?.delta?.content||j.delta?.text||'';if(d){fullText+=d;responseLine.innerHTML=formatOutput(fullText)+'<span class="cursor-blink"></span>';output.scrollTop=output.scrollHeight;}}catch(e){}
+            try{var j=JSON.parse(p);var d=j.choices?.[0]?.delta?.content||j.delta?.text||'';if(d){fullText+=d;streamedChars+=d.length;responseLine.innerHTML=formatOutput(fullText)+'<span class="cursor-block"></span>';output.scrollTop=output.scrollHeight;}}catch(e){}
           });
           readChunk();
         });
@@ -1171,13 +1252,53 @@ function sendMessage(){
         responseLine.innerHTML=formatOutput(content);
         chatHistory.push({role:'assistant',content:content});
         totalTokens+=Math.ceil(content.length/4);updateUsage();saveSession();
-        isStreaming=false;inputField.placeholder='describe a task for zero...';inputField.focus();
+        isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';inputField.focus();
       });
     }
   }).catch(function(e){
     responseLine.innerHTML='<span style="color:var(--red)">'+esc(e.message)+'</span>';
-    chatHistory.pop();isStreaming=false;inputField.placeholder='describe a task for zero...';
+    chatHistory.pop();isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';
   });
+}
+
+/* ══════ KBD TOGGLE ══════ */
+var kbdOn=true,ctrlMode=false,altMode=false;
+function toggleKbd(){
+  kbdOn=!kbdOn;
+  var toast=document.getElementById('kbdToast');
+  document.getElementById('kbdState').textContent=kbdOn?'On':'Off';
+  toast.classList.add('show');
+  if(kbdOn){inputField.readOnly=false;inputField.focus();}
+  else{inputField.readOnly=true;inputField.blur();}
+  setTimeout(function(){toast.classList.remove('show');},1500);
+}
+
+/* ══════ MIC (SPEECH) ══════ */
+var micActive=false,recognition=null;
+function toggleMic(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    addLine('<span class="warn">Speech recognition not supported in this browser.</span>','system');return;
+  }
+  if(micActive&&recognition){recognition.stop();return;}
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';
+  var micBtn=document.querySelector('[data-action="mic"]');
+  recognition.onstart=function(){micActive=true;if(micBtn){micBtn.style.background='var(--red)';micBtn.style.color='#fff';}};
+  recognition.onresult=function(e){
+    var transcript='';for(var i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}
+    inputField.value=transcript;
+  };
+  recognition.onend=function(){micActive=false;if(micBtn){micBtn.style.background='';micBtn.style.color='';}recognition=null;inputField.focus();};
+  recognition.onerror=function(e){micActive=false;if(micBtn){micBtn.style.background='';micBtn.style.color='';}
+    if(e.error!=='aborted')addLine('<span class="warn">Mic error: '+e.error+'</span>','system');};
+  recognition.start();
+}
+
+/* ══════ TITLE BAR ══════ */
+function updateTitleBar(){
+  document.getElementById('tbModel').textContent=MODELS[currentModel]||currentModel;
+  var maxCtx=1000000;var pct=Math.min(100,Math.round(totalTokens/maxCtx*100));
+  document.getElementById('tbCtx').textContent=pct>0?pct+'%':'';
 }
 
 /* ══════ SETTINGS PANEL ══════ */
