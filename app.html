@@ -4031,19 +4031,17 @@ document.getElementById('previewCloseBtn').addEventListener('click', closePrevie
     await gateCheckBalance(addr);
   });
 
-  // De-dupe stray Privy dialogs: if a wallet modal opens twice (double-tap /
-  // ghost-click on mobile in-app browsers), keep only the newest and hide the
-  // rest so the user never sees two stacked "Connect your wallet" sheets.
   (function dedupePrivyModals() {
     const prune = () => {
       for (const id of ['privy-dialog', 'privy-dialog-backdrop']) {
         const nodes = document.querySelectorAll('#' + id);
         if (nodes.length < 2) continue;
-        // hide (don't remove — lets React unmount them cleanly later)
         nodes.forEach((n, i) => {
           if (i < nodes.length - 1) { n.style.display = 'none'; n.style.pointerEvents = 'none'; }
         });
       }
+      const iframes = document.querySelectorAll('iframe[title*="privy" i], iframe[src*="privy"]');
+      if (iframes.length > 1) iframes.forEach((f, i) => { if (i < iframes.length - 1) f.remove(); });
     };
     const obs = new MutationObserver(prune);
     obs.observe(document.body, { childList: true, subtree: true });
@@ -4051,16 +4049,14 @@ document.getElementById('previewCloseBtn').addEventListener('click', closePrevie
 
   let _gateConnecting = false;
   window.gateConnect = function() {
-    // Ignore rapid repeat taps or a modal already on screen → prevents 2x popup
     if (_gateConnecting || document.getElementById('privy-dialog')) return;
     _gateConnecting = true;
-    setTimeout(() => { _gateConnecting = false; }, 1500);
-    document.getElementById('gateMsg').textContent = '';
     const btn = document.getElementById('gateConnectBtn');
-    // Prefer Privy: click the hidden button injected by wallet.js
+    btn.style.pointerEvents = 'none';
+    setTimeout(() => { _gateConnecting = false; btn.style.pointerEvents = ''; }, 3000);
+    document.getElementById('gateMsg').textContent = '';
     const privyBtn = document.querySelector('#orlix-wallet .ow-btn, #orlix-wallet button');
     if (privyBtn) { privyBtn.click(); return; }
-    // Privy may still be loading (defer script) — wait up to 3s for it
     btn.disabled = true; btn.innerHTML = '⏳ Connecting…';
     let waited = 0;
     const waitForPrivy = setInterval(() => {
@@ -4069,7 +4065,6 @@ document.getElementById('previewCloseBtn').addEventListener('click', closePrevie
       if (pb) { clearInterval(waitForPrivy); btn.disabled = false; btn.innerHTML = CONN_SVG; pb.click(); return; }
       if (waited >= 3000) {
         clearInterval(waitForPrivy);
-        // Privy didn't load — fall back to window.ethereum
         if (!window.ethereum) {
           document.getElementById('gateMsg').textContent = 'Wallet loading… please try again';
           btn.disabled = false; btn.innerHTML = CONN_SVG;

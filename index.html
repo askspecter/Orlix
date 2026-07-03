@@ -195,10 +195,24 @@ img {
   line-height: 1.1;
   color: var(--text-1);
   margin-bottom: 24px;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1), text-shadow 0.3s ease, letter-spacing 0.3s ease;
+  cursor: default;
+}
+
+.hero h1:hover {
+  transform: scale(1.04);
+  text-shadow: 0 0 40px rgba(240,120,48,0.3), 0 0 80px rgba(240,120,48,0.1);
+  letter-spacing: 0.01em;
 }
 
 .hero h1 .gradient-text {
   color: var(--orange);
+  transition: text-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.hero h1:hover .gradient-text {
+  text-shadow: 0 0 20px rgba(240,120,48,0.6), 0 0 60px rgba(240,120,48,0.2);
+  filter: brightness(1.2);
 }
 
 .hero-sub {
@@ -361,93 +375,7 @@ img {
   50% { transform: translateY(8px); opacity: 0.2; }
 }
 
-/* ================================================
-   MODEL MARQUEE
-   ================================================ */
-.marquee-section {
-  padding: 64px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  overflow: hidden;
-  background: var(--bg-2);
-}
-
-.marquee-label {
-  text-align: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  margin-bottom: 28px;
-}
-
-.marquee-track-wrap {
-  position: relative;
-}
-
-.marquee-track-wrap::before,
-.marquee-track-wrap::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 200px;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.marquee-track-wrap::before {
-  left: 0;
-  background: linear-gradient(to right, var(--bg-2), transparent);
-}
-
-.marquee-track-wrap::after {
-  right: 0;
-  background: linear-gradient(to left, var(--bg-2), transparent);
-}
-
-.marquee-track {
-  display: flex;
-  gap: 12px;
-  animation: marqueeScroll 30s linear infinite;
-  width: max-content;
-}
-
-.marquee-track:hover {
-  animation-play-state: paused;
-}
-
-@keyframes marqueeScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.model-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: 100px;
-  border: 1px solid var(--border);
-  background: var(--bg-3);
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-2);
-  white-space: nowrap;
-  transition: var(--transition);
-}
-
-.model-chip:hover {
-  border-color: var(--border-hover);
-  color: var(--text-1);
-}
-
-.model-chip .chip-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
+/* Marquee — removed */
 
 /* ================================================
    SECTION COMMONS
@@ -591,6 +519,16 @@ img {
 .card-telegram {
   grid-column: 9 / 13;
   grid-row: 3 / 4;
+}
+
+.card-basecity {
+  grid-column: 1 / 7;
+  grid-row: 4 / 5;
+}
+
+.card-b20 {
+  grid-column: 7 / 13;
+  grid-row: 4 / 5;
 }
 
 /* Card: Chat */
@@ -1080,6 +1018,133 @@ img {
   padding-top: 2px;
 }
 
+/* Card: Base City */
+.basecity-preview {
+  position: relative;
+  height: 160px;
+  background: linear-gradient(180deg, #0a0e1a 0%, #0f1628 60%, #0a0a0a 100%);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.basecity-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(96,165,250,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96,165,250,0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+  transform: perspective(400px) rotateX(45deg);
+  transform-origin: center bottom;
+}
+.basecity-buildings {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 16px;
+}
+.bc-building {
+  width: 12px;
+  border-radius: 2px 2px 0 0;
+  opacity: 0.7;
+}
+.basecity-glow {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 80px;
+  background: radial-gradient(ellipse, rgba(96,165,250,0.15) 0%, transparent 70%);
+}
+.basecity-label {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+  background: var(--blue-dim);
+  border: 1px solid rgba(96,165,250,0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.basecity-title { font-size: 0.95rem; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+.basecity-desc { font-size: 0.78rem; color: var(--text-3); line-height: 1.4; margin-bottom: 12px; }
+.basecity-stats {
+  display: flex;
+  gap: 16px;
+}
+.basecity-stat-val { font-size: 0.95rem; font-weight: 700; color: var(--text-1); }
+.basecity-stat-label { font-size: 0.65rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Card: B20 Studio */
+.b20-preview {
+  padding: 12px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+.b20-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.b20-chain-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--blue);
+  background: var(--blue-dim);
+  border: 1px solid rgba(96,165,250,0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.b20-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+.b20-field:last-child { border-bottom: none; }
+.b20-field-label { color: var(--text-3); }
+.b20-field-val { color: var(--text-1); font-weight: 600; font-family: var(--mono); }
+.b20-deploy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid rgba(240,120,48,0.4);
+  border-radius: 4px;
+  cursor: default;
+}
+.b20-title { font-size: 0.95rem; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+.b20-desc { font-size: 0.78rem; color: var(--text-3); line-height: 1.4; }
+
 /* ================================================
    FEATURE HIGHLIGHTS (Alternating)
    ================================================ */
@@ -1452,68 +1517,7 @@ img {
 }
 
 
-/* ================================================
-   CTA SECTION
-   ================================================ */
-.cta-section {
-  padding: 80px 40px;
-  background: var(--bg);
-}
-
-.cta-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.cta-card {
-  position: relative;
-  padding: 80px 60px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  text-align: center;
-  overflow: hidden;
-}
-
-.cta-card::before {
-  content: '';
-  position: absolute;
-  top: -100px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(ellipse, rgba(240,120,48,0.12) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.cta-title {
-  position: relative;
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  color: var(--text-1);
-  margin-bottom: 16px;
-}
-
-.cta-sub {
-  position: relative;
-  font-size: 1.05rem;
-  color: var(--text-2);
-  max-width: 480px;
-  margin: 0 auto 36px;
-  line-height: 1.7;
-}
-
-.cta-buttons {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
+/* CTA section — removed (redundant with hero CTA) */
 
 /* ================================================
    FOOTER
@@ -1693,144 +1697,60 @@ footer {
   .ham { display: flex; }
 }
 @media (max-width: 768px) {
-  .nav{height:60px}
-  .nav-in{height:60px;padding:0 16px;gap:10px}
-  .mob-nav{top:60px}
-  .nav-logo img{height:28px!important}
+  .nav{height:56px}
+  .nav-in{height:56px;padding:0 16px;gap:10px}
+  .mob-nav{top:56px}
+  .nav-logo img{height:26px!important}
   .nav-right{gap:8px}
+  .nav-cta{display:none}
   .theme-toggle{width:28px;height:28px;border-radius:4px}
   .theme-toggle svg{width:13px;height:13px}
-  .nav-cta{padding:6px 12px;font-size:.72rem;border-radius:4px}
   .ham span{width:18px;height:1.5px}
-  .hero{padding-top:90px}
 
-  .bento-grid {
-    grid-template-columns: repeat(6, 1fr);
+  .hero {
+    min-height: auto;
+    padding: 88px 20px 48px;
   }
+  .hero h1 { font-size: 2.2rem; margin-bottom: 16px; }
+  .hero-eyebrow { margin-bottom: 16px; font-size: 0.72rem; }
+  .hero-sub { font-size: 0.9rem; margin-bottom: 28px; line-height: 1.6; }
+  .hero-ctas { gap: 10px; margin-bottom: 32px; }
+  .hero-ctas .btn-primary { padding: 12px 24px; font-size: 0.9rem; }
+  .hero-ctas .btn-ghost { padding: 12px 24px; font-size: 0.9rem; }
+  .hero-stats { font-size: 0.72rem; gap: 6px; }
 
-  .card-chat {
-    grid-column: 1 / 7;
-    grid-row: 1 / 2;
-  }
-
-  .card-models-count {
-    grid-column: 1 / 4;
-    grid-row: 2 / 3;
-  }
-
-  .card-speed {
-    grid-column: 4 / 7;
-    grid-row: 2 / 3;
-  }
-
-  .card-network {
-    grid-column: 1 / 3;
-    grid-row: 3 / 4;
-  }
-
-  .card-token {
-    grid-column: 3 / 7;
-    grid-row: 3 / 4;
-  }
-
-  .card-wallet {
-    grid-column: 1 / 4;
-    grid-row: 4 / 5;
-  }
-
-  .card-telegram {
-    grid-column: 4 / 7;
-    grid-row: 4 / 5;
-  }
-
-  .feature-item {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .feature-item.reverse .feature-text {
-    order: 1;
-  }
-
-  .feature-item.reverse .feature-visual {
-    order: 2;
-  }
-
-
-  .footer-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-  }
-
-  .footer-brand {
-    grid-column: 1 / -1;
-  }
-
-  .section {
-    padding: 80px 24px;
-  }
-
-  .bento-section {
-    padding: 80px 24px;
-  }
-
-  .features-section {
-    padding: 80px 24px;
-  }
-
-  .models-section {
-    padding: 80px 24px;
-  }
-
-  .cta-section {
-    padding: 60px 24px;
-  }
-
-  footer {
-    padding: 60px 24px 32px;
-  }
-}
-
-/* ================================================
-   RESPONSIVE — MOBILE (768px)
-   ================================================ */
-@media (max-width: 768px) {
   .bento-grid {
     grid-template-columns: 1fr;
   }
-
   .card-chat, .card-models-count, .card-speed, .card-network,
-  .card-token, .card-wallet, .card-telegram {
+  .card-token, .card-wallet, .card-telegram, .card-basecity, .card-b20 {
     grid-column: 1;
     grid-row: auto;
   }
+  .bento-card { padding: 20px; }
 
-  .roadmap-grid {
-    grid-template-columns: 1fr;
-  }
+  .bento-section { padding: 48px 16px; }
+  .section { padding: 48px 16px; }
+  .models-section { padding: 48px 16px; }
+
+  .section-title { font-size: 1.6rem; margin-bottom: 10px; }
+  .section-desc { font-size: 0.85rem; }
+  .section-header { margin-bottom: 32px; }
 
   .footer-grid {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 28px;
   }
-
-  .footer-col {
-    padding-top: 0;
-  }
-
+  .footer-col { padding-top: 0; }
   .footer-bottom {
     flex-direction: column;
     gap: 12px;
     text-align: center;
   }
+  footer { padding: 48px 16px 28px; }
 
-  .hero {
-    padding: 100px 20px 80px;
-  }
-
-  .cta-card {
-    padding: 48px 24px;
-  }
+  .models-grid { gap: 6px; }
+  .model-card { padding: 10px 12px; }
 }
 
 /* ================================================
@@ -1841,28 +1761,12 @@ footer {
     flex-direction: column;
     width: 100%;
   }
-
-  .btn-primary, .btn-ghost {
+  .hero-ctas .btn-primary,
+  .hero-ctas .btn-ghost {
     width: 100%;
     justify-content: center;
   }
-
-  .cta-buttons {
-    flex-direction: column;
-    width: 100%;
-    max-width: 320px;
-    margin: 0 auto;
-  }
-
-  .cta-buttons .btn-primary,
-  .cta-buttons .btn-ghost {
-    width: 100%;
-    justify-content: center;
-  }
-
-  nav {
-    padding: 0 16px;
-  }
+  .hero-ca { flex-wrap: wrap; justify-content: center; }
 }
 
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
@@ -2149,6 +2053,58 @@ footer {
       </div>
     </div>
 
+    <!-- Card 8: Base City -->
+    <a href="neural-map.html" class="bento-card card-basecity fade-up" style="text-decoration:none;color:inherit;cursor:pointer">
+      <div class="card-label">Base City</div>
+      <div class="basecity-preview">
+        <div class="basecity-grid-bg"></div>
+        <div class="basecity-buildings">
+          <div class="bc-building" style="height:35px;background:var(--blue)"></div>
+          <div class="bc-building" style="height:55px;background:var(--purple)"></div>
+          <div class="bc-building" style="height:70px;background:var(--orange)"></div>
+          <div class="bc-building" style="height:45px;background:var(--green)"></div>
+          <div class="bc-building" style="height:80px;background:var(--blue)"></div>
+          <div class="bc-building" style="height:30px;background:var(--purple)"></div>
+          <div class="bc-building" style="height:60px;background:var(--orange)"></div>
+          <div class="bc-building" style="height:50px;background:var(--green)"></div>
+          <div class="bc-building" style="height:40px;background:var(--blue)"></div>
+          <div class="bc-building" style="height:65px;background:var(--purple)"></div>
+          <div class="bc-building" style="height:75px;background:var(--orange)"></div>
+          <div class="bc-building" style="height:42px;background:var(--green)"></div>
+          <div class="bc-building" style="height:58px;background:var(--blue)"></div>
+          <div class="bc-building" style="height:48px;background:var(--purple)"></div>
+          <div class="bc-building" style="height:38px;background:var(--orange)"></div>
+        </div>
+        <div class="basecity-glow"></div>
+        <div class="basecity-label">3D</div>
+      </div>
+      <div class="basecity-title">3D Network Visualization</div>
+      <div class="basecity-desc">Explore Base ecosystem as an interactive 3D city. Every building is a live protocol — powered by Three.js.</div>
+      <div class="basecity-stats">
+        <div><div class="basecity-stat-val">15×15</div><div class="basecity-stat-label">Grid</div></div>
+        <div><div class="basecity-stat-val">225</div><div class="basecity-stat-label">Blocks</div></div>
+        <div><div class="basecity-stat-val">60fps</div><div class="basecity-stat-label">Render</div></div>
+      </div>
+    </a>
+
+    <!-- Card 9: B20 Studio -->
+    <a href="b20-studio.html" class="bento-card card-b20 fade-up fade-up-d1" style="text-decoration:none;color:inherit;cursor:pointer">
+      <div class="card-label">B20 Studio</div>
+      <div class="b20-preview">
+        <div class="b20-header-row">
+          <span style="font-size:0.85rem;font-weight:700;color:var(--text-1)">Deploy Token</span>
+          <div class="b20-chain-pill">Base L2</div>
+        </div>
+        <div class="b20-field"><span class="b20-field-label">Name</span><span class="b20-field-val">MyToken</span></div>
+        <div class="b20-field"><span class="b20-field-label">Symbol</span><span class="b20-field-val">MTK</span></div>
+        <div class="b20-field"><span class="b20-field-label">Supply</span><span class="b20-field-val">1,000,000</span></div>
+        <div class="b20-field"><span class="b20-field-label">Standard</span><span class="b20-field-val">B20</span></div>
+        <div class="b20-deploy-btn">Deploy to Base →</div>
+      </div>
+      <div class="b20-title">One-click Token Deployment</div>
+      <div class="b20-desc">Deploy B20-standard tokens on Base. Built-in AI config, gas estimation, and instant verification.</div>
+    </a>
+
   </div>
 </section>
 
@@ -2343,22 +2299,6 @@ footer {
 </section>
 
 <!-- ================================================
-     CTA SECTION
-     ================================================ -->
-<section class="cta-section">
-  <div class="cta-inner">
-    <div class="cta-card fade-up">
-      <h2 class="cta-title">Ready?</h2>
-      <p class="cta-sub">Hold 10,000,000 $ORLIX on Base to unlock. No signup, no API keys.</p>
-      <div class="cta-buttons">
-        <a href="app.html" class="btn-primary">Launch Terminal →</a>
-        <a href="docs.html" class="btn-ghost">Docs</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================================================
      FOOTER
      ================================================ -->
 <footer>
@@ -2469,19 +2409,6 @@ function copyCA(el) {
   els.forEach(function(el) { observer.observe(el); });
 })();
 
-// Marquee: ensure seamless loop by checking track width
-(function() {
-  var track = document.getElementById('marqueeTrack');
-  if (!track) return;
-  // The track already has items duplicated in HTML for seamless CSS animation
-  // Dynamic resize: recalculate animation duration for smooth speed
-  function calibrate() {
-    var chips = track.querySelectorAll('.model-chip');
-    if (chips.length === 0) return;
-    // Already set via CSS animation on .marquee-track
-  }
-  calibrate();
-})();
 
 // Smooth anchor scroll
 document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
