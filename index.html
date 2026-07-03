@@ -108,16 +108,16 @@ img {
 /* ================================================
    NAVIGATION
    ================================================ */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:none;height:88px}
-.nav-in{display:flex;align-items:center;height:88px;justify-content:space-between;padding:0 40px;gap:24px}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);height:56px}
+.nav-in{display:flex;align-items:center;height:56px;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 32px;gap:20px}
 .nav-logo{display:flex;align-items:center;flex-shrink:0}
 .nav-logo:hover{opacity:.85}
-.nav-links{display:flex;align-items:center;gap:2px}
-.nav-links a{padding:6px 13px;font-size:.82rem;font-weight:500;color:var(--text-2);border-radius:4px;transition:var(--transition);white-space:nowrap;text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:0}
+.nav-links a{padding:6px 12px;font-size:.78rem;font-weight:500;color:var(--text-2);border-radius:4px;transition:var(--transition);white-space:nowrap;text-decoration:none}
 .nav-links a:hover{color:var(--text-1);background:rgba(255,255,255,.05)}
 .nav-links a.active{color:var(--orange)}
-.nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
-.theme-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:4px;background:var(--bg-3);border:1px solid var(--border);color:var(--text-2);cursor:pointer;transition:var(--transition);flex-shrink:0}
+.nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.theme-toggle{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:4px;background:var(--bg-3);border:1px solid var(--border);color:var(--text-2);cursor:pointer;transition:var(--transition);flex-shrink:0}
 .theme-toggle:hover{border-color:var(--border-hover);color:var(--text-1)}
 .theme-toggle .ico-sun{display:none}
 .theme-toggle .ico-moon{display:block}
@@ -125,15 +125,15 @@ img {
 :root.light .theme-toggle .ico-moon{display:none}
 :root.light .nav-logo img{filter:invert(1)}.wm{display:block}.wm-light{display:none}:root.light .wm-dark{display:none}:root.light .wm-light{display:block}:root.light .wm{filter:none!important}
 :root.light .footer-brand img{filter:invert(1)}
-.nav-cta{display:flex;align-items:center;padding:8px 18px;background:var(--orange);color:#fff;font-size:.82rem;font-weight:700;border-radius:4px;transition:var(--transition);flex-shrink:0;text-decoration:none}
+.nav-cta{display:flex;align-items:center;padding:6px 14px;background:var(--orange);color:#fff;font-size:.75rem;font-weight:700;border-radius:4px;transition:var(--transition);flex-shrink:0;text-decoration:none}
 .nav-cta:hover{background:#E06820;color:#fff;transform:translateY(-1px)}
-.ham{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
-.ham span{display:block;width:22px;height:2px;background:var(--text-1);border-radius:2px;transition:var(--transition)}
-.mob-nav{display:none;position:fixed;top:88px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);flex-direction:column;padding:16px 0 32px;overflow-y:auto}
+.ham{display:none;flex-direction:column;gap:4px;cursor:pointer;background:none;border:none;padding:4px}
+.ham span{display:block;width:18px;height:1.5px;background:var(--text-1);border-radius:2px;transition:var(--transition)}
+.mob-nav{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);flex-direction:column;padding:8px 0 32px;overflow-y:auto}
 .mob-nav.open{display:flex}
-.mob-nav a{font-size:.95rem;font-weight:500;color:var(--text-2);padding:14px 28px;transition:color .15s;text-decoration:none;border-bottom:1px solid var(--border)}
+.mob-nav a{font-size:.85rem;font-weight:500;color:var(--text-2);padding:12px 24px;transition:color .15s;text-decoration:none;border-bottom:1px solid var(--border)}
 .mob-nav a:hover{color:var(--text-1);background:rgba(255,255,255,.03)}
-.mob-nav .mob-cta{margin:20px 24px 0;display:block;text-align:center;background:var(--orange);color:#fff;padding:14px;border-radius:4px;font-weight:600;border-bottom:none}
+.mob-nav .mob-cta{margin:16px 20px 0;display:block;text-align:center;background:var(--orange);color:#fff;padding:12px;border-radius:4px;font-weight:600;border-bottom:none}
 :root.light .nav{background:rgba(244,244,245,.92)!important;border-bottom-color:rgba(0,0,0,.08)}
 
 /* ================================================
@@ -141,46 +141,42 @@ img {
    ================================================ */
 .hero {
   position: relative;
-  min-height: 70vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 120px 24px 60px;
+  padding: 100px 32px 64px;
   overflow: hidden;
 }
 
-/* Grid background */
 .hero::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, black 30%, transparent 100%);
 }
-
-/* Orange orb — removed for terminal theme */
 
 .hero-content {
   position: relative;
   z-index: 1;
-  max-width: 860px;
+  max-width: 720px;
 }
 
 .hero-eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.8rem;
+  gap: 10px;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-3);
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .hero-eyebrow::before,
@@ -189,37 +185,37 @@ img {
 }
 
 .hero h1 {
-  font-size: clamp(2.4rem, 5.5vw, 4rem);
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
   color: var(--text-1);
-  margin-bottom: 24px;
-  transition: transform 0.3s cubic-bezier(.4,0,.2,1), text-shadow 0.3s ease, letter-spacing 0.3s ease;
+  margin-bottom: 20px;
+  transition: transform 0.35s cubic-bezier(.4,0,.2,1), text-shadow 0.35s ease, letter-spacing 0.35s ease;
   cursor: default;
 }
 
 .hero h1:hover {
-  transform: scale(1.04);
-  text-shadow: 0 0 40px rgba(240,120,48,0.3), 0 0 80px rgba(240,120,48,0.1);
+  transform: scale(1.05) translateY(-2px);
+  text-shadow: 0 0 40px rgba(240,120,48,0.25), 0 0 80px rgba(240,120,48,0.08);
   letter-spacing: 0.01em;
 }
 
 .hero h1 .gradient-text {
   color: var(--orange);
-  transition: text-shadow 0.3s ease, filter 0.3s ease;
+  transition: text-shadow 0.35s ease, filter 0.35s ease;
 }
 
 .hero h1:hover .gradient-text {
-  text-shadow: 0 0 20px rgba(240,120,48,0.6), 0 0 60px rgba(240,120,48,0.2);
-  filter: brightness(1.2);
+  text-shadow: 0 0 24px rgba(240,120,48,0.5), 0 0 60px rgba(240,120,48,0.15);
+  filter: brightness(1.25);
 }
 
 .hero-sub {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: var(--text-2);
-  max-width: 580px;
-  margin: 0 auto 40px;
+  max-width: 520px;
+  margin: 0 auto 32px;
   line-height: 1.7;
 }
 
@@ -227,8 +223,8 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  margin-bottom: 48px;
+  gap: 12px;
+  margin-bottom: 36px;
   flex-wrap: wrap;
 }
 
@@ -236,11 +232,11 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #fff;
   background: var(--orange);
-  padding: 14px 28px;
+  padding: 11px 24px;
   border-radius: 4px;
   transition: var(--transition);
   border: 1px solid rgba(240,120,48,0.4);
@@ -248,7 +244,7 @@ img {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px var(--orange-glow);
+  box-shadow: 0 8px 28px var(--orange-glow);
   background: #e86d28;
 }
 
@@ -256,11 +252,11 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--text-2);
   background: transparent;
-  padding: 14px 28px;
+  padding: 11px 24px;
   border-radius: 4px;
   border: 1px solid var(--border);
   transition: var(--transition);
@@ -278,7 +274,7 @@ img {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-3);
   font-weight: 500;
 }
@@ -381,7 +377,7 @@ img {
    SECTION COMMONS
    ================================================ */
 .section {
-  padding: 120px 40px;
+  padding: 64px 32px;
 }
 
 .section-inner {
@@ -390,7 +386,7 @@ img {
 }
 
 .section-header {
-  margin-bottom: 64px;
+  margin-bottom: 40px;
 }
 
 .section-header.center {
@@ -414,12 +410,12 @@ img {
 }
 
 .section-title {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 800;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
   color: var(--text-1);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .section-desc {
@@ -437,7 +433,7 @@ img {
    BENTO GRID
    ================================================ */
 .bento-section {
-  padding: 120px 40px;
+  padding: 64px 32px;
   background: var(--bg);
 }
 
@@ -1410,7 +1406,7 @@ img {
    MODELS GRID
    ================================================ */
 .models-section {
-  padding: 120px 40px;
+  padding: 64px 32px;
   background: var(--bg);
 }
 
@@ -1436,8 +1432,8 @@ img {
 .model-card:hover {
   border-color: var(--border-hover);
   background: var(--bg-3);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
 .model-icon {
@@ -1523,7 +1519,7 @@ img {
    FOOTER
    ================================================ */
 footer {
-  padding: 80px 40px 40px;
+  padding: 48px 32px 32px;
   background: var(--bg-2);
   border-top: 1px solid var(--border);
 }
@@ -1533,8 +1529,8 @@ footer {
   margin: 0 auto;
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
-  gap: 60px;
-  margin-bottom: 60px;
+  gap: 40px;
+  margin-bottom: 40px;
   align-items: start;
 }
 
@@ -1692,70 +1688,80 @@ footer {
    RESPONSIVE — TABLET (1024px)
    ================================================ */
 @media (max-width: 1024px) {
-  .nav-in { padding: 0 24px; }
+  .nav-in { padding: 0 20px; }
   .nav-links,.hide-sm { display: none; }
   .ham { display: flex; }
 }
 @media (max-width: 768px) {
-  .nav{height:56px}
-  .nav-in{height:56px;padding:0 16px;gap:10px}
-  .mob-nav{top:56px}
-  .nav-logo img{height:26px!important}
-  .nav-right{gap:8px}
+  .nav{height:48px}
+  .nav-in{height:48px;padding:0 16px;gap:8px}
+  .mob-nav{top:48px}
+  .nav-logo img{height:22px!important}
+  .nav-right{gap:6px}
   .nav-cta{display:none}
   .theme-toggle{width:28px;height:28px;border-radius:4px}
-  .theme-toggle svg{width:13px;height:13px}
-  .ham span{width:18px;height:1.5px}
+  .theme-toggle svg{width:12px;height:12px}
 
   .hero {
-    min-height: auto;
-    padding: 88px 20px 48px;
+    padding: 72px 16px 40px;
   }
-  .hero h1 { font-size: 2.2rem; margin-bottom: 16px; }
-  .hero-eyebrow { margin-bottom: 16px; font-size: 0.72rem; }
-  .hero-sub { font-size: 0.9rem; margin-bottom: 28px; line-height: 1.6; }
-  .hero-ctas { gap: 10px; margin-bottom: 32px; }
-  .hero-ctas .btn-primary { padding: 12px 24px; font-size: 0.9rem; }
-  .hero-ctas .btn-ghost { padding: 12px 24px; font-size: 0.9rem; }
-  .hero-stats { font-size: 0.72rem; gap: 6px; }
+  .hero h1 { font-size: 2rem; margin-bottom: 14px; }
+  .hero-eyebrow { margin-bottom: 14px; font-size: 0.68rem; }
+  .hero-sub { font-size: 0.82rem; margin-bottom: 24px; line-height: 1.6; }
+  .hero-ctas { gap: 8px; margin-bottom: 24px; }
+  .hero-ctas .btn-primary { padding: 10px 20px; font-size: 0.82rem; }
+  .hero-ctas .btn-ghost { padding: 10px 20px; font-size: 0.82rem; }
+  .hero-stats { font-size: 0.68rem; gap: 6px; }
 
   .bento-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
   .card-chat, .card-models-count, .card-speed, .card-network,
   .card-token, .card-wallet, .card-telegram, .card-basecity, .card-b20 {
     grid-column: 1;
     grid-row: auto;
   }
-  .bento-card { padding: 20px; }
+  .bento-card { padding: 18px; }
 
-  .bento-section { padding: 48px 16px; }
-  .section { padding: 48px 16px; }
-  .models-section { padding: 48px 16px; }
+  .bento-section { padding: 32px 12px; }
+  .section { padding: 32px 12px; }
+  .models-section { padding: 32px 12px; }
 
-  .section-title { font-size: 1.6rem; margin-bottom: 10px; }
-  .section-desc { font-size: 0.85rem; }
-  .section-header { margin-bottom: 32px; }
+  .section-title { font-size: 1.4rem; margin-bottom: 8px; }
+  .section-desc { font-size: 0.8rem; }
+  .section-header { margin-bottom: 24px; }
+  .section-eyebrow { font-size: 0.68rem; margin-bottom: 10px; }
 
   .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
   }
+  .footer-brand { grid-column: 1 / -1; }
   .footer-col { padding-top: 0; }
   .footer-bottom {
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     text-align: center;
   }
-  footer { padding: 48px 16px 28px; }
+  footer { padding: 32px 12px 20px; }
+  .footer-tagline { font-size: 0.78rem; }
+  .footer-col h4 { font-size: 0.72rem; margin-bottom: 12px; }
+  .footer-col ul { gap: 8px; }
+  .footer-col ul li a { font-size: 0.78rem; }
 
   .models-grid { gap: 6px; }
   .model-card { padding: 10px 12px; }
+  .model-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+  .chat-messages { min-height: auto; }
+  .chat-bubble { font-size: 0.78rem; }
+  .chat-input-bar span { font-size: 0.78rem; }
+
+  .basecity-preview { height: 130px; }
+  .b20-field { font-size: 0.72rem; padding: 6px 0; }
 }
 
-/* ================================================
-   RESPONSIVE — MOBILE SMALL (480px)
-   ================================================ */
 @media (max-width: 480px) {
   .hero-ctas {
     flex-direction: column;
@@ -1767,6 +1773,7 @@ footer {
     justify-content: center;
   }
   .hero-ca { flex-wrap: wrap; justify-content: center; }
+  .footer-grid { grid-template-columns: 1fr; gap: 20px; }
 }
 
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
@@ -1781,7 +1788,7 @@ footer {
      ================================================ -->
 <nav class="nav">
   <div class="nav-in">
-    <a href="/" class="nav-logo"><img class="wm wm-dark" src="/orlix-wordmark.png" alt="ORLIX" style="height:40px;margin-left:-2px"><img class="wm wm-light" src="/orlix-wordmark-light.png" alt="ORLIX" style="height:40px;margin-left:-2px"></a>
+    <a href="/" class="nav-logo"><img class="wm wm-dark" src="/orlix-wordmark.png" alt="ORLIX" style="height:28px"><img class="wm wm-light" src="/orlix-wordmark-light.png" alt="ORLIX" style="height:28px"></a>
     <div class="nav-links hide-sm">
       <a href="#features">Features</a>
       <a href="#models">Models</a>
@@ -1849,7 +1856,7 @@ footer {
      BENTO GRID (Features)
      ================================================ -->
 <section class="bento-section" id="features">
-  <div style="max-width:1200px;margin:0 auto 48px">
+  <div style="max-width:1200px;margin:0 auto 32px">
     <div class="section-eyebrow fade-up">// features</div>
     <h2 class="section-title fade-up fade-up-d1">Built-in modules</h2>
     <p class="section-desc fade-up fade-up-d2">AI chat, onchain analytics, wallet monitoring, and deployment tools — all in one interface.</p>
@@ -2116,7 +2123,7 @@ footer {
      ================================================ -->
 <section class="models-section" id="models">
   <div style="max-width:1200px;margin:0 auto">
-    <div class="section-header center" style="margin-bottom:48px">
+    <div class="section-header center" style="margin-bottom:32px">
       <div class="section-eyebrow" style="justify-content:center">
         // models
       </div>
@@ -2304,7 +2311,7 @@ footer {
 <footer>
   <div class="footer-grid">
     <div class="footer-brand">
-      <img class="wm wm-dark" src="/orlix-wordmark.png" alt="ORLIX" style="height:44px;margin-bottom:12px;"><img class="wm wm-light" src="/orlix-wordmark-light.png" alt="ORLIX" style="height:44px;margin-bottom:12px;">
+      <img class="wm wm-dark" src="/orlix-wordmark.png" alt="ORLIX" style="height:28px;margin-bottom:12px;"><img class="wm wm-light" src="/orlix-wordmark-light.png" alt="ORLIX" style="height:28px;margin-bottom:12px;">
       <p class="footer-tagline">Personal AI Operating System — 19 frontier models and onchain intelligence in one unified interface.</p>
       <div class="social-row">
         <a href="https://t.me/orlixai_bot" target="_blank" rel="noopener" class="social-btn" title="Telegram" aria-label="Telegram">
