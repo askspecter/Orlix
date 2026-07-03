@@ -1697,7 +1697,7 @@ function renderMemory(filter=''){
     <td style="color:var(--dim-2);white-space:nowrap">${m.added}</td>
     <td><button class="btn sm danger mem-del" data-id="${m.id}">✕</button></td>
   </tr>`).join('');
-  document.getElementById('bdg-mem').textContent=memories.length;
+  const _bdgMem=document.getElementById('bdg-mem');if(_bdgMem)_bdgMem.textContent=memories.length;
   const _stMem=document.getElementById('st-mem');if(_stMem)_stMem.textContent=memories.length;
   body.querySelectorAll('.mem-del').forEach(b=>b.addEventListener('click',()=>{
     memories=memories.filter(m=>m.id!==+b.dataset.id);renderMemory(document.getElementById('memSearch').value);
@@ -1725,7 +1725,7 @@ function renderPolicies(){
     <td><button class="btn sm danger pol-del" data-id="${p.id}">✕</button></td>
   </tr>`).join('');
   const active=policies.filter(p=>p.on).length;
-  document.getElementById('bdg-pol').textContent=policies.length;
+  const _bdgPol=document.getElementById('bdg-pol');if(_bdgPol)_bdgPol.textContent=policies.length;
   const _stPol=document.getElementById('st-pol');if(_stPol)_stPol.textContent=active;
   body.querySelectorAll('.pol-tog').forEach(cb=>cb.addEventListener('change',()=>{
     const p=policies.find(p=>p.id===+cb.dataset.id);if(p){p.on=cb.checked;p.ver++;renderPolicies();}
@@ -1756,7 +1756,7 @@ function renderGoals(){
       <span style="color:var(--dim-2);font-size:.7rem;white-space:nowrap">${g.due}</span>
     </div>
   </div>`).join('');
-  document.getElementById('bdg-goals').textContent=goals.length;
+  const _bdgGoals=document.getElementById('bdg-goals');if(_bdgGoals)_bdgGoals.textContent=goals.length;
   const _stGoals=document.getElementById('st-goals');if(_stGoals)_stGoals.textContent=goals.length;
   body.querySelectorAll('.goal-del').forEach(b=>b.addEventListener('click',()=>{
     goals=goals.filter(g=>g.id!==+b.dataset.id);renderGoals();
