@@ -835,7 +835,7 @@ function initShell(){
   // welcome wrap (centered)
   var ww=document.createElement('div');ww.className='welcome-wrap';output.appendChild(ww);
 
-  // ASCII logo rendered via canvas (gap-free solid blocks)
+  // ASCII logo via canvas — pixel-grid with continuous path-traced outlines
   var AL=[
     '███████╗███████╗██████╗  ██████╗',
     '╚══███╔╝██╔════╝██╔══██╗██╔═══██╗',
@@ -844,30 +844,50 @@ function initShell(){
     '███████╗███████╗██║  ██║╚██████╔╝',
     '╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝'
   ];
-  var oCol=24,cfs=22,dpr=window.devicePixelRatio||1;
+  var oCol=24,cU=24,dpr=window.devicePixelRatio||1;
+  var Rows=AL.length,Cols=0;
+  AL.forEach(function(l){if(l.length>Cols)Cols=l.length;});
+  var pw=Cols*cU,ph=Rows*cU;
   var cvs=document.createElement('canvas');
-  var cx=cvs.getContext('2d');
-  cx.font='bold '+cfs+'px "Courier New",monospace';
-  var cw=cx.measureText('█').width;
-  var lh=cfs*1.15;
-  var maxL=0;AL.forEach(function(l){if(l.length>maxL)maxL=l.length;});
-  var pw=Math.ceil(cw*maxL),ph=Math.ceil(lh*AL.length);
   cvs.width=pw*dpr;cvs.height=ph*dpr;
+  var cx=cvs.getContext('2d');
   cx.scale(dpr,dpr);
-  cx.font='bold '+cfs+'px "Courier New",monospace';
-  cx.textBaseline='top';
-  AL.forEach(function(line,row){
-    for(var i=0;i<line.length;i++){
-      var ch=line[i];if(ch===' ')continue;
-      var col=i>=oCol?'#caff3f':'#ececee';
-      cx.fillStyle=col;
-      if(ch==='█'){
-        cx.fillRect(i*cw,row*lh,cw+0.5,lh);
-      }else{
-        cx.fillText(ch,i*cw,row*lh);
-      }
+
+  // 1) draw solid blocks
+  for(var r=0;r<Rows;r++)for(var c=0;c<Cols;c++){
+    if(c<AL[r].length&&AL[r][c]==='█'){
+      cx.fillStyle=c>=oCol?'#caff3f':'#ececee';
+      cx.fillRect(c*cU,r*cU,cU,cU);
     }
-  });
+  }
+
+  // 2) draw box-drawing chars as double-line rectangles (pixel-perfect, no gaps)
+  var bt=4,ba=(cU-bt)/2,bb=ba;
+  for(var r=0;r<Rows;r++)for(var c=0;c<Cols;c++){
+    var ch=c<AL[r].length?AL[r][c]:' ';
+    if(ch===' '||ch==='█')continue;
+    cx.fillStyle=c>=oCol?'#caff3f':'#ececee';
+    var x=c*cU,y=r*cU;
+    switch(ch){
+      case '═':
+        cx.fillRect(x,y+ba,cU,bt);cx.fillRect(x,y+bb,cU,bt);break;
+      case '║':
+        cx.fillRect(x+ba,y,bt,cU);cx.fillRect(x+bb,y,bt,cU);break;
+      case '╔':
+        cx.fillRect(x+ba,y+ba,cU-ba,bt);cx.fillRect(x+ba,y+ba,bt,cU-ba);
+        cx.fillRect(x+bb,y+bb,cU-bb,bt);cx.fillRect(x+bb,y+bb,bt,cU-bb);break;
+      case '╗':
+        cx.fillRect(x,y+ba,cU-ba,bt);cx.fillRect(x+cU-ba-bt,y+ba,bt,cU-ba);
+        cx.fillRect(x,y+bb,cU-bb,bt);cx.fillRect(x+cU-bb-bt,y+bb,bt,cU-bb);break;
+      case '╚':
+        cx.fillRect(x+ba,y,bt,cU-ba);cx.fillRect(x+ba,y+cU-ba-bt,cU-ba,bt);
+        cx.fillRect(x+bb,y,bt,cU-bb);cx.fillRect(x+bb,y+cU-bb-bt,cU-bb,bt);break;
+      case '╝':
+        cx.fillRect(x,y+cU-ba-bt,cU-ba,bt);cx.fillRect(x+cU-ba-bt,y,bt,cU-ba);
+        cx.fillRect(x,y+cU-bb-bt,cU-bb,bt);cx.fillRect(x+cU-bb-bt,y,bt,cU-bb);break;
+    }
+  }
+
   var logoImg=document.createElement('img');
   logoImg.src=cvs.toDataURL();
   logoImg.className='ascii-logo';logoImg.alt='ZERO';
