@@ -2169,7 +2169,6 @@ function addMsg(role, content, meta='', skipHistory=false){
   if(empty) empty.remove();
   chatMessages.appendChild(div);
   chatMessages.scrollTop=chatMessages.scrollHeight;
-  if(role==='assistant' && content) addSkillActionsToMsg(div, content);
   return div;
 }
 
@@ -2395,7 +2394,6 @@ async function sendChat(){
 
         cursor.remove();
         bubble.innerHTML = renderContent(full);
-        if(full) addSkillActionsToMsg(msgDiv, full);
         chatHistory.push({role:'assistant',content:full});
         if(typeof logAudit==='function') logAudit('chat','Orlix','replied ('+pgModelSel.value+')');
         saveCurrentChat();
@@ -2663,7 +2661,8 @@ function isHtmlContent(lang, code){
   if(/^htm/i.test(lang)) return true;
   if(/<!DOCTYPE\s+html/i.test(code)) return true;
   if(/<html[\s>]/i.test(code)) return true;
-  if(!lang && code.trimStart().startsWith('<') && /<\/?(div|body|head|span|p|a|ul|li|script|style|meta|link|title)[\s>/]/i.test(code)) return true;
+  if(!lang && code.trimStart().startsWith('<') && /<\/?(div|body|head|canvas|section|main|header|footer|span|p|a|ul|li|script|style|meta|link|title|svg|form|button|input|nav)[\s>/]/i.test(code)) return true;
+  if(/<style[\s>][\s\S]*<\/style>/i.test(code) && /<(div|canvas|span|button|section)[\s>]/i.test(code)) return true;
   return false;
 }
 
@@ -2880,12 +2879,14 @@ function renderContent(text){
   }
 
   // Fallback: AI dumped raw HTML without code fences
-  if(!lastHtmlId && /<!DOCTYPE\s+html|<html[\s>]/i.test(text)){
-    const raw = text.match(/(<!DOCTYPE[\s\S]*|<html[\s\S]*)/i);
-    if(raw){
+  if(!lastHtmlId){
+    const htmlMatch = text.match(/(<!DOCTYPE[\s\S]*|<html[\s\S]*)/i)
+      || (/<(div|style|canvas|section|main|header|body|script)[\s>]/i.test(text) && text.match(/(<(?:div|style|canvas|section|main|header|body)[\s\S]*)/i));
+    if(htmlMatch){
       const id = 'c'+(++_codeIdx);
-      _codeStore[id] = raw[1];
+      _codeStore[id] = htmlMatch[1];
       lastHtmlId = id;
+      result = renderMd(text.slice(0, text.indexOf(htmlMatch[1])));
     }
   }
 
