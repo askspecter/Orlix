@@ -13,16 +13,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#08080C;--s1:#0D0D12;--s2:#111118;--s3:#17171F;--s4:#1D1D27;
-  --b1:rgba(255,255,255,.055);--b2:rgba(255,255,255,.10);--b3:rgba(255,255,255,.16);
-  --orange:#F07830;--orange-d:rgba(240,120,48,.10);
+  --bg:#0a0a0a;--s1:#111111;--s2:#181818;--s3:#202020;--s4:#282828;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);--b3:rgba(255,255,255,.2);
+  --orange:#F07830;--orange-d:rgba(240,120,48,.08);
   --blue:#3B82F6;--green:#22C55E;--red:#EF4444;--yellow:#EAB308;
-  --t1:#F0F0F2;--t2:#8A8A96;--t3:#46464F;
-  --font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
-  --r:12px;
+  --t1:#E0E0E0;--t2:#8a8a8a;--t3:#505050;
+  --font:'JetBrains Mono',monospace;--mono:'JetBrains Mono',monospace;
+  --r:4px;
 }
-:root.light{--bg:#F8F8FA;--s1:#EFEFF2;--s2:#E6E6EB;--s3:#DCDCE2;--s4:#D0D0D8;--b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.12);--b3:rgba(0,0,0,.18);--t1:#18181B;--t2:#52525B;--t3:#A1A1AA;--orange-d:rgba(240,120,48,.12)}
-:root.light .nav{background:rgba(248,248,250,.92)!important}
+:root.light{--bg:#F4F4F5;--s1:#EAEAEC;--s2:#DDDDE0;--s3:#D0D0D4;--s4:#C4C4C8;--b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.18);--b3:rgba(0,0,0,.25);--t1:#1a1a1a;--t2:#555555;--t3:#999999;--orange-d:rgba(224,104,32,.08)}
+:root.light .nav{background:rgba(244,244,245,.92)!important}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--t2);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,textarea,select{font-family:var(--font)}
@@ -32,7 +32,7 @@ a{text-decoration:none}
 .nav{
   position:fixed;top:0;left:0;right:0;z-index:100;height:56px;
   display:flex;align-items:center;justify-content:space-between;padding:0 20px;
-  background:rgba(8,8,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:rgba(10,10,10,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--b1);
 }
 .nav-left{display:flex;align-items:center;gap:8px}
