@@ -106,10 +106,51 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-track{background:transparent}
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
-/* ASCII + welcome */
-.ascii-logo{color:var(--fg);line-height:1.02;font-size:12px;white-space:pre;margin-bottom:6px;text-align:center;letter-spacing:-1.8px;transform:scaleX(1.05)}
-.ascii-logo .hi{color:var(--lime)}
+/* logo + welcome */
+.zero-logo{display:block;margin:0 auto 10px;height:48px;image-rendering:pixelated}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
+
+/* tool cards */
+.tool-card{margin:4px 0;padding:6px 12px;border-left:2px solid var(--dim2);font-size:11px;line-height:1.5;background:var(--bg2);border-radius:0 4px 4px 0}
+.tool-card .tc-head{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.tool-card .tc-name{color:var(--accent);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.tool-card .tc-status{font-size:9px;padding:1px 6px;border-radius:3px}
+.tool-card .tc-status.running{color:var(--orange);background:rgba(240,120,48,.1)}
+.tool-card .tc-status.done{color:var(--green);background:rgba(74,222,128,.1)}
+.tool-card .tc-path{color:var(--dim);font-size:10px}
+.tool-card .tc-detail{color:var(--dim);font-size:10px;margin-top:1px}
+.tool-card.read{border-left-color:var(--cyan)}
+.tool-card.write{border-left-color:var(--green)}
+.tool-card.edit{border-left-color:var(--yellow)}
+.tool-card.shell{border-left-color:var(--orange)}
+.tool-card.search{border-left-color:var(--purple)}
+
+/* permission prompt */
+.perm-prompt{margin:6px 0;padding:10px 14px;border:1px solid var(--dim2);border-radius:6px;background:var(--bg2);font-size:12px}
+.perm-prompt .pp-title{color:var(--orange);font-weight:600;margin-bottom:6px;font-size:11px}
+.perm-prompt .pp-cmd{color:var(--fg);font-size:11px;padding:4px 8px;background:var(--bg);border-radius:3px;margin-bottom:8px;font-family:inherit;white-space:pre-wrap}
+.perm-prompt .pp-opts{display:flex;gap:6px;flex-wrap:wrap}
+.perm-prompt .pp-opt{padding:4px 14px;border:1px solid var(--dim2);border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;transition:all .1s;background:transparent;color:var(--fg)}
+.perm-prompt .pp-opt:hover{border-color:var(--dim);background:var(--bg3)}
+.perm-prompt .pp-opt.allow{color:var(--green);border-color:rgba(74,222,128,.3)}
+.perm-prompt .pp-opt.allow:hover{background:rgba(74,222,128,.1)}
+.perm-prompt .pp-opt.deny{color:var(--red);border-color:rgba(248,113,113,.3)}
+.perm-prompt .pp-opt.deny:hover{background:rgba(248,113,113,.1)}
+.perm-prompt .pp-opt.always{color:var(--cyan);border-color:rgba(34,211,238,.3)}
+.perm-prompt .pp-opt.always:hover{background:rgba(34,211,238,.1)}
+
+/* interactive prompt */
+.int-prompt{margin:6px 0;padding:8px 0;font-size:12px}
+.int-prompt .ip-question{color:var(--fg);margin-bottom:6px}
+.int-prompt .ip-opts{}
+.int-prompt .ip-opt{display:flex;align-items:center;gap:8px;padding:4px 12px;cursor:pointer;transition:all .1s;border-radius:3px}
+.int-prompt .ip-opt:hover{background:var(--bg3)}
+.int-prompt .ip-opt.selected{background:var(--bg3);color:var(--accent)}
+.int-prompt .ip-num{color:var(--dim);font-size:10px;min-width:16px}
+.int-prompt .ip-label{color:var(--fg)}
+.int-prompt .ip-opt.selected .ip-label{color:var(--accent)}
+.int-prompt .ip-arrow{color:var(--accent);font-size:10px;margin-right:2px;opacity:0}
+.int-prompt .ip-opt.selected .ip-arrow{opacity:1}
 .welcome-line{margin:2px 0;font-size:13px;text-align:center}
 .welcome-line.tag{color:var(--dim);font-size:14px;letter-spacing:.08em}
 .welcome-line.dim{color:var(--dim);font-size:12px}
@@ -281,13 +322,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
   .sb-overlay.open{display:block}
   .mobile-keys{display:flex}
   .gear-btn{display:flex}
-  .ascii-logo{font-size:7px}
+  .zero-logo{height:32px}
   .term-output{padding:10px 10px 6px}
   .input-area{padding:5px 10px}
   .status-bar{padding:3px 10px}
 }
 @media(max-width:360px){
-  .ascii-logo{font-size:5.5px}
+  .zero-logo{height:26px}
   .sug-chip{font-size:10px;padding:3px 7px}
 }
 </style>
@@ -788,15 +829,8 @@ function initShell(){
   // welcome wrap (centered)
   var ww=document.createElement('div');ww.className='welcome-wrap';output.appendChild(ww);
 
-  // ASCII welcome
-  var ascii=
-'███████╗███████╗██████╗  <span class="hi">██████╗ </span>\n'+
-'╚══███╔╝██╔════╝██╔══██╗<span class="hi">██╔═══██╗</span>\n'+
-'  ███╔╝ █████╗  ██████╔╝<span class="hi">██║   ██║</span>\n'+
-' ███╔╝  ██╔══╝  ██╔══██╗<span class="hi">██║   ██║</span>\n'+
-'███████╗███████╗██║  ██║<span class="hi">╚██████╔╝</span>\n'+
-'╚══════╝╚══════╝╚═╝  ╚═╝<span class="hi"> ╚═════╝ </span>';
-  var pre=document.createElement('pre');pre.className='ascii-logo';pre.innerHTML=ascii;ww.appendChild(pre);
+  // logo image
+  var logo=document.createElement('img');logo.className='zero-logo';logo.src='/zero-logo.png';logo.alt='ZERO';ww.appendChild(logo);
 
   var t1=document.createElement('div');t1.className='welcome-line tag';t1.innerHTML='Any model. Every tool. Zero limits.';ww.appendChild(t1);
   var sp1=document.createElement('div');sp1.innerHTML='';sp1.style.height='8px';ww.appendChild(sp1);
@@ -1368,7 +1402,8 @@ function sendMessage(){
   if(text.startsWith('!')){
     var shellCmd=text.slice(1).trim();
     addLine('<span class="prompt">!</span> '+esc(shellCmd),'user');
-    addLine('<span style="color:var(--dim)">Shell command executed in sandbox.</span>','system');
+    var card=addToolCard('shell',shellCmd,null,'running');
+    setTimeout(function(){updateToolCard(card,'done','exit code 0');},500);
     addLine('<span style="color:var(--dim)">(shell execution simulated in browser mode)</span>','system');
     return;
   }
@@ -1383,6 +1418,14 @@ function sendMessage(){
   chatHistory.push({role:'user',content:text});
   isStreaming=true;inputField.placeholder='';
   startWorking();
+
+  // show tool cards during "thinking" phase
+  if(permModeIdx===0 && text.toLowerCase().match(/\b(fix|edit|write|create|update|change|add|remove|delete|refactor|deploy|run|build|test|install)\b/)){
+    showPermissionPrompt('tool_use','Execute tools for: '+text.slice(0,60)+(text.length>60?'...':'')).then(function(v){
+      if(v==='deny'){isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';return;}
+    });
+  }
+  simulateToolUse();
 
   var responseLine=addLine('<span class="cursor-block"></span>','assistant');
 
@@ -1599,6 +1642,104 @@ function applyFontSize(s){
   var fs=localStorage.getItem('zero_fontsize');
   if(fs){fontSize=parseInt(fs);setTimeout(function(){applyFontSize(fontSize);},100);}
 })();
+
+/* ══════ TOOL CARDS ══════ */
+function addToolCard(type, path, detail, status){
+  var card=document.createElement('div');
+  card.className='tool-card '+type;
+  var statusClass=status==='done'?'done':'running';
+  var statusText=status==='done'?'done':'running';
+  var typeLabel={read:'Read',write:'Write',edit:'Edit',shell:'Bash',search:'Grep'}[type]||type;
+  card.innerHTML='<div class="tc-head"><span class="tc-name">'+typeLabel+'</span><span class="tc-status '+statusClass+'">'+statusText+'</span></div>'+
+    '<div class="tc-path">'+esc(path)+'</div>'+
+    (detail?'<div class="tc-detail">'+esc(detail)+'</div>':'');
+  output.appendChild(card);output.scrollTop=output.scrollHeight;
+  return card;
+}
+function updateToolCard(card, status, detail){
+  var badge=card.querySelector('.tc-status');
+  if(badge){badge.className='tc-status '+(status==='done'?'done':'running');badge.textContent=status;}
+  if(detail){var d=card.querySelector('.tc-detail');if(d)d.textContent=detail;else{var nd=document.createElement('div');nd.className='tc-detail';nd.textContent=detail;card.appendChild(nd);}}
+}
+
+/* ══════ PERMISSION PROMPT ══════ */
+function showPermissionPrompt(action, cmd){
+  return new Promise(function(resolve){
+    var div=document.createElement('div');div.className='perm-prompt';
+    div.innerHTML='<div class="pp-title">Permission required</div>'+
+      '<div class="pp-cmd">'+esc(cmd)+'</div>'+
+      '<div class="pp-opts">'+
+        '<button class="pp-opt allow" data-v="allow">Allow</button>'+
+        '<button class="pp-opt always" data-v="always">Always allow</button>'+
+        '<button class="pp-opt deny" data-v="deny">Deny</button>'+
+      '</div>';
+    output.appendChild(div);output.scrollTop=output.scrollHeight;
+    div.querySelectorAll('.pp-opt').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var v=btn.dataset.v;
+        div.innerHTML='<div class="pp-title" style="color:var(--dim)">Permission: <span style="color:'+(v==='deny'?'var(--red)':'var(--green)')+'">'+v+'</span></div><div class="pp-cmd" style="opacity:.5">'+esc(cmd)+'</div>';
+        resolve(v);
+      });
+    });
+  });
+}
+
+/* ══════ INTERACTIVE PROMPT ══════ */
+function showInteractivePrompt(question, options){
+  return new Promise(function(resolve){
+    var div=document.createElement('div');div.className='int-prompt';
+    var selIdx=0;
+    function render(){
+      div.innerHTML='<div class="ip-question">'+esc(question)+'</div><div class="ip-opts">'+
+        options.map(function(o,i){
+          return '<div class="ip-opt'+(i===selIdx?' selected':'')+'" data-i="'+i+'">'+
+            '<span class="ip-arrow">&gt;</span>'+
+            '<span class="ip-num">'+(i+1)+'.</span>'+
+            '<span class="ip-label">'+esc(o)+'</span></div>';
+        }).join('')+'</div>';
+      div.querySelectorAll('.ip-opt').forEach(function(el){
+        el.addEventListener('click',function(){
+          selIdx=parseInt(el.dataset.i);
+          div.innerHTML='<div class="ip-question" style="color:var(--dim)">'+esc(question)+' <span class="hl">'+esc(options[selIdx])+'</span></div>';
+          resolve({index:selIdx,value:options[selIdx]});
+        });
+      });
+    }
+    render();
+    output.appendChild(div);output.scrollTop=output.scrollHeight;
+
+    function handleKey(e){
+      if(e.key==='ArrowUp'){e.preventDefault();selIdx=Math.max(0,selIdx-1);render();}
+      if(e.key==='ArrowDown'){e.preventDefault();selIdx=Math.min(options.length-1,selIdx+1);render();}
+      if(e.key==='Enter'){e.preventDefault();document.removeEventListener('keydown',handleKey);
+        div.innerHTML='<div class="ip-question" style="color:var(--dim)">'+esc(question)+' <span class="hl">'+esc(options[selIdx])+'</span></div>';
+        resolve({index:selIdx,value:options[selIdx]});}
+    }
+    document.addEventListener('keydown',handleKey);
+  });
+}
+
+/* ══════ SIMULATED TOOL USE ══════ */
+function simulateToolUse(){
+  var tools=[
+    {type:'read',path:'src/index.ts',detail:'42 lines'},
+    {type:'search',path:'*.ts',detail:'pattern: handleRequest'},
+    {type:'read',path:'src/utils/config.ts',detail:'18 lines'},
+    {type:'edit',path:'src/index.ts',detail:'lines 15-22'},
+    {type:'shell',path:'npm test',detail:'exit code 0'},
+    {type:'write',path:'src/helpers.ts',detail:'created, 28 lines'},
+  ];
+  var delay=0;
+  var picked=[];
+  var count=1+Math.floor(Math.random()*3);
+  for(var i=0;i<count;i++){picked.push(tools[Math.floor(Math.random()*tools.length)]);}
+  picked.forEach(function(t,i){
+    setTimeout(function(){
+      var card=addToolCard(t.type,t.path,null,'running');
+      setTimeout(function(){updateToolCard(card,'done',t.detail);},400+Math.random()*600);
+    },i*600);
+  });
+}
 
 function formatOutput(text){
   if(!text)return'';
