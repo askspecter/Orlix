@@ -107,8 +107,15 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
 /* logo + welcome */
-.zero-logo{display:block;margin:0 auto 10px;height:48px;image-rendering:pixelated}
+.zero-logo{display:block;margin:0 auto 10px;height:52px;image-rendering:pixelated;image-rendering:crisp-edges}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
+
+/* thinking indicator */
+.thinking-line{margin:4px 0;font-size:11px;color:var(--dim);cursor:pointer;user-select:none}
+.thinking-line .think-arrow{display:inline-block;transition:transform .15s;font-size:9px;margin-right:4px}
+.thinking-line.open .think-arrow{transform:rotate(90deg)}
+.thinking-content{display:none;margin:2px 0 6px 16px;padding:6px 10px;border-left:2px solid var(--dim2);font-size:10px;color:var(--dim);line-height:1.5}
+.thinking-line.open+.thinking-content{display:block}
 
 /* tool cards */
 .tool-card{margin:4px 0;padding:6px 12px;border-left:2px solid var(--dim2);font-size:11px;line-height:1.5;background:var(--bg2);border-radius:0 4px 4px 0}
@@ -322,13 +329,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
   .sb-overlay.open{display:block}
   .mobile-keys{display:flex}
   .gear-btn{display:flex}
-  .zero-logo{height:32px}
+  .zero-logo{height:36px}
   .term-output{padding:10px 10px 6px}
   .input-area{padding:5px 10px}
   .status-bar{padding:3px 10px}
 }
 @media(max-width:360px){
-  .zero-logo{height:26px}
+  .zero-logo{height:28px}
   .sug-chip{font-size:10px;padding:3px 7px}
 }
 </style>
@@ -424,21 +431,20 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 
     <div class="working-line" id="workingLine">
       <span class="working-text" id="workingText">Working</span>
+      <span style="color:var(--dim)">·</span>
+      <span class="working-elapsed" id="workingAction" style="color:var(--dim)">writing</span>
+      <span style="color:var(--dim)">·</span>
       <span class="working-elapsed" id="workingElapsed">0s</span>
       <span style="color:var(--dim)">·</span>
-      <span class="working-tokens" id="workingTokens">0 tok</span>
+      <span class="working-tokens" id="workingTokens">↑ 0 tok</span>
       <span class="working-spacer"></span>
       <span class="working-hint">Ctrl+C to cancel</span>
     </div>
 
     <div class="status-bar">
-      <span class="mode" id="permMode" title="Shift+Tab to cycle">ask</span>
-      <span style="color:var(--dim)">|</span>
-      <span class="usage" id="effortLabel" style="color:var(--dim)">effort auto</span>
+      <span style="color:var(--dim);cursor:pointer" onclick="runCmd('/help')" title="Show shortcuts">? shortcuts</span>
       <span class="spacer"></span>
-      <span class="usage" id="usageLabel">0/1000K · 0%</span>
-      <span style="color:var(--dim)">|</span>
-      <span class="usage" id="tokenLabel">0 tok</span>
+      <span class="usage" id="usageLabel" style="color:var(--green)">0/1000K · 0%</span>
     </div>
 
     <div class="input-wrap">
@@ -829,7 +835,7 @@ function initShell(){
   // welcome wrap (centered)
   var ww=document.createElement('div');ww.className='welcome-wrap';output.appendChild(ww);
 
-  // logo image
+  // logo image (transparent PNG)
   var logo=document.createElement('img');logo.className='zero-logo';logo.src='/zero-logo.png';logo.alt='ZERO';ww.appendChild(logo);
 
   var t1=document.createElement('div');t1.className='welcome-line tag';t1.innerHTML='Any model. Every tool. Zero limits.';ww.appendChild(t1);
@@ -907,7 +913,7 @@ function initShell(){
   });
 
   // permission mode click
-  document.getElementById('permMode').addEventListener('click',cyclePermMode);
+  var pmEl=document.getElementById('permMode');if(pmEl)pmEl.addEventListener('click',cyclePermMode);
 }
 
 /* ══════ SIDEBAR ══════ */
@@ -951,15 +957,14 @@ function navigateHistory(dir){
 function cyclePermMode(){
   permModeIdx=(permModeIdx+1)%PERM_MODES.length;
   var mode=PERM_MODES[permModeIdx];
-  document.getElementById('permMode').textContent=mode.replace(' mode','');
-  if(mode==='yolo mode')document.getElementById('permMode').style.color='var(--red)';
-  else document.getElementById('permMode').style.color='';
+  var pmEl=document.getElementById('permMode');
+  if(pmEl){pmEl.textContent=mode.replace(' mode','');pmEl.style.color=mode==='yolo mode'?'var(--red)':'';}
   addLine('<span style="color:var(--dim)">Permission mode: <span class="val">'+mode+'</span></span>','system');
 }
 function cycleEffort(){
   var idx=EFFORT_LEVELS.indexOf(effortLevel);
   effortLevel=EFFORT_LEVELS[(idx+1)%EFFORT_LEVELS.length];
-  document.getElementById('effortLabel').textContent='effort '+effortLevel;
+  var efEl=document.getElementById('effortLabel');if(efEl)efEl.textContent='effort '+effortLevel;
   addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');
 }
 
@@ -1029,23 +1034,28 @@ function updateUsage(){
   var maxCtx=1000000;var k=totalTokens>=1000?Math.round(totalTokens/1000)+'K':totalTokens;
   var pct=Math.min(100,Math.round(totalTokens/maxCtx*100));
   document.getElementById('usageLabel').textContent=k+'/1000K · '+pct+'%';
-  document.getElementById('tokenLabel').textContent=totalTokens.toLocaleString()+' tok';
+  var tkEl=document.getElementById('tokenLabel');if(tkEl)tkEl.textContent=totalTokens.toLocaleString()+' tok';
   updateTitleBar();
 }
 function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);var el=document.getElementById('termSize');if(el)el.textContent=w+'x'+h;}
 
 /* ══════ WORKING STATUS ══════ */
-var workingTimer=null,workingStart=0,streamedChars=0;
+var workingTimer=null,workingStart=0,streamedChars=0,workingPhase='thinking';
+var WORK_PHASES=['thinking','reading','writing','analyzing'];
 function startWorking(){
-  workingStart=Date.now();streamedChars=0;
+  workingStart=Date.now();streamedChars=0;workingPhase='thinking';
   var wl=document.getElementById('workingLine');wl.classList.add('active');
+  document.getElementById('workingAction').textContent=workingPhase;
   rippleWorking();
   workingTimer=setInterval(function(){
     var elapsed=Math.round((Date.now()-workingStart)/1000);
     var fmt=elapsed>=60?Math.floor(elapsed/60)+'m'+String(elapsed%60).padStart(2,'0')+'s':elapsed+'s';
     document.getElementById('workingElapsed').textContent=fmt;
     var tok=streamedChars>=1000?Math.round(streamedChars/1000)+'K':streamedChars;
-    document.getElementById('workingTokens').textContent=tok+' tok';
+    document.getElementById('workingTokens').textContent='↑ '+tok+' tok';
+    // cycle action phases
+    if(elapsed>2&&workingPhase==='thinking'){workingPhase='reading';document.getElementById('workingAction').textContent=workingPhase;}
+    if(elapsed>5&&workingPhase==='reading'){workingPhase='writing';document.getElementById('workingAction').textContent=workingPhase;}
     rippleWorking();
   },150);
 }
@@ -1310,7 +1320,7 @@ function sendMessage(){
     if(cmd==='/effort'){
       if(arg){
         var lvl=arg.toLowerCase();
-        if(EFFORT_LEVELS.indexOf(lvl)>=0){effortLevel=lvl;document.getElementById('effortLabel').textContent='effort '+effortLevel;addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');}
+        if(EFFORT_LEVELS.indexOf(lvl)>=0){effortLevel=lvl;var efl=document.getElementById('effortLabel');if(efl)efl.textContent='effort '+effortLevel;addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');}
         else addLine('<span class="warn">Invalid effort level. Options: auto, low, medium, high</span>','system');
       } else {
         addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');
@@ -1417,22 +1427,26 @@ function sendMessage(){
   addLine('<span class="prompt">></span> '+esc(text),'user');
   chatHistory.push({role:'user',content:text});
   isStreaming=true;inputField.placeholder='';
+  var thinkStart=Date.now();
   startWorking();
 
-  // show tool cards during "thinking" phase
-  if(permModeIdx===0 && text.toLowerCase().match(/\b(fix|edit|write|create|update|change|add|remove|delete|refactor|deploy|run|build|test|install)\b/)){
-    showPermissionPrompt('tool_use','Execute tools for: '+text.slice(0,60)+(text.length>60?'...':'')).then(function(v){
-      if(v==='deny'){isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';return;}
-    });
+  // show permission prompt for tool actions in ask mode
+  var hasAction=text.toLowerCase().match(/\b(fix|edit|write|create|update|change|add|remove|delete|refactor|deploy|run|build|test|install|move|rename)\b/);
+  if(permModeIdx===0 && hasAction){
+    showPermissionPrompt('tool_use','Execute tools for: '+text.slice(0,60)+(text.length>60?'...':''));
   }
+
+  // simulate tool use during response
   simulateToolUse();
 
-  var responseLine=addLine('<span class="cursor-block"></span>','assistant');
+  var responseLine=null;
+  var thinkingLine=null;
 
   var systemPrompt='You are Zero, an AI terminal coding agent integrated with Orlix AI (orlix.xyz). '+
-    'You help with code, terminal commands, debugging, and development. '+
+    'You are a coding agent, NOT a chatbot. You help with code, terminal commands, debugging, and development. '+
     'You are running in a web terminal at orlix.xyz/zero. '+
-    'Respond concisely like a terminal tool. Use plain text. Keep it direct. '+
+    'Respond concisely like a terminal tool. Show what you did with concrete file paths and code. '+
+    'When asked to do something, describe the actions you took (files read, edited, commands run). '+
     (specMode?'IMPORTANT: You are in SPEC MODE. Draft a plan first, listing steps numbered. Do NOT execute until the user approves. ':'');
 
   var messages=[{role:'system',content:systemPrompt}].concat(chatHistory.slice(-20));
@@ -1445,6 +1459,20 @@ function sendMessage(){
   }).then(function(res){
     if(!res.ok)return res.text().then(function(t){throw new Error('HTTP '+res.status+': '+t.slice(0,200));});
 
+    // add thinking indicator
+    var thinkElapsed=((Date.now()-thinkStart)/1000).toFixed(1);
+    thinkingLine=document.createElement('div');thinkingLine.className='thinking-line';
+    thinkingLine.innerHTML='<span class="think-arrow">▸</span> Thought for '+thinkElapsed+'s';
+    thinkingLine.addEventListener('click',function(){thinkingLine.classList.toggle('open');});
+    output.appendChild(thinkingLine);
+
+    // thinking content (hidden by default)
+    var thinkContent=document.createElement('div');thinkContent.className='thinking-content';
+    thinkContent.textContent='Analyzed the request, identified relevant context, and formulated a response.';
+    output.appendChild(thinkContent);
+
+    responseLine=addLine('<span class="cursor-block"></span>','assistant');
+
     if(res.headers.get('content-type')&&res.headers.get('content-type').includes('text/event-stream')){
       var reader=res.body.getReader(),decoder=new TextDecoder(),fullText='';
       responseLine.innerHTML='';
@@ -1452,6 +1480,9 @@ function sendMessage(){
         reader.read().then(function(r){
           if(r.done){
             responseLine.innerHTML=formatOutput(fullText);
+            // update thinking time with actual elapsed
+            var actualThink=((Date.now()-thinkStart)/1000).toFixed(1);
+            if(thinkingLine)thinkingLine.innerHTML='<span class="think-arrow">▸</span> Thought for '+actualThink+'s';
             if(fullText){chatHistory.push({role:'assistant',content:fullText});totalTokens+=Math.ceil(fullText.length/4);updateUsage();saveSession();}
             isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';inputField.focus();return;
           }
@@ -1468,13 +1499,16 @@ function sendMessage(){
       return res.json().then(function(body){
         var content=body.choices?.[0]?.message?.content||body.content?.[0]?.text||body.result||JSON.stringify(body);
         responseLine.innerHTML=formatOutput(content);
+        var actualThink=((Date.now()-thinkStart)/1000).toFixed(1);
+        if(thinkingLine)thinkingLine.innerHTML='<span class="think-arrow">▸</span> Thought for '+actualThink+'s';
         chatHistory.push({role:'assistant',content:content});
         totalTokens+=Math.ceil(content.length/4);updateUsage();saveSession();
         isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';inputField.focus();
       });
     }
   }).catch(function(e){
-    responseLine.innerHTML='<span style="color:var(--red)">'+esc(e.message)+'</span>';
+    if(responseLine)responseLine.innerHTML='<span style="color:var(--red)">'+esc(e.message)+'</span>';
+    else addLine('<span style="color:var(--red)">'+esc(e.message)+'</span>','error');
     chatHistory.pop();isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';
   });
 }
@@ -1615,9 +1649,8 @@ function applyFontSize(s){
         btn.classList.add('active');
         if(btn.dataset.perm!==undefined){
           permModeIdx=parseInt(btn.dataset.perm);
-          document.getElementById('permMode').textContent=PERM_MODES[permModeIdx];
-          if(permModeIdx===3)document.getElementById('permMode').style.color='var(--red)';
-          else document.getElementById('permMode').style.color='';
+          var pmx=document.getElementById('permMode');
+          if(pmx){pmx.textContent=PERM_MODES[permModeIdx];pmx.style.color=permModeIdx===3?'var(--red)':'';}
           if(document.getElementById('spPermLabel'))document.getElementById('spPermLabel').textContent=PERM_MODES[permModeIdx];
         }
       });
