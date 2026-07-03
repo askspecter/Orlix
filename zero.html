@@ -844,7 +844,7 @@ function initShell(){
     '███████╗███████╗██║  ██║╚██████╔╝',
     '╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝'
   ];
-  var oCol=24,cU=12,dpr=window.devicePixelRatio||1;
+  var oCol=24,cU=24,dpr=window.devicePixelRatio||1;
   var Rows=AL.length,Cols=0;
   AL.forEach(function(l){if(l.length>Cols)Cols=l.length;});
   var pw=Cols*cU,ph=Rows*cU;
@@ -862,7 +862,7 @@ function initShell(){
   }
 
   // 2) draw box-drawing chars as double-line rectangles (pixel-perfect, no gaps)
-  var ba=3,bt=2,bb=7;
+  var bt=4,ba=(cU-bt)/2,bb=ba;
   for(var r=0;r<Rows;r++)for(var c=0;c<Cols;c++){
     var ch=c<AL[r].length?AL[r][c]:' ';
     if(ch===' '||ch==='█')continue;
