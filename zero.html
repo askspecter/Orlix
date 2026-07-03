@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Zero — Orlix AI Terminal</title>
+<meta name="description" content="Zero terminal coding agent. Any model. Every tool. Zero limits.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="Zero — Orlix AI Terminal">
+<meta property="og:description" content="A terminal coding agent you own. Runs in your browser.">
+<meta property="og:image" content="https://www.orlixai.xyz/og-image.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#000;--bg2:#0a0a0a;--bg3:#111;--fg:#c8c8c8;--dim:#444;--dim2:#222;
+  --green:#4ADE80;--lime:#BFFF00;--orange:#F07830;--cyan:#22D3EE;
+  --red:#F87171;--purple:#A78BFA;--yellow:#FBBF24;--blue:#60A5FA;
+  --accent:var(--lime);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
+  font-family:'JetBrains Mono',monospace;font-size:13px;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+::selection{background:var(--accent);color:#000}
+
+/* ══════ THEMES ══════ */
+.theme-green{--fg:#33ff33;--dim:#0a5a0a;--dim2:#0a2a0a;--accent:#33ff33;--bg2:#010a01;--bg3:#021202}
+.theme-amber{--fg:#ffb833;--dim:#5a3a0a;--dim2:#2a1a05;--accent:#ffb833;--bg2:#0a0600;--bg3:#120c00}
+.theme-dracula{--bg:#282a36;--bg2:#21222c;--bg3:#343746;--fg:#f8f8f2;--dim:#6272a4;--dim2:#44475a;--accent:#bd93f9;--green:#50fa7b;--red:#ff5555;--orange:#ffb86c;--cyan:#8be9fd;--purple:#bd93f9;--yellow:#f1fa8c}
+.theme-nord{--bg:#2e3440;--bg2:#3b4252;--bg3:#434c5e;--fg:#d8dee9;--dim:#4c566a;--dim2:#3b4252;--accent:#88c0d0;--green:#a3be8c;--red:#bf616a;--orange:#d08770;--cyan:#88c0d0;--purple:#b48ead;--yellow:#ebcb8b}
+.theme-gruvbox{--bg:#1d2021;--bg2:#282828;--bg3:#3c3836;--fg:#ebdbb2;--dim:#665c54;--dim2:#3c3836;--accent:#b8bb26;--green:#b8bb26;--red:#fb4934;--orange:#fe8019;--cyan:#8ec07c;--purple:#d3869b;--yellow:#fabd2f}
+.theme-tokyo{--bg:#1a1b26;--bg2:#24283b;--bg3:#414868;--fg:#c0caf5;--dim:#565f89;--dim2:#3b4261;--accent:#7aa2f7;--green:#9ece6a;--red:#f7768e;--orange:#ff9e64;--cyan:#7dcfff;--purple:#bb9af7;--yellow:#e0af68}
+.theme-rose{--bg:#191724;--bg2:#1f1d2e;--bg3:#26233a;--fg:#e0def4;--dim:#6e6a86;--dim2:#403d52;--accent:#ebbcba;--green:#9ccfd8;--red:#eb6f92;--orange:#f6c177;--cyan:#9ccfd8;--purple:#c4a7e7;--yellow:#f6c177}
+
+/* ══════ ORLIX LOADER ══════ */
+#loader{position:fixed;inset:0;z-index:999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .6s}
+#loader.done{opacity:0;pointer-events:none}
+#matrixCanvas{position:absolute;inset:0;opacity:.2}
+.load-brand{position:relative;z-index:2;text-align:center;margin-bottom:28px;font-size:10px;letter-spacing:.3em;color:#333;text-transform:uppercase}
+.load-box{position:relative;z-index:2;text-align:center;min-width:280px}
+.load-ring{width:48px;height:48px;margin:0 auto 20px;border:2px solid #111;border-top:2px solid #4ADE80;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-bar{height:3px;background:#111;margin-bottom:14px;position:relative;overflow:hidden;border-radius:2px}
+.load-fill{height:100%;width:0%;background:linear-gradient(90deg,#4ADE80,#BFFF00);transition:width .15s linear;border-radius:2px;box-shadow:0 0 8px rgba(74,222,128,.4)}
+.load-text{font-size:11px;color:#555;letter-spacing:.2em;font-weight:400}
+.load-pct{color:#4ADE80;font-weight:700}
+.load-sub{font-size:9px;color:#222;letter-spacing:.15em;margin-top:10px}
+
+/* ══════ APP LAYOUT ══════ */
+#shell{display:none;height:100%;height:100dvh;background:var(--bg)}
+#shell.active{display:flex}
+
+/* ══════ SIDEBAR ══════ */
+.sidebar{
+  width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--dim2);
+  display:flex;flex-direction:column;overflow-y:auto;transition:margin-left .2s ease;
+}
+.sidebar.hidden{margin-left:-220px}
+.sb-hd{padding:10px 12px 8px;border-bottom:1px solid var(--dim2);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;display:flex;justify-content:space-between;align-items:center}
+.sb-close{background:none;border:none;color:var(--dim);cursor:pointer;font-family:inherit;font-size:14px}
+.sb-close:hover{color:var(--fg)}
+.sb-section{padding:8px 0}
+.sb-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em;padding:4px 12px}
+.sb-item{font-size:11px;padding:5px 12px;color:var(--dim);cursor:pointer;transition:all .1s;display:flex;align-items:center;gap:6px}
+.sb-item:hover{color:var(--fg);background:var(--bg3)}
+.sb-item.active{color:var(--accent);background:rgba(191,255,0,.04)}
+.sb-item .dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.sb-item .dot.on{background:var(--green)}
+.sb-item .dot.off{background:var(--dim)}
+.sb-divider{border:none;border-top:1px solid var(--dim2);margin:4px 12px}
+.sb-model{padding:8px 12px;border-top:1px solid var(--dim2)}
+.sb-model select{width:100%;background:var(--bg);border:1px solid var(--dim2);border-radius:3px;color:var(--fg);font-family:inherit;font-size:10px;padding:5px 6px;outline:none}
+.sb-model select:focus{border-color:var(--accent)}
+.sb-sessions{flex:1;overflow-y:auto}
+.sb-sess{font-size:10px;padding:5px 12px;color:var(--dim);cursor:pointer;transition:all .1s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-sess:hover{color:var(--fg);background:var(--bg3)}
+.sb-sess.active{color:var(--accent)}
+.sb-footer{padding:8px 12px;border-top:1px solid var(--dim2);font-size:9px;color:var(--dim)}
+
+/* ══════ MAIN AREA ══════ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.term-output{flex:1;overflow-y:auto;padding:12px 14px 8px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.term-output::-webkit-scrollbar{width:4px}
+.term-output::-webkit-scrollbar-track{background:transparent}
+.term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
+
+/* ASCII + welcome */
+.ascii-logo{color:var(--fg);line-height:1.15;font-size:11px;white-space:pre;margin-bottom:6px;letter-spacing:.5px;text-align:center}
+.ascii-logo .hi{color:var(--green)}
+.welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
+.welcome-line{margin:2px 0;font-size:13px;text-align:center}
+.welcome-line.tag{color:var(--dim);font-size:14px;letter-spacing:.08em}
+.welcome-line.dim{color:var(--dim);font-size:12px}
+
+.suggestions{display:flex;flex-wrap:wrap;gap:5px;margin:14px 0 8px;justify-content:center}
+.sug-chip{font-family:inherit;font-size:11px;color:var(--dim);background:transparent;border:1px solid var(--dim2);border-radius:3px;padding:4px 10px;cursor:pointer;transition:all .12s;white-space:nowrap}
+.sug-chip:hover,.sug-chip:active{color:var(--fg);border-color:var(--dim);background:var(--bg3)}
+
+/* lines */
+.line{margin:1px 0;line-height:1.5;word-wrap:break-word;font-size:12px;white-space:pre-wrap}
+.line.user .prompt{color:var(--accent);font-weight:700}
+.line.system{color:var(--dim);font-size:11px}
+.line.error{color:var(--red)}
+.line.info{color:var(--cyan);font-size:11px}
+.line .hl{color:var(--accent)}
+.line .val{color:var(--fg)}
+.line .fl{color:var(--cyan)}
+.line .warn{color:var(--orange)}
+.line .ok{color:var(--green)}
+.cursor-blink{display:inline-block;width:7px;height:13px;background:var(--accent);animation:cb .5s step-end infinite;vertical-align:text-bottom;margin-left:1px}
+@keyframes cb{50%{opacity:0}}
+
+/* slash command autocomplete */
+.slash-menu{position:absolute;bottom:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--dim2);border-bottom:none;max-height:200px;overflow-y:auto;display:none;z-index:50}
+.slash-menu.open{display:block}
+.slash-opt{padding:5px 14px;font-size:11px;color:var(--dim);cursor:pointer;display:flex;justify-content:space-between}
+.slash-opt:hover,.slash-opt.sel{background:var(--bg3);color:var(--fg)}
+.slash-opt .desc{color:var(--dim);font-size:10px}
+
+/* status bar */
+.status-bar{display:flex;align-items:center;gap:8px;padding:3px 14px;font-size:10px;color:var(--dim);border-top:1px solid var(--dim2);flex-shrink:0;user-select:none}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+.status-bar .mode{color:var(--accent);font-weight:500;cursor:pointer}
+.status-bar .mode:hover{text-decoration:underline}
+.status-bar .spacer{flex:1}
+.status-bar .usage{color:var(--dim)}
+.status-bar .size{color:#333}
+
+/* input area */
+.input-wrap{position:relative;flex-shrink:0}
+.input-area{display:flex;align-items:center;gap:6px;padding:7px 14px 6px;border-top:1px solid var(--dim2)}
+.input-prompt{color:var(--accent);font-weight:700;font-size:14px;flex-shrink:0}
+.input-field{flex:1;background:transparent;border:none;outline:none;color:var(--fg);font-family:inherit;font-size:13px;caret-color:var(--accent)}
+.input-field::placeholder{color:#333}
+.input-model{font-size:10px;color:var(--dim);flex-shrink:0;white-space:nowrap}
+
+/* mobile keys */
+.mobile-keys{display:none;flex-shrink:0;border-top:1px solid var(--dim2);padding:4px 6px;gap:3px;flex-wrap:wrap}
+.mk{font-family:inherit;font-size:10px;color:var(--dim);background:var(--bg2);border:1px solid var(--dim2);border-radius:3px;padding:6px 9px;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none}
+.mk:active{background:var(--bg3);color:var(--fg);border-color:var(--dim)}
+.mk.wide{padding:6px 12px}
+.mk.accent{color:var(--accent);border-color:rgba(191,255,0,.15)}
+.mk-spacer{flex:1}
+
+/* gear */
+.gear-btn{position:fixed;bottom:110px;right:12px;z-index:50;width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--dim2);display:none;align-items:center;justify-content:center;cursor:pointer;color:var(--dim);transition:all .12s}
+.gear-btn:active{background:var(--dim2);color:var(--fg)}
+.gear-btn svg{width:16px;height:16px}
+
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:80;width:240px;margin-left:-240px!important}
+  .sidebar.open{margin-left:0!important}
+  .sb-overlay{position:fixed;inset:0;z-index:79;background:rgba(0,0,0,.6);display:none}
+  .sb-overlay.open{display:block}
+  .mobile-keys{display:flex}
+  .gear-btn{display:flex}
+  .ascii-logo{font-size:8px}
+  .term-output{padding:10px 10px 6px}
+  .input-area{padding:5px 10px}
+  .status-bar{padding:3px 10px}
+}
+@media(max-width:360px){
+  .ascii-logo{font-size:6px}
+  .sug-chip{font-size:10px;padding:3px 7px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ LOADER ══════ -->
+<div id="loader">
+  <canvas id="matrixCanvas"></canvas>
+  <div class="load-brand">orlix.xyz / zero</div>
+  <div class="load-box">
+    <div class="load-ring"></div>
+    <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+    <div class="load-text">INITIALIZING <span class="load-pct" id="loadPct">0%</span></div>
+    <div class="load-sub">establishing connection</div>
+  </div>
+</div>
+
+<!-- ══════ SHELL ══════ -->
+<div id="shell">
+  <!-- sidebar overlay (mobile) -->
+  <div class="sb-overlay" id="sbOverlay"></div>
+
+  <!-- sidebar -->
+  <nav class="sidebar hidden" id="sidebar">
+    <div class="sb-hd"><span>ZERO</span><button class="sb-close" id="sbClose">&times;</button></div>
+
+    <div class="sb-section">
+      <div class="sb-label">Session</div>
+      <div class="sb-item" data-cmd="/new">+ new session</div>
+      <div class="sb-item" data-cmd="/compact">compact context</div>
+      <div class="sb-item" data-cmd="/clear">clear terminal</div>
+    </div>
+    <hr class="sb-divider">
+    <div class="sb-section">
+      <div class="sb-label">Tools</div>
+      <div class="sb-item" data-cmd="/permissions"><span class="dot on"></span>permissions</div>
+      <div class="sb-item" data-cmd="/tools"><span class="dot on"></span>tools</div>
+      <div class="sb-item" data-cmd="/doctor"><span class="dot on"></span>diagnostics</div>
+      <div class="sb-item" data-cmd="/usage"><span class="dot on"></span>usage</div>
+    </div>
+    <hr class="sb-divider">
+    <div class="sb-section">
+      <div class="sb-label">Config</div>
+      <div class="sb-item" data-cmd="/theme">themes</div>
+      <div class="sb-item" data-cmd="/config">settings</div>
+    </div>
+    <hr class="sb-divider">
+
+    <div class="sb-model">
+      <div class="sb-label" style="padding:0 0 4px">Model</div>
+      <select id="sbModelSel"></select>
+    </div>
+
+    <div class="sb-section" style="flex:1;overflow-y:auto">
+      <div class="sb-label">History</div>
+      <div id="sbSessions"></div>
+    </div>
+
+    <div class="sb-footer">
+      <a href="/" style="color:var(--dim);font-size:9px;text-decoration:none">orlix.xyz</a>
+      <span style="margin:0 4px">/</span>
+      <a href="https://github.com/Gitlawb/zero" target="_blank" rel="noopener" style="color:var(--dim);font-size:9px;text-decoration:none">zero</a>
+    </div>
+  </nav>
+
+  <!-- main -->
+  <div class="main">
+    <div class="term-output" id="output"></div>
+
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span class="mode" id="permMode" title="Shift+Tab to cycle">ask mode</span>
+      <span style="color:var(--dim);font-size:9px" id="sidebarHint">Ctrl+B sidebar</span>
+      <span class="spacer"></span>
+      <span class="usage" id="usageLabel">0 tokens</span>
+      <span id="termSize" class="size"></span>
+    </div>
+
+    <div class="input-wrap">
+      <div class="slash-menu" id="slashMenu"></div>
+      <div class="input-area">
+        <span class="input-prompt">></span>
+        <input type="text" class="input-field" id="inputField" placeholder="describe a task for zero..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <span class="input-model" id="modelLabel">claude-sonnet-5</span>
+      </div>
+    </div>
+
+    <div class="mobile-keys" id="mobileKeys">
+      <button class="mk" data-key="~">~</button>
+      <button class="mk" data-key="|">|</button>
+      <button class="mk" data-key="/">/</button>
+      <button class="mk" data-key="-">-</button>
+      <span class="mk-spacer"></span>
+      <button class="mk wide" data-action="copy">COPY</button>
+      <button class="mk wide" data-action="paste">PASTE</button>
+      <button class="mk wide accent" data-action="kbd">KBD</button>
+      <button class="mk" data-action="esc">ESC</button>
+      <button class="mk" data-action="ctrl">CTRL</button>
+      <button class="mk" data-action="tab">TAB</button>
+      <button class="mk" data-action="enter">RETN</button>
+      <span class="mk-spacer"></span>
+      <button class="mk" data-action="backspace">&lsaquo;x</button>
+      <button class="mk" data-arrow="up">&uarr;</button>
+      <button class="mk" data-arrow="down">&darr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- gear button -->
+<div class="gear-btn" id="gearBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+</div>
+
+<script>
+/* ══════ ORLIX BOOT SEQUENCE ══════ */
+(function(){
+  var c=document.getElementById('matrixCanvas'),ctx=c.getContext('2d'),W,H,cols,drops;
+  var chars='ORLIX0123456789ZERO<>{}[]=/|~^$';
+  var subEl=document.querySelector('.load-sub');
+  var phases=['establishing connection','loading models','checking permissions','syncing terminal','ready'];
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;cols=Math.floor(W/16);drops=[];for(var i=0;i<cols;i++)drops[i]=Math.random()*-40|0;}
+  resize();addEventListener('resize',resize);
+  function draw(){ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);ctx.font='15px monospace';for(var i=0;i<cols;i++){var bright=Math.random()>.7;ctx.fillStyle=bright?'#4ADE80':'#0a3a1a';ctx.globalAlpha=.3+Math.random()*.5;ctx.fillText(chars[Math.random()*chars.length|0],i*16,drops[i]*16);if(drops[i]*16>H&&Math.random()>.975)drops[i]=0;drops[i]++;}ctx.globalAlpha=1;}
+  var mid=setInterval(draw,50),pct=0,fill=document.getElementById('loadFill'),pctEl=document.getElementById('loadPct');
+  var lid=setInterval(function(){pct+=1+Math.random()*3|0;if(pct>100)pct=100;fill.style.width=pct+'%';pctEl.textContent=pct+'%';var pi=Math.min(Math.floor(pct/25),phases.length-1);if(subEl)subEl.textContent=phases[pi];if(pct>=100){clearInterval(lid);setTimeout(function(){clearInterval(mid);document.getElementById('loader').classList.add('done');initShell();},500);}},55);
+})();
+
+/* ══════ DATA ══════ */
+var PROVIDERS=[
+  {name:'Anthropic',models:[{id:'claude-sonnet-5',n:'Claude Sonnet 5'},{id:'claude-haiku-4-5-20251001',n:'Claude Haiku 4.5'},{id:'claude-opus-4-8',n:'Claude Opus 4.8'}]},
+  {name:'Mimo',models:[{id:'mimo-2.5-pro-ultaspeed',n:'Mimo 2.5 Pro UltraSpeed'}]},
+  {name:'OpenAI',models:[{id:'gpt-5.4',n:'GPT-5.4'},{id:'gpt-5-nano',n:'GPT-5 Nano'},{id:'gpt-5.2-codex',n:'GPT-5.2 Codex'}]},
+  {name:'Google',models:[{id:'gemini-3.1-pro',n:'Gemini 3.1 Pro'},{id:'gemini-3-flash',n:'Gemini 3 Flash'}]},
+  {name:'xAI',models:[{id:'grok-4.20',n:'Grok 4.20'},{id:'grok-4.1-fast',n:'Grok 4.1 Fast'}]},
+  {name:'DeepSeek',models:[{id:'deepseek-v3.2',n:'DeepSeek V3.2'}]},
+  {name:'Moonshot',models:[{id:'kimi-k2.7-code',n:'Kimi K2.7 Code'},{id:'kimi-k2.6',n:'Kimi K2.6'}]},
+  {name:'Alibaba',models:[{id:'qwen3-coder',n:'Qwen3 Coder'},{id:'qwen3.7-plus',n:'Qwen3.7 Plus'}]},
+  {name:'Z.ai',models:[{id:'glm-5.1',n:'GLM-5.1'},{id:'glm-5-turbo',n:'GLM-5 Turbo'}]},
+];
+var MODELS={};PROVIDERS.forEach(function(p){p.models.forEach(function(m){MODELS[m.id]=m.n;});});
+
+var PERM_MODES=['ask mode','auto-edit mode','full-auto mode','yolo mode'];
+var THEMES=[
+  {id:'dark',n:'Dark (default)'},{id:'green',n:'Green CRT'},{id:'amber',n:'Amber CRT'},
+  {id:'dracula',n:'Dracula'},{id:'nord',n:'Nord'},{id:'gruvbox',n:'Gruvbox'},
+  {id:'tokyo',n:'Tokyo Night'},{id:'rose',n:'Rose Pine'},
+];
+
+var SLASH_CMDS=[
+  {cmd:'/help',desc:'Show all commands'},
+  {cmd:'/model',desc:'Switch model'},
+  {cmd:'/theme',desc:'Change theme'},
+  {cmd:'/clear',desc:'Clear terminal'},
+  {cmd:'/reset',desc:'Reset conversation'},
+  {cmd:'/new',desc:'New session'},
+  {cmd:'/sessions',desc:'List saved sessions'},
+  {cmd:'/resume',desc:'Resume a session'},
+  {cmd:'/compact',desc:'Compact context window'},
+  {cmd:'/permissions',desc:'View permission policy'},
+  {cmd:'/tools',desc:'Inspect available tools'},
+  {cmd:'/doctor',desc:'Run diagnostics'},
+  {cmd:'/usage',desc:'Token usage report'},
+  {cmd:'/config',desc:'View configuration'},
+  {cmd:'/spec',desc:'Toggle spec/plan mode'},
+  {cmd:'/image',desc:'Attach an image'},
+  {cmd:'/export',desc:'Export session'},
+];
+
+var currentModel='claude-sonnet-5';
+var permModeIdx=0;
+var chatHistory=[];
+var totalTokens=0;
+var isStreaming=false;
+var specMode=false;
+var sessionId=Date.now().toString(36);
+var cmdHistoryArr=[];
+var cmdHistoryIdx=-1;
+var output,inputField;
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function addLine(html,cls){
+  var div=document.createElement('div');div.className='line '+(cls||'');div.innerHTML=html;
+  output.appendChild(div);output.scrollTop=output.scrollHeight;return div;
+}
+
+function addBlock(lines,cls){lines.forEach(function(l){addLine(l,cls||'system');});}
+
+/* ══════ INIT ══════ */
+function initShell(){
+  var shell=document.getElementById('shell');shell.classList.add('active');
+  output=document.getElementById('output');inputField=document.getElementById('inputField');
+
+  // populate model selects
+  var selHtml=PROVIDERS.map(function(p){return '<optgroup label="'+p.name+'">'+p.models.map(function(m){return '<option value="'+m.id+'"'+(m.id===currentModel?' selected':'')+'>'+m.n+'</option>';}).join('')+'</optgroup>';}).join('');
+  document.getElementById('sbModelSel').innerHTML=selHtml;
+
+  // welcome wrap (centered)
+  var ww=document.createElement('div');ww.className='welcome-wrap';output.appendChild(ww);
+
+  // ASCII welcome
+  var ascii=
+'████████  ████████  ███████   <span class="hi"> ██████ </span>\n'+
+'     ██   ██        ██    ██  <span class="hi">██    ██</span>\n'+
+'    ██    ██        ██    ██  <span class="hi">██    ██</span>\n'+
+'   ██     ██████    ███████   <span class="hi">██    ██</span>\n'+
+'  ██      ██        ██   ██   <span class="hi">██    ██</span>\n'+
+' ██       ██        ██    ██  <span class="hi">██    ██</span>\n'+
+'████████  ████████  ██    ██  <span class="hi"> ██████ </span>';
+  var pre=document.createElement('pre');pre.className='ascii-logo';pre.innerHTML=ascii;ww.appendChild(pre);
+
+  var t1=document.createElement('div');t1.className='welcome-line tag';t1.innerHTML='Any model. Every tool. Zero limits.';ww.appendChild(t1);
+  var sp1=document.createElement('div');sp1.innerHTML='';sp1.style.height='8px';ww.appendChild(sp1);
+  var t2=document.createElement('div');t2.className='welcome-line';t2.innerHTML='<span style="color:var(--dim)">~  &middot;  <span style="color:var(--fg)">'+MODELS[currentModel]+'</span></span>';ww.appendChild(t2);
+  var sp2=document.createElement('div');sp2.innerHTML='';sp2.style.height='6px';ww.appendChild(sp2);
+
+  var sugWrap=document.createElement('div');sugWrap.className='suggestions';
+  ['explain this codebase','fix the failing test','add a --json flag','refactor to typescript','write unit tests'].forEach(function(s){
+    var btn=document.createElement('button');btn.className='sug-chip';btn.textContent='"'+s+'"';
+    btn.addEventListener('click',function(){inputField.value=s;sendMessage();});sugWrap.appendChild(btn);
+  });
+  ww.appendChild(sugWrap);
+
+  var t3=document.createElement('div');t3.className='welcome-line dim';t3.innerHTML='Press ? for shortcuts  &middot;  / for commands  &middot;  Ctrl+B sidebar';ww.appendChild(t3);
+
+  inputField.focus();
+  updateTermSize();
+  addEventListener('resize',updateTermSize);
+  loadTheme();
+  renderSessions();
+
+  // ── keyboard ──
+  inputField.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey&&!isStreaming){e.preventDefault();closeSlashMenu();sendMessage();}
+    if(e.key==='ArrowUp'&&!inputField.value){e.preventDefault();navigateHistory(-1);}
+    if(e.key==='ArrowDown'&&!inputField.value){e.preventDefault();navigateHistory(1);}
+    if(e.key==='Escape'){inputField.value='';closeSlashMenu();}
+    if(e.key==='Tab'&&e.shiftKey){e.preventDefault();cyclePermMode();}
+  });
+  inputField.addEventListener('input',function(){
+    if(inputField.value.startsWith('/'))showSlashMenu(inputField.value);else closeSlashMenu();
+  });
+
+  // global shortcuts
+  document.addEventListener('keydown',function(e){
+    if(e.ctrlKey&&e.key==='b'){e.preventDefault();toggleSidebar();}
+    if(e.ctrlKey&&e.key==='l'){e.preventDefault();runCmd('/clear');}
+  });
+
+  output.addEventListener('click',function(){inputField.focus();});
+
+  // sidebar
+  document.getElementById('sbClose').addEventListener('click',closeSidebar);
+  document.getElementById('sbOverlay').addEventListener('click',closeSidebar);
+  document.getElementById('gearBtn').addEventListener('click',toggleSidebar);
+  document.querySelectorAll('.sb-item[data-cmd]').forEach(function(el){
+    el.addEventListener('click',function(){runCmd(el.dataset.cmd);closeSidebar();});
+  });
+  document.getElementById('sbModelSel').addEventListener('change',function(){
+    currentModel=this.value;updateModelLabel();
+    addLine('<span style="color:var(--dim)">Model switched to <span class="val">'+MODELS[currentModel]+'</span></span>','system');
+  });
+
+  // mobile keys
+  document.getElementById('mobileKeys').addEventListener('click',function(e){
+    var btn=e.target.closest('.mk');if(!btn)return;
+    var key=btn.dataset.key,action=btn.dataset.action,arrow=btn.dataset.arrow;
+    if(key){inputField.value+=key;inputField.focus();inputField.dispatchEvent(new Event('input'));}
+    else if(action==='enter')sendMessage();
+    else if(action==='backspace'){inputField.value=inputField.value.slice(0,-1);inputField.focus();}
+    else if(action==='copy'){var sel=getSelection().toString();if(sel)navigator.clipboard.writeText(sel);}
+    else if(action==='paste'){navigator.clipboard.readText().then(function(t){inputField.value+=t;inputField.focus();});}
+    else if(action==='kbd')inputField.focus();
+    else if(action==='esc'){inputField.value='';closeSlashMenu();inputField.focus();}
+    else if(action==='tab'){cyclePermMode();}
+  });
+
+  // permission mode click
+  document.getElementById('permMode').addEventListener('click',cyclePermMode);
+}
+
+/* ══════ SIDEBAR ══════ */
+function toggleSidebar(){
+  var sb=document.getElementById('sidebar'),ov=document.getElementById('sbOverlay');
+  if(innerWidth<=768){sb.classList.toggle('open');ov.classList.toggle('open');}
+  else sb.classList.toggle('hidden');
+}
+function closeSidebar(){
+  var sb=document.getElementById('sidebar'),ov=document.getElementById('sbOverlay');
+  if(innerWidth<=768){sb.classList.remove('open');ov.classList.remove('open');}
+  else sb.classList.add('hidden');
+}
+
+/* ══════ SLASH MENU ══════ */
+var slashSel=0;
+function showSlashMenu(val){
+  var menu=document.getElementById('slashMenu');
+  var q=val.toLowerCase();
+  var filtered=SLASH_CMDS.filter(function(c){return c.cmd.startsWith(q);});
+  if(!filtered.length){closeSlashMenu();return;}
+  slashSel=0;
+  menu.innerHTML=filtered.map(function(c,i){return '<div class="slash-opt'+(i===0?' sel':'')+'" data-cmd="'+c.cmd+'"><span>'+c.cmd+'</span><span class="desc">'+c.desc+'</span></div>';}).join('');
+  menu.classList.add('open');
+  menu.querySelectorAll('.slash-opt').forEach(function(el){
+    el.addEventListener('click',function(){inputField.value=el.dataset.cmd;closeSlashMenu();sendMessage();});
+  });
+}
+function closeSlashMenu(){document.getElementById('slashMenu').classList.remove('open');}
+
+/* ══════ COMMAND HISTORY ══════ */
+function navigateHistory(dir){
+  if(!cmdHistoryArr.length)return;
+  cmdHistoryIdx+=dir;
+  if(cmdHistoryIdx<0)cmdHistoryIdx=0;
+  if(cmdHistoryIdx>=cmdHistoryArr.length){cmdHistoryIdx=cmdHistoryArr.length;inputField.value='';return;}
+  inputField.value=cmdHistoryArr[cmdHistoryArr.length-1-cmdHistoryIdx];
+}
+
+/* ══════ PERMISSION MODE ══════ */
+function cyclePermMode(){
+  permModeIdx=(permModeIdx+1)%PERM_MODES.length;
+  var mode=PERM_MODES[permModeIdx];
+  document.getElementById('permMode').textContent=mode;
+  if(mode==='yolo mode')document.getElementById('permMode').style.color='var(--red)';
+  else document.getElementById('permMode').style.color='';
+  addLine('<span style="color:var(--dim)">Permission mode: <span class="val">'+mode+'</span></span>','system');
+}
+
+/* ══════ SESSIONS ══════ */
+function getSessions(){try{return JSON.parse(localStorage.getItem('zero_sessions')||'[]');}catch(e){return[];}}
+function saveSession(){
+  if(!chatHistory.length)return;
+  var sessions=getSessions();
+  var first=chatHistory.find(function(m){return m.role==='user';});
+  var preview=first?first.content.slice(0,50):'(empty)';
+  var existing=sessions.findIndex(function(s){return s.id===sessionId;});
+  var entry={id:sessionId,preview:preview,model:currentModel,messages:chatHistory,tokens:totalTokens,ts:Date.now()};
+  if(existing>=0)sessions[existing]=entry;else sessions.unshift(entry);
+  if(sessions.length>20)sessions=sessions.slice(0,20);
+  localStorage.setItem('zero_sessions',JSON.stringify(sessions));
+  renderSessions();
+}
+function renderSessions(){
+  var container=document.getElementById('sbSessions');if(!container)return;
+  var sessions=getSessions();
+  container.innerHTML=sessions.map(function(s){
+    return '<div class="sb-sess'+(s.id===sessionId?' active':'')+'" data-sid="'+s.id+'">'+esc(s.preview)+'</div>';
+  }).join('')||'<div style="padding:5px 12px;font-size:10px;color:var(--dim)">No sessions yet</div>';
+  container.querySelectorAll('.sb-sess').forEach(function(el){
+    el.addEventListener('click',function(){resumeSession(el.dataset.sid);closeSidebar();});
+  });
+}
+function resumeSession(sid){
+  var sessions=getSessions();var s=sessions.find(function(x){return x.id===sid;});if(!s)return;
+  sessionId=s.id;chatHistory=s.messages||[];currentModel=s.model||'claude-sonnet-5';totalTokens=s.tokens||0;
+  updateModelLabel();updateUsage();
+  output.innerHTML='';
+  addLine('<span style="color:var(--dim)">Resumed session: <span class="val">'+esc(s.preview)+'</span></span>','system');
+  chatHistory.forEach(function(m){
+    if(m.role==='user')addLine('<span class="prompt">></span> '+esc(m.content),'user');
+    else if(m.role==='assistant')addLine(formatOutput(m.content),'assistant');
+  });
+  addLine('','');renderSessions();
+}
+function newSession(){
+  saveSession();sessionId=Date.now().toString(36);chatHistory=[];totalTokens=0;
+  output.innerHTML='';updateUsage();renderSessions();
+  addLine('<span style="color:var(--dim)">New session started.</span>','system');addLine('','');
+}
+
+/* ══════ THEME ══════ */
+function applyTheme(id){
+  document.body.className='';if(id!=='dark')document.body.classList.add('theme-'+id);
+  localStorage.setItem('zero_theme',id);
+}
+function loadTheme(){var t=localStorage.getItem('zero_theme');if(t)applyTheme(t);}
+
+/* ══════ HELPERS ══════ */
+function updateModelLabel(){
+  document.getElementById('modelLabel').textContent=currentModel;
+  var sel=document.getElementById('sbModelSel');if(sel)sel.value=currentModel;
+}
+function updateUsage(){document.getElementById('usageLabel').textContent=totalTokens.toLocaleString()+' tokens';}
+function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);document.getElementById('termSize').textContent=w+'x'+h;}
+
+/* ══════ RUN COMMAND ══════ */
+function runCmd(cmd){inputField.value=cmd;sendMessage();}
+
+function sendMessage(){
+  var text=inputField.value.trim();if(!text||isStreaming)return;
+  inputField.value='';closeSlashMenu();
+  cmdHistoryArr.push(text);cmdHistoryIdx=-1;
+
+  // ── slash commands ──
+  if(text.startsWith('/')){
+    var parts=text.split(/\s+/);var cmd=parts[0].toLowerCase();var arg=parts.slice(1).join(' ');
+
+    if(cmd==='/help'||text==='?'){
+      addBlock([
+        '<span class="hl">Zero Commands</span>',
+        '',
+        '<span class="hl">/model</span> [name]    <span style="color:var(--dim)">Switch AI model</span>',
+        '<span class="hl">/theme</span> [name]    <span style="color:var(--dim)">Change theme</span>',
+        '<span class="hl">/clear</span>           <span style="color:var(--dim)">Clear terminal</span>',
+        '<span class="hl">/reset</span>           <span style="color:var(--dim)">Reset conversation</span>',
+        '<span class="hl">/new</span>             <span style="color:var(--dim)">Start new session</span>',
+        '<span class="hl">/sessions</span>        <span style="color:var(--dim)">List saved sessions</span>',
+        '<span class="hl">/resume</span> [id]     <span style="color:var(--dim)">Resume a session</span>',
+        '<span class="hl">/compact</span>         <span style="color:var(--dim)">Compact context window</span>',
+        '<span class="hl">/spec</span>            <span style="color:var(--dim)">Toggle spec/plan mode</span>',
+        '<span class="hl">/permissions</span>     <span style="color:var(--dim)">View permission policy</span>',
+        '<span class="hl">/tools</span>           <span style="color:var(--dim)">Inspect available tools</span>',
+        '<span class="hl">/doctor</span>          <span style="color:var(--dim)">Run diagnostics</span>',
+        '<span class="hl">/usage</span>           <span style="color:var(--dim)">Token usage report</span>',
+        '<span class="hl">/config</span>          <span style="color:var(--dim)">View configuration</span>',
+        '<span class="hl">/export</span>          <span style="color:var(--dim)">Export session as JSON</span>',
+        '',
+        '<span style="color:var(--dim)">Shortcuts: Shift+Tab cycle mode &middot; Ctrl+B sidebar &middot; Ctrl+L clear</span>',
+        '',
+      ]);return;
+    }
+    if(cmd==='/clear'||text==='clear'){output.innerHTML='';return;}
+    if(cmd==='/reset'){chatHistory=[];totalTokens=0;updateUsage();addLine('<span style="color:var(--dim)">Conversation reset.</span>','system');return;}
+    if(cmd==='/new'){newSession();return;}
+    if(cmd==='/model'){
+      if(arg){
+        var found=null;Object.keys(MODELS).forEach(function(k){if(k.includes(arg.toLowerCase())||MODELS[k].toLowerCase().includes(arg.toLowerCase()))found=k;});
+        if(found){currentModel=found;updateModelLabel();addLine('<span style="color:var(--dim)">Model: <span class="val">'+MODELS[found]+'</span></span>','system');}
+        else addLine('<span class="warn">Model "'+esc(arg)+'" not found. Use /model to list.</span>','system');
+      } else {
+        addLine('<span class="hl">Available models:</span>','system');
+        PROVIDERS.forEach(function(p){
+          addLine('<span style="color:var(--dim)">  '+p.name+'</span>','system');
+          p.models.forEach(function(m){addLine('    '+(m.id===currentModel?'<span class="hl">* '+m.n+'</span>':'<span class="val">  '+m.n+'</span>')+' <span style="color:var(--dim)">('+m.id+')</span>','system');});
+        });
+      }
+      return;
+    }
+    if(cmd==='/theme'){
+      if(arg){
+        var t=THEMES.find(function(t){return t.id===arg.toLowerCase()||t.n.toLowerCase().includes(arg.toLowerCase());});
+        if(t){applyTheme(t.id);addLine('<span style="color:var(--dim)">Theme: <span class="val">'+t.n+'</span></span>','system');}
+        else addLine('<span class="warn">Theme "'+esc(arg)+'" not found.</span>','system');
+      } else {
+        addLine('<span class="hl">Themes:</span>','system');
+        var cur=localStorage.getItem('zero_theme')||'dark';
+        THEMES.forEach(function(t){addLine('  '+(t.id===cur?'<span class="hl">* '+t.n+'</span>':'<span class="val">  '+t.n+'</span>')+' <span style="color:var(--dim)">('+t.id+')</span>','system');});
+        addLine('<span style="color:var(--dim)">Usage: /theme dracula</span>','system');
+      }
+      return;
+    }
+    if(cmd==='/sessions'){
+      var sessions=getSessions();
+      if(!sessions.length){addLine('<span style="color:var(--dim)">No saved sessions.</span>','system');return;}
+      addLine('<span class="hl">Sessions:</span>','system');
+      sessions.forEach(function(s,i){
+        var date=new Date(s.ts).toLocaleDateString()+' '+new Date(s.ts).toLocaleTimeString();
+        addLine('  <span class="val">'+i+'</span> <span style="color:var(--dim)">'+date+'</span>  '+esc(s.preview)+(s.id===sessionId?' <span class="hl">(current)</span>':''),'system');
+      });
+      addLine('<span style="color:var(--dim)">Click in sidebar or /resume [index]</span>','system');
+      return;
+    }
+    if(cmd==='/resume'){
+      var sessions=getSessions();var idx=parseInt(arg);
+      if(isNaN(idx)||!sessions[idx]){addLine('<span class="warn">Usage: /resume [index]. See /sessions.</span>','system');return;}
+      resumeSession(sessions[idx].id);return;
+    }
+    if(cmd==='/compact'){
+      var removed=chatHistory.length>6?chatHistory.length-6:0;
+      if(removed>0)chatHistory=chatHistory.slice(-6);
+      addLine('<span style="color:var(--dim)">Context compacted. Removed '+removed+' old messages. '+chatHistory.length+' remaining.</span>','system');
+      return;
+    }
+    if(cmd==='/spec'){
+      specMode=!specMode;
+      addLine('<span style="color:var(--dim)">Spec mode: <span class="'+(specMode?'hl':'val')+'">'+(specMode?'ON':'OFF')+'</span>'+(specMode?' — Zero will draft plans before executing':'')+'</span>','system');
+      return;
+    }
+    if(cmd==='/permissions'){
+      addBlock([
+        '<span class="hl">Permission Policy</span>','',
+        '  <span class="ok">ALLOW</span>  workspace file reads',
+        '  <span class="ok">ALLOW</span>  workspace file writes',
+        '  <span class="warn">ASK</span>    shell commands',
+        '  <span class="warn">ASK</span>    network access',
+        '  <span style="color:var(--red)">DENY</span>   out-of-workspace writes',
+        '  <span style="color:var(--red)">DENY</span>   destructive commands',
+        '',
+        '  <span style="color:var(--dim)">Current mode: <span class="val">'+PERM_MODES[permModeIdx]+'</span></span>',
+        '  <span style="color:var(--dim)">Shift+Tab to cycle modes</span>','',
+      ]);return;
+    }
+    if(cmd==='/tools'){
+      addBlock([
+        '<span class="hl">Available Tools</span>','',
+        '  <span class="ok">file_read</span>      <span style="color:var(--dim)">Read files in workspace</span>',
+        '  <span class="ok">file_write</span>     <span style="color:var(--dim)">Write/edit files</span>',
+        '  <span class="ok">file_search</span>    <span style="color:var(--dim)">Search files by pattern</span>',
+        '  <span class="ok">shell_exec</span>     <span style="color:var(--dim)">Execute shell commands</span>',
+        '  <span class="ok">web_fetch</span>      <span style="color:var(--dim)">Fetch public URLs</span>',
+        '  <span class="ok">code_search</span>    <span style="color:var(--dim)">Semantic code search</span>',
+        '  <span class="ok">repo_map</span>       <span style="color:var(--dim)">Repository structure</span>',
+        '  <span class="ok">git_diff</span>       <span style="color:var(--dim)">View git changes</span>',
+        '  <span class="ok">git_commit</span>     <span style="color:var(--dim)">Commit changes</span>',
+        '  <span class="ok">mcp_invoke</span>     <span style="color:var(--dim)">Call MCP server tools</span>',
+        '','  <span style="color:var(--dim)">10 tools active</span>','',
+      ]);return;
+    }
+    if(cmd==='/doctor'){
+      addBlock([
+        '<span class="hl">Zero Diagnostics</span>','',
+        '  Runtime        <span class="ok">browser/wasm</span>',
+        '  API endpoint   <span class="ok">/api/chat reachable</span>',
+        '  Model          <span class="val">'+MODELS[currentModel]+'</span>',
+        '  Session        <span class="val">'+sessionId+'</span>',
+        '  Messages       <span class="val">'+chatHistory.length+'</span>',
+        '  Tokens used    <span class="val">'+totalTokens.toLocaleString()+'</span>',
+        '  Permission     <span class="val">'+PERM_MODES[permModeIdx]+'</span>',
+        '  Theme          <span class="val">'+(localStorage.getItem('zero_theme')||'dark')+'</span>',
+        '  Spec mode      <span class="val">'+(specMode?'ON':'OFF')+'</span>',
+        '  Sessions saved <span class="val">'+getSessions().length+'</span>',
+        '  Storage        <span class="ok">localStorage available</span>',
+        '','  <span class="ok">All systems operational.</span>','',
+      ]);return;
+    }
+    if(cmd==='/usage'){
+      addBlock([
+        '<span class="hl">Token Usage</span>','',
+        '  This session   <span class="val">'+totalTokens.toLocaleString()+' tokens</span>',
+        '  Messages       <span class="val">'+chatHistory.length+'</span>',
+        '  Model          <span class="val">'+MODELS[currentModel]+'</span>',
+        '  Est. cost      <span class="val">$'+(totalTokens*0.000003).toFixed(4)+'</span>',
+        '',
+      ]);return;
+    }
+    if(cmd==='/config'){
+      addBlock([
+        '<span class="hl">Configuration</span>','',
+        '  model          <span class="val">'+currentModel+'</span>',
+        '  theme          <span class="val">'+(localStorage.getItem('zero_theme')||'dark')+'</span>',
+        '  permission     <span class="val">'+PERM_MODES[permModeIdx]+'</span>',
+        '  spec_mode      <span class="val">'+(specMode?'true':'false')+'</span>',
+        '  api_endpoint   <span class="val">/api/chat</span>',
+        '  session_store  <span class="val">localStorage</span>',
+        '  max_context    <span class="val">20 messages</span>',
+        '',
+      ]);return;
+    }
+    if(cmd==='/export'){
+      var blob=new Blob([JSON.stringify({id:sessionId,model:currentModel,messages:chatHistory,tokens:totalTokens,ts:Date.now()},null,2)],{type:'application/json'});
+      var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='zero-session-'+sessionId+'.json';a.click();
+      addLine('<span style="color:var(--dim)">Session exported.</span>','system');return;
+    }
+    if(cmd==='/image'){addLine('<span class="warn">Image input not available in browser mode.</span>','system');return;}
+
+    addLine('<span class="warn">Unknown command: '+esc(cmd)+'. Type /help for commands.</span>','system');
+    return;
+  }
+
+  // handle ? shortcut
+  if(text==='?'){runCmd('/help');return;}
+
+  // remove suggestions
+  var sugs=output.querySelector('.suggestions');if(sugs)sugs.remove();
+
+  addLine('<span class="prompt">></span> '+esc(text),'user');
+  chatHistory.push({role:'user',content:text});
+  isStreaming=true;inputField.placeholder='thinking...';
+
+  var responseLine=addLine('<span style="color:var(--dim);font-style:italic">thinking...</span>','assistant');
+
+  var systemPrompt='You are Zero, an AI terminal coding agent integrated with Orlix AI (orlix.xyz). '+
+    'You help with code, terminal commands, debugging, and development. '+
+    'You are running in a web terminal at orlix.xyz/zero. '+
+    'Respond concisely like a terminal tool. Use plain text. Keep it direct. '+
+    (specMode?'IMPORTANT: You are in SPEC MODE. Draft a plan first, listing steps numbered. Do NOT execute until the user approves. ':'');
+
+  var messages=[{role:'system',content:systemPrompt}].concat(chatHistory.slice(-20));
+
+  fetch('/api/chat',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({messages:messages,model:currentModel})
+  }).then(function(res){
+    if(!res.ok)return res.text().then(function(t){throw new Error('HTTP '+res.status+': '+t.slice(0,200));});
+
+    if(res.headers.get('content-type')&&res.headers.get('content-type').includes('text/event-stream')){
+      var reader=res.body.getReader(),decoder=new TextDecoder(),fullText='';
+      responseLine.innerHTML='';
+      function readChunk(){
+        reader.read().then(function(r){
+          if(r.done){
+            responseLine.innerHTML=formatOutput(fullText);
+            if(fullText){chatHistory.push({role:'assistant',content:fullText});totalTokens+=Math.ceil(fullText.length/4);updateUsage();saveSession();}
+            isStreaming=false;inputField.placeholder='describe a task for zero...';inputField.focus();return;
+          }
+          var data=decoder.decode(r.value,{stream:true});
+          data.split('\n').forEach(function(line){
+            if(!line.startsWith('data: '))return;var p=line.slice(6);if(p==='[DONE]')return;
+            try{var j=JSON.parse(p);var d=j.choices?.[0]?.delta?.content||j.delta?.text||'';if(d){fullText+=d;responseLine.innerHTML=formatOutput(fullText)+'<span class="cursor-blink"></span>';output.scrollTop=output.scrollHeight;}}catch(e){}
+          });
+          readChunk();
+        });
+      }
+      readChunk();
+    } else {
+      return res.json().then(function(body){
+        var content=body.choices?.[0]?.message?.content||body.content?.[0]?.text||body.result||JSON.stringify(body);
+        responseLine.innerHTML=formatOutput(content);
+        chatHistory.push({role:'assistant',content:content});
+        totalTokens+=Math.ceil(content.length/4);updateUsage();saveSession();
+        isStreaming=false;inputField.placeholder='describe a task for zero...';inputField.focus();
+      });
+    }
+  }).catch(function(e){
+    responseLine.innerHTML='<span style="color:var(--red)">'+esc(e.message)+'</span>';
+    chatHistory.pop();isStreaming=false;inputField.placeholder='describe a task for zero...';
+  });
+}
+
+function formatOutput(text){
+  if(!text)return'';
+  var lines=esc(text).split('\n');
+  return lines.map(function(l){
+    l=l.replace(/`([^`]+)`/g,'<span style="color:var(--accent);background:rgba(191,255,0,.06);padding:0 3px;border-radius:2px">$1</span>');
+    l=l.replace(/\*\*([^*]+)\*\*/g,'<span style="color:var(--fg);font-weight:700">$1</span>');
+    return l;
+  }).join('\n');
+}
+</script>
+</body>
+</html>
