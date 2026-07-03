@@ -397,7 +397,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
           <button class="sp-font-btn" id="fontDec">&minus;</button>
           <span class="sp-font-val" id="fontVal">13 pt</span>
           <button class="sp-font-btn" id="fontInc">+</button>
-          <button class="sp-font-reset" id="fontReset">&#x21BA; Reset</button>
+          <button class="sp-font-reset" id="fontReset">Reset</button>
         </div>
       </div>
 
@@ -408,10 +408,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
         <div class="sp-theme-current" id="spThemeCurrent">
           <span class="tdot" id="spThemeDot"></span>
           <span class="tname" id="spThemeName">Dark</span>
-          <span class="tarr">&#x21B3;</span>
+          <span class="tarr">&gt;</span>
         </div>
         <div class="sp-filter-wrap">
-          <span class="sicon">&#x1F50D;</span>
+          <span class="sicon">&gt;</span>
           <input type="text" class="sp-theme-filter" id="spThemeFilter" placeholder="Filter themes" autocomplete="off">
         </div>
         <div class="sp-theme-list" id="spThemeList"></div>
@@ -421,15 +421,15 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 
       <div class="sp-section">
         <div class="sp-label">Workspace</div>
-        <div class="sp-item" id="spWsItem"><span class="sp-icon">&#x1F5C2;</span><span>Workspace Manager</span><span class="arrow">&#x2197;</span></div>
-        <div class="sp-item" id="spBootItem"><span class="sp-icon">&#x26A1;</span><span>Boot Script</span><span class="sp-dot"></span></div>
+        <div class="sp-item" id="spWsItem"><span class="sp-icon">/</span><span>Workspace Manager</span><span class="arrow">&gt;</span></div>
+        <div class="sp-item" id="spBootItem"><span class="sp-icon">$</span><span>Boot Script</span><span class="sp-dot"></span></div>
       </div>
 
       <hr class="sp-divider">
 
       <div class="sp-section">
         <div class="sp-label">Advanced</div>
-        <div class="sp-item" id="spAdvItem"><span class="sp-icon">&#x2699;</span><span>Advanced Settings</span><span class="arrow">&#x2197;</span></div>
+        <div class="sp-item" id="spAdvItem"><span class="sp-icon">~</span><span>Advanced Settings</span><span class="arrow">&gt;</span></div>
       </div>
 
       <div class="sp-section">
@@ -440,23 +440,23 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
     <!-- ═══ WORKSPACE MANAGER ═══ -->
     <div class="sp-view" id="spWsView">
       <div class="sp-header">
-        <div><span class="sp-title" style="font-size:12px">&#x1F5C2; Workspace Manager</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:8px;vertical-align:middle"></span></div>
+        <div><span class="sp-title" style="font-size:12px">Workspace Manager</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:8px;vertical-align:middle"></span></div>
         <button class="sp-close" data-back="spMain">&times;</button>
       </div>
       <div class="sp-path">/workspace</div>
 
       <div class="sp-tabs">
-        <button class="sp-tab active" data-tab="wsFiles">&#x1F4C1; FILES</button>
-        <button class="sp-tab" data-tab="wsUpload">&#x2B06; UPLOAD</button>
+        <button class="sp-tab active" data-tab="wsFiles">FILES</button>
+        <button class="sp-tab" data-tab="wsUpload">UPLOAD</button>
       </div>
 
       <div class="sp-tab-content active" id="wsFiles">
         <div class="sp-badges">
-          <span class="sp-badge ok">&#x2139; Quota OK</span>
-          <span class="sp-badge warn">&#x26A0; Ephemeral</span>
+          <span class="sp-badge ok">Quota OK</span>
+          <span class="sp-badge warn">Ephemeral</span>
         </div>
         <div class="sp-filter-wrap">
-          <span class="sicon">&#x1F50D;</span>
+          <span class="sicon">&gt;</span>
           <input type="text" class="sp-file-search" placeholder="Search in current folder" autocomplete="off">
         </div>
         <table class="sp-file-table"><tr><th>NAME</th><th>SIZE</th><th>ACTIONS</th></tr></table>
@@ -466,22 +466,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
       <div class="sp-tab-content" id="wsUpload">
         <div style="padding:10px 14px;border:1px solid var(--dim2);border-radius:8px;margin-bottom:12px">
           <div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Destination Folder</div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg)">&#x1F4C1; /workspace</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg)">/workspace</div>
           <div style="font-size:10px;color:var(--dim);margin-top:4px">Files will be uploaded to this folder. Existing files with the same name will be overwritten.</div>
         </div>
         <div class="sp-upload-zone" id="spUploadZone">
-          <div class="sp-upload-icon">&#x2B06;</div>
+          <div class="sp-upload-icon">^</div>
           <div class="sp-upload-text"><strong>Click to select files</strong> or drag and drop here</div>
           <div class="sp-upload-sub">Multiple files allowed</div>
         </div>
-        <div style="margin-top:12px;text-align:right"><button class="sp-btn" style="display:inline-flex;width:auto;padding:8px 20px;opacity:.5;cursor:default">&#x2B06; Upload</button></div>
+        <div style="margin-top:12px;text-align:right"><button class="sp-btn" style="display:inline-flex;width:auto;padding:8px 20px;opacity:.5;cursor:default">Upload</button></div>
       </div>
     </div>
 
     <!-- ═══ ADVANCED SETTINGS ═══ -->
     <div class="sp-view" id="spAdvView">
       <div class="sp-header">
-        <div><span class="sp-title" style="font-size:12px">&#x2699; Advanced Settings</span></div>
+        <div><span class="sp-title" style="font-size:12px">Advanced Settings</span></div>
         <button class="sp-close" data-back="spMain">&times;</button>
       </div>
       <div style="font-size:11px;color:var(--dim);margin-bottom:14px">Some privacy and advanced options.</div>
@@ -538,7 +538,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
     <!-- ═══ BOOT SCRIPT ═══ -->
     <div class="sp-view" id="spBootView">
       <div class="sp-header">
-        <div><span class="sp-title" style="font-size:12px">&#x26A1; Boot Script</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:8px;vertical-align:middle"></span></div>
+        <div><span class="sp-title" style="font-size:12px">Boot Script</span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-left:8px;vertical-align:middle"></span></div>
         <button class="sp-close" data-back="spMain">&times;</button>
       </div>
       <div style="font-size:11px;color:var(--dim);margin-bottom:14px">Set the bash code to be executed upon VM start.</div>
@@ -553,10 +553,10 @@ export ZERO_SANDBOX_BACKEND=none
       <div class="sp-link-box" id="spBootLink">https://orlix.xyz/zero#run=...</div>
 
       <div class="sp-btn-col">
-        <button class="sp-btn danger" id="spBootClear">&#x232B; Clear</button>
-        <button class="sp-btn" id="spBootCopy">&#x1F4CB; Copy Code</button>
-        <button class="sp-btn" id="spBootCopyLink">&#x1F517; Copy Link</button>
-        <button class="sp-btn primary" id="spBootRun">&#x1F680; Run It</button>
+        <button class="sp-btn danger" id="spBootClear">Clear</button>
+        <button class="sp-btn" id="spBootCopy">Copy Code</button>
+        <button class="sp-btn" id="spBootCopyLink">Copy Link</button>
+        <button class="sp-btn primary" id="spBootRun">Run It</button>
       </div>
     </div>
 
@@ -892,7 +892,7 @@ function updateModelLabel(){
 function updateUsage(){
   var maxCtx=1000000;var k=totalTokens>=1000?(totalTokens/1000).toFixed(1)+'K':totalTokens;
   var pct=Math.min(100,Math.round(totalTokens/maxCtx*100));
-  document.getElementById('usageLabel').innerHTML='&#x23F1; '+k+'/1000K &middot; '+pct+'%';
+  document.getElementById('usageLabel').innerHTML=k+'/1000K &middot; '+pct+'%';
 }
 function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);document.getElementById('termSize').textContent=w+'x'+h;}
 
