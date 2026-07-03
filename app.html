@@ -2169,6 +2169,7 @@ function addMsg(role, content, meta='', skipHistory=false){
   if(empty) empty.remove();
   chatMessages.appendChild(div);
   chatMessages.scrollTop=chatMessages.scrollHeight;
+  if(role==='assistant' && content) addSkillActionsToMsg(div, content);
   return div;
 }
 
@@ -2394,6 +2395,7 @@ async function sendChat(){
 
         cursor.remove();
         bubble.innerHTML = renderContent(full);
+        if(full) addSkillActionsToMsg(msgDiv, full);
         chatHistory.push({role:'assistant',content:full});
         if(typeof logAudit==='function') logAudit('chat','Orlix','replied ('+pgModelSel.value+')');
         saveCurrentChat();
@@ -2589,6 +2591,7 @@ let _codeIdx = 0;
 function esc2(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function renderMd(raw) {
+  raw = raw.replace(/\\n/g, '\n');
   function inl(s) {
     return s
       .replace(/`([^`\n]+)`/g,'<code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:.85em">$1</code>')
