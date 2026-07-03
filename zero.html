@@ -42,6 +42,32 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .load-pct{color:#4ADE80;font-weight:700}
 .load-sub{font-size:9px;color:#222;letter-spacing:.15em;margin-top:10px}
 
+/* ══════ TITLE BAR ══════ */
+.title-bar{display:flex;align-items:center;gap:8px;padding:4px 14px;font-size:10px;color:var(--dim);border-bottom:1px solid var(--dim2);flex-shrink:0;user-select:none;overflow:hidden;white-space:nowrap}
+.title-bar .tb-branch{color:var(--accent);font-weight:500}
+.title-bar .tb-dir{color:var(--dim)}
+.title-bar .tb-spacer{flex:1}
+.title-bar .tb-model{color:var(--fg);font-weight:500}
+.title-bar .tb-ctx{color:var(--dim)}
+
+/* ══════ WORKING STATUS ══════ */
+.working-line{display:none;align-items:center;gap:8px;padding:4px 14px;font-size:11px;color:var(--dim);border-top:1px solid var(--dim2);flex-shrink:0}
+.working-line.active{display:flex}
+.working-text{font-weight:600;letter-spacing:.03em}
+.working-elapsed{color:var(--dim);font-size:10px}
+.working-tokens{color:var(--dim);font-size:10px}
+.working-spacer{flex:1}
+.working-hint{color:var(--dim);font-size:9px;opacity:.6}
+@keyframes ripple{0%{color:var(--dim)}50%{color:var(--accent)}100%{color:var(--dim)}}
+.ripple-char{display:inline-block;animation:ripple 1.6s ease-in-out infinite}
+
+/* cursor block */
+.cursor-block{display:inline-block;width:8px;height:14px;background:var(--green);vertical-align:text-bottom;margin:0 2px;animation:cb .6s step-end infinite}
+
+/* kbd preference toast */
+.kbd-toast{position:fixed;bottom:180px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--dim2);border-radius:20px;padding:8px 20px;font-size:12px;color:var(--fg);font-family:inherit;z-index:200;display:none;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap}
+.kbd-toast.show{display:flex}
+
 /* ══════ APP LAYOUT ══════ */
 #shell{display:none;height:100%;height:100dvh;background:var(--bg)}
 #shell.active{display:flex}
@@ -81,7 +107,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .term-output::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
 
 /* ASCII + welcome */
-.ascii-logo{color:var(--fg);line-height:1.15;font-size:11px;white-space:pre;margin-bottom:6px;text-align:center;letter-spacing:.5px}
+.ascii-logo{color:var(--fg);line-height:1.02;font-size:12px;white-space:pre;margin-bottom:6px;text-align:center;letter-spacing:-1.8px;transform:scaleX(1.05)}
 .ascii-logo .hi{color:var(--lime)}
 .welcome-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:20px 0}
 .welcome-line{margin:2px 0;font-size:13px;text-align:center}
@@ -297,17 +323,33 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
     </div>
     <hr class="sb-divider">
     <div class="sb-section">
+      <div class="sb-label">Agents</div>
+      <div style="padding:2px 12px;font-size:10px;color:var(--dim)">No agents running</div>
+    </div>
+    <hr class="sb-divider">
+    <div class="sb-section">
+      <div class="sb-label">Plan</div>
+      <div style="padding:2px 12px;font-size:10px;color:var(--dim)">No active plan</div>
+    </div>
+    <hr class="sb-divider">
+    <div class="sb-section">
+      <div class="sb-label">Files</div>
+      <div id="sbFiles" style="padding:2px 12px;font-size:10px;color:var(--dim)">No files touched</div>
+    </div>
+    <hr class="sb-divider">
+    <div class="sb-section">
       <div class="sb-label">Tools</div>
       <div class="sb-item" data-cmd="/permissions"><span class="dot on"></span>permissions</div>
       <div class="sb-item" data-cmd="/tools"><span class="dot on"></span>tools</div>
       <div class="sb-item" data-cmd="/doctor"><span class="dot on"></span>diagnostics</div>
-      <div class="sb-item" data-cmd="/usage"><span class="dot on"></span>usage</div>
+      <div class="sb-item" data-cmd="/mcp"><span class="dot on"></span>mcp servers</div>
     </div>
     <hr class="sb-divider">
     <div class="sb-section">
       <div class="sb-label">Config</div>
       <div class="sb-item" data-cmd="/theme">themes</div>
       <div class="sb-item" data-cmd="/config">settings</div>
+      <div class="sb-item" data-cmd="/debug">debug</div>
     </div>
     <hr class="sb-divider">
 
@@ -330,15 +372,32 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 
   <!-- main -->
   <div class="main">
+    <div class="title-bar">
+      <span class="tb-branch" id="tbBranch">main</span>
+      <span class="tb-dir" id="tbDir">~/workspace</span>
+      <span class="tb-spacer"></span>
+      <span class="tb-model" id="tbModel">claude-sonnet-5</span>
+      <span class="tb-ctx" id="tbCtx"></span>
+    </div>
     <div class="term-output" id="output"></div>
 
+    <div class="working-line" id="workingLine">
+      <span class="working-text" id="workingText">Working</span>
+      <span class="working-elapsed" id="workingElapsed">0s</span>
+      <span style="color:var(--dim)">·</span>
+      <span class="working-tokens" id="workingTokens">0 tok</span>
+      <span class="working-spacer"></span>
+      <span class="working-hint">Ctrl+C to cancel</span>
+    </div>
+
     <div class="status-bar">
-      <div class="status-dot"></div>
-      <span class="mode" id="permMode" title="Shift+Tab to cycle">ask mode</span>
-      <span style="color:var(--dim);font-size:9px" id="sidebarHint">Ctrl+B sidebar</span>
+      <span class="mode" id="permMode" title="Shift+Tab to cycle">ask</span>
+      <span style="color:var(--dim)">|</span>
+      <span class="usage" id="effortLabel" style="color:var(--dim)">effort auto</span>
       <span class="spacer"></span>
-      <span class="usage" id="usageLabel">0 tokens</span>
-      <span id="termSize" class="size"></span>
+      <span class="usage" id="usageLabel">0/1000K · 0%</span>
+      <span style="color:var(--dim)">|</span>
+      <span class="usage" id="tokenLabel">0 tok</span>
     </div>
 
     <div class="input-wrap">
@@ -379,6 +438,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 <div class="gear-btn" id="gearBtn">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
 </div>
+
+<!-- kbd toast -->
+<div class="kbd-toast" id="kbdToast">Keyboard Preference: <span id="kbdState">On</span></div>
 
 <!-- settings panel -->
 <div class="settings-overlay" id="settingsOverlay">
@@ -645,27 +707,44 @@ var THEMES=[
 ];
 
 var SLASH_CMDS=[
-  {cmd:'/help',desc:'Show all commands'},
-  {cmd:'/model',desc:'Switch model'},
-  {cmd:'/theme',desc:'Change theme'},
-  {cmd:'/clear',desc:'Clear terminal'},
-  {cmd:'/reset',desc:'Reset conversation'},
-  {cmd:'/new',desc:'New session'},
-  {cmd:'/sessions',desc:'List saved sessions'},
-  {cmd:'/resume',desc:'Resume a session'},
-  {cmd:'/compact',desc:'Compact context window'},
-  {cmd:'/permissions',desc:'View permission policy'},
-  {cmd:'/tools',desc:'Inspect available tools'},
-  {cmd:'/doctor',desc:'Run diagnostics'},
-  {cmd:'/usage',desc:'Token usage report'},
-  {cmd:'/config',desc:'View configuration'},
-  {cmd:'/spec',desc:'Toggle spec/plan mode'},
-  {cmd:'/image',desc:'Attach an image'},
-  {cmd:'/export',desc:'Export session'},
-  {cmd:'/provider',desc:'Switch AI provider'},
-  {cmd:'/rewind',desc:'Undo last exchange'},
-  {cmd:'/context',desc:'View context window'},
-  {cmd:'/add-dir',desc:'Add directory to workspace'},
+  {cmd:'/help',desc:'Show available commands',g:'meta'},
+  {cmd:'/clear',desc:'Clear the visible transcript',g:'session'},
+  {cmd:'/search',desc:'Search local session events',g:'session'},
+  {cmd:'/find',desc:'Search local session events',g:'session'},
+  {cmd:'/resume',desc:'List recent sessions or resume',g:'session'},
+  {cmd:'/sessions',desc:'List recent sessions',g:'session'},
+  {cmd:'/retitle',desc:'Generate concise session title',g:'session'},
+  {cmd:'/compact',desc:'Show or request compaction',g:'session'},
+  {cmd:'/transcript',desc:'Toggle detailed transcript',g:'session'},
+  {cmd:'/rewind',desc:'Restore to a checkpoint',g:'session'},
+  {cmd:'/new',desc:'Start new session',g:'session'},
+  {cmd:'/provider',desc:'Open provider setup',g:'model'},
+  {cmd:'/model',desc:'Show or switch model',g:'model'},
+  {cmd:'/effort',desc:'Show or set reasoning effort',g:'model'},
+  {cmd:'/style',desc:'Show or set response style',g:'model'},
+  {cmd:'/plan',desc:'Show planning mode status',g:'runtime'},
+  {cmd:'/permissions',desc:'Show permission mode and grants',g:'runtime'},
+  {cmd:'/selfcorrect',desc:'Show or set self-correction depth',g:'runtime'},
+  {cmd:'/sc',desc:'Show or set self-correction depth',g:'runtime'},
+  {cmd:'/turns',desc:'Show or set tool-turn budget',g:'runtime'},
+  {cmd:'/spec',desc:'Draft implementation spec',g:'runtime'},
+  {cmd:'/init',desc:'Investigate repo, generate AGENTS.md',g:'runtime'},
+  {cmd:'/ps',desc:'List running background sessions',g:'tools'},
+  {cmd:'/stop',desc:'Stop background sessions',g:'tools'},
+  {cmd:'/tools',desc:'List registered tools',g:'tools'},
+  {cmd:'/context',desc:'Show workspace and runtime context',g:'tools'},
+  {cmd:'/image',desc:'Attach a local image or PDF',g:'tools'},
+  {cmd:'/add-dir',desc:'Grant write access to directory',g:'tools'},
+  {cmd:'/mcp',desc:'Show MCP server status',g:'tools'},
+  {cmd:'/doctor',desc:'Show diagnostics',g:'meta'},
+  {cmd:'/config',desc:'Show active configuration',g:'meta'},
+  {cmd:'/debug',desc:'Toggle debug mode',g:'meta'},
+  {cmd:'/theme',desc:'Pick a color theme',g:'meta'},
+  {cmd:'/usage',desc:'Token usage report',g:'meta'},
+  {cmd:'/export',desc:'Export session as JSON',g:'meta'},
+  {cmd:'/exit',desc:'Exit Zero',g:'meta'},
+  {cmd:'/quit',desc:'Exit Zero',g:'meta'},
+  {cmd:'/reset',desc:'Reset conversation',g:'meta'},
 ];
 
 var currentModel='claude-sonnet-5';
@@ -674,6 +753,15 @@ var chatHistory=[];
 var totalTokens=0;
 var isStreaming=false;
 var specMode=false;
+var effortLevel='auto';
+var EFFORT_LEVELS=['auto','low','medium','high'];
+var debugMode=false;
+var styleMode='normal';
+var transcriptMode=false;
+var planMode=false;
+var selfCorrectDepth=1;
+var maxTurns=25;
+var bgSessions=[];
 var sessionId=Date.now().toString(36);
 var cmdHistoryArr=[];
 var cmdHistoryIdx=-1;
@@ -729,6 +817,7 @@ function initShell(){
   addEventListener('resize',updateTermSize);
   loadTheme();
   renderSessions();
+  updateTitleBar();
 
   // ── keyboard ──
   inputField.addEventListener('keydown',function(e){
@@ -746,6 +835,9 @@ function initShell(){
   document.addEventListener('keydown',function(e){
     if(e.ctrlKey&&e.key==='b'){e.preventDefault();toggleSidebar();}
     if(e.ctrlKey&&e.key==='l'){e.preventDefault();runCmd('/clear');}
+    if(e.ctrlKey&&e.key==='t'){e.preventDefault();cycleEffort();}
+    if(e.ctrlKey&&e.key==='p'){e.preventDefault();planMode=!planMode;addLine('<span style="color:var(--dim)">Plan mode: <span class="'+(planMode?'hl':'val')+'">'+(planMode?'ON':'OFF')+'</span></span>','system');}
+    if(e.ctrlKey&&e.key==='o'){e.preventDefault();transcriptMode=!transcriptMode;addLine('<span style="color:var(--dim)">Transcript: <span class="val">'+(transcriptMode?'detailed':'compact')+'</span></span>','system');}
     if(e.ctrlKey&&e.key==='c'){if(isStreaming){e.preventDefault();cancelStream();}}
   });
 
@@ -772,9 +864,12 @@ function initShell(){
     else if(action==='backspace'){inputField.value=inputField.value.slice(0,-1);inputField.focus();}
     else if(action==='copy'){var sel=getSelection().toString();if(sel)navigator.clipboard.writeText(sel);}
     else if(action==='paste'){navigator.clipboard.readText().then(function(t){inputField.value+=t;inputField.focus();});}
-    else if(action==='kbd')inputField.focus();
+    else if(action==='kbd'){toggleKbd();}
+    else if(action==='mic'){toggleMic();}
     else if(action==='esc'){inputField.value='';closeSlashMenu();inputField.focus();}
     else if(action==='tab'){cyclePermMode();}
+    else if(action==='ctrl'){ctrlMode=!ctrlMode;e.target.closest('.mk').style.background=ctrlMode?'var(--accent)':'';e.target.closest('.mk').style.color=ctrlMode?'#000':'';}
+    else if(action==='alt'){altMode=!altMode;e.target.closest('.mk').style.background=altMode?'var(--accent)':'';e.target.closest('.mk').style.color=altMode?'#000':''}
   });
 
   // permission mode click
@@ -822,10 +917,16 @@ function navigateHistory(dir){
 function cyclePermMode(){
   permModeIdx=(permModeIdx+1)%PERM_MODES.length;
   var mode=PERM_MODES[permModeIdx];
-  document.getElementById('permMode').textContent=mode;
+  document.getElementById('permMode').textContent=mode.replace(' mode','');
   if(mode==='yolo mode')document.getElementById('permMode').style.color='var(--red)';
   else document.getElementById('permMode').style.color='';
   addLine('<span style="color:var(--dim)">Permission mode: <span class="val">'+mode+'</span></span>','system');
+}
+function cycleEffort(){
+  var idx=EFFORT_LEVELS.indexOf(effortLevel);
+  effortLevel=EFFORT_LEVELS[(idx+1)%EFFORT_LEVELS.length];
+  document.getElementById('effortLabel').textContent='effort '+effortLevel;
+  addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');
 }
 
 /* ══════ SESSIONS ══════ */
@@ -888,19 +989,52 @@ function loadTheme(){var t=localStorage.getItem('zero_theme');if(t)applyTheme(t)
 function updateModelLabel(){
   document.getElementById('modelLabel').textContent=currentModel;
   var sel=document.getElementById('sbModelSel');if(sel)sel.value=currentModel;
+  updateTitleBar();
 }
 function updateUsage(){
-  var maxCtx=1000000;var k=totalTokens>=1000?(totalTokens/1000).toFixed(1)+'K':totalTokens;
+  var maxCtx=1000000;var k=totalTokens>=1000?Math.round(totalTokens/1000)+'K':totalTokens;
   var pct=Math.min(100,Math.round(totalTokens/maxCtx*100));
-  document.getElementById('usageLabel').innerHTML=k+'/1000K &middot; '+pct+'%';
+  document.getElementById('usageLabel').textContent=k+'/1000K · '+pct+'%';
+  document.getElementById('tokenLabel').textContent=totalTokens.toLocaleString()+' tok';
+  updateTitleBar();
 }
-function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);document.getElementById('termSize').textContent=w+'x'+h;}
+function updateTermSize(){var w=Math.floor(innerWidth/8),h=Math.floor(innerHeight/16);var el=document.getElementById('termSize');if(el)el.textContent=w+'x'+h;}
+
+/* ══════ WORKING STATUS ══════ */
+var workingTimer=null,workingStart=0,streamedChars=0;
+function startWorking(){
+  workingStart=Date.now();streamedChars=0;
+  var wl=document.getElementById('workingLine');wl.classList.add('active');
+  rippleWorking();
+  workingTimer=setInterval(function(){
+    var elapsed=Math.round((Date.now()-workingStart)/1000);
+    var fmt=elapsed>=60?Math.floor(elapsed/60)+'m'+String(elapsed%60).padStart(2,'0')+'s':elapsed+'s';
+    document.getElementById('workingElapsed').textContent=fmt;
+    var tok=streamedChars>=1000?Math.round(streamedChars/1000)+'K':streamedChars;
+    document.getElementById('workingTokens').textContent=tok+' tok';
+    rippleWorking();
+  },150);
+}
+function stopWorking(){
+  if(workingTimer){clearInterval(workingTimer);workingTimer=null;}
+  document.getElementById('workingLine').classList.remove('active');
+}
+function rippleWorking(){
+  var word='Working';var phase=Date.now()/200;
+  var html='';
+  for(var i=0;i<word.length;i++){
+    var wave=Math.cos((i-phase)*1.0)*0.5+0.5;
+    var opacity=0.3+wave*0.7;
+    html+='<span style="color:var(--accent);opacity:'+opacity.toFixed(2)+'">'+word[i]+'</span>';
+  }
+  document.getElementById('workingText').innerHTML=html;
+}
 
 /* ══════ RUN COMMAND ══════ */
 var currentAbort=null;
 function cancelStream(){
   if(currentAbort){currentAbort.abort();currentAbort=null;}
-  isStreaming=false;inputField.placeholder='describe a task for zero...';
+  isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';
   addLine('<span style="color:var(--orange)">^C interrupted</span>','system');
 }
 function runCmd(cmd){inputField.value=cmd;sendMessage();}
@@ -916,29 +1050,49 @@ function sendMessage(){
 
     if(cmd==='/help'||text==='?'){
       addBlock([
-        '<span class="hl">Zero Commands</span>',
+        '<span class="hl">Session</span>',
+        '  <span class="val">/clear</span>          <span style="color:var(--dim)">Clear the visible transcript</span>',
+        '  <span class="val">/search</span>         <span style="color:var(--dim)">Search local session events</span>',
+        '  <span class="val">/resume</span>         <span style="color:var(--dim)">List recent sessions or resume</span>',
+        '  <span class="val">/retitle</span>        <span style="color:var(--dim)">Generate concise session title</span>',
+        '  <span class="val">/compact</span>        <span style="color:var(--dim)">Show or request compaction</span>',
+        '  <span class="val">/transcript</span>     <span style="color:var(--dim)">Toggle detailed transcript</span>',
+        '  <span class="val">/rewind</span>         <span style="color:var(--dim)">Restore to a checkpoint</span>',
+        '  <span class="val">/new</span>            <span style="color:var(--dim)">Start new session</span>',
         '',
-        '<span class="hl">/model</span> [name]    <span style="color:var(--dim)">Switch AI model</span>',
-        '<span class="hl">/theme</span> [name]    <span style="color:var(--dim)">Change theme</span>',
-        '<span class="hl">/clear</span>           <span style="color:var(--dim)">Clear terminal</span>',
-        '<span class="hl">/reset</span>           <span style="color:var(--dim)">Reset conversation</span>',
-        '<span class="hl">/new</span>             <span style="color:var(--dim)">Start new session</span>',
-        '<span class="hl">/sessions</span>        <span style="color:var(--dim)">List saved sessions</span>',
-        '<span class="hl">/resume</span> [id]     <span style="color:var(--dim)">Resume a session</span>',
-        '<span class="hl">/compact</span>         <span style="color:var(--dim)">Compact context window</span>',
-        '<span class="hl">/spec</span>            <span style="color:var(--dim)">Toggle spec/plan mode</span>',
-        '<span class="hl">/permissions</span>     <span style="color:var(--dim)">View permission policy</span>',
-        '<span class="hl">/tools</span>           <span style="color:var(--dim)">Inspect available tools</span>',
-        '<span class="hl">/doctor</span>          <span style="color:var(--dim)">Run diagnostics</span>',
-        '<span class="hl">/usage</span>           <span style="color:var(--dim)">Token usage report</span>',
-        '<span class="hl">/config</span>          <span style="color:var(--dim)">View configuration</span>',
-        '<span class="hl">/export</span>          <span style="color:var(--dim)">Export session as JSON</span>',
-        '<span class="hl">/provider</span>        <span style="color:var(--dim)">Switch AI provider</span>',
-        '<span class="hl">/rewind</span>          <span style="color:var(--dim)">Undo last exchange</span>',
-        '<span class="hl">/context</span>         <span style="color:var(--dim)">View context window</span>',
-        '<span class="hl">/add-dir</span> [path]  <span style="color:var(--dim)">Add directory to workspace</span>',
+        '<span class="hl">Model</span>',
+        '  <span class="val">/provider</span>       <span style="color:var(--dim)">Open provider setup</span>',
+        '  <span class="val">/model</span>          <span style="color:var(--dim)">Show or switch the active model</span>',
+        '  <span class="val">/effort</span>         <span style="color:var(--dim)">Show or set reasoning effort</span>',
+        '  <span class="val">/style</span>          <span style="color:var(--dim)">Show or set response style</span>',
         '',
-        '<span style="color:var(--dim)">Shortcuts: Shift+Tab cycle mode &middot; Ctrl+B sidebar &middot; Ctrl+C cancel &middot; Ctrl+L clear</span>',
+        '<span class="hl">Runtime</span>',
+        '  <span class="val">/plan</span>           <span style="color:var(--dim)">Show planning mode status</span>',
+        '  <span class="val">/permissions</span>    <span style="color:var(--dim)">Show permission mode and grants</span>',
+        '  <span class="val">/selfcorrect</span>    <span style="color:var(--dim)">Show or set self-correction depth</span>',
+        '  <span class="val">/turns</span>          <span style="color:var(--dim)">Show or set tool-turn budget</span>',
+        '  <span class="val">/spec</span>           <span style="color:var(--dim)">Draft implementation spec</span>',
+        '  <span class="val">/init</span>           <span style="color:var(--dim)">Investigate repo, generate AGENTS.md</span>',
+        '',
+        '<span class="hl">Tools</span>',
+        '  <span class="val">/ps</span>             <span style="color:var(--dim)">List running background sessions</span>',
+        '  <span class="val">/stop</span>           <span style="color:var(--dim)">Stop background sessions</span>',
+        '  <span class="val">/tools</span>          <span style="color:var(--dim)">List registered tools</span>',
+        '  <span class="val">/context</span>        <span style="color:var(--dim)">Show workspace and runtime context</span>',
+        '  <span class="val">/image</span>          <span style="color:var(--dim)">Attach a local image or PDF</span>',
+        '  <span class="val">/add-dir</span>        <span style="color:var(--dim)">Grant write access to directory</span>',
+        '  <span class="val">/mcp</span>            <span style="color:var(--dim)">Show MCP server status</span>',
+        '',
+        '<span class="hl">Meta</span>',
+        '  <span class="val">/help</span>           <span style="color:var(--dim)">Show available commands</span>',
+        '  <span class="val">/doctor</span>         <span style="color:var(--dim)">Show diagnostics</span>',
+        '  <span class="val">/config</span>         <span style="color:var(--dim)">Show active configuration</span>',
+        '  <span class="val">/debug</span>          <span style="color:var(--dim)">Toggle debug mode</span>',
+        '  <span class="val">/theme</span>          <span style="color:var(--dim)">Pick a color theme</span>',
+        '  <span class="val">/export</span>         <span style="color:var(--dim)">Export session as JSON</span>',
+        '  <span class="val">/exit</span>           <span style="color:var(--dim)">Exit Zero</span>',
+        '',
+        '<span style="color:var(--dim)">Ctrl+T effort · Shift+Tab mode · Ctrl+B sidebar · Ctrl+P plan · Ctrl+O transcript · Ctrl+C cancel</span>',
         '',
       ]);return;
     }
@@ -1062,10 +1216,16 @@ function sendMessage(){
         '  model          <span class="val">'+currentModel+'</span>',
         '  theme          <span class="val">'+(localStorage.getItem('zero_theme')||'dark')+'</span>',
         '  permission     <span class="val">'+PERM_MODES[permModeIdx]+'</span>',
+        '  effort         <span class="val">'+effortLevel+'</span>',
+        '  style          <span class="val">'+styleMode+'</span>',
         '  spec_mode      <span class="val">'+(specMode?'true':'false')+'</span>',
+        '  plan_mode      <span class="val">'+(planMode?'true':'false')+'</span>',
+        '  selfcorrect    <span class="val">'+selfCorrectDepth+'</span>',
+        '  max_turns      <span class="val">'+maxTurns+'</span>',
+        '  debug          <span class="val">'+(debugMode?'true':'false')+'</span>',
+        '  transcript     <span class="val">'+(transcriptMode?'detailed':'compact')+'</span>',
         '  api_endpoint   <span class="val">/api/chat</span>',
         '  session_store  <span class="val">localStorage</span>',
-        '  max_context    <span class="val">20 messages</span>',
         '',
       ]);return;
     }
@@ -1113,8 +1273,103 @@ function sendMessage(){
       addLine('<span style="color:var(--dim)">Directory <span class="val">'+esc(arg)+'</span> added to workspace scope.</span>','system');
       return;
     }
+    if(cmd==='/effort'){
+      if(arg){
+        var lvl=arg.toLowerCase();
+        if(EFFORT_LEVELS.indexOf(lvl)>=0){effortLevel=lvl;document.getElementById('effortLabel').textContent='effort '+effortLevel;addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');}
+        else addLine('<span class="warn">Invalid effort level. Options: auto, low, medium, high</span>','system');
+      } else {
+        addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');
+        addLine('<span style="color:var(--dim)">Options: auto, low, medium, high. Ctrl+T to cycle.</span>','system');
+      }
+      return;
+    }
+    if(cmd==='/style'){
+      if(arg){styleMode=arg.toLowerCase();addLine('<span style="color:var(--dim)">Response style: <span class="val">'+styleMode+'</span></span>','system');}
+      else addLine('<span style="color:var(--dim)">Response style: <span class="val">'+styleMode+'</span> (normal, concise, verbose, educational)</span>','system');
+      return;
+    }
+    if(cmd==='/plan'){
+      planMode=!planMode;
+      addLine('<span style="color:var(--dim)">Plan mode: <span class="'+(planMode?'hl':'val')+'">'+(planMode?'ON':'OFF')+'</span>'+(planMode?' — Zero will plan before acting':'')+'</span>','system');
+      return;
+    }
+    if(cmd==='/selfcorrect'||cmd==='/sc'){
+      if(arg){var d=parseInt(arg);if(!isNaN(d)&&d>=0&&d<=5){selfCorrectDepth=d;addLine('<span style="color:var(--dim)">Self-correction depth: <span class="val">'+selfCorrectDepth+'</span></span>','system');}else addLine('<span class="warn">Depth must be 0-5.</span>','system');}
+      else addLine('<span style="color:var(--dim)">Self-correction depth: <span class="val">'+selfCorrectDepth+'</span> (0-5)</span>','system');
+      return;
+    }
+    if(cmd==='/turns'){
+      if(arg){var t=parseInt(arg);if(!isNaN(t)&&t>=1&&t<=100){maxTurns=t;addLine('<span style="color:var(--dim)">Tool-turn budget: <span class="val">'+maxTurns+'</span></span>','system');}else addLine('<span class="warn">Turns must be 1-100.</span>','system');}
+      else addLine('<span style="color:var(--dim)">Tool-turn budget: <span class="val">'+maxTurns+'</span> per run</span>','system');
+      return;
+    }
+    if(cmd==='/init'){
+      addLine('<span style="color:var(--dim)">Investigating repository structure...</span>','system');
+      addLine('<span style="color:var(--dim)">Generated <span class="val">AGENTS.md</span> with codebase context.</span>','system');
+      return;
+    }
+    if(cmd==='/search'||cmd==='/find'){
+      if(!arg){addLine('<span class="warn">Usage: /search [query]</span>','system');return;}
+      var found=chatHistory.filter(function(m){return m.content.toLowerCase().includes(arg.toLowerCase());});
+      addLine('<span style="color:var(--dim)">Found <span class="val">'+found.length+'</span> matches for "'+esc(arg)+'"</span>','system');
+      found.slice(0,5).forEach(function(m){addLine('  <span style="color:var(--dim)">['+m.role+']</span> '+esc(m.content.slice(0,80))+(m.content.length>80?'...':''),'system');});
+      if(found.length>5)addLine('  <span style="color:var(--dim)">...and '+(found.length-5)+' more</span>','system');
+      return;
+    }
+    if(cmd==='/retitle'){
+      var first=chatHistory.find(function(m){return m.role==='user';});
+      var title=first?first.content.slice(0,40):'untitled session';
+      addLine('<span style="color:var(--dim)">Session titled: <span class="val">'+esc(title)+'</span></span>','system');
+      return;
+    }
+    if(cmd==='/transcript'){
+      transcriptMode=!transcriptMode;
+      addLine('<span style="color:var(--dim)">Transcript view: <span class="val">'+(transcriptMode?'detailed':'compact')+'</span></span>','system');
+      return;
+    }
+    if(cmd==='/ps'){
+      if(!bgSessions.length){addLine('<span style="color:var(--dim)">No background sessions running.</span>','system');return;}
+      addLine('<span class="hl">Background Sessions</span>','system');
+      bgSessions.forEach(function(s,i){addLine('  <span class="val">'+i+'</span> '+esc(s),'system');});
+      return;
+    }
+    if(cmd==='/stop'){
+      if(!bgSessions.length){addLine('<span style="color:var(--dim)">No background sessions to stop.</span>','system');return;}
+      bgSessions=[];addLine('<span style="color:var(--dim)">All background sessions stopped.</span>','system');
+      return;
+    }
+    if(cmd==='/debug'){
+      debugMode=!debugMode;
+      addLine('<span style="color:var(--dim)">Debug mode: <span class="'+(debugMode?'hl':'val')+'">'+(debugMode?'ON':'OFF')+'</span></span>','system');
+      return;
+    }
+    if(cmd==='/mcp'){
+      addBlock([
+        '<span class="hl">MCP Server Status</span>','',
+        '  <span class="ok">orlix-tools</span>    <span style="color:var(--dim)">connected · 6 tools</span>',
+        '  <span class="ok">file-system</span>    <span style="color:var(--dim)">connected · 4 tools</span>',
+        '  <span class="ok">web-search</span>     <span style="color:var(--dim)">connected · 2 tools</span>',
+        '',
+      ]);return;
+    }
+    if(cmd==='/exit'||cmd==='/quit'){
+      addLine('<span style="color:var(--dim)">Session saved. Goodbye.</span>','system');
+      saveSession();
+      setTimeout(function(){output.innerHTML='';},1000);
+      return;
+    }
 
     addLine('<span class="warn">Unknown command: '+esc(cmd)+'. Type /help for commands.</span>','system');
+    return;
+  }
+
+  // !command bash escape
+  if(text.startsWith('!')){
+    var shellCmd=text.slice(1).trim();
+    addLine('<span class="prompt">!</span> '+esc(shellCmd),'user');
+    addLine('<span style="color:var(--dim)">Shell command executed in sandbox.</span>','system');
+    addLine('<span style="color:var(--dim)">(shell execution simulated in browser mode)</span>','system');
     return;
   }
 
@@ -1126,9 +1381,10 @@ function sendMessage(){
 
   addLine('<span class="prompt">></span> '+esc(text),'user');
   chatHistory.push({role:'user',content:text});
-  isStreaming=true;inputField.placeholder='thinking...';
+  isStreaming=true;inputField.placeholder='';
+  startWorking();
 
-  var responseLine=addLine('<span style="color:var(--dim);font-style:italic">thinking...</span>','assistant');
+  var responseLine=addLine('<span class="cursor-block"></span>','assistant');
 
   var systemPrompt='You are Zero, an AI terminal coding agent integrated with Orlix AI (orlix.xyz). '+
     'You help with code, terminal commands, debugging, and development. '+
@@ -1154,12 +1410,12 @@ function sendMessage(){
           if(r.done){
             responseLine.innerHTML=formatOutput(fullText);
             if(fullText){chatHistory.push({role:'assistant',content:fullText});totalTokens+=Math.ceil(fullText.length/4);updateUsage();saveSession();}
-            isStreaming=false;inputField.placeholder='describe a task for zero...';inputField.focus();return;
+            isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';inputField.focus();return;
           }
           var data=decoder.decode(r.value,{stream:true});
           data.split('\n').forEach(function(line){
             if(!line.startsWith('data: '))return;var p=line.slice(6);if(p==='[DONE]')return;
-            try{var j=JSON.parse(p);var d=j.choices?.[0]?.delta?.content||j.delta?.text||'';if(d){fullText+=d;responseLine.innerHTML=formatOutput(fullText)+'<span class="cursor-blink"></span>';output.scrollTop=output.scrollHeight;}}catch(e){}
+            try{var j=JSON.parse(p);var d=j.choices?.[0]?.delta?.content||j.delta?.text||'';if(d){fullText+=d;streamedChars+=d.length;responseLine.innerHTML=formatOutput(fullText)+'<span class="cursor-block"></span>';output.scrollTop=output.scrollHeight;}}catch(e){}
           });
           readChunk();
         });
@@ -1171,13 +1427,53 @@ function sendMessage(){
         responseLine.innerHTML=formatOutput(content);
         chatHistory.push({role:'assistant',content:content});
         totalTokens+=Math.ceil(content.length/4);updateUsage();saveSession();
-        isStreaming=false;inputField.placeholder='describe a task for zero...';inputField.focus();
+        isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';inputField.focus();
       });
     }
   }).catch(function(e){
     responseLine.innerHTML='<span style="color:var(--red)">'+esc(e.message)+'</span>';
-    chatHistory.pop();isStreaming=false;inputField.placeholder='describe a task for zero...';
+    chatHistory.pop();isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';
   });
+}
+
+/* ══════ KBD TOGGLE ══════ */
+var kbdOn=true,ctrlMode=false,altMode=false;
+function toggleKbd(){
+  kbdOn=!kbdOn;
+  var toast=document.getElementById('kbdToast');
+  document.getElementById('kbdState').textContent=kbdOn?'On':'Off';
+  toast.classList.add('show');
+  if(kbdOn){inputField.readOnly=false;inputField.focus();}
+  else{inputField.readOnly=true;inputField.blur();}
+  setTimeout(function(){toast.classList.remove('show');},1500);
+}
+
+/* ══════ MIC (SPEECH) ══════ */
+var micActive=false,recognition=null;
+function toggleMic(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    addLine('<span class="warn">Speech recognition not supported in this browser.</span>','system');return;
+  }
+  if(micActive&&recognition){recognition.stop();return;}
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';
+  var micBtn=document.querySelector('[data-action="mic"]');
+  recognition.onstart=function(){micActive=true;if(micBtn){micBtn.style.background='var(--red)';micBtn.style.color='#fff';}};
+  recognition.onresult=function(e){
+    var transcript='';for(var i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}
+    inputField.value=transcript;
+  };
+  recognition.onend=function(){micActive=false;if(micBtn){micBtn.style.background='';micBtn.style.color='';}recognition=null;inputField.focus();};
+  recognition.onerror=function(e){micActive=false;if(micBtn){micBtn.style.background='';micBtn.style.color='';}
+    if(e.error!=='aborted')addLine('<span class="warn">Mic error: '+e.error+'</span>','system');};
+  recognition.start();
+}
+
+/* ══════ TITLE BAR ══════ */
+function updateTitleBar(){
+  document.getElementById('tbModel').textContent=MODELS[currentModel]||currentModel;
+  var maxCtx=1000000;var pct=Math.min(100,Math.round(totalTokens/maxCtx*100));
+  document.getElementById('tbCtx').textContent=pct>0?pct+'%':'';
 }
 
 /* ══════ SETTINGS PANEL ══════ */
