@@ -21,6 +21,8 @@
   --font:'JetBrains Mono',monospace;--mono:'JetBrains Mono',monospace;
   --r:4px;
 }
+:root.light{--bg:#F4F4F5;--s1:#EAEAEC;--s2:#DDDDE0;--s3:#D0D0D4;--s4:#C4C4C8;--b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.18);--b3:rgba(0,0,0,.25);--t1:#1a1a1a;--t2:#555555;--t3:#999999;--orange-d:rgba(224,104,32,.08)}
+:root.light .nav{background:rgba(244,244,245,.92)!important}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--t2);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,textarea,select{font-family:var(--font)}
@@ -224,6 +226,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   border-radius:9px;padding:10px 16px;margin-bottom:18px;
   font-size:.78rem;font-weight:600;color:#ca8a04;
 }
+:root.light .mainnet-bar{background:rgba(234,179,8,.08);color:#92400e}
 .mainnet-bar button{background:none;border:none;color:inherit;font-weight:700;cursor:pointer;text-decoration:underline;font-size:inherit;font-family:inherit;padding:0}
 .mainnet-bar button:hover{opacity:.8}
 /* sepolia live badge */
@@ -460,6 +463,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .net-pill{font-size:.6rem;padding:4px 8px}
 }
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
+:root.light .crt-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);opacity:.3}
 </style>
 </head>
 <body>
@@ -1755,8 +1759,7 @@ async function onMint() {
 
 <script src="/wallet-dist/wallet.js" defer></script>
 <script>
-// Force dark theme — remove light class if set by other pages
-document.documentElement.classList.remove('light');
+(function(){var r=document.documentElement;if(localStorage.getItem('b20_theme')==='light')r.classList.add('light');var btn=document.getElementById('themeToggle');if(btn)btn.addEventListener('click',function(){var l=r.classList.toggle('light');localStorage.setItem('b20_theme',l?'light':'dark');});})();
 </script>
 </body>
 </html>
