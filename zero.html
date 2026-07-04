@@ -117,20 +117,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .thinking-content{display:none;margin:2px 0 6px 16px;padding:6px 10px;border-left:2px solid var(--dim2);font-size:10px;color:var(--dim);line-height:1.5}
 .thinking-line.open+.thinking-content{display:block}
 
-/* tool cards */
-.tool-card{margin:4px 0;padding:6px 12px;border-left:2px solid var(--dim2);font-size:11px;line-height:1.5;background:var(--bg2);border-radius:0 4px 4px 0}
-.tool-card .tc-head{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+/* tool cards — ZERO-style ╭──╮ bordered blocks */
+.tool-card{margin:4px 0;font-size:11px;line-height:1.5;font-family:'JetBrains Mono',monospace;white-space:pre;color:var(--dim)}
+.tool-card .tc-border{color:var(--dim2)}
+.tool-card .tc-inner{padding:0 0 0 2ch}
+.tool-card .tc-head{display:flex;align-items:center;gap:6px}
 .tool-card .tc-name{color:var(--accent);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
 .tool-card .tc-status{font-size:9px;padding:1px 6px;border-radius:3px}
 .tool-card .tc-status.running{color:var(--orange);background:rgba(240,120,48,.1)}
 .tool-card .tc-status.done{color:var(--green);background:rgba(74,222,128,.1)}
 .tool-card .tc-path{color:var(--dim);font-size:10px}
-.tool-card .tc-detail{color:var(--dim);font-size:10px;margin-top:1px}
-.tool-card.read{border-left-color:var(--cyan)}
-.tool-card.write{border-left-color:var(--green)}
-.tool-card.edit{border-left-color:var(--yellow)}
-.tool-card.shell{border-left-color:var(--orange)}
-.tool-card.search{border-left-color:var(--purple)}
+.tool-card .tc-detail{color:var(--dim);font-size:10px}
+.tool-card.read .tc-name{color:var(--cyan)}
+.tool-card.write .tc-name{color:var(--green)}
+.tool-card.edit .tc-name{color:var(--yellow)}
+.tool-card.shell .tc-name{color:var(--orange)}
+.tool-card.search .tc-name{color:var(--purple)}
 
 /* permission prompt */
 .perm-prompt{margin:6px 0;padding:10px 14px;border:1px solid var(--dim2);border-radius:6px;background:var(--bg2);font-size:12px}
@@ -179,6 +181,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .line .ok{color:var(--green)}
 .cursor-blink{display:inline-block;width:7px;height:13px;background:var(--accent);animation:cb .5s step-end infinite;vertical-align:text-bottom;margin-left:1px}
 @keyframes cb{50%{opacity:0}}
+
+/* ? keyboard shortcut overlay */
+.help-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:20px}
+.help-overlay.open{display:flex}
+.help-panel{background:var(--bg2);border:1px solid var(--dim2);border-radius:10px;width:min(580px,94vw);max-height:88vh;overflow-y:auto;padding:24px 28px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.help-panel::-webkit-scrollbar{width:4px}
+.help-panel::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px}
+.hp-title{font-size:14px;font-weight:700;color:var(--fg);margin-bottom:4px}
+.hp-sub{font-size:10px;color:var(--dim);margin-bottom:18px}
+.hp-group{margin-bottom:16px}
+.hp-group-title{font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;font-weight:600}
+.hp-row{display:flex;align-items:center;padding:3px 0;font-size:12px}
+.hp-keys{min-width:160px;display:flex;gap:4px;flex-shrink:0}
+.hp-key{background:var(--bg3);border:1px solid var(--dim2);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--fg);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.hp-desc{color:var(--dim);font-size:11px}
+.hp-footer{margin-top:14px;font-size:10px;color:var(--dim);text-align:center}
 
 /* slash command autocomplete */
 .slash-menu{position:absolute;bottom:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--dim2);border-bottom:none;max-height:200px;overflow-y:auto;display:none;z-index:50}
@@ -442,7 +460,12 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
     </div>
 
     <div class="status-bar">
-      <span style="color:var(--dim);cursor:pointer" onclick="runCmd('/help')" title="Show shortcuts">? shortcuts</span>
+      <span class="status-dot"></span>
+      <span class="mode" id="permMode" onclick="cyclePermMode()" title="Shift+Tab to cycle">ask</span>
+      <span style="color:var(--dim)">·</span>
+      <span style="color:var(--dim);cursor:pointer" id="effortLabel" onclick="cycleEffort()" title="Ctrl+T to cycle">effort auto</span>
+      <span style="color:var(--dim)">·</span>
+      <span style="color:var(--dim);cursor:pointer" onclick="toggleHelpOverlay()" title="Press ? for shortcuts">? shortcuts</span>
       <span class="spacer"></span>
       <span class="usage" id="usageLabel" style="color:var(--green)">0/1000K · 0%</span>
     </div>
@@ -450,7 +473,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
     <div class="input-wrap">
       <div class="slash-menu" id="slashMenu"></div>
       <div class="input-area">
-        <span class="input-prompt">></span>
+        <span class="input-prompt">❯</span>
         <input type="text" class="input-field" id="inputField" placeholder="describe a task for zero..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <span class="input-model" id="modelLabel">claude-sonnet-5</span>
       </div>
@@ -488,6 +511,45 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 
 <!-- kbd toast -->
 <div class="kbd-toast" id="kbdToast">Keyboard Preference: <span id="kbdState">On</span></div>
+
+<!-- ? help overlay -->
+<div class="help-overlay" id="helpOverlay">
+  <div class="help-panel">
+    <div class="hp-title">Keyboard Shortcuts</div>
+    <div class="hp-sub">Press ? anywhere to toggle this overlay</div>
+
+    <div class="hp-group">
+      <div class="hp-group-title">Chat</div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Enter</span></div><div class="hp-desc">Send message</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Esc</span></div><div class="hp-desc">Clear input</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Ctrl</span><span class="hp-key">C</span></div><div class="hp-desc">Cancel streaming response</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">?</span></div><div class="hp-desc">Toggle this help overlay</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">↑</span> <span class="hp-key">↓</span></div><div class="hp-desc">Navigate command history</div></div>
+    </div>
+
+    <div class="hp-group">
+      <div class="hp-group-title">Model & Run Controls</div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Ctrl</span><span class="hp-key">T</span></div><div class="hp-desc">Cycle reasoning effort (auto → low → medium → high)</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Shift</span><span class="hp-key">Tab</span></div><div class="hp-desc">Cycle permission mode (ask → auto → full-auto → yolo)</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Ctrl</span><span class="hp-key">P</span></div><div class="hp-desc">Toggle plan mode</div></div>
+    </div>
+
+    <div class="hp-group">
+      <div class="hp-group-title">Navigation</div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Ctrl</span><span class="hp-key">B</span></div><div class="hp-desc">Toggle sidebar</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Ctrl</span><span class="hp-key">L</span></div><div class="hp-desc">Clear terminal</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">Ctrl</span><span class="hp-key">O</span></div><div class="hp-desc">Toggle transcript mode</div></div>
+    </div>
+
+    <div class="hp-group">
+      <div class="hp-group-title">Commands</div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">/</span></div><div class="hp-desc">Open slash command menu</div></div>
+      <div class="hp-row"><div class="hp-keys"><span class="hp-key">!</span></div><div class="hp-desc">Run a shell command (e.g. !ls -la)</div></div>
+    </div>
+
+    <div class="hp-footer">Press <span style="color:var(--fg)">?</span> or <span style="color:var(--fg)">Esc</span> to close</div>
+  </div>
+</div>
 
 <!-- settings panel -->
 <div class="settings-overlay" id="settingsOverlay">
@@ -934,6 +996,7 @@ function initShell(){
     if(e.ctrlKey&&e.key==='p'){e.preventDefault();planMode=!planMode;addLine('<span style="color:var(--dim)">Plan mode: <span class="'+(planMode?'hl':'val')+'">'+(planMode?'ON':'OFF')+'</span></span>','system');}
     if(e.ctrlKey&&e.key==='o'){e.preventDefault();transcriptMode=!transcriptMode;addLine('<span style="color:var(--dim)">Transcript: <span class="val">'+(transcriptMode?'detailed':'compact')+'</span></span>','system');}
     if(e.ctrlKey&&e.key==='c'){if(isStreaming){e.preventDefault();cancelStream();}}
+    if(e.key==='?'&&!e.ctrlKey&&!e.altKey&&(document.activeElement!==inputField||!inputField.value)){e.preventDefault();toggleHelpOverlay();}
   });
 
   output.addEventListener('click',function(){inputField.focus();});
@@ -1013,13 +1076,16 @@ function cyclePermMode(){
   permModeIdx=(permModeIdx+1)%PERM_MODES.length;
   var mode=PERM_MODES[permModeIdx];
   var pmEl=document.getElementById('permMode');
-  if(pmEl){pmEl.textContent=mode.replace(' mode','');pmEl.style.color=mode==='yolo mode'?'var(--red)':'';}
+  if(pmEl){pmEl.textContent=mode.replace(' mode','');pmEl.style.color=mode==='yolo mode'?'var(--red)':mode==='full-auto mode'?'var(--orange)':'';}
+  var dot=document.querySelector('.status-dot');
+  if(dot)dot.style.background=mode==='yolo mode'?'var(--red)':mode==='full-auto mode'?'var(--orange)':'var(--green)';
   addLine('<span style="color:var(--dim)">Permission mode: <span class="val">'+mode+'</span></span>','system');
 }
 function cycleEffort(){
   var idx=EFFORT_LEVELS.indexOf(effortLevel);
   effortLevel=EFFORT_LEVELS[(idx+1)%EFFORT_LEVELS.length];
-  var efEl=document.getElementById('effortLabel');if(efEl)efEl.textContent='effort '+effortLevel;
+  var efEl=document.getElementById('effortLabel');
+  if(efEl){efEl.textContent='effort '+effortLevel;efEl.style.color=effortLevel==='high'?'var(--accent)':'';}
   addLine('<span style="color:var(--dim)">Reasoning effort: <span class="val">'+effortLevel+'</span></span>','system');
 }
 
@@ -1054,7 +1120,7 @@ function resumeSession(sid){
   output.innerHTML='';
   addLine('<span style="color:var(--dim)">Resumed session: <span class="val">'+esc(s.preview)+'</span></span>','system');
   chatHistory.forEach(function(m){
-    if(m.role==='user')addLine('<span class="prompt">></span> '+esc(m.content),'user');
+    if(m.role==='user')addLine('<span class="prompt">❯</span> '+esc(m.content),'user');
     else if(m.role==='assistant')addLine(formatOutput(m.content),'assistant');
   });
   addLine('','');renderSessions();
@@ -1119,12 +1185,14 @@ function stopWorking(){
   document.getElementById('workingLine').classList.remove('active');
 }
 function rippleWorking(){
-  var word='Working';var phase=Date.now()/200;
+  var word='Working';var t=Date.now()/1000;
   var html='';
   for(var i=0;i<word.length;i++){
-    var wave=Math.cos((i-phase)*1.0)*0.5+0.5;
-    var opacity=0.3+wave*0.7;
-    html+='<span style="color:var(--accent);opacity:'+opacity.toFixed(2)+'">'+word[i]+'</span>';
+    var level=Math.cos((t*2.5)-(i*0.8))*0.5+0.5;
+    var r=Math.round(68+(191-68)*level);
+    var g=Math.round(68+(255-68)*level);
+    var b=Math.round(68+(0)*level);
+    html+='<span style="color:rgb('+r+','+g+','+b+')">'+word[i]+'</span>';
   }
   document.getElementById('workingText').innerHTML=html;
 }
@@ -1148,52 +1216,7 @@ function sendMessage(){
     var parts=text.split(/\s+/);var cmd=parts[0].toLowerCase();var arg=parts.slice(1).join(' ');
 
     if(cmd==='/help'||text==='?'){
-      addBlock([
-        '<span class="hl">Session</span>',
-        '  <span class="val">/clear</span>          <span style="color:var(--dim)">Clear the visible transcript</span>',
-        '  <span class="val">/search</span>         <span style="color:var(--dim)">Search local session events</span>',
-        '  <span class="val">/resume</span>         <span style="color:var(--dim)">List recent sessions or resume</span>',
-        '  <span class="val">/retitle</span>        <span style="color:var(--dim)">Generate concise session title</span>',
-        '  <span class="val">/compact</span>        <span style="color:var(--dim)">Show or request compaction</span>',
-        '  <span class="val">/transcript</span>     <span style="color:var(--dim)">Toggle detailed transcript</span>',
-        '  <span class="val">/rewind</span>         <span style="color:var(--dim)">Restore to a checkpoint</span>',
-        '  <span class="val">/new</span>            <span style="color:var(--dim)">Start new session</span>',
-        '',
-        '<span class="hl">Model</span>',
-        '  <span class="val">/provider</span>       <span style="color:var(--dim)">Open provider setup</span>',
-        '  <span class="val">/model</span>          <span style="color:var(--dim)">Show or switch the active model</span>',
-        '  <span class="val">/effort</span>         <span style="color:var(--dim)">Show or set reasoning effort</span>',
-        '  <span class="val">/style</span>          <span style="color:var(--dim)">Show or set response style</span>',
-        '',
-        '<span class="hl">Runtime</span>',
-        '  <span class="val">/plan</span>           <span style="color:var(--dim)">Show planning mode status</span>',
-        '  <span class="val">/permissions</span>    <span style="color:var(--dim)">Show permission mode and grants</span>',
-        '  <span class="val">/selfcorrect</span>    <span style="color:var(--dim)">Show or set self-correction depth</span>',
-        '  <span class="val">/turns</span>          <span style="color:var(--dim)">Show or set tool-turn budget</span>',
-        '  <span class="val">/spec</span>           <span style="color:var(--dim)">Draft implementation spec</span>',
-        '  <span class="val">/init</span>           <span style="color:var(--dim)">Investigate repo, generate AGENTS.md</span>',
-        '',
-        '<span class="hl">Tools</span>',
-        '  <span class="val">/ps</span>             <span style="color:var(--dim)">List running background sessions</span>',
-        '  <span class="val">/stop</span>           <span style="color:var(--dim)">Stop background sessions</span>',
-        '  <span class="val">/tools</span>          <span style="color:var(--dim)">List registered tools</span>',
-        '  <span class="val">/context</span>        <span style="color:var(--dim)">Show workspace and runtime context</span>',
-        '  <span class="val">/image</span>          <span style="color:var(--dim)">Attach a local image or PDF</span>',
-        '  <span class="val">/add-dir</span>        <span style="color:var(--dim)">Grant write access to directory</span>',
-        '  <span class="val">/mcp</span>            <span style="color:var(--dim)">Show MCP server status</span>',
-        '',
-        '<span class="hl">Meta</span>',
-        '  <span class="val">/help</span>           <span style="color:var(--dim)">Show available commands</span>',
-        '  <span class="val">/doctor</span>         <span style="color:var(--dim)">Show diagnostics</span>',
-        '  <span class="val">/config</span>         <span style="color:var(--dim)">Show active configuration</span>',
-        '  <span class="val">/debug</span>          <span style="color:var(--dim)">Toggle debug mode</span>',
-        '  <span class="val">/theme</span>          <span style="color:var(--dim)">Pick a color theme</span>',
-        '  <span class="val">/export</span>         <span style="color:var(--dim)">Export session as JSON</span>',
-        '  <span class="val">/exit</span>           <span style="color:var(--dim)">Exit Zero</span>',
-        '',
-        '<span style="color:var(--dim)">Ctrl+T effort · Shift+Tab mode · Ctrl+B sidebar · Ctrl+P plan · Ctrl+O transcript · Ctrl+C cancel</span>',
-        '',
-      ]);return;
+      toggleHelpOverlay();return;
     }
     if(cmd==='/clear'||text==='clear'){output.innerHTML='';return;}
     if(cmd==='/reset'){chatHistory=[];totalTokens=0;updateUsage();addLine('<span style="color:var(--dim)">Conversation reset.</span>','system');return;}
@@ -1466,7 +1489,7 @@ function sendMessage(){
   // !command bash escape
   if(text.startsWith('!')){
     var shellCmd=text.slice(1).trim();
-    addLine('<span class="prompt">!</span> '+esc(shellCmd),'user');
+    addLine('<span class="prompt">❯</span> <span style="color:var(--orange)">!</span>'+esc(shellCmd),'user');
     var card=addToolCard('shell',shellCmd,null,'running');
     setTimeout(function(){updateToolCard(card,'done','exit code 0');},500);
     addLine('<span style="color:var(--dim)">(shell execution simulated in browser mode)</span>','system');
@@ -1474,12 +1497,12 @@ function sendMessage(){
   }
 
   // handle ? shortcut
-  if(text==='?'){runCmd('/help');return;}
+  if(text==='?'){toggleHelpOverlay();return;}
 
   // remove suggestions
   var sugs=output.querySelector('.suggestions');if(sugs)sugs.remove();
 
-  addLine('<span class="prompt">></span> '+esc(text),'user');
+  addLine('<span class="prompt">❯</span> '+esc(text),'user');
   chatHistory.push({role:'user',content:text});
   isStreaming=true;inputField.placeholder='';
   var thinkStart=Date.now();
@@ -1567,6 +1590,21 @@ function sendMessage(){
     chatHistory.pop();isStreaming=false;stopWorking();inputField.placeholder='describe a task for zero...';
   });
 }
+
+/* ══════ HELP OVERLAY ══════ */
+function toggleHelpOverlay(){
+  var ov=document.getElementById('helpOverlay');
+  ov.classList.toggle('open');
+}
+(function(){
+  var ov=document.getElementById('helpOverlay');
+  if(ov){
+    ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('open');});
+    document.addEventListener('keydown',function(e){
+      if(ov.classList.contains('open')&&(e.key==='Escape'||e.key==='?')){e.preventDefault();ov.classList.remove('open');}
+    });
+  }
+})();
 
 /* ══════ KBD TOGGLE ══════ */
 var kbdOn=true,ctrlMode=false,altMode=false;
@@ -1731,23 +1769,34 @@ function applyFontSize(s){
   if(fs){fontSize=parseInt(fs);setTimeout(function(){applyFontSize(fontSize);},100);}
 })();
 
-/* ══════ TOOL CARDS ══════ */
+/* ══════ TOOL CARDS — ZERO ╭──╮ STYLE ══════ */
 function addToolCard(type, path, detail, status){
   var card=document.createElement('div');
   card.className='tool-card '+type;
   var statusClass=status==='done'?'done':'running';
-  var statusText=status==='done'?'done':'running';
+  var statusText=status==='done'?'✓':'⟳';
   var typeLabel={read:'Read',write:'Write',edit:'Edit',shell:'Bash',search:'Grep'}[type]||type;
-  card.innerHTML='<div class="tc-head"><span class="tc-name">'+typeLabel+'</span><span class="tc-status '+statusClass+'">'+statusText+'</span></div>'+
-    '<div class="tc-path">'+esc(path)+'</div>'+
-    (detail?'<div class="tc-detail">'+esc(detail)+'</div>':'');
+  var pathEsc=esc(path);
+  var w=Math.max(pathEsc.length+4, typeLabel.length+statusText.length+6, 30);
+  var topBar='╭'+'─'.repeat(w)+'╮';
+  var bottomBar='╰'+'─'.repeat(w)+'╯';
+  var padLine=function(content,rawLen){var pad=w-rawLen;return '│ '+content+' '.repeat(Math.max(0,pad-1))+'│';};
+  card.innerHTML=
+    '<span class="tc-border">'+topBar+'</span>\n'+
+    padLine('<span class="tc-name">'+typeLabel+'</span> <span class="tc-status '+statusClass+'">'+statusText+'</span>',typeLabel.length+1+statusText.length)+'\n'+
+    padLine('<span class="tc-path">'+pathEsc+'</span>',pathEsc.length)+'\n'+
+    (detail?padLine('<span class="tc-detail">'+esc(detail)+'</span>',detail.length)+'\n':'')+
+    '<span class="tc-border">'+bottomBar+'</span>';
   output.appendChild(card);output.scrollTop=output.scrollHeight;
   return card;
 }
 function updateToolCard(card, status, detail){
   var badge=card.querySelector('.tc-status');
-  if(badge){badge.className='tc-status '+(status==='done'?'done':'running');badge.textContent=status;}
-  if(detail){var d=card.querySelector('.tc-detail');if(d)d.textContent=detail;else{var nd=document.createElement('div');nd.className='tc-detail';nd.textContent=detail;card.appendChild(nd);}}
+  if(badge){badge.className='tc-status '+(status==='done'?'done':'running');badge.textContent=status==='done'?'✓':'⟳';}
+  if(detail){
+    var d=card.querySelector('.tc-detail');
+    if(d)d.textContent=detail;
+  }
 }
 
 /* ══════ PERMISSION PROMPT ══════ */
