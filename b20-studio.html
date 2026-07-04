@@ -164,13 +164,11 @@ select.inp{cursor:pointer;appearance:none;-webkit-appearance:none;
 select.inp option{background:var(--s2);color:var(--t1)}
 
 /* ── LOGO + NAME ROW ── */
-.logo-name-row{display:grid;grid-template-columns:110px 1fr;gap:16px;margin-bottom:14px;align-items:stretch}
-.logo-col{display:flex;flex-direction:column;gap:6px}
 .logo-upload{
-  width:110px;height:110px;border:1.5px dashed var(--b2);border-radius:10px;
+  width:100%;aspect-ratio:1;max-width:140px;border:1.5px dashed var(--b2);border-radius:10px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
   transition:border-color .2s,background .2s,box-shadow .2s;overflow:hidden;
-  background:var(--s2);flex-shrink:0;position:relative;
+  background:var(--s2);position:relative;margin-bottom:14px;
 }
 .logo-upload:hover{border-color:var(--orange);background:rgba(240,120,48,.05);box-shadow:0 0 0 3px rgba(240,120,48,.06)}
 .logo-upload.has-logo{border-style:solid;border-color:var(--b2);cursor:default}
@@ -179,13 +177,12 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .logo-placeholder-ico{font-size:1.5rem;margin-bottom:6px;opacity:.4}
 .logo-placeholder-txt{font-size:.6rem;color:var(--t3);line-height:1.5}
 .logo-preview{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:10px}
-.logo-preview img{max-width:88px;max-height:88px;border-radius:8px;object-fit:contain}
+.logo-preview img{max-width:100px;max-height:100px;border-radius:8px;object-fit:contain}
 .logo-remove-btn{
-  width:100%;background:none;border:none;font-family:var(--font);font-size:.6rem;
-  color:var(--t3);cursor:pointer;padding:0;transition:color .12s;text-align:center;
+  display:block;margin:-8px 0 14px;background:none;border:none;font-family:var(--font);font-size:.6rem;
+  color:var(--t3);cursor:pointer;padding:0;transition:color .12s;
 }
 .logo-remove-btn:hover{color:var(--red)}
-.logo-name-fields{display:flex;flex-direction:column;justify-content:center;gap:12px}
 
 /* ── TOGGLE ── */
 .toggle{position:relative;display:inline-flex;cursor:pointer;flex-shrink:0;user-select:none}
@@ -458,8 +455,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .sidebar{display:none}
   .content{padding:20px 16px 80px}
   .field-row,.variant-grid{grid-template-columns:1fr}
-  .logo-name-row{grid-template-columns:90px 1fr;gap:12px}
-  .logo-upload{width:90px;height:90px}
+  .logo-upload{max-width:120px}
   .pg-title{font-size:1.25rem}
   .card{padding:16px}
   .bottom-nav{display:grid}
@@ -638,28 +634,26 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </div>
       </div>
 
-      <!-- Logo + Name/Symbol -->
-      <div class="logo-name-row">
-        <div class="logo-col">
-          <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
-            <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
-            <div class="logo-placeholder" id="logoPlaceholder">
-              <div class="logo-placeholder-ico">&#x1F4CE;</div>
-              <div class="logo-placeholder-txt">PNG / JPG<br>max 500KB</div>
-            </div>
-          </div>
-          <button class="logo-remove-btn" id="logoRemove" style="display:none" onclick="removeLogo(event)">Remove</button>
-          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
+      <!-- Logo -->
+      <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
+        <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
+        <div class="logo-placeholder" id="logoPlaceholder">
+          <div class="logo-placeholder-ico">&#x1F4CE;</div>
+          <div class="logo-placeholder-txt">Upload logo<br><span style="font-size:.5rem">PNG / JPG · max 500KB</span></div>
         </div>
-        <div class="logo-name-fields">
-          <div>
-            <label class="field-label">Token Name</label>
-            <input class="inp" id="fName" type="text" placeholder="e.g. GameFi Token" oninput="onFormChange()" autocomplete="off">
-          </div>
-          <div>
-            <label class="field-label">Symbol</label>
-            <input class="inp" id="fSym" type="text" placeholder="e.g. GAME" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
-          </div>
+      </div>
+      <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
+      <button class="logo-remove-btn" id="logoRemove" style="display:none" onclick="removeLogo(event)">Remove logo</button>
+
+      <!-- Name + Symbol -->
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Token Name</label>
+          <input class="inp" id="fName" type="text" placeholder="e.g. GameFi Token" oninput="onFormChange()" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label">Symbol</label>
+          <input class="inp" id="fSym" type="text" placeholder="e.g. GAME" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
         </div>
       </div>
 
