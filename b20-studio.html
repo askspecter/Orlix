@@ -155,6 +155,28 @@ select.inp{cursor:pointer;appearance:none;-webkit-appearance:none;
 }
 select.inp option{background:var(--s2);color:var(--t1)}
 
+/* ── LOGO + NAME ROW ── */
+.logo-name-row{display:grid;grid-template-columns:120px 1fr;gap:14px;margin-bottom:12px;align-items:start}
+.logo-upload{
+  width:120px;height:120px;border:1.5px dashed var(--b2);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:border-color .15s,background .15s;overflow:hidden;
+  background:var(--s2);flex-shrink:0;position:relative;
+}
+.logo-upload:hover{border-color:var(--orange);background:rgba(240,120,48,.04)}
+.logo-upload.has-logo{border-style:solid;border-color:var(--b2);cursor:default}
+.logo-placeholder{text-align:center}
+.logo-preview{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:8px}
+.logo-preview img{max-width:90px;max-height:90px;border-radius:6px;object-fit:contain}
+.logo-remove{
+  position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;
+  font-family:var(--font);font-size:.6rem;color:#fff;cursor:pointer;
+  padding:2px 6px;border-radius:4px;opacity:0;transition:opacity .12s;
+}
+.logo-upload:hover .logo-remove{opacity:1}
+.logo-remove:hover{opacity:1;background:var(--red)}
+.logo-name-fields{display:flex;flex-direction:column;gap:10px}
+
 /* ── TOGGLE ── */
 .toggle{position:relative;display:inline-flex;cursor:pointer;flex-shrink:0;user-select:none}
 .toggle input{opacity:0;width:0;height:0;position:absolute;pointer-events:none}
@@ -426,6 +448,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .sidebar{display:none}
   .content{padding:20px 16px 80px}
   .field-row,.variant-grid{grid-template-columns:1fr}
+  .logo-name-row{grid-template-columns:1fr}
+  .logo-upload{width:100%;height:100px}
   .pg-title{font-size:1.25rem}
   .card{padding:16px}
   .bottom-nav{display:grid}
@@ -591,7 +615,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <div class="variant-card sel" id="varAsset" onclick="setVariant('asset')">
           <div class="vc-chk">✓</div>
           <div class="vc-name">Asset</div>
-          <div class="vc-desc">6–18 decimals, rebase multiplier, batched issuance.</div>
+          <div class="vc-desc">6–18 decimals, 1B supply, batched issuance.</div>
         </div>
         <div class="variant-card" id="varStable" onclick="setVariant('stablecoin')">
           <div class="vc-chk">✓</div>
@@ -600,15 +624,29 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </div>
       </div>
 
-      <!-- Name + Symbol -->
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Token Name</label>
-          <input class="inp" id="fName" type="text" placeholder="e.g. BNKR Token" oninput="onFormChange()" autocomplete="off">
+      <!-- Logo + Name/Symbol -->
+      <div class="logo-name-row">
+        <div class="field" style="margin-bottom:0">
+          <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
+            <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
+            <div class="logo-placeholder" id="logoPlaceholder">
+              <div style="font-size:1.4rem;margin-bottom:4px">&#x2B06;</div>
+              <div style="font-size:.62rem;color:var(--t2)">Upload logo</div>
+              <div style="font-size:.55rem;color:var(--t3);margin-top:2px">PNG / JPG · 500KB</div>
+            </div>
+            <button class="logo-remove" id="logoRemove" style="display:none" onclick="removeLogo(event)">&#x2715;</button>
+          </div>
+          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
         </div>
-        <div class="field">
-          <label class="field-label">Symbol</label>
-          <input class="inp" id="fSym" type="text" placeholder="e.g. BNKR" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
+        <div class="logo-name-fields">
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label">Token Name</label>
+            <input class="inp" id="fName" type="text" placeholder="e.g. BNKR Token" oninput="onFormChange()" autocomplete="off">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label">Symbol</label>
+            <input class="inp" id="fSym" type="text" placeholder="e.g. BNKR" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
+          </div>
         </div>
       </div>
 
@@ -640,17 +678,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <input class="inp" id="fAdmin" type="text" placeholder="0x… (auto-fills on connect)" style="font-size:.72rem" oninput="onFormChange()" autocomplete="off">
       </div>
 
-      <!-- Rebase Multiplier (Asset only) -->
-      <div class="field" id="rebaseRow">
-        <label class="field-label">Rebase Multiplier <span class="sub">· optional</span></label>
-        <input class="inp" id="fRebase" type="text" placeholder="(none)" autocomplete="off">
-      </div>
-
-      <!-- Contract URI -->
-      <div class="field">
-        <label class="field-label">Contract URI <span class="sub">· metadata</span></label>
-        <input class="inp" id="fUri" type="text" placeholder="ipfs://bafkrei… or https://…" autocomplete="off">
-      </div>
+      <input type="hidden" id="fRebase">
+      <input type="hidden" id="fUri">
 
       <!-- Compliance -->
       <div class="sec-label" style="margin-top:8px">Compliance Policy</div>
@@ -954,7 +983,6 @@ function setVariant(v) {
   const dec = document.getElementById('fDec');
   if (v === 'stablecoin') { dec.value = '6'; dec.disabled = true; }
   else { dec.disabled = false; }
-  document.getElementById('rebaseRow').style.display   = v === 'asset' ? '' : 'none';
   document.getElementById('operatorRow').style.display = v === 'asset' ? '' : 'none';
   onFormChange();
 }
@@ -964,6 +992,34 @@ function onDecChange() {}
 
 // ── supply cap (fixed at 1B) ─────────────────────────────────────────────────
 function onCapToggle() {}
+
+// ── logo upload ──────────────────────────────────────────────────────────────
+var _logoDataUrl = null;
+function onLogoSelect(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 512000) { alert('Logo max 500KB'); input.value = ''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _logoDataUrl = e.target.result;
+    document.getElementById('logoImg').src = _logoDataUrl;
+    document.getElementById('logoPreview').style.display = '';
+    document.getElementById('logoPlaceholder').style.display = 'none';
+    document.getElementById('logoUpload').classList.add('has-logo');
+    document.getElementById('logoRemove').style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function removeLogo(e) {
+  if (e) { e.stopPropagation(); e.preventDefault(); }
+  _logoDataUrl = null;
+  document.getElementById('logoFile').value = '';
+  document.getElementById('logoImg').src = '';
+  document.getElementById('logoPreview').style.display = 'none';
+  document.getElementById('logoPlaceholder').style.display = '';
+  document.getElementById('logoUpload').classList.remove('has-logo');
+  document.getElementById('logoRemove').style.display = 'none';
+}
 
 function onFormChange() {}
 
@@ -1752,7 +1808,6 @@ async function onMint() {
 (function init() {
   checkB20Activation();
   onFormChange();
-  document.getElementById('rebaseRow').style.display   = variant === 'asset' ? '' : 'none';
   document.getElementById('operatorRow').style.display = variant === 'asset' ? '' : 'none';
 })();
 </script>
