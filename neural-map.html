@@ -598,6 +598,9 @@ let clouds = [], fillerWinks = [], searchlights = null, moonHalo = null, redEye 
 // Scenic environment (diorama)
 let ships = [], oceanMesh = null, oceanBaseY = null, envTime = 0;
 
+// Cyberpunk megacity layer
+let hoverCars = [], floatStructs = [], skywayRails = [], holoBillboards = [], lightShafts = null, orbitRings = [];
+
 // Particle system
 let pSystem = null, pPositions = null, pVelocities = null, pOrigins = null, pColors = null;
 const P_COUNT = 500;
@@ -834,9 +837,9 @@ function createNeonSign(text, color, width, height) {
 // ── Height calculation ────────────────────────────────────────
 function calcHeight(node) {
   const mcap = node.mcap || node.vol24h || node.liquidity || 5000;
-  // Compress range: 8–80 units, smooth log curve
-  const raw = (Math.log10(Math.max(1000, mcap)) - 3) * 16;
-  return Math.max(8, Math.min(80, raw));
+  // Megacity range: 10–130 units, smooth log curve — supertalls downtown
+  const raw = (Math.log10(Math.max(1000, mcap)) - 3) * 21;
+  return Math.max(10, Math.min(130, raw));
 }
 
 // ── Rooftop details ───────────────────────────────────────────
@@ -1301,6 +1304,40 @@ function createBuilding(node, x, z) {
   group.add(sign);
   neonSigns.push({mesh: sign, baseIntensity: 1.0, flicker: Math.random() * Math.PI * 2});
 
+  // Cyberpunk neon edge strips — vertical light lines on tower corners
+  if (node.isOrlix || Math.random() < 0.45) {
+    const stripCol = node.isOrlix ? 0xF07830 : NEON_PALETTE[Math.floor(Math.random() * NEON_PALETTE.length)];
+    const stripMat = new THREE.MeshBasicMaterial({ color: stripCol, transparent: true, opacity: 0.9 });
+    const stripH = height * 0.55;
+    const corners = node.isOrlix ? [[1,1],[1,-1],[-1,1],[-1,-1]] : [[1,1],[-1,-1]];
+    for (const [sx, sz] of corners) {
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.22, stripH, 0.22), stripMat);
+      strip.position.set(sx * (bw/2 + 0.05), stripH/2, sz * (bd/2 + 0.05));
+      group.add(strip);
+    }
+  }
+
+  // ORLIX landmark — orbiting halo ring with glowing drones (impossible architecture)
+  if (node.isOrlix) {
+    const ringGrp = new THREE.Group();
+    const halo = new THREE.Mesh(
+      new THREE.TorusGeometry(bw * 1.4, 0.22, 8, 48),
+      new THREE.MeshBasicMaterial({ color: 0xF07830, transparent: true, opacity: 0.85 })
+    );
+    halo.rotation.x = Math.PI / 2;
+    ringGrp.add(halo);
+    for (let bi = 0; bi < 3; bi++) {
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xFFD9A0 }));
+      const a = bi / 3 * Math.PI * 2;
+      bead.position.set(Math.cos(a) * bw * 1.4, 0, Math.sin(a) * bw * 1.4);
+      ringGrp.add(bead);
+    }
+    ringGrp.position.y = height * 0.82;
+    group.add(ringGrp);
+    orbitRings.push({ grp: ringGrp, spd: 0.012 });
+  }
+
   // Antenna + blinking light for tall buildings
   if (height > 35) {
     const antH = height * 0.13;
@@ -1446,6 +1483,189 @@ function setupFlyInput(canvas) {
   canvas.addEventListener('wheel', skipIntro);
 }
 
+// ── Cyberpunk megacity layer ───────────────────────────────────
+// Layered vertical city: neon skybridges between supertalls, floating
+// megastructures with their own mini-districts, multi-altitude hover
+// traffic, holographic billboards, volumetric beacon shafts.
+function buildCyberpunkLayer(isMobile, tops) {
+  const CYBER_NEON = [0x00FFCC, 0xFF2A6D, 0x00AAFF, 0xF07830, 0xBB00FF];
+
+  // A. Skybridges — neon-railed decks connecting tall towers mid-air
+  {
+    const tall = tops.filter(t => t.y > 45);
+    const maxBridges = isMobile ? 6 : 18;
+    let built = 0;
+    const used = new Set();
+    for (let i = 0; i < tall.length && built < maxBridges; i++) {
+      for (let j = i + 1; j < tall.length && built < maxBridges; j++) {
+        if (used.has(i) && used.has(j)) continue;
+        const a = tall[i], b = tall[j];
+        const dx = b.x - a.x, dz = b.z - a.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist < 25 || dist > 85) continue;
+        const h = Math.min(a.y, b.y) * (0.45 + Math.random() * 0.3);
+        const grp = new THREE.Group();
+        grp.position.set((a.x + b.x) / 2, h, (a.z + b.z) / 2);
+        grp.rotation.y = Math.atan2(dx, dz);
+        const deck = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.5, dist),
+          new THREE.MeshStandardMaterial({ color: 0x11141f, roughness: 0.5, metalness: 0.6 }));
+        grp.add(deck);
+        const railCol = CYBER_NEON[Math.floor(Math.random() * CYBER_NEON.length)];
+        for (const side of [-1, 1]) {
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, dist),
+            new THREE.MeshBasicMaterial({ color: railCol, transparent: true, opacity: 0.85 }));
+          rail.position.set(side * 1.05, 0.4, 0);
+          grp.add(rail);
+          skywayRails.push({ mat: rail.material, phase: Math.random() * Math.PI * 2 });
+        }
+        scene.add(grp);
+        used.add(i); used.add(j);
+        built++;
+      }
+    }
+  }
+
+  // B. Floating megastructures — hovering hex platforms with sky-districts
+  {
+    const N = isMobile ? 2 : 4;
+    const spots = [[-95, 185, -80], [110, 210, 60], [-60, 240, 120], [70, 170, -130]];
+    for (let i = 0; i < N; i++) {
+      const [fx, fy, fz] = spots[i];
+      const grp = new THREE.Group();
+      grp.position.set(fx, fy, fz);
+      const rad = 18 + Math.random() * 10;
+      const platMat = new THREE.MeshStandardMaterial({ color: 0x161a26, roughness: 0.4, metalness: 0.75 });
+      const plat = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad * 0.7, 4.5, 6), platMat);
+      grp.add(plat);
+      // Neon rim ring
+      const ringCol = CYBER_NEON[i % CYBER_NEON.length];
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(rad * 1.15, 0.5, 8, 40),
+        new THREE.MeshBasicMaterial({ color: ringCol, transparent: true, opacity: 0.75 }));
+      ring.rotation.x = Math.PI / 2;
+      grp.add(ring);
+      // Mini sky-district on the platform
+      const nT = isMobile ? 3 : 5;
+      for (let k = 0; k < nT; k++) {
+        const tw = 2.5 + Math.random() * 3, th = 5 + Math.random() * 12;
+        const t = new THREE.Mesh(new THREE.BoxGeometry(tw, th, tw),
+          new THREE.MeshStandardMaterial({
+            color: 0x1a2030, emissive: new THREE.Color(0xffffff),
+            emissiveMap: getWindowTex(), emissiveIntensity: 0.5,
+            roughness: 0.4, metalness: 0.6
+          }));
+        const ang = Math.random() * Math.PI * 2, rr = Math.random() * rad * 0.55;
+        t.position.set(Math.cos(ang) * rr, 2.25 + th / 2, Math.sin(ang) * rr);
+        grp.add(t);
+      }
+      // Underside glow — anti-gravity thrusters
+      const gc = document.createElement('canvas'); gc.width = gc.height = 128;
+      const gctx = gc.getContext('2d');
+      const gg = gctx.createRadialGradient(64, 64, 4, 64, 64, 64);
+      gg.addColorStop(0, 'rgba(120,220,255,0.9)');
+      gg.addColorStop(0.5, 'rgba(60,140,255,0.25)');
+      gg.addColorStop(1, 'rgba(40,100,255,0)');
+      gctx.fillStyle = gg; gctx.fillRect(0, 0, 128, 128);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(gc), transparent: true, opacity: 0.7,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      }));
+      glow.position.y = -4;
+      glow.scale.set(rad * 2.4, rad * 2.4, 1);
+      grp.add(glow);
+      // Blinking beacon
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.6, 6, 6),
+        new THREE.MeshBasicMaterial({ color: 0xFF3B30, transparent: true }));
+      beacon.position.y = 20;
+      grp.add(beacon);
+      antennaTips.push({ mesh: beacon, offset: Math.random() * Math.PI * 2 });
+      scene.add(grp);
+      floatStructs.push({ grp, baseY: fy, phase: Math.random() * Math.PI * 2, glow });
+    }
+  }
+
+  // C. Hover traffic — glowing flying cars in layered sky-lanes
+  {
+    const N = isMobile ? 10 : 28;
+    const LANES_Y = [55, 85, 115, 145];
+    for (let i = 0; i < N; i++) {
+      const grp = new THREE.Group();
+      const warm = Math.random() > 0.5;
+      const streak = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.22, 0.5),
+        new THREE.MeshBasicMaterial({
+          color: warm ? 0xFFAA55 : 0x66DDFF, transparent: true, opacity: 0.9,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+      grp.add(streak);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.3, 0.55),
+        new THREE.MeshBasicMaterial({ color: 0x1a1d28 }));
+      body.position.y = 0.25;
+      grp.add(body);
+      const axis = Math.random() > 0.5 ? 'x' : 'z';
+      const fixed = (Math.random() - 0.5) * 260;
+      const y = LANES_Y[Math.floor(Math.random() * LANES_Y.length)] + (Math.random() - 0.5) * 8;
+      const dir = Math.random() > 0.5 ? 1 : -1;
+      if (axis === 'z') grp.rotation.y = Math.PI / 2;
+      scene.add(grp);
+      hoverCars.push({ grp, axis, fixed, y, dir, pos: (Math.random() - 0.5) * 840, spd: 1.2 + Math.random() * 1.8 });
+    }
+  }
+
+  // D. Holographic billboards — giant flickering ad panels in the sky
+  {
+    const N = isMobile ? 2 : 6;
+    const ADS = ['$ORLIX', 'BASE CITY', 'ORLIX.XYZ', 'B20 LIVE', 'AI × ONCHAIN', '▲ BUILD'];
+    const topSorted = [...tops].sort((a, b) => b.y - a.y);
+    for (let i = 0; i < N && i < topSorted.length; i++) {
+      const t = topSorted[i];
+      const c = document.createElement('canvas'); c.width = 512; c.height = 288;
+      const ctx = c.getContext('2d');
+      const hue = ['#00ffcc', '#ff2a6d', '#00aaff', '#f07830', '#bb00ff', '#ffee00'][i % 6];
+      ctx.fillStyle = 'rgba(6,12,24,0.55)'; ctx.fillRect(0, 0, 512, 288);
+      ctx.strokeStyle = hue; ctx.lineWidth = 6; ctx.strokeRect(6, 6, 500, 276);
+      ctx.font = '900 72px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.shadowColor = hue; ctx.shadowBlur = 28;
+      ctx.fillStyle = hue;
+      ctx.fillText(ADS[i % ADS.length], 256, 144);
+      // scanlines
+      ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,0.28)';
+      for (let sy = 0; sy < 288; sy += 5) ctx.fillRect(0, sy, 512, 2);
+      const tex = new THREE.CanvasTexture(c);
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex, transparent: true, opacity: 0.62, side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(22, 12.4), mat);
+      const grp = new THREE.Group();
+      grp.position.set(t.x + (Math.random() > 0.5 ? 14 : -14), t.y * 0.8 + 8, t.z + (Math.random() > 0.5 ? 10 : -10));
+      grp.rotation.y = Math.random() * Math.PI * 2;
+      grp.add(panel);
+      scene.add(grp);
+      holoBillboards.push({ grp, mat, base: 0.62, phase: Math.random() * Math.PI * 2, rot: Math.random() > 0.5 });
+    }
+  }
+
+  // E. Volumetric beacon shafts — colored light pillars rising from plazas
+  {
+    lightShafts = new THREE.Group();
+    const N = isMobile ? 3 : 6;
+    for (let i = 0; i < N; i++) {
+      const col = CYBER_NEON[i % CYBER_NEON.length];
+      const shaft = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.2, 4.5, 220, 12, 1, true),
+        new THREE.MeshBasicMaterial({
+          color: col, transparent: true, opacity: 0.045,
+          blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false
+        }));
+      const ang = i / N * Math.PI * 2;
+      const rr = 90 + Math.random() * 60;
+      shaft.position.set(Math.cos(ang) * rr, 110, Math.sin(ang) * rr);
+      lightShafts.add(shaft);
+    }
+    scene.add(lightShafts);
+  }
+}
+
 function initCity(data) {
   // Stats
   document.getElementById('s-nodes').textContent = data.nodes.length;
@@ -1456,7 +1676,7 @@ function initCity(data) {
   // Scene
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05060E);
-  scene.fog = new THREE.FogExp2(0x05060E, 0.0024);
+  scene.fog = new THREE.FogExp2(0x05060E, 0.0020);
 
   // Camera — starts at intro start pos
   const W = window.innerWidth, H = window.innerHeight;
@@ -1525,7 +1745,7 @@ function initCity(data) {
   if (typeof THREE.EffectComposer !== 'undefined' && !isMobile) {
     composer = new THREE.EffectComposer(renderer);
     composer.addPass(new THREE.RenderPass(scene, camera));
-    bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 0.85, 0.4, 0.72);
+    bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.05, 0.45, 0.7);
     composer.addPass(bloomPass);
   }
 
@@ -1701,6 +1921,14 @@ function initCity(data) {
   rimLight.position.set(-120, 80, -120);
   scene.add(rimLight);
 
+  // Cyberpunk dual rim — magenta + cyan cross lighting
+  const rimMagenta = new THREE.PointLight(0xFF2A6D, 1.1, 420, 1.4);
+  rimMagenta.position.set(130, 90, -60);
+  scene.add(rimMagenta);
+  const rimCyan = new THREE.PointLight(0x00CCDD, 0.9, 420, 1.4);
+  rimCyan.position.set(-100, 70, 130);
+  scene.add(rimCyan);
+
   // Additional atmospheric fill
   const atm1 = new THREE.PointLight(0xF07830, 1.8, 600, 1.2);
   atm1.position.set(0, 120, 0); scene.add(atm1);
@@ -1715,7 +1943,7 @@ function initCity(data) {
     if (isNight) {
       // Deep neon night
       scene.background = new THREE.Color(0x05060E);
-      scene.fog = new THREE.FogExp2(0x05060E, 0.0024);
+      scene.fog = new THREE.FogExp2(0x05060E, 0.0020);
       ambLight.color.set(0x2a3a55); ambLight.intensity = 0.95;
       dirLight.color.set(0x9fb4d8); dirLight.intensity = 1.5;
       stars.visible = true; moon.visible = true; sunSphere.visible = false;
@@ -1729,6 +1957,9 @@ function initCity(data) {
       clouds.forEach(c => { c.sp.material.color.set(0x8fa0c8); c.sp.material.opacity = 0.10; });
       if (moonHalo) moonHalo.visible = true;
       if (searchlights) searchlights.visible = true;
+      if (lightShafts) lightShafts.visible = true;
+      holoBillboards.forEach(b => { b.grp.visible = true; });
+      rimMagenta.intensity = 1.1; rimCyan.intensity = 0.9;
       applyEnvironment(true);
       btn.innerHTML = '<span class="hbtn-ico">🌙</span><span class="hbtn-txt"> Night</span>';
     } else {
@@ -1748,6 +1979,9 @@ function initCity(data) {
       clouds.forEach(c => { c.sp.material.color.set(0xffffff); c.sp.material.opacity = 0.55; });
       if (moonHalo) moonHalo.visible = false;
       if (searchlights) searchlights.visible = false;
+      if (lightShafts) lightShafts.visible = false;
+      holoBillboards.forEach(b => { b.grp.visible = false; });
+      rimMagenta.intensity = 0; rimCyan.intensity = 0;
       applyEnvironment(false);
       btn.innerHTML = '<span class="hbtn-ico">☀️</span><span class="hbtn-txt"> Day</span>';
     }
@@ -1949,6 +2183,9 @@ function initCity(data) {
     }
     scene.add(searchlights);
   }
+
+  // ── Cyberpunk megacity layer — skybridges, floating structures, hover traffic ──
+  buildCyberpunkLayer(isMobile, buildingTopPositions);
 
   // ── A red-eye flight crossing the sky with blinking nav lights ──
   {
@@ -2236,6 +2473,40 @@ function initCity(data) {
     }
     // Subtle star twinkle
     starMat.opacity = 0.78 + 0.08 * Math.sin(cityTime * 0.8);
+
+    // ── Cyberpunk layer ───────────────────────────────────────
+    // Hover traffic streams through layered sky-lanes
+    for (const hc of hoverCars) {
+      hc.pos += hc.spd * hc.dir;
+      if (hc.pos > 420) hc.pos = -420;
+      if (hc.pos < -420) hc.pos = 420;
+      if (hc.axis === 'x') hc.grp.position.set(hc.pos, hc.y, hc.fixed);
+      else hc.grp.position.set(hc.fixed, hc.y, hc.pos);
+    }
+    // Floating megastructures hover-bob, thruster glow breathes
+    for (const fs of floatStructs) {
+      fs.grp.position.y = fs.baseY + Math.sin(cityTime * 0.35 + fs.phase) * 3.2;
+      fs.grp.rotation.y += 0.0008;
+      fs.glow.material.opacity = 0.55 + 0.2 * Math.sin(cityTime * 2.2 + fs.phase);
+    }
+    // Holo billboards flicker + slow spin
+    for (const hb of holoBillboards) {
+      hb.mat.opacity = hb.base * (0.75 + 0.25 * Math.sin(cityTime * 3.1 + hb.phase)) *
+        (Math.random() > 0.995 ? 0.3 : 1);   // occasional glitch drop
+      if (hb.rot) hb.grp.rotation.y += 0.004;
+    }
+    // ORLIX halo ring orbits
+    for (const or of orbitRings) or.grp.rotation.y += or.spd;
+    // Skybridge neon rails pulse
+    for (const sr of skywayRails) {
+      sr.mat.opacity = 0.6 + 0.3 * Math.sin(cityTime * 1.8 + sr.phase);
+    }
+    // Beacon shafts breathe
+    if (lightShafts && lightShafts.visible) {
+      lightShafts.children.forEach((s, i) => {
+        s.material.opacity = 0.032 + 0.022 * Math.sin(cityTime * 0.9 + i * 1.7);
+      });
+    }
 
     if (composer && useBloom) composer.render(); else renderer.render(scene, camera);
   }
