@@ -314,20 +314,9 @@ function parseConfig(input) {
   }
   if (adminless) warnings.push('Admin-less deploy is irreversible — no minting, pausing, or policy changes ever');
 
-  const rawCap  = String(input.supply_cap ?? input.supplyCap ?? '0').replace(/,/g, '');
-  let supplyCap = '0';
-  if (rawCap && rawCap !== '0') {
-    if (!/^\d+$/.test(rawCap)) errors.push('supply_cap must be an integer string with no commas or decimals');
-    else supplyCap = rawCap;
-  }
-
-  // Initial supply: minted to admin at deploy time (in whole token units, not wei)
-  const rawInit = String(input.initial_supply ?? input.initialSupply ?? '0').replace(/,/g, '');
-  let initialSupply = '0';
-  if (rawInit && rawInit !== '0') {
-    if (!/^\d+(\.\d+)?$/.test(rawInit)) errors.push('initial_supply must be a number');
-    else initialSupply = rawInit;
-  }
+  // Supply fixed at 1 billion — not configurable
+  const supplyCap = '1000000000';
+  const initialSupply = '1000000000';
 
   const pol      = input.policies ?? {};
   const policies = { allowlist: !!pol.allowlist, blocklist: !!pol.blocklist, freeze: !!pol.freeze };
@@ -421,7 +410,7 @@ async function handleInfo(net, res) {
         'ERC-20 compatible — works with any wallet, DEX, or indexer',
         'ERC-2612 permits — gasless approvals (no separate tx)',
         'Role-based access — mint, burn, pause, metadata roles',
-        'Supply caps — optional maximum total supply',
+        'Supply cap — fixed at 1 billion (1B) per token',
         'Transfer policies — sender/receiver/executor control',
         'Freeze & Seize — freeze accounts and recover balances',
         'Transfer memos — payment IDs and compliance tags',

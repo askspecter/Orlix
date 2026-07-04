@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
         'ERC-20 compatible — drop-in for wallets, DEXes, indexers',
         'ERC-2612 permits — approve without separate transaction',
         'Role-based access control — mint, burn, pause, metadata',
-        'Supply caps — optional maximum supply',
+        'Supply cap — fixed at 1 billion (1B) per token',
         'Transfer policies — granular sender/receiver/executor control',
         'Freeze & seize — burn balance of blocked address',
         'Transfer memos — payment IDs and compliance tags',
