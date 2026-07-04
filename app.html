@@ -834,11 +834,12 @@ select.inp{cursor:pointer}
 :root:not(.light) .gate-brand{text-shadow:0 0 16px rgba(240,120,48,.3)}
 
 /* ── ORLIX Banner ── */
-.orlix-banner{font-family:var(--mono);font-size:9px;line-height:1.15;margin-bottom:16px;user-select:none;overflow-x:auto;white-space:pre}
+.orlix-banner{font-family:'JetBrains Mono',monospace;font-size:12px;line-height:.92;letter-spacing:-.02em;margin-bottom:16px;user-select:none;overflow-x:auto;white-space:pre;-webkit-font-smoothing:none;-moz-osx-font-smoothing:unset}
 .orlix-banner .art-orli{color:var(--text-1)}
 .orlix-banner .art-x{color:var(--orange)}
-.orlix-banner .art-sub{display:block;margin-top:6px;font-size:.72rem;color:var(--text-3);letter-spacing:.08em;white-space:normal}
-@media(max-width:480px){.orlix-banner{font-size:5.5px}}
+.orlix-banner .art-sub{display:block;margin-top:8px;font-size:.72rem;color:var(--text-3);letter-spacing:.08em;white-space:normal;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.4}
+@media(max-width:640px){.orlix-banner{font-size:7px}}
+@media(max-width:380px){.orlix-banner{font-size:5.5px}}
 
 /* ── Theme Picker ── */
 .tp-current{display:flex;align-items:center;gap:8px;padding:11px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:default}
