@@ -8,24 +8,32 @@
 // repeated trace comes back instantly.
 
 const BASE_RPC = 'https://mainnet.base.org';
-const BSCAN     = 'https://api.basescan.org/api';
+// Blockscout exposes an Etherscan-compatible API at /api with NO key required,
+// and it actually returns data for Base (the legacy api.basescan.org V1 endpoint
+// now returns empty, and Etherscan V2 gates Base behind a paid plan). So we use
+// Blockscout as the primary source — the response shape ({result:[...]}) matches
+// what the Etherscan-style callers below already expect.
+const BSCAN      = 'https://base.blockscout.com/api';
 const BLOCKSCOUT = 'https://base.blockscout.com/api/v2';
 const WETH      = '0x4200000000000000000000000000000000000006';
 
 const short = a => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '?';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ── Basescan helper (free tier: ~5 req/s, so we self-throttle) ───────────────
+// ── Onchain data helper (Blockscout etherscan-compatible endpoint) ───────────
+// Self-throttled to be a good citizen. Returns { result: [...] } on success.
 let _lastCall = 0;
 async function bscan(params, { timeout = 9000 } = {}) {
-  const key = process.env.BASESCAN_API_KEY || '';
-  const wait = 220 - (Date.now() - _lastCall);
+  const wait = 160 - (Date.now() - _lastCall);
   if (wait > 0) await sleep(wait);
   _lastCall = Date.now();
-  const qs = new URLSearchParams({ ...params, apikey: key }).toString();
+  const qs = new URLSearchParams(params).toString();
   const r = await fetch(`${BSCAN}?${qs}`, { signal: AbortSignal.timeout(timeout) }).catch(() => null);
   if (!r || !r.ok) return { status: '0', result: [] };
-  return r.json().catch(() => ({ status: '0', result: [] }));
+  const j = await r.json().catch(() => ({ status: '0', result: [] }));
+  // Blockscout returns message:"OK" (not status:"1"); normalise result to array
+  if (!Array.isArray(j.result)) j.result = [];
+  return j;
 }
 
 async function rpc(method, params = []) {
@@ -113,6 +121,19 @@ const KNOWN = {
 };
 function label(addr) { return KNOWN[addr?.toLowerCase()] || null; }
 
+// Burn / mint / system contracts that should never count as a "buyer" or "sibling"
+const SYSTEM = new Set([
+  '0x0000000000000000000000000000000000000000',
+  '0x000000000000000000000000000000000000dead',
+  '0x0000000071727de22e5e9d8baf0edac6f37da032', // ERC-4337 EntryPoint v0.7
+  '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789', // ERC-4337 EntryPoint v0.6
+  '0x4200000000000000000000000000000000000006', // WETH
+]);
+function isSystem(addr) {
+  const a = addr?.toLowerCase();
+  return !a || SYSTEM.has(a) || /^0x0+$/.test(a) || a.endsWith('dead');
+}
+
 async function firstFunder(wallet) {
   // Basescan: earliest normal txs, look for first inbound with value > 0
   const j = await bscan({ module: 'account', action: 'txlist', address: wallet,
@@ -179,7 +200,7 @@ async function walletCluster(wallet) {
   for (const t of txs) {
     if (t.from?.toLowerCase() === f.from && BigInt(t.value || '0') > 0n && t.to && t.to.toLowerCase() !== wallet) {
       const to = t.to.toLowerCase();
-      if (label(to)) continue;                          // skip sends back to exchanges
+      if (label(to) || isSystem(to)) continue;          // skip exchanges + system addrs
       if (!sib.has(to)) sib.set(to, { addr: to, value: Number(t.value) / 1e18, ts: Number(t.timeStamp), count: 0 });
       sib.get(to).count++;
     }
@@ -192,10 +213,18 @@ async function walletCluster(wallet) {
 
 // ── 3. DEPLOYER RAP SHEET — every token a creator has launched ───────────────
 async function contractCreator(token) {
+  // Primary: Blockscout V2 address endpoint carries the creator + creation tx.
+  const r = await fetch(`${BLOCKSCOUT}/addresses/${token}`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
+  if (r && r.ok) {
+    const d = await r.json().catch(() => ({}));
+    const creator = d.creator_address_hash?.toLowerCase();
+    if (creator) return { creator, hash: d.creation_transaction_hash || null };
+  }
+  // Fallback: etherscan-style getcontractcreation (some deployers only resolve here)
   const j = await bscan({ module: 'contract', action: 'getcontractcreation', contractaddresses: token });
-  const row = Array.isArray(j.result) ? j.result[0] : null;
-  if (!row) return null;
-  return { creator: row.contractCreator?.toLowerCase(), hash: row.txHash };
+  const row = Array.isArray(j.result) && j.result.length ? j.result[0] : null;
+  if (row && row.contractCreator) return { creator: row.contractCreator.toLowerCase(), hash: row.txHash };
+  return null;
 }
 
 async function deployerRapSheet(token) {
@@ -257,7 +286,7 @@ async function earlyBuyers(token, n = 12) {
   for (const t of txs) {
     const to = t.to?.toLowerCase();
     if (!to || seen.has(to)) continue;
-    if (to === '0x0000000000000000000000000000000000000000') continue;
+    if (isSystem(to) || to === token) continue;   // skip burn/mint/entrypoint/self
     if (label(to)) continue;
     // skip the LP pair / router (they receive tokens as liquidity)
     seen.add(to);
@@ -288,7 +317,7 @@ async function rugDossier(token) {
   const [dx, cc, holdersRes] = await Promise.all([
     dexData(token).catch(() => null),
     contractCreator(token).catch(() => null),
-    fetch(`${BLOCKSCOUT}/tokens/${token}/holders?limit=15`, { signal: AbortSignal.timeout(8000) })
+    fetch(`${BLOCKSCOUT}/tokens/${token}/holders`, { signal: AbortSignal.timeout(8000) })
       .then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
 
