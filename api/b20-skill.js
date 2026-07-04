@@ -314,17 +314,9 @@ function parseConfig(input) {
   }
   if (adminless) warnings.push('Admin-less deploy is irreversible — no minting, pausing, or policy changes ever');
 
-  // Supply cap fixed at 1 billion
+  // Supply fixed at 1 billion — not configurable
   const supplyCap = '1000000000';
-
-  // Initial supply: minted to admin at deploy time (in whole token units, not wei)
-  const rawInit = String(input.initial_supply ?? input.initialSupply ?? '0').replace(/,/g, '');
-  let initialSupply = '0';
-  if (rawInit && rawInit !== '0') {
-    if (!/^\d+(\.\d+)?$/.test(rawInit)) errors.push('initial_supply must be a number');
-    else if (Number(rawInit) > 1000000000) errors.push('initial_supply cannot exceed 1,000,000,000 (1B supply cap)');
-    else initialSupply = rawInit;
-  }
+  const initialSupply = '1000000000';
 
   const pol      = input.policies ?? {};
   const policies = { allowlist: !!pol.allowlist, blocklist: !!pol.blocklist, freeze: !!pol.freeze };

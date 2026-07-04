@@ -612,7 +612,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </div>
       </div>
 
-      <!-- Decimals -->
+      <!-- Decimals + Supply -->
       <div class="field-row">
         <div class="field">
           <label class="field-label">Decimals</label>
@@ -625,20 +625,14 @@ select.inp option{background:var(--s2);color:var(--t1)}
           </select>
         </div>
         <div class="field">
-          <label class="field-label">Supply Cap</label>
-          <input class="inp" id="fCap" type="text" value="1,000,000,000" disabled style="opacity:.6;cursor:not-allowed">
-          <input type="hidden" id="fUncapped">
-          <span style="font-size:.6rem;color:var(--t3);margin-top:2px;display:block">Fixed at 1 billion</span>
+          <label class="field-label">Total Supply</label>
+          <input class="inp" type="text" value="1,000,000,000" disabled style="opacity:.6;cursor:not-allowed">
+          <span style="font-size:.6rem;color:var(--t3);margin-top:2px;display:block">1B · minted to you at deploy</span>
         </div>
       </div>
-
-      <!-- Initial Supply -->
-      <div class="field">
-        <div class="cap-label-row">
-          <label class="field-label" style="margin-bottom:0">Initial Supply</label>
-          <span style="font-size:.62rem;color:var(--t3)">minted to you at deploy (max 1B)</span>
-        </div>
-        <input class="inp" id="fInitSupply" type="text" placeholder="e.g. 1000000" value="1000000" oninput="onFormChange()" autocomplete="off">
+      <input type="hidden" id="fCap" value="1000000000">
+      <input type="hidden" id="fUncapped">
+      <input type="hidden" id="fInitSupply" value="1000000000">
 
       <!-- Initial Admin -->
       <div class="field">
@@ -1091,7 +1085,7 @@ async function onDeploy() {
       variant,
       decimals:    parseInt(document.getElementById('fDec').value),
       supply_cap:     '1000000000',
-      initial_supply: (document.getElementById('fInitSupply').value || '').trim().replace(/,/g,'') || '0',
+      initial_supply: '1000000000',
       admin:       adminless ? undefined : walletAddress,
       adminless,
       policies: {
