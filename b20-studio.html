@@ -156,26 +156,28 @@ select.inp{cursor:pointer;appearance:none;-webkit-appearance:none;
 select.inp option{background:var(--s2);color:var(--t1)}
 
 /* ── LOGO + NAME ROW ── */
-.logo-name-row{display:grid;grid-template-columns:120px 1fr;gap:14px;margin-bottom:12px;align-items:start}
+.logo-name-row{display:grid;grid-template-columns:110px 1fr;gap:16px;margin-bottom:14px;align-items:stretch}
+.logo-col{display:flex;flex-direction:column;gap:6px}
 .logo-upload{
-  width:120px;height:120px;border:1.5px dashed var(--b2);border-radius:8px;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;
-  transition:border-color .15s,background .15s;overflow:hidden;
+  width:110px;height:110px;border:1.5px dashed var(--b2);border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;
+  transition:border-color .2s,background .2s,box-shadow .2s;overflow:hidden;
   background:var(--s2);flex-shrink:0;position:relative;
 }
-.logo-upload:hover{border-color:var(--orange);background:rgba(240,120,48,.04)}
+.logo-upload:hover{border-color:var(--orange);background:rgba(240,120,48,.05);box-shadow:0 0 0 3px rgba(240,120,48,.06)}
 .logo-upload.has-logo{border-style:solid;border-color:var(--b2);cursor:default}
-.logo-placeholder{text-align:center}
-.logo-preview{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:8px}
-.logo-preview img{max-width:90px;max-height:90px;border-radius:6px;object-fit:contain}
-.logo-remove{
-  position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;
-  font-family:var(--font);font-size:.6rem;color:#fff;cursor:pointer;
-  padding:2px 6px;border-radius:4px;opacity:0;transition:opacity .12s;
+.logo-upload.has-logo:hover{box-shadow:none}
+.logo-placeholder{text-align:center;pointer-events:none}
+.logo-placeholder-ico{font-size:1.5rem;margin-bottom:6px;opacity:.4}
+.logo-placeholder-txt{font-size:.6rem;color:var(--t3);line-height:1.5}
+.logo-preview{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:10px}
+.logo-preview img{max-width:88px;max-height:88px;border-radius:8px;object-fit:contain}
+.logo-remove-btn{
+  width:100%;background:none;border:none;font-family:var(--font);font-size:.6rem;
+  color:var(--t3);cursor:pointer;padding:0;transition:color .12s;text-align:center;
 }
-.logo-upload:hover .logo-remove{opacity:1}
-.logo-remove:hover{opacity:1;background:var(--red)}
-.logo-name-fields{display:flex;flex-direction:column;gap:10px}
+.logo-remove-btn:hover{color:var(--red)}
+.logo-name-fields{display:flex;flex-direction:column;justify-content:center;gap:12px}
 
 /* ── TOGGLE ── */
 .toggle{position:relative;display:inline-flex;cursor:pointer;flex-shrink:0;user-select:none}
@@ -448,8 +450,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .sidebar{display:none}
   .content{padding:20px 16px 80px}
   .field-row,.variant-grid{grid-template-columns:1fr}
-  .logo-name-row{grid-template-columns:1fr}
-  .logo-upload{width:100%;height:100px}
+  .logo-name-row{grid-template-columns:90px 1fr;gap:12px}
+  .logo-upload{width:90px;height:90px}
   .pg-title{font-size:1.25rem}
   .card{padding:16px}
   .bottom-nav{display:grid}
@@ -626,26 +628,25 @@ select.inp option{background:var(--s2);color:var(--t1)}
 
       <!-- Logo + Name/Symbol -->
       <div class="logo-name-row">
-        <div class="field" style="margin-bottom:0">
+        <div class="logo-col">
           <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
             <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
             <div class="logo-placeholder" id="logoPlaceholder">
-              <div style="font-size:1.4rem;margin-bottom:4px">&#x2B06;</div>
-              <div style="font-size:.62rem;color:var(--t2)">Upload logo</div>
-              <div style="font-size:.55rem;color:var(--t3);margin-top:2px">PNG / JPG · 500KB</div>
+              <div class="logo-placeholder-ico">&#x1F4CE;</div>
+              <div class="logo-placeholder-txt">PNG / JPG<br>max 500KB</div>
             </div>
-            <button class="logo-remove" id="logoRemove" style="display:none" onclick="removeLogo(event)">&#x2715;</button>
           </div>
+          <button class="logo-remove-btn" id="logoRemove" style="display:none" onclick="removeLogo(event)">Remove</button>
           <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
         </div>
         <div class="logo-name-fields">
-          <div class="field" style="margin-bottom:0">
+          <div>
             <label class="field-label">Token Name</label>
-            <input class="inp" id="fName" type="text" placeholder="e.g. BNKR Token" oninput="onFormChange()" autocomplete="off">
+            <input class="inp" id="fName" type="text" placeholder="e.g. GameFi Token" oninput="onFormChange()" autocomplete="off">
           </div>
-          <div class="field" style="margin-bottom:0">
+          <div>
             <label class="field-label">Symbol</label>
-            <input class="inp" id="fSym" type="text" placeholder="e.g. BNKR" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
+            <input class="inp" id="fSym" type="text" placeholder="e.g. GAME" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
           </div>
         </div>
       </div>
@@ -1006,7 +1007,7 @@ function onLogoSelect(input) {
     document.getElementById('logoPreview').style.display = '';
     document.getElementById('logoPlaceholder').style.display = 'none';
     document.getElementById('logoUpload').classList.add('has-logo');
-    document.getElementById('logoRemove').style.display = '';
+    document.getElementById('logoRemove').style.display = 'block';
   };
   reader.readAsDataURL(file);
 }
