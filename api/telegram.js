@@ -3,6 +3,7 @@
 // GET https://api.telegram.org/bot{TOKEN}/setWebhook?url=https://orlixai.xyz/api/telegram
 
 const { ethers } = require('ethers');
+const INV = require('./_investigate.js');
 
 const ANTHROPIC_KEY = () => process.env.BANKR_LLM_KEY || process.env.ANTHROPIC_API_KEY || '';
 const TG_TOKEN      = () => process.env.TELEGRAM_BOT_TOKEN || '';
@@ -813,6 +814,186 @@ async function cmdTop(chatId, lang) {
 
 // ── Smart Detect (auto-detect address / $TICKER) ─────────────────────────────
 
+// ── ONCHAIN DETECTIVE ───────────────────────────────────────────────────────
+// One clue in → the rest of the network out. Money trails, side-wallet
+// clusters, deployer rap sheets, early buyers, and full rug dossiers.
+
+const bsLink = a => `https://basescan.org/address/${a}`;
+const dxLink = a => `https://dexscreener.com/base/${a}`;
+
+// /trace <wallet> — follow the money up to its source
+async function cmdTrace(chatId, wallet, lang = 'en') {
+  const isID = lang === 'id';
+  typing(chatId);
+  await send(chatId, isID ? `🕵️ *Melacak aliran dana...*\n_Naik ke atas rantai funding, ini bisa makan beberapa detik._` : `🕵️ *Tracing the money trail...*\n_Walking up the funding chain, this can take a few seconds._`);
+  const res = await INV.traceFunding(wallet, 6);
+  if (!res.hops.length || (res.hops.length === 1 && res.hops[0].end)) {
+    return send(chatId, isID ? `🤷 Tidak ada transaksi funding masuk yang ketemu untuk \`${INV.short(wallet)}\`.` : `🤷 No inbound funding transactions found for \`${INV.short(wallet)}\`.`);
+  }
+  let msg = `🕵️ *${isID ? 'JEJAK DANA' : 'MONEY TRAIL'}*\n\`${wallet}\`\n\n`;
+  let prev = INV.short(wallet);
+  res.hops.forEach((h, i) => {
+    if (h.end) { msg += `${'   '.repeat(i)}⊘ _${isID ? 'jejak berakhir (tidak ada funding masuk)' : 'trail ends (no inbound funding)'}_\n`; return; }
+    const arrow = `${'   '.repeat(i)}${i === 0 ? '💰' : '↑'}`;
+    const who = h.label ? `🏦 *${h.label}*` : `\`${INV.short(h.from)}\``;
+    const amt = h.value ? `${h.value.toFixed(4)} ETH` : '';
+    const when = h.ts ? `· ${INV.ageFrom(h.ts)} ${isID ? 'lalu' : 'ago'}` : '';
+    msg += `${arrow} ${amt} ← ${who} ${when}${h.internal ? ' _(internal)_' : ''}\n`;
+    if (h.terminal) msg += `${'   '.repeat(i + 1)}✅ _${isID ? 'SUMBER DITEMUKAN — dana berasal dari exchange/bridge di atas' : 'SOURCE FOUND — funds originate from the exchange/bridge above'}_\n`;
+    if (h.loop) msg += `${'   '.repeat(i + 1)}🔁 _${isID ? 'loop terdeteksi' : 'loop detected'}_\n`;
+    prev = h.label || INV.short(h.from);
+  });
+  const last = res.hops[res.hops.length - 1];
+  const kb = [];
+  if (last && last.from && !last.label) kb.push([{ text: isID ? '🔍 Lacak funder ini' : '🔍 Trace this funder', callback_data: `trace:${last.from}` }, { text: isID ? '🕸 Side wallets' : '🕸 Side wallets', callback_data: `cluster:${last.from}` }]);
+  kb.push([{ text: '📊 Basescan', url: bsLink(wallet) }]);
+  await tg('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true, reply_markup: { inline_keyboard: kb } });
+}
+
+// /cluster <wallet> — the side wallets seeded by the same funder
+async function cmdCluster(chatId, wallet, lang = 'en') {
+  const isID = lang === 'id';
+  typing(chatId);
+  await send(chatId, isID ? `🕸 *Memetakan side wallets...*` : `🕸 *Mapping side wallets...*`);
+  const res = await INV.walletCluster(wallet);
+  if (!res.funder) return send(chatId, isID ? `🤷 Tidak ketemu funder untuk \`${INV.short(wallet)}\`.` : `🤷 Couldn't find a funder for \`${INV.short(wallet)}\`.`);
+  const f = res.funder;
+  let msg = `🕸 *${isID ? 'KLASTER WALLET' : 'WALLET CLUSTER'}*\n`;
+  msg += `${isID ? 'Target' : 'Target'}: \`${INV.short(wallet)}\`\n`;
+  msg += `${isID ? 'Didanai oleh' : 'Funded by'}: ${f.label ? `🏦 *${f.label}*` : `\`${INV.short(f.addr)}\``}\n\n`;
+  if (!res.siblings.length) {
+    msg += isID ? '_Funder ini tidak mendanai wallet lain (bersih / atau exchange).￼_' : '_This funder seeded no other wallets (clean / or an exchange)._';
+  } else {
+    msg += `*${isID ? 'Side wallets dari funder yang sama' : 'Side wallets from the same funder'} (${res.siblings.length}):*\n`;
+    res.siblings.forEach(s => {
+      msg += `• \`${INV.short(s.addr)}\` — ${s.value.toFixed(3)} ETH · ${INV.ageFrom(s.ts)}${isID ? ' lalu' : ' ago'}\n`;
+    });
+    msg += `\n_${isID ? 'Wallet-wallet ini kemungkinan satu orang / satu operasi.' : 'These wallets are likely one operator / one operation.'}_`;
+  }
+  const kb = res.siblings.slice(0, 3).map(s => ([{ text: `🔍 ${INV.short(s.addr)}`, callback_data: `watch:${s.addr}` }]));
+  kb.push([{ text: '📊 Basescan', url: bsLink(f.addr) }]);
+  await tg('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true, reply_markup: { inline_keyboard: kb } });
+}
+
+// /deployer <token> — the creator's full launch history
+async function cmdDeployer(chatId, token, lang = 'en') {
+  const isID = lang === 'id';
+  typing(chatId);
+  await send(chatId, isID ? `🎯 *Membongkar riwayat deployer...*` : `🎯 *Pulling the deployer's rap sheet...*`);
+  const res = await INV.deployerRapSheet(token);
+  if (!res.creator) return send(chatId, isID ? `🤷 Tidak bisa temukan deployer untuk \`${INV.short(token)}\`.` : `🤷 Couldn't find the deployer for \`${INV.short(token)}\`.`);
+  let msg = `🎯 *${isID ? 'RAP SHEET DEPLOYER' : 'DEPLOYER RAP SHEET'}*\n`;
+  msg += `${isID ? 'Deployer' : 'Deployer'}: \`${INV.short(res.creator)}\`\n`;
+  msg += `${isID ? 'Total token dibuat' : 'Total tokens deployed'}: *${res.totalDeploys}*\n`;
+  if (res.firstDeploy) msg += `${isID ? 'Deploy pertama' : 'First deploy'}: ${INV.ageFrom(res.firstDeploy)}${isID ? ' lalu' : ' ago'}\n`;
+  msg += `\n*${isID ? 'Token terbaru' : 'Recent launches'}:*\n`;
+  let dead = 0;
+  res.deploys.forEach(d => {
+    const sym = d.symbol ? `$${d.symbol}` : INV.short(d.addr);
+    const status = d.dead === true ? '💀' : d.dead === false ? '🟢' : '❔';
+    if (d.dead) dead++;
+    const mc = d.mcap ? INV.fmtUsd(d.mcap) : '—';
+    msg += `${status} *${sym}* · ${isID ? 'mcap' : 'mcap'} ${mc} · liq ${INV.fmtUsd(d.liq)} · ${INV.ageFrom(d.ts)}\n`;
+  });
+  if (res.totalDeploys > 3) {
+    const rate = res.deploys.length ? Math.round((dead / res.deploys.length) * 100) : 0;
+    msg += `\n${dead > 0 ? '⚠️' : '✅'} _${isID ? `${dead} dari ${res.deploys.length} token terbaru mati (${rate}%).` : `${dead} of ${res.deploys.length} recent tokens are dead (${rate}%).`}_`;
+    if (rate >= 50) msg += `\n🚨 *${isID ? 'POLA SERIAL RUGGER' : 'SERIAL RUGGER PATTERN'}*`;
+  }
+  await tg('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: [
+      [{ text: isID ? '🕵️ Lacak dana deployer' : '🕵️ Trace deployer funds', callback_data: `trace:${res.creator}` }],
+      [{ text: '📊 Basescan', url: bsLink(res.creator) }],
+    ] } });
+}
+
+// /early <token> — first buyers and who's still holding
+async function cmdEarly(chatId, token, lang = 'en') {
+  const isID = lang === 'id';
+  typing(chatId);
+  await send(chatId, isID ? `⏱ *Mencari pembeli pertama...*` : `⏱ *Finding the first buyers...*`);
+  const res = await INV.earlyBuyers(token, 12);
+  if (!res.buyers.length) return send(chatId, isID ? `🤷 Tidak ada data transfer awal untuk \`${INV.short(token)}\`.` : `🤷 No early transfer data for \`${INV.short(token)}\`.`);
+  let msg = `⏱ *${isID ? 'PEMBELI PERTAMA' : 'EARLY BUYERS'}*\n\`${INV.short(token)}\`\n\n`;
+  const icon = { diamond: '💎', trimmed: '✂️', sold: '💸' };
+  let diamonds = 0, sold = 0;
+  res.buyers.forEach((b, i) => {
+    if (b.status === 'diamond') diamonds++; if (b.status === 'sold') sold++;
+    msg += `${String(i + 1).padStart(2)}. ${icon[b.status]} \`${INV.short(b.addr)}\` — ${isID ? 'sisa' : 'holds'} ${b.pctLeft.toFixed(0)}% · ${INV.ageFrom(b.ts)}\n`;
+  });
+  msg += `\n💎 ${diamonds} ${isID ? 'diamond' : 'diamond'} · 💸 ${sold} ${isID ? 'sudah jual habis' : 'fully sold'} · ${isID ? 'dari' : 'of'} ${res.buyers.length}`;
+  await tg('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: [[{ text: '📈 Chart', url: dxLink(token) }]] } });
+}
+
+// /dossier <token> (alias /rugcheck) — full risk report
+async function cmdDossier(chatId, token, lang = 'en') {
+  const isID = lang === 'id';
+  typing(chatId);
+  await send(chatId, isID ? `🗂 *Menyusun dossier risiko...*` : `🗂 *Compiling risk dossier...*`);
+  const d = await INV.rugDossier(token);
+  const vico = d.verdict === 'LOW RISK' ? '🟢' : d.verdict === 'CAUTION' ? '🟡' : '🔴';
+  let msg = `🗂 *${isID ? 'DOSSIER TOKEN' : 'TOKEN DOSSIER'}*\n`;
+  msg += `*${d.name}* ($${d.symbol})\n\`${INV.short(d.token)}\`\n\n`;
+  msg += `${vico} *${isID ? 'Skor Risiko' : 'Risk Score'}: ${d.score}/100 — ${d.verdict}*\n\n`;
+  msg += `💵 ${isID ? 'Harga' : 'Price'}: ${d.price ? '$' + Number(d.price).toPrecision(4) : '—'}${d.ch24 != null ? ` (${d.ch24 >= 0 ? '🟢+' : '🔴'}${d.ch24}%)` : ''}\n`;
+  msg += `📊 ${isID ? 'Mcap' : 'Mcap'}: ${INV.fmtUsd(d.mcap)} · Liq: ${INV.fmtUsd(d.liq)}\n`;
+  msg += `⏳ ${isID ? 'Umur pair' : 'Pair age'}: ${d.ageStr}\n`;
+  if (d.dev) {
+    msg += `\n*👤 ${isID ? 'Wallet Dev' : 'Dev Wallet'}*\n`;
+    msg += `\`${INV.short(d.dev.addr)}\` · ${isID ? 'umur' : 'age'} ${d.dev.age}\n`;
+    msg += `${isID ? 'Didanai' : 'Funded by'}: ${d.dev.fundedBy}\n`;
+    if (d.dev.deploys != null) msg += `${isID ? 'Token dibuat' : 'Tokens deployed'}: ${d.dev.deploys}${d.dev.priorRugs ? ` (${d.dev.priorRugs} 💀)` : ''}\n`;
+  }
+  if (d.flags.length) {
+    msg += `\n*🚩 ${isID ? 'Red Flags' : 'Red Flags'}:*\n`;
+    d.flags.forEach(f => { msg += `• ${f}\n`; });
+  } else {
+    msg += `\n✅ _${isID ? 'Tidak ada red flag mencolok.' : 'No major red flags detected.'}_\n`;
+  }
+  msg += `\n_${isID ? 'Bukan nasihat finansial. DYOR.' : 'Not financial advice. DYOR.'}_`;
+  const kb = [];
+  if (d.dev) kb.push([{ text: isID ? '🎯 Riwayat deployer' : '🎯 Deployer history', callback_data: `deployer:${d.token}` }, { text: isID ? '⏱ Pembeli awal' : '⏱ Early buyers', callback_data: `early:${d.token}` }]);
+  kb.push([{ text: '📈 Chart', url: d.url || dxLink(d.token) }]);
+  await tg('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true, reply_markup: { inline_keyboard: kb } });
+}
+
+// ── Stalk mode — register a wallet for movement alerts (scanned by cron) ─────
+async function cmdStalk(chatId, userId, wallet, lang = 'en') {
+  const isID = lang === 'id';
+  if (!/^0x[0-9a-f]{40}$/i.test(wallet || '')) {
+    // list current stalks
+    const cur = await INV.redis('SMEMBERS', `stalk:list:${chatId}`).catch(() => null);
+    if (Array.isArray(cur) && cur.length) {
+      let m = `👁 *${isID ? 'Wallet yang kamu awasi' : 'Wallets you\'re stalking'}:*\n`;
+      cur.forEach(w => { m += `• \`${w}\`\n`; });
+      m += `\n_${isID ? 'Hentikan: /unstalk <alamat>' : 'Stop: /unstalk <address>'}_`;
+      return send(chatId, m);
+    }
+    return send(chatId, isID ? `👁 *Stalk Mode*\n\nContoh: \`/stalk 0x...\`\nSaya akan DM kamu tiap wallet itu bergerak (jual, beli, transfer).` : `👁 *Stalk Mode*\n\nUsage: \`/stalk 0x...\`\nI'll DM you the moment that wallet moves (sells, buys, transfers).`);
+  }
+  wallet = wallet.toLowerCase();
+  const latest = await INV.bscan({ module: 'account', action: 'txlist', address: wallet, page: '1', offset: '1', sort: 'desc' });
+  const lastHash = Array.isArray(latest.result) && latest.result[0] ? latest.result[0].hash : '';
+  await INV.redis('SADD', `stalk:list:${chatId}`, wallet);
+  await INV.redis('SADD', 'stalk:all', `${chatId}:${wallet}`);
+  await INV.redis('SET', `stalk:seen:${chatId}:${wallet}`, lastHash);
+  await send(chatId, isID
+    ? `👁 *Sekarang mengawasi* \`${INV.short(wallet)}\`\n\nKamu akan dapat notifikasi tiap ada aktivitas baru. Hentikan: /unstalk`
+    : `👁 *Now stalking* \`${INV.short(wallet)}\`\n\nYou'll get a ping on every new move. Stop: /unstalk`);
+}
+async function cmdUnstalk(chatId, wallet, lang = 'en') {
+  const isID = lang === 'id';
+  if (!/^0x[0-9a-f]{40}$/i.test(wallet || '')) {
+    await INV.redis('DEL', `stalk:list:${chatId}`);
+    return send(chatId, isID ? '🚫 Semua stalk dihentikan.' : '🚫 Stopped stalking all wallets.');
+  }
+  wallet = wallet.toLowerCase();
+  await INV.redis('SREM', `stalk:list:${chatId}`, wallet);
+  await INV.redis('SREM', 'stalk:all', `${chatId}:${wallet}`);
+  await send(chatId, isID ? `🚫 Berhenti mengawasi \`${INV.short(wallet)}\`.` : `🚫 Stopped stalking \`${INV.short(wallet)}\`.`);
+}
+
 async function smartDetect(chatId, userId, text, lang) {
   const isID = lang === 'id';
 
@@ -895,6 +1076,12 @@ async function setupBot() {
     { command: 'bridge',  description: 'Bridge Base ↔ Robinhood' },
     { command: 'top',     description: 'Top trending tokens' },
     { command: 'analyze', description: 'Deep token analysis' },
+    { command: 'dossier', description: '🕵️ Full rug dossier + risk score' },
+    { command: 'trace',   description: '🕵️ Follow a wallet\'s money trail' },
+    { command: 'cluster', description: '🕵️ Find a wallet\'s side wallets' },
+    { command: 'deployer',description: '🕵️ Every token a deployer launched' },
+    { command: 'early',   description: '🕵️ First buyers — who still holds' },
+    { command: 'stalk',   description: '👁 Alert me when a wallet moves' },
     { command: 'price',   description: 'Quick token price' },
     { command: 'watch',   description: 'Wallet activity tracker' },
     { command: 'wallet',  description: 'Your Base agent wallet' },
@@ -963,6 +1150,21 @@ module.exports = async function handler(req, res) {
           else { await send(cbChat, '🔍 Analyzing...'); await cmdAnalyze(cbChat, addr, cbLang); }
         } else if (cbData.startsWith('watch:')) {
           await cmdWatch(cbChat, cbData.slice(6).toLowerCase(), cbLang);
+        } else if (cbData.startsWith('trace:')) {
+          const g = await aiAllowed(cbChat, cbUser);
+          if (!g.ok) { await denyAiGate(cbChat, cbLang, g); } else { await cmdTrace(cbChat, cbData.slice(6).toLowerCase(), cbLang); }
+        } else if (cbData.startsWith('cluster:')) {
+          const g = await aiAllowed(cbChat, cbUser);
+          if (!g.ok) { await denyAiGate(cbChat, cbLang, g); } else { await cmdCluster(cbChat, cbData.slice(8).toLowerCase(), cbLang); }
+        } else if (cbData.startsWith('deployer:')) {
+          const g = await aiAllowed(cbChat, cbUser);
+          if (!g.ok) { await denyAiGate(cbChat, cbLang, g); } else { await cmdDeployer(cbChat, cbData.slice(9).toLowerCase(), cbLang); }
+        } else if (cbData.startsWith('early:')) {
+          const g = await aiAllowed(cbChat, cbUser);
+          if (!g.ok) { await denyAiGate(cbChat, cbLang, g); } else { await cmdEarly(cbChat, cbData.slice(6).toLowerCase(), cbLang); }
+        } else if (cbData.startsWith('dossier:')) {
+          const g = await aiAllowed(cbChat, cbUser);
+          if (!g.ok) { await denyAiGate(cbChat, cbLang, g); } else { await cmdDossier(cbChat, cbData.slice(8).toLowerCase(), cbLang); }
         } else if (cbData.startsWith('price:')) {
           await cmdPrice(cbChat, cbData.slice(6).toLowerCase());
         } else if (cbData.startsWith('ticker:')) {
@@ -1046,10 +1248,14 @@ module.exports = async function handler(req, res) {
       `/watch — ${isID ? 'Cek aktivitas dompet' : 'Wallet activity tracker'}\n` +
       `/wallet — ${isID ? 'Agent wallet kamu' : 'Your agent wallet'}\n` +
       `/help — ${isID ? 'Panduan lengkap' : 'Full command list'}\n\n` +
+      `*🕵️ ${isID ? 'Onchain Detective' : 'Onchain Detective'}:*\n` +
+      (isID
+        ? `Kasih 1 petunjuk, saya bongkar sisanya:\n• /trace — jejak dana wallet ke sumbernya\n• /cluster — side wallets satu operator\n• /deployer — semua token yang dia luncurkan\n• /early — pembeli pertama, siapa masih hold\n• /dossier — dossier risiko + skor rug\n• /stalk — alert tiap wallet bergerak\n\n`
+        : `Give me one clue, I'll find the rest:\n• /trace — a wallet's money trail to its source\n• /cluster — side wallets of the same operator\n• /deployer — every token a deployer launched\n• /early — first buyers, who's still holding\n• /dossier — full risk dossier + rug score\n• /stalk — get pinged when a wallet moves\n\n`) +
       `*🧠 ${isID ? 'Smart Detection' : 'Smart Detection'}:*\n` +
       (isID
-        ? `• Tempel alamat 0x → otomatis deteksi kontrak/dompet\n• Ketik $TICKER → langsung lihat harga\n• Tanya apa saja → AI chat\n`
-        : `• Paste 0x address → auto-detect contract/wallet\n• Type $TICKER → instant price lookup\n• Ask anything → AI chat\n`) +
+        ? `• Tempel alamat 0x → otomatis deteksi kontrak/dompet\n• Ketik $TICKER → langsung lihat harga\n• Kirim screenshot (chart/DM/wallet) → investigasi otomatis\n• Tanya apa saja → AI chat\n`
+        : `• Paste 0x address → auto-detect contract/wallet\n• Type $TICKER → instant price lookup\n• Send a screenshot (chart/DM/wallet) → auto-investigation\n• Ask anything → AI chat\n`) +
       accessLine + `\n\n_Powered by Orlix AI · orlixai.xyz_`,
       reply_markup: { inline_keyboard: [
         [{ text: '🔄 Swap ORLIX', callback_data: 'swap_menu' }, { text: '🏆 Top Tokens', callback_data: 'top' }],
@@ -1066,13 +1272,13 @@ module.exports = async function handler(req, res) {
       parse_mode: 'Markdown',
       disable_web_page_preview: true,
       text: isID
-        ? `*⚡ Menu Orlix AI*\n\n*Trading:*\n/swap — Swap ORLIX ↔ ETH\n/top — Top token trending\n/price — Harga token\n\n*Analisa:*\n/analyze — Analisa token _(10M $ORLIX)_\n/watch — Aktivitas dompet\n\n*Wallet:*\n/wallet · /balance · /export\n\n_Atau tempel alamat 0x / ketik $TICKER_`
-        : `*⚡ Orlix AI Menu*\n\n*Trading:*\n/swap — Swap ORLIX ↔ ETH\n/top — Top trending tokens\n/price — Token price\n\n*Analysis:*\n/analyze — Token analysis _(10M $ORLIX)_\n/watch — Wallet activity\n\n*Wallet:*\n/wallet · /balance · /export\n\n_Or paste a 0x address / type $TICKER_`,
+        ? `*⚡ Menu Orlix AI*\n\n*Trading:*\n/swap — Swap ORLIX ↔ ETH\n/top — Top token trending\n/price — Harga token\n\n*🕵️ Onchain Detective _(10M $ORLIX)_:*\n/dossier — Dossier risiko + skor rug\n/trace — Lacak jejak dana wallet\n/cluster — Side wallets satu operator\n/deployer — Riwayat semua token deployer\n/early — Pembeli pertama\n/stalk — Alert saat wallet bergerak\n\n*Wallet:*\n/wallet · /balance · /export\n\n_Tempel 0x / ketik $TICKER / kirim screenshot_`
+        : `*⚡ Orlix AI Menu*\n\n*Trading:*\n/swap — Swap ORLIX ↔ ETH\n/top — Top trending tokens\n/price — Token price\n\n*🕵️ Onchain Detective _(10M $ORLIX)_:*\n/dossier — Risk dossier + rug score\n/trace — Follow a wallet's money trail\n/cluster — Side wallets, same operator\n/deployer — A deployer's full history\n/early — First buyers, who still holds\n/stalk — Alert when a wallet moves\n\n*Wallet:*\n/wallet · /balance · /export\n\n_Paste 0x / type $TICKER / send a screenshot_`,
       reply_markup: { inline_keyboard: [
         [{ text: '🔄 Swap', callback_data: 'swap_menu' }, { text: '🏆 Top', callback_data: 'top' }],
         [{ text: '🚀 Dashboard', url: 'https://orlixai.xyz/app' },
          { text: '🪙 Buy $ORLIX', url: 'https://orlixai.xyz/token' }],
-        [{ text: '🏙 Base City', url: 'https://orlixai.xyz/neural-map.html' }],
+        [{ text: '🏙 Base City', url: 'https://orlixai.xyz/base-city' }],
       ] },
     });
     return res.status(200).json({ ok: true });
@@ -1152,10 +1358,17 @@ module.exports = async function handler(req, res) {
       `*📊 ${isID ? 'Data Onchain (Gratis)' : 'Onchain Data (Free)'}*\n` +
       `/price — ${isID ? 'Harga token instan' : 'Instant token price'}\n` +
       `/watch — ${isID ? 'Saldo & transaksi wallet' : 'Wallet balance & transactions'}\n\n` +
+      `*🕵️ ${isID ? 'Onchain Detective (Perlu 10M $ORLIX)' : 'Onchain Detective (Need 10M $ORLIX)'}*\n` +
+      `/dossier — ${isID ? 'Dossier risiko lengkap + skor rug' : 'Full risk dossier + rug score'}\n` +
+      `/trace — ${isID ? 'Lacak jejak dana wallet ke sumbernya' : 'Follow a wallet\'s money trail to source'}\n` +
+      `/cluster — ${isID ? 'Temukan side wallets (satu operator)' : 'Find side wallets (same operator)'}\n` +
+      `/deployer — ${isID ? 'Semua token yang pernah dia luncurkan' : 'Every token a deployer has launched'}\n` +
+      `/early — ${isID ? 'Pembeli pertama — siapa masih hold' : 'First buyers — who still holds'}\n` +
+      `/stalk — ${isID ? 'Alert tiap wallet bergerak' : 'Alert me the moment a wallet moves'}\n\n` +
       `*🤖 ${isID ? 'Fitur AI (Perlu 10M $ORLIX)' : 'AI Features (Need 10M $ORLIX)'}*\n` +
       `/analyze — ${isID ? 'Analisa risiko token mendalam' : 'Deep token risk analysis'}\n` +
       `${isID ? 'Chat bebas' : 'Free chat'} — ${isID ? 'Tanya apa saja' : 'Ask anything'}\n` +
-      `${isID ? 'Kirim gambar' : 'Send image'} — ${isID ? 'Analisa visual AI' : 'AI visual analysis'}\n\n` +
+      `${isID ? 'Kirim screenshot' : 'Send screenshot'} — ${isID ? 'chart/DM/wallet → investigasi otomatis' : 'chart/DM/wallet → auto-investigation'}\n\n` +
       `*🧠 Smart Detection*\n` +
       (isID
         ? `• Tempel alamat \`0x...\` → otomatis deteksi kontrak atau dompet\n• Ketik \`$BRETT\` → langsung lihat harga\n\n`
@@ -1218,6 +1431,41 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
 
+  // ── ONCHAIN DETECTIVE (gated) ─────────────────────────────────────────────
+  const invRoute = [
+    { re: /^\/trace\b/,    fn: (a) => cmdTrace(chatId, a, lang),           need: 'wallet' },
+    { re: /^\/cluster\b/,  fn: (a) => cmdCluster(chatId, a, lang),         need: 'wallet' },
+    { re: /^\/deployer\b/, fn: (a) => cmdDeployer(chatId, a, lang),        need: 'token'  },
+    { re: /^\/early\b/,    fn: (a) => cmdEarly(chatId, a, lang),           need: 'token'  },
+    { re: /^\/(dossier|rugcheck|rug)\b/, fn: (a) => cmdDossier(chatId, a, lang), need: 'token' },
+  ];
+  for (const route of invRoute) {
+    if (route.re.test(text)) {
+      { const g = await aiAllowed(chatId, userId); if (!g.ok) { await denyAiGate(chatId, lang, g); return res.status(200).json({ ok: true }); } }
+      const addr = (text.split(/\s+/)[1] || '').toLowerCase();
+      if (!/^0x[0-9a-f]{40}$/i.test(addr)) {
+        await send(chatId, isID ? `⚠️ Contoh: \`${text.split(/\s+/)[0]} 0x...\` (alamat ${route.need === 'token' ? 'token' : 'wallet'})` : `⚠️ Usage: \`${text.split(/\s+/)[0]} 0x...\` (${route.need} address)`);
+        return res.status(200).json({ ok: true });
+      }
+      try { await route.fn(addr); }
+      catch (e) { await send(chatId, `⚠️ ${e.message}`); }
+      return res.status(200).json({ ok: true });
+    }
+  }
+
+  // ── /stalk · /unstalk (gated) ─────────────────────────────────────────────
+  if (text.startsWith('/stalk')) {
+    { const g = await aiAllowed(chatId, userId); if (!g.ok) { await denyAiGate(chatId, lang, g); return res.status(200).json({ ok: true }); } }
+    try { await cmdStalk(chatId, userId, text.split(/\s+/)[1], lang); }
+    catch (e) { await send(chatId, `⚠️ ${e.message}`); }
+    return res.status(200).json({ ok: true });
+  }
+  if (text.startsWith('/unstalk')) {
+    try { await cmdUnstalk(chatId, text.split(/\s+/)[1], lang); }
+    catch (e) { await send(chatId, `⚠️ ${e.message}`); }
+    return res.status(200).json({ ok: true });
+  }
+
   // ── /swap (free) ───────────────────────────────────────────────────────────
   if (text.startsWith('/swap')) {
     const args = text.slice(5).trim();
@@ -1261,11 +1509,21 @@ module.exports = async function handler(req, res) {
     const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
     try {
       const { url: aiUrl, headers: aiHdr } = aiEndpoint(ANTHROPIC_KEY());
+      // Vision pass 1: read the screenshot AND extract any onchain clue as JSON,
+      // so a chart / DM / wallet screenshot can auto-launch an investigation.
       const r = await fetch(aiUrl, {
         method: 'POST', headers: aiHdr,
         body: JSON.stringify({
           model: 'claude-sonnet-4-6', max_tokens: 1500,
-          system: `You are Orlix AI. ${isID ? 'Balas dalam Bahasa Indonesia.' : 'Reply in English.'} ONLY use Telegram markdown: *bold*, _italic_, \`code\`. NEVER use # or ## headers or --- rules. Use *bold text* for section titles. You CAN use > for callouts. Be detailed and thorough.`,
+          system: `You are Orlix AI, an onchain detective reading a screenshot. ${isID ? 'Balas dalam Bahasa Indonesia.' : 'Reply in English.'}
+
+First, describe what the image shows (a chart, a DM, a group chat, a wallet, a tweet, a contract, etc) and pull out anything an investigator would care about: ticker, token name, price, a contract address, a wallet address, a tx hash, timestamps, usernames, claims.
+
+Telegram markdown ONLY: *bold*, _italic_, \`code\`. NEVER use # headers or --- rules. Use *bold* on its own line for section titles. Keep it tight.
+
+Then, on the VERY LAST line, output a machine-readable clue block EXACTLY in this format (no other text after it):
+CLUE|type=<token|wallet|none>|address=<0x... or NONE>|ticker=<SYMBOL or NONE>
+Rules: 'token' if you see a contract address or a coin/ticker being discussed; 'wallet' if the main subject is a wallet/holder address; a 40-hex 0x address is required to set address=, otherwise NONE.`,
           messages: [{ role: 'user', content: [
             { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
             { type: 'text', text: caption },
@@ -1273,7 +1531,31 @@ module.exports = async function handler(req, res) {
         }),
       });
       const data = await r.json();
-      await sendLong(chatId, data.content?.[0]?.text || (isID ? 'Tidak dapat menganalisa gambar.' : 'Could not analyze image.'));
+      let out = data.content?.[0]?.text || (isID ? 'Tidak dapat menganalisa gambar.' : 'Could not analyze image.');
+
+      // Parse + strip the clue line
+      let clue = null;
+      const cm = out.match(/CLUE\|type=(\w+)\|address=(0x[0-9a-fA-F]{40}|NONE)\|ticker=([A-Za-z0-9]+|NONE)/);
+      if (cm) { clue = { type: cm[1], address: cm[2], ticker: cm[3] }; out = out.replace(/\n?CLUE\|.*$/s, '').trim(); }
+      await sendLong(chatId, out);
+
+      // Auto-launch the matching investigation from the extracted clue
+      if (clue) {
+        let addr = clue.address !== 'NONE' ? clue.address.toLowerCase() : null;
+        if (!addr && clue.ticker !== 'NONE') {
+          const found = await searchTicker(clue.ticker).catch(() => null);
+          if (found?.baseToken?.address) addr = found.baseToken.address.toLowerCase();
+        }
+        if (addr && /^0x[0-9a-f]{40}$/i.test(addr)) {
+          await send(chatId, isID
+            ? `🔎 _Menemukan petunjuk di gambar — memulai investigasi otomatis pada_ \`${INV.short(addr)}\`...`
+            : `🔎 _Found a clue in the image — auto-investigating_ \`${INV.short(addr)}\`...`);
+          try {
+            if (clue.type === 'wallet') await cmdTrace(chatId, addr, lang);
+            else await cmdDossier(chatId, addr, lang);
+          } catch (e) { await send(chatId, `⚠️ ${e.message}`); }
+        }
+      }
     } catch (e) { await send(chatId, `⚠️ Vision error: ${e.message}`); }
     return res.status(200).json({ ok: true });
   }
