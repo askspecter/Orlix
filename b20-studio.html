@@ -21,8 +21,9 @@
   --t1:#E0E0E0;--t2:#8a8a8a;--t3:#505050;
   --font:'JetBrains Mono',monospace;--mono:'JetBrains Mono',monospace;
   --r:10px;
+  --accent:#F07830;--surface:#181818;--border:rgba(255,255,255,.07);
 }
-:root.light{--bg:#F4F4F5;--s1:#EAEAEC;--s2:#DDDDE0;--s3:#D0D0D4;--s4:#C4C4C8;--b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.18);--b3:rgba(0,0,0,.25);--t1:#1a1a1a;--t2:#555555;--t3:#999999;--orange-d:rgba(224,104,32,.08)}
+:root.light{--bg:#F4F4F5;--s1:#EAEAEC;--s2:#DDDDE0;--s3:#D0D0D4;--s4:#C4C4C8;--b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.18);--b3:rgba(0,0,0,.25);--t1:#1a1a1a;--t2:#555555;--t3:#999999;--orange-d:rgba(224,104,32,.08);--accent:#E06820;--surface:#DDDDE0;--border:rgba(0,0,0,.1)}
 :root.light .nav{background:rgba(244,244,245,.92)!important}
 :root.light .logo-upload{background:var(--bg);border-color:var(--b2)}
 :root.light .logo-upload:hover{border-color:var(--orange);background:rgba(240,120,48,.04)}
@@ -1833,7 +1834,9 @@ async function onMint() {
   if (!/^0x[0-9a-fA-F]{40}$/.test(recipient)) { showToast('Enter a valid recipient address', 'warn'); return; }
 
   // Encode mint(address to, uint256 amount) = selector 0x40c10f19
-  const amountWei = BigInt(Math.round(Number(amountStr) * Math.pow(10, decimals)));
+  const [intPart, fracPart = ''] = amountStr.split('.');
+  const paddedFrac = (fracPart + '0'.repeat(decimals)).slice(0, decimals);
+  const amountWei = BigInt(intPart + paddedFrac);
   const toHex     = recipient.replace('0x', '').toLowerCase().padStart(64, '0');
   const amtHex    = amountWei.toString(16).padStart(64, '0');
   const data      = '0x40c10f19' + toHex + amtHex;
