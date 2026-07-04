@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('orlix_theme');if(t==='light')document.documentElement.classList.add('light');})()</script>
 <style>
 :root{
   --bg:#0a0a0a;--s1:#111111;--s2:#181818;--s3:#202020;--s4:#282828;
@@ -23,6 +24,13 @@
 }
 :root.light{--bg:#F4F4F5;--s1:#EAEAEC;--s2:#DDDDE0;--s3:#D0D0D4;--s4:#C4C4C8;--b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.18);--b3:rgba(0,0,0,.25);--t1:#1a1a1a;--t2:#555555;--t3:#999999;--orange-d:rgba(224,104,32,.08)}
 :root.light .nav{background:rgba(244,244,245,.92)!important}
+:root.light .logo-upload{background:var(--bg);border-color:var(--b2)}
+:root.light .logo-upload:hover{border-color:var(--orange);background:rgba(240,120,48,.04)}
+.theme-btn{background:none;border:1px solid var(--b2);border-radius:6px;padding:6px;cursor:pointer;color:var(--t2);display:flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s}
+.theme-btn:hover{border-color:var(--orange);color:var(--t1)}
+.theme-ico-light{display:none}
+:root.light .theme-ico-dark{display:none}
+:root.light .theme-ico-light{display:block}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--t2);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,textarea,select{font-family:var(--font)}
@@ -515,6 +523,10 @@ select.inp option{background:var(--s2);color:var(--t1)}
     </div>
   </div>
   <div class="nav-right">
+    <button id="themeToggle" class="theme-btn" title="Toggle theme">
+      <svg class="theme-ico-dark" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41"/></svg>
+      <svg class="theme-ico-light" width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.3 12.3A7.5 7.5 0 0 1 7.7 2.7a7.5 7.5 0 1 0 9.6 9.6z"/></svg>
+    </button>
     <div id="orlix-wallet" style="display:flex;align-items:center;position:relative">
       <button id="wallet-fallback" onclick="toggleWalletDrop(event)" style="visibility:hidden">
         <span class="wf-dot"></span>
