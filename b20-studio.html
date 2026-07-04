@@ -612,7 +612,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </div>
       </div>
 
-      <!-- Decimals + Supply Cap -->
+      <!-- Decimals -->
       <div class="field-row">
         <div class="field">
           <label class="field-label">Decimals</label>
@@ -625,18 +625,10 @@ select.inp option{background:var(--s2);color:var(--t1)}
           </select>
         </div>
         <div class="field">
-          <div class="cap-label-row">
-            <label class="field-label" style="margin-bottom:0">Supply Cap</label>
-            <div class="cap-toggle-wrap">
-              <span class="cap-toggle-lbl">No cap</span>
-              <label class="toggle">
-                <input type="checkbox" id="fUncapped" onchange="onCapToggle()">
-                <div class="tg-track"></div>
-                <div class="tg-thumb"></div>
-              </label>
-            </div>
-          </div>
-          <input class="inp" id="fCap" type="text" placeholder="e.g. 10,000,000" oninput="onFormChange()">
+          <label class="field-label">Supply Cap</label>
+          <input class="inp" id="fCap" type="text" value="1,000,000,000" disabled style="opacity:.6;cursor:not-allowed">
+          <input type="hidden" id="fUncapped">
+          <span style="font-size:.6rem;color:var(--t3);margin-top:2px;display:block">Fixed at 1 billion</span>
         </div>
       </div>
 
@@ -644,10 +636,9 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <div class="field">
         <div class="cap-label-row">
           <label class="field-label" style="margin-bottom:0">Initial Supply</label>
-          <span style="font-size:.62rem;color:var(--t3)">minted to you at deploy</span>
+          <span style="font-size:.62rem;color:var(--t3)">minted to you at deploy (max 1B)</span>
         </div>
         <input class="inp" id="fInitSupply" type="text" placeholder="e.g. 1000000" value="1000000" oninput="onFormChange()" autocomplete="off">
-      </div>
 
       <!-- Initial Admin -->
       <div class="field">
@@ -977,14 +968,8 @@ function setVariant(v) {
 // ── decimals ──────────────────────────────────────────────────────────────────
 function onDecChange() {}
 
-// ── supply cap ────────────────────────────────────────────────────────────────
-function onCapToggle() {
-  const unc = document.getElementById('fUncapped').checked;
-  const cap = document.getElementById('fCap');
-  cap.disabled = unc;
-  if (unc) { cap.value = ''; cap.placeholder = 'Uncapped'; }
-  else { cap.placeholder = 'e.g. 10,000,000'; }
-}
+// ── supply cap (fixed at 1B) ─────────────────────────────────────────────────
+function onCapToggle() {}
 
 function onFormChange() {}
 
@@ -1098,7 +1083,6 @@ async function onDeploy() {
     setDeployBtn('loading', '⏳ Preparing…', 'Fetching live gas + nonce from Base…');
 
     const adminless = document.getElementById('fAdminless').checked;
-    const capRaw    = document.getElementById('fCap').value.replace(/,/g,'');
     _deployDecimals = parseInt(document.getElementById('fDec').value) || 18;
     const payload   = {
       action:      'prepare',
@@ -1106,7 +1090,7 @@ async function onDeploy() {
       symbol:      sym,
       variant,
       decimals:    parseInt(document.getElementById('fDec').value),
-      supply_cap:     document.getElementById('fUncapped').checked ? '0' : (capRaw || '0'),
+      supply_cap:     '1000000000',
       initial_supply: (document.getElementById('fInitSupply').value || '').trim().replace(/,/g,'') || '0',
       admin:       adminless ? undefined : walletAddress,
       adminless,
@@ -1419,8 +1403,7 @@ async function aiAutoFill() {
     if (d.symbol) document.getElementById('fSym').value = d.symbol.toUpperCase().slice(0,11);
     if (d.variant) setVariant(d.variant);
     if (d.decimals !== undefined) { document.getElementById('fDec').value = d.decimals; onDecChange(); }
-    if (d.uncapped !== undefined) { document.getElementById('fUncapped').checked = !!d.uncapped; onCapToggle(); }
-    if (d.supply && !d.uncapped) document.getElementById('fCap').value = Number(d.supply).toLocaleString();
+    // Supply cap is fixed at 1B — ignore AI suggestions for supply
     if (d.allowlist !== undefined) document.getElementById('fAllow').checked = !!d.allowlist;
     if (d.blocklist !== undefined) document.getElementById('fBlock').checked = !!d.blocklist;
     if (d.freeze   !== undefined) document.getElementById('fFreeze').checked  = !!d.freeze;

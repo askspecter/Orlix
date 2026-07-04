@@ -19,8 +19,6 @@ Return exactly this JSON structure:
   "symbol": string,
   "variant": "asset" | "stablecoin",
   "decimals": 18 | 6,
-  "uncapped": boolean,
-  "supply": string | null,
   "allowlist": boolean,
   "blocklist": boolean,
   "freeze": boolean
@@ -31,8 +29,7 @@ Rules:
 - symbol: UPPERCASE, no spaces, max 11 chars (e.g. "GAMEFI", "BNKR")
 - variant: "stablecoin" ONLY if explicitly described as stable/pegged/USD-backed; otherwise "asset"
 - decimals: 18 for asset tokens; 6 for stablecoins
-- uncapped: true if no supply mentioned, or "unlimited", "no cap", "infinite"
-- supply: total supply as digits string if mentioned (500M → "500000000", 1B → "1000000000", 100k → "100000"), null if uncapped
+- Supply cap is always fixed at 1 billion (1,000,000,000). Do not include supply fields.
 - allowlist: true if "whitelist", "allowlist", "KYC", "approved-only" mentioned
 - blocklist: true if "blacklist", "blocklist", "ban" mentioned
 - freeze: true if "freeze", "seize", "compliance", "regulatory" mentioned
@@ -97,7 +94,9 @@ module.exports = async (req, res) => {
     // Sanitize output
     params.symbol = (params.symbol || '').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0, 11);
     params.decimals = params.variant === 'stablecoin' ? 6 : (Number(params.decimals) || 18);
-    if (params.uncapped) params.supply = null;
+    // Supply is always fixed at 1B
+    delete params.uncapped;
+    delete params.supply;
 
     res.writeHead(200, CORS);
     res.end(JSON.stringify(params));
