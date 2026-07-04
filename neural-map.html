@@ -64,6 +64,13 @@ canvas{display:block}
 
 /* ── CANVAS ── */
 #city-canvas{position:fixed;top:0;left:0;width:100%;height:100%}
+/* Cinematic lens vignette + subtle anamorphic top/bottom shading */
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:5;
+  background:
+    radial-gradient(ellipse 120% 90% at 50% 45%, transparent 55%, rgba(0,0,5,0.38) 100%),
+    linear-gradient(to bottom, rgba(0,0,8,0.22) 0%, transparent 12%, transparent 88%, rgba(0,0,8,0.3) 100%);
+}
 
 /* ── LOADING ── */
 #loading{
@@ -229,6 +236,7 @@ canvas{display:block}
 </div>
 
 <canvas id="city-canvas"></canvas>
+<div class="vignette"></div>
 
 <!-- LOADING -->
 <div id="loading">
@@ -597,6 +605,7 @@ let clouds = [], fillerWinks = [], searchlights = null, moonHalo = null, redEye 
 
 // Scenic environment (diorama)
 let ships = [], oceanMesh = null, oceanBaseY = null, envTime = 0;
+let shoreFoam = null, cityReflection = null, groundHaze = [];
 
 // Cyberpunk megacity layer
 let hoverCars = [], floatStructs = [], skywayRails = [], holoBillboards = [], lightShafts = null, orbitRings = [];
@@ -729,28 +738,54 @@ function createPerson(lane, perpOff, bound) {
   });
 }
 
-// ── Window texture ──────────────────────────────────────────────
-let _winTex = null;
+// ── Window textures — a pool of variants so towers don't repeat ──
+// Each variant differs in window pitch, lit density, colour warmth,
+// dark floors and bright "office overtime" floors — like a real city.
+let _winTexPool = null;
 function getWindowTex() {
-  if (_winTex) return _winTex;
-  const c = document.createElement('canvas');
-  c.width = 256; c.height = 512;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(0, 0, 256, 512);
-  for (let y = 12; y < 512; y += 26) {
-    for (let x = 12; x < 256; x += 22) {
-      if (Math.random() > 0.42) {
-        const r = Math.random();
-        if (r > 0.6) ctx.fillStyle = '#EEC866';
-        else if (r > 0.35) ctx.fillStyle = '#6699CC';
-        else ctx.fillStyle = '#CC7733';
-        ctx.fillRect(x, y, 10, 16);
+  if (!_winTexPool) {
+    _winTexPool = [];
+    for (let v = 0; v < 5; v++) {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, 256, 512);
+      const pitchY = [24, 26, 30, 22, 28][v];
+      const pitchX = [20, 22, 26, 18, 24][v];
+      const winW = pitchX * 0.5, winH = pitchY * 0.62;
+      const density = [0.55, 0.42, 0.35, 0.62, 0.48][v];
+      const warm = [0.7, 0.5, 0.35, 0.8, 0.55][v];   // warm vs cool glass
+      let floor = 0;
+      for (let y = 10; y < 512; y += pitchY, floor++) {
+        // whole-floor character: some dark, some fully lit (cleaning crews)
+        const fr = Math.random();
+        const floorMode = fr < 0.08 ? 'dark' : fr < 0.15 ? 'bright' : 'mix';
+        for (let x = 8; x < 256; x += pitchX) {
+          const lit = floorMode === 'dark' ? Math.random() < 0.04
+                    : floorMode === 'bright' ? Math.random() < 0.9
+                    : Math.random() < density;
+          if (!lit) continue;
+          const r = Math.random();
+          if (r < warm * 0.55)      ctx.fillStyle = '#EEC866';
+          else if (r < warm)        ctx.fillStyle = '#D89A50';
+          else if (r < warm + 0.25) ctx.fillStyle = '#7FA8CF';
+          else                      ctx.fillStyle = '#5C7A9E';
+          // luminance jitter — no two windows identical
+          ctx.globalAlpha = 0.55 + Math.random() * 0.45;
+          ctx.fillRect(x, y, winW, winH);
+          // occasional half-drawn blind
+          if (Math.random() < 0.18) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x, y, winW, winH * (0.3 + Math.random() * 0.3));
+          }
+          ctx.globalAlpha = 1;
+        }
       }
+      _winTexPool.push(new THREE.CanvasTexture(c));
     }
   }
-  _winTex = new THREE.CanvasTexture(c);
-  return _winTex;
+  return _winTexPool[Math.floor(Math.random() * _winTexPool.length)];
 }
 
 // ── Contact shadow (fake AO blob grounding each building) ───────
@@ -872,29 +907,60 @@ function addRooftopDetails(group, topY, bw, bd, height) {
   }
 }
 
-// ── Tree ──────────────────────────────────────────────────────
+// ── Tree — organic mixed forest, not perfect cones ─────────────
 function createTree(x, z, groundY) {
   const grp = new THREE.Group();
-  const trunkH = 2 + Math.random() * 2;
+  const trunkH = 2 + Math.random() * 2.4;
+  const lean = (Math.random() - 0.5) * 0.12;    // trees never grow dead straight
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.25, 0.35, trunkH, 6),
-    new THREE.MeshStandardMaterial({color:0x4A3020, roughness:0.9, metalness:0})
+    new THREE.CylinderGeometry(0.22, 0.4, trunkH, 6),
+    new THREE.MeshStandardMaterial({color: Math.random() > 0.5 ? 0x4A3020 : 0x3d2a1c, roughness:0.95, metalness:0})
   );
   trunk.position.y = trunkH / 2;
+  trunk.rotation.z = lean;
   trunk.castShadow = true;
   grp.add(trunk);
-  const layers = 2 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < layers; i++) {
-    const fr = 1.8 - i * 0.35;
-    const fh = 3.0 - i * 0.4;
-    const foliage = new THREE.Mesh(
-      new THREE.ConeGeometry(fr, fh, 7),
-      new THREE.MeshStandardMaterial({color: i===0?0x1a4a1a:0x1e5a1e, roughness:0.85, metalness:0})
-    );
-    foliage.position.y = trunkH + i * 1.4 + fh/2 - 0.4;
-    foliage.castShadow = true;
-    grp.add(foliage);
+
+  if (Math.random() < 0.5) {
+    // Conifer — irregular stacked cones, jittered so no two match
+    const layers = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < layers; i++) {
+      const fr = (1.9 - i * 0.38) * (0.85 + Math.random() * 0.3);
+      const fh = (3.0 - i * 0.4) * (0.85 + Math.random() * 0.3);
+      const shade = [0x16421a, 0x1a4a1a, 0x1e5a1e, 0x143a16][Math.floor(Math.random() * 4)];
+      const foliage = new THREE.Mesh(
+        new THREE.ConeGeometry(fr, fh, 7),
+        new THREE.MeshStandardMaterial({color: shade, roughness:0.9, metalness:0})
+      );
+      foliage.position.set((Math.random()-0.5)*0.3, trunkH + i * 1.35 + fh/2 - 0.4, (Math.random()-0.5)*0.3);
+      foliage.rotation.y = Math.random() * Math.PI;
+      foliage.scale.x = 0.85 + Math.random() * 0.3;
+      foliage.castShadow = true;
+      grp.add(foliage);
+    }
+  } else {
+    // Deciduous — 2-3 squashed overlapping canopy blobs
+    const blobs = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < blobs; i++) {
+      const br = 1.3 + Math.random() * 1.1;
+      const shade = [0x1c4a20, 0x225426, 0x18401c, 0x2a5e2e][Math.floor(Math.random() * 4)];
+      const blob = new THREE.Mesh(
+        new THREE.SphereGeometry(br, 7, 6),
+        new THREE.MeshStandardMaterial({color: shade, roughness:0.92, metalness:0})
+      );
+      blob.position.set(
+        (Math.random() - 0.5) * 1.6,
+        trunkH + br * 0.55 + i * 0.8,
+        (Math.random() - 0.5) * 1.6
+      );
+      blob.scale.y = 0.65 + Math.random() * 0.25;   // canopies are wider than tall
+      blob.castShadow = true;
+      grp.add(blob);
+    }
   }
+  grp.rotation.y = Math.random() * Math.PI * 2;
+  const s = 0.8 + Math.random() * 0.6;              // size variation across the forest
+  grp.scale.set(s, s, s);
   grp.position.set(x, groundY || 0, z);
   scene.add(grp);
 }
@@ -1013,7 +1079,8 @@ function buildScenery(isMobile) {
   });
 
   // ── Ocean — on the +Z side of the city ─────────────────────
-  const ocean = new THREE.Mesh(new THREE.PlaneGeometry(1400, 600, 60, 30), waterMat);
+  const oceanSegs = isMobile ? [70, 36] : [140, 70];
+  const ocean = new THREE.Mesh(new THREE.PlaneGeometry(1400, 600, oceanSegs[0], oceanSegs[1]), waterMat);
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.set(0, -0.3, 470); // far side, z from ~170 outward
   ocean.receiveShadow = !isMobile;
@@ -1031,6 +1098,62 @@ function buildScenery(isMobile) {
   shore.rotation.x = -Math.PI / 2;
   shore.position.set(0, -0.25, 172);
   scene.add(shore);
+
+  // Breaking foam line — noisy white speckle texture drifting along the shore
+  {
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 64;
+    const ctx = c.getContext('2d');
+    for (let i = 0; i < 2200; i++) {
+      const fx = Math.random() * 1024;
+      const fy = 32 + (Math.random() + Math.random() - 1) * 26;
+      ctx.globalAlpha = 0.08 + Math.random() * 0.35;
+      ctx.fillStyle = '#dfeef2';
+      const fw = 1 + Math.random() * 5;
+      ctx.fillRect(fx, fy, fw, 1 + Math.random() * 2);
+    }
+    ctx.globalAlpha = 1;
+    const foamTex = new THREE.CanvasTexture(c);
+    foamTex.wrapS = THREE.RepeatWrapping;
+    const foam = new THREE.Mesh(
+      new THREE.PlaneGeometry(900, 14),
+      new THREE.MeshBasicMaterial({ map: foamTex, transparent: true, opacity: 0.4, depthWrite: false })
+    );
+    foam.rotation.x = -Math.PI / 2;
+    foam.position.set(0, -0.14, 181);
+    scene.add(foam);
+    shoreFoam = { tex: foamTex, mat: foam.material };
+  }
+
+  // City glow reflected on the water — warm smear fading out to sea
+  {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 256;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, 'rgba(255,140,60,0.30)');
+    g.addColorStop(0.35, 'rgba(255,120,50,0.10)');
+    g.addColorStop(1, 'rgba(255,110,40,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 128, 256);
+    // vertical streaks — light pillars smeared by the waves
+    for (let i = 0; i < 26; i++) {
+      const sx = Math.random() * 128, sw = 2 + Math.random() * 6, sh = 60 + Math.random() * 150;
+      const sg = ctx.createLinearGradient(0, 0, 0, sh);
+      sg.addColorStop(0, `rgba(255,${150 + Math.random() * 60 | 0},70,${0.10 + Math.random() * 0.14})`);
+      sg.addColorStop(1, 'rgba(255,140,60,0)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(sx, 0, sw, sh);
+    }
+    const reflTex = new THREE.CanvasTexture(c);
+    cityReflection = new THREE.Mesh(
+      new THREE.PlaneGeometry(560, 260),
+      new THREE.MeshBasicMaterial({ map: reflTex, transparent: true, opacity: 0.55,
+        blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    cityReflection.rotation.x = -Math.PI / 2;
+    cityReflection.position.set(0, -0.1, 320);
+    scene.add(cityReflection);
+  }
 
   // ── River — one smooth continuous channel from the hills to the sea ──
   // Wide segments with rounded joints at every bend so it never looks broken.
@@ -1828,8 +1951,8 @@ function initCity(data) {
   const gGeo = new THREE.PlaneGeometry(320, 320);
   const gMat = new THREE.MeshStandardMaterial({
     color: 0x08080F,
-    roughness: 0.6,
-    metalness: 0.35
+    roughness: 0.35,
+    metalness: 0.55
   });
   const ground = new THREE.Mesh(gGeo, gMat);
   ground.rotation.x = -Math.PI / 2;
@@ -1853,18 +1976,79 @@ function initCity(data) {
   horizon.position.y = 60;
   scene.add(horizon);
 
-  // Stars — 1500, larger
+  // Stars — 2200 with real magnitude + colour temperature variation
+  // (blue-white giants, yellow suns, faint red dwarfs), plus a Milky Way
+  const starGrp = new THREE.Group();
   const starGeo = new THREE.BufferGeometry();
-  const starPos = new Float32Array(1500 * 3);
-  for (let i = 0; i < 1500; i++) {
+  const N_STARS = 2200;
+  const starPos = new Float32Array(N_STARS * 3);
+  const starCol = new Float32Array(N_STARS * 3);
+  for (let i = 0; i < N_STARS; i++) {
     starPos[i*3]   = (Math.random()-0.5)*1400;
     starPos[i*3+1] = 120 + Math.random()*500;
     starPos[i*3+2] = (Math.random()-0.5)*1400;
+    const t = Math.random();
+    let r, g, b;
+    if (t < 0.12)      { r = 0.72; g = 0.80; b = 1.0; }   // blue-white
+    else if (t < 0.55) { r = 1.0;  g = 0.97; b = 0.92; }  // white
+    else if (t < 0.85) { r = 1.0;  g = 0.88; b = 0.70; }  // yellow
+    else               { r = 1.0;  g = 0.72; b = 0.58; }  // orange-red
+    const mag = 0.35 + Math.random() * 0.65;              // magnitude spread
+    starCol[i*3] = r * mag; starCol[i*3+1] = g * mag; starCol[i*3+2] = b * mag;
   }
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({color:0xffffff, size:0.7, transparent:true, opacity:0.85});
-  const stars = new THREE.Points(starGeo, starMat);
-  scene.add(stars);
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+  const starMat = new THREE.PointsMaterial({ vertexColors: true, size: 0.85, transparent: true, opacity: 0.9, sizeAttenuation: true });
+  starGrp.add(new THREE.Points(starGeo, starMat));
+
+  // Milky Way — hazy star-cloud band painted on canvas, wrapped high overhead
+  {
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 256;
+    const ctx = c.getContext('2d');
+    for (let i = 0; i < 260; i++) {
+      const gx = Math.random() * 1024;
+      const gy = 128 + (Math.random() + Math.random() - 1) * 78;
+      const gr = 8 + Math.random() * 46;
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      const a = 0.015 + Math.random() * 0.035;
+      const tint = Math.random();
+      const col = tint < 0.6 ? '200,210,235' : tint < 0.85 ? '235,220,200' : '180,190,225';
+      g.addColorStop(0, `rgba(${col},${a})`);
+      g.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 1024, 256);
+    }
+    // dust lanes — dark rifts through the band
+    for (let i = 0; i < 40; i++) {
+      const gx = Math.random() * 1024, gy = 118 + (Math.random() - 0.5) * 60, gr = 12 + Math.random() * 34;
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      g.addColorStop(0, 'rgba(4,5,12,0.14)');
+      g.addColorStop(1, 'rgba(4,5,12,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 1024, 256);
+    }
+    // pinprick dense stars inside the band
+    for (let i = 0; i < 1400; i++) {
+      const gx = Math.random() * 1024;
+      const gy = 128 + (Math.random() + Math.random() - 1) * 85;
+      ctx.globalAlpha = 0.25 + Math.random() * 0.6;
+      ctx.fillStyle = '#e8ecf8';
+      ctx.fillRect(gx, gy, Math.random() < 0.85 ? 1 : 2, 1);
+    }
+    ctx.globalAlpha = 1;
+    const mwTex = new THREE.CanvasTexture(c);
+    const mwBand = new THREE.Mesh(
+      new THREE.CylinderGeometry(1380, 1380, 620, 48, 1, true),
+      new THREE.MeshBasicMaterial({ map: mwTex, side: THREE.BackSide, transparent: true,
+        opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })
+    );
+    mwBand.position.y = 330;
+    mwBand.rotation.z = 0.42;    // the band cuts across the sky at an angle
+    starGrp.add(mwBand);
+  }
+  scene.add(starGrp);
+  const stars = starGrp;   // day/night toggle keeps working
 
   // ── Sky dome — smooth gradient horizon instead of a flat color ──
   const skyNightTex = makeSkyTexture(true);
@@ -1898,18 +2082,67 @@ function initCity(data) {
     clouds.push({ sp, vx: 0.03 + Math.random() * 0.05 });
   }
 
-  // Moon — pulled close so it hangs over the mountains
-  const moonGeo = new THREE.SphereGeometry(22, 16, 16);
-  const moonMat = new THREE.MeshBasicMaterial({color: 0xEEEECC});
-  const moon = new THREE.Mesh(moonGeo, moonMat);
+  // ── Ground haze — thin drifting mist sheets hugging the city floor ──
+  // Cheap volumetric feel: the same soft cloud texture, flattened and slid
+  // between the buildings at street level.
+  {
+    const nHaze = isMobile ? 4 : 9;
+    for (let i = 0; i < nHaze; i++) {
+      const hm = new THREE.SpriteMaterial({ map: cloudTex, transparent: true,
+        opacity: 0.05 + Math.random() * 0.04, color: 0x6a7898, depthWrite: false });
+      const sp = new THREE.Sprite(hm);
+      const ang = Math.random() * Math.PI * 2, rr = 60 + Math.random() * 150;
+      sp.position.set(Math.cos(ang) * rr, 5 + Math.random() * 14, Math.sin(ang) * rr);
+      sp.scale.set(150 + Math.random() * 120, 26 + Math.random() * 18, 1);
+      scene.add(sp);
+      groundHaze.push({ sp, vx: 0.015 + Math.random() * 0.03, baseO: hm.opacity });
+    }
+  }
+
+  // Moon — realistic cratered surface painted on a canvas texture,
+  // shaded sphere lit from one side (was flat colour + floating blobs)
+  const moonCanvas = document.createElement('canvas');
+  moonCanvas.width = moonCanvas.height = 512;
+  {
+    const ctx = moonCanvas.getContext('2d');
+    // base regolith with subtle mottling
+    ctx.fillStyle = '#cfcdc2'; ctx.fillRect(0, 0, 512, 512);
+    for (let i = 0; i < 900; i++) {
+      const mx = Math.random() * 512, my = Math.random() * 512, mr = 2 + Math.random() * 18;
+      ctx.globalAlpha = 0.05 + Math.random() * 0.08;
+      ctx.fillStyle = Math.random() > 0.5 ? '#b8b6a8' : '#e0ded2';
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+    }
+    // dark maria (the big grey "seas")
+    for (const [mx, my, mr] of [[180, 160, 90], [330, 240, 70], [240, 350, 55], [140, 300, 45]]) {
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = '#8f8d84';
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+    }
+    // craters — rim highlight + inner shadow, like the real thing
+    for (let i = 0; i < 70; i++) {
+      const mx = 30 + Math.random() * 452, my = 30 + Math.random() * 452;
+      const mr = 3 + Math.random() * (Math.random() < 0.12 ? 26 : 10);
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = '#a5a396';
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#807e72';
+      ctx.beginPath(); ctx.arc(mx + mr * 0.15, my + mr * 0.18, mr * 0.7, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.45;
+      ctx.strokeStyle = '#e8e6da'; ctx.lineWidth = Math.max(1, mr * 0.12);
+      ctx.beginPath(); ctx.arc(mx, my, mr, Math.PI * 0.9, Math.PI * 1.9); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  const moonTex = new THREE.CanvasTexture(moonCanvas);
+  const moon = new THREE.Mesh(
+    new THREE.SphereGeometry(22, 32, 32),
+    new THREE.MeshStandardMaterial({ map: moonTex, roughness: 1, metalness: 0,
+      emissive: 0xf5f2e0, emissiveMap: moonTex, emissiveIntensity: 0.55 })
+  );
   moon.position.set(-130, 150, -190);
   scene.add(moon);
-  const craterMat = new THREE.MeshBasicMaterial({color: 0xC8C8A0});
-  [[8,6,14,-2],[5,-8,10,8],[-6,3,-18,4]].forEach(([cx,cy,cz,cr]) => {
-    const c = new THREE.Mesh(new THREE.SphereGeometry(Math.abs(cr)*0.9,8,8), craterMat);
-    c.position.set(moon.position.x+cx*2, moon.position.y+cy*2, moon.position.z+cz*0.5+18);
-    scene.add(c);
-  });
 
   // Soft halo around the moon — makes the night sky feel atmospheric
   {
@@ -2014,6 +2247,8 @@ function initCity(data) {
       if (lightShafts) lightShafts.visible = true;
       holoBillboards.forEach(b => { b.grp.visible = true; });
       rimMagenta.intensity = 1.1; rimCyan.intensity = 0.9;
+      if (cityReflection) cityReflection.visible = true;
+      groundHaze.forEach(h => h.sp.material.color.set(0x6a7898));
       applyEnvironment(true);
       btn.innerHTML = '<span class="hbtn-ico">🌙</span><span class="hbtn-txt"> Night</span>';
     } else {
@@ -2037,6 +2272,8 @@ function initCity(data) {
       if (lightShafts) lightShafts.visible = false;
       holoBillboards.forEach(b => { b.grp.visible = false; });
       rimMagenta.intensity = 0; rimCyan.intensity = 0;
+      if (cityReflection) cityReflection.visible = false;
+      groundHaze.forEach(h => h.sp.material.color.set(0xdde6f0));
       applyEnvironment(false);
       btn.innerHTML = '<span class="hbtn-ico">☀️</span><span class="hbtn-txt"> Day</span>';
     }
@@ -2080,7 +2317,8 @@ function initCity(data) {
   centers.push( half + STREET/2);
 
   // Materials
-  const roadMat = new THREE.MeshBasicMaterial({ color: 0x0b0b16 });
+  // Wet asphalt — low roughness so streets catch the env-map sheen like rain-slicked roads
+  const roadMat = new THREE.MeshStandardMaterial({ color: 0x0a0a12, roughness: 0.25, metalness: 0.8 });
   const mLineO  = new THREE.MeshBasicMaterial({ color: 0xF07830, transparent:true, opacity:0.55 });
   const mPole   = new THREE.MeshPhongMaterial({ color: 0x556677, shininess: 25 });
   const mLamp   = new THREE.MeshBasicMaterial({ color: 0xFFAA44 });
@@ -2481,9 +2719,11 @@ function initCity(data) {
       for (let i = 0; i < pos.count; i++) {
         const ix = i * 3;
         const bx = base[ix], by = base[ix + 1];
-        // gentle ripples — small amplitude so the sea stays calm, not spiky
-        const wave = Math.sin(bx * 0.04 + envTime * 1.3) * 0.32
-                   + Math.cos(by * 0.05 + envTime * 0.9) * 0.22;
+        // layered swell + cross-chop — reads as real water, not a sine sheet
+        const wave = Math.sin(bx * 0.04 + envTime * 1.3) * 0.30
+                   + Math.cos(by * 0.05 + envTime * 0.9) * 0.20
+                   + Math.sin((bx + by) * 0.09 + envTime * 1.9) * 0.11
+                   + Math.sin(bx * 0.13 - by * 0.07 + envTime * 2.6) * 0.05;
         pos.array[ix + 2] = wave;
       }
       pos.needsUpdate = true;
@@ -2509,6 +2749,16 @@ function initCity(data) {
       c.sp.position.x += c.vx;
       if (c.sp.position.x > 520) c.sp.position.x = -520;
     }
+    // Ground haze slides between the buildings, breathing slowly
+    for (let gi = 0; gi < groundHaze.length; gi++) {
+      const h = groundHaze[gi];
+      h.sp.position.x += h.vx;
+      if (h.sp.position.x > 260) h.sp.position.x = -260;
+      h.sp.material.opacity = h.baseO * (0.7 + 0.3 * Math.sin(cityTime * 0.4 + gi * 2.1));
+    }
+    // Shore foam creeps along the beach; city reflection shimmers on the swell
+    if (shoreFoam) shoreFoam.tex.offset.x = cityTime * 0.008;
+    if (cityReflection) cityReflection.material.opacity = 0.45 + 0.12 * Math.sin(cityTime * 1.1);
     // Windows shimmer — city lights turning on and off
     for (const w of fillerWinks) {
       w.m.emissiveIntensity = 0.26 + 0.08 * Math.sin(cityTime * w.spd + w.phase);
