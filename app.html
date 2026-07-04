@@ -4132,7 +4132,8 @@ document.getElementById('previewCloseBtn').addEventListener('click', closePrevie
 
 // ══════ THEME SYSTEM ══════
 var THEMES=[
-  {id:'dark',n:'Dark',d:1,bg:'#000',bg2:'#0a0a0a',bg3:'#111',fg:'#c8c8c8',dim:'#444',dim2:'#222',accent:'#BFFF00',green:'#4ADE80',red:'#F87171',orange:'#F07830',cyan:'#22D3EE',purple:'#A78BFA',yellow:'#FBBF24',blue:'#60A5FA'},
+  {id:'orlix',n:'Orlix',d:1,bg:'#0a0a0a',bg2:'#111111',bg3:'#181818',fg:'#E0E0E0',dim:'#8a8a8a',dim2:'#505050',accent:'#F07830',green:'#4ADE80',red:'#F87171',orange:'#F07830',cyan:'#22D3EE',purple:'#A78BFA',yellow:'#FBBF24',blue:'#60A5FA'},
+  {id:'dark',n:'Dark',bg:'#000',bg2:'#0a0a0a',bg3:'#111',fg:'#c8c8c8',dim:'#444',dim2:'#222',accent:'#BFFF00',green:'#4ADE80',red:'#F87171',orange:'#F07830',cyan:'#22D3EE',purple:'#A78BFA',yellow:'#FBBF24',blue:'#60A5FA'},
   {id:'noir-glass',n:'Noir Glass',bg:'#0c0c0c',bg2:'#141414',bg3:'#1c1c1c',fg:'#d4d4d4',dim:'#525252',dim2:'#262626',accent:'#a3e635',green:'#4ade80',red:'#f87171',orange:'#fb923c',cyan:'#22d3ee',purple:'#c084fc',yellow:'#facc15',blue:'#60a5fa'},
   {id:'green-crt',n:'Green CRT',bg:'#000',bg2:'#010a01',bg3:'#021202',fg:'#33ff33',dim:'#0a5a0a',dim2:'#0a2a0a',accent:'#33ff33',green:'#33ff33',red:'#ff3333',orange:'#ff8833',cyan:'#33ffcc',purple:'#cc33ff',yellow:'#ffff33',blue:'#3388ff'},
   {id:'amber-crt',n:'Amber CRT',bg:'#000',bg2:'#0a0600',bg3:'#120c00',fg:'#ffb833',dim:'#5a3a0a',dim2:'#2a1a05',accent:'#ffb833',green:'#ffb833',red:'#ff6633',orange:'#ffcc33',cyan:'#ffdd88',purple:'#ffaa55',yellow:'#ffee00',blue:'#ffcc66'},
@@ -4246,8 +4247,9 @@ function renderThemeCards(filter){
   });
 }
 (function(){
-  var saved=localStorage.getItem('orlix-theme')||'dark';
+  var saved=localStorage.getItem('orlix-theme')||'orlix';
   if(saved==='light')saved='github-light';
+  if(saved==='dark'&&!localStorage.getItem('orlix-theme'))saved='orlix';
   applyTheme(saved);
   var fi=document.getElementById('tpFilter');
   if(fi){fi.addEventListener('input',function(){renderThemeCards(this.value);});renderThemeCards('');}
