@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script>(function(){var t=localStorage.getItem('orlix_theme');if(t==='light')document.documentElement.classList.add('light');})()</script>
+<script>(function(){var t=localStorage.getItem('orlix-theme');if(t==='light')document.documentElement.classList.add('light');})()</script>
 <style>
 :root{
   --bg:#0a0a0a;--s1:#111111;--s2:#181818;--s3:#202020;--s4:#282828;
@@ -473,8 +473,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .sidebar{display:none}
   .content{padding:20px 16px 80px}
   .field-row,.variant-grid{grid-template-columns:1fr}
-  .logo-name-row{grid-template-columns:90px 1fr;gap:10px}
-  .logo-upload{width:90px}
+  .logo-name-row{grid-template-columns:90px 1fr;gap:12px;align-items:start}
+  .logo-upload{width:90px;height:90px;min-height:90px;max-height:90px;flex:none;aspect-ratio:1}
   .pg-title{font-size:1.25rem}
   .card{padding:16px}
   .bottom-nav{display:grid}
@@ -1864,7 +1864,7 @@ async function onMint() {
 
 <script src="/wallet-dist/wallet.js" defer></script>
 <script>
-(function(){var r=document.documentElement;if(localStorage.getItem('orlix_theme')==='light')r.classList.add('light');window.addEventListener('storage',function(e){if(e.key==='orlix_theme'){e.newValue==='light'?r.classList.add('light'):r.classList.remove('light');}});})();
+(function(){var r=document.documentElement;if(localStorage.getItem('orlix-theme')==='light')r.classList.add('light');window.addEventListener('storage',function(e){if(e.key==='orlix-theme'){e.newValue==='light'?r.classList.add('light'):r.classList.remove('light');}});})();
 </script>
 </body>
 </html>
