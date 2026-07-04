@@ -43,17 +43,6 @@
   --mono:'JetBrains Mono',monospace;
   --font:'JetBrains Mono',monospace;
 }
-:root.light{
-  --bg:#F4F4F5;--bg-2:#EAEAEC;--bg-3:#DDDDE0;--bg-4:#D0D0D4;
-  --border:rgba(0,0,0,.1);--border-hover:rgba(0,0,0,.18);--border-accent:rgba(240,120,48,.3);
-  --text-1:#1a1a1a;--text-2:#555555;--text-3:#999999;
-  --orange:#E06820;--orange-dim:rgba(224,104,32,.08);--orange-glow:rgba(224,104,32,.15);
-  --purple:#8B5CF6;--purple-dim:rgba(139,92,246,.1);
-  --green:#22C55E;--green-dim:rgba(34,197,94,.1);
-  --red:#EF4444;--red-dim:rgba(239,68,68,.1);
-  --blue:#3B82F6;--blue-dim:rgba(59,130,246,.1);
-  --dim-2:rgba(0,0,0,.1);--line:rgba(0,0,0,.07);--line-bright:rgba(0,0,0,.12);
-}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--text-2);height:100%}
 body{font-family:var(--font);font-size:13px;line-height:1.6;overflow:hidden;-webkit-font-smoothing:antialiased}
@@ -67,7 +56,7 @@ input,select,textarea{font-family:var(--mono)}
 .titlebar{
   position:fixed;top:0;left:0;right:0;z-index:100;height:72px;
   display:flex;align-items:center;
-  background:rgba(9,9,11,.9);
+  background:var(--bg-glass,rgba(9,9,11,.9));
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
 }
@@ -82,8 +71,6 @@ input,select,textarea{font-family:var(--mono)}
 .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
 .status-dot{animation:blink 2.5s ease-in-out infinite}
-:root.light .titlebar{background:rgba(244,244,245,.92)!important;border-bottom-color:rgba(0,0,0,.08)}
-:root.light .menu-btn{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1);color:var(--text-2)}
 :root.light .tb-brand img{filter:invert(1)}.wm{display:block}.wm-light{display:none}:root.light .wm-dark{display:none}:root.light .wm-light{display:block}:root.light .wm{filter:none!important}
 
 /* ── layout ── */
@@ -119,10 +106,6 @@ input,select,textarea{font-family:var(--mono)}
 .sb-ver{color:var(--text-3);font-size:.69rem;line-height:1.75}
 .sb-theme-btn{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;margin-bottom:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text-3);font-size:.72rem;font-weight:500;transition:color var(--tr),border-color var(--tr),background var(--tr)}
 .sb-theme-btn:hover{color:var(--text-1);background:var(--bg-3)}
-.sb-theme-btn .ico-sun{display:none}
-.sb-theme-btn .ico-moon{display:block}
-:root.light .sb-theme-btn .ico-sun{display:block}
-:root.light .sb-theme-btn .ico-moon{display:none}
 
 /* ── main area ── */
 .main{flex:1;overflow-y:auto;padding:28px 32px;min-width:0;background:var(--bg)}
@@ -790,7 +773,7 @@ select.inp{cursor:pointer}
 @media(max-width:640px){.gallery-wrap{padding-bottom:50px}.gallery-wrap .g-hero h1{font-size:1.4rem}.gallery-wrap .g-stats{grid-template-columns:1fr 1fr}.gallery-wrap .g-stats .g-stat:last-child{display:none}.gallery-wrap .g-builds-grid{grid-template-columns:1fr}}
 
 /* ── Access Gate ── */
-#accessGate{position:fixed;inset:0;z-index:9999;background:rgba(9,9,11,.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;transition:opacity .4s ease}
+#accessGate{position:fixed;inset:0;z-index:9999;background:var(--bg-glass,rgba(9,9,11,.97));backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;transition:opacity .4s ease}
 #accessGate.fade-out{opacity:0;pointer-events:none}
 .gate-card{max-width:400px;width:calc(100% - 40px);background:var(--bg-2);border:1px solid var(--border);border-radius:24px;padding:40px 32px;text-align:center}
 .gate-logo{width:80px;height:80px;border-radius:22px;overflow:hidden;margin:0 auto 18px;display:block}
@@ -840,36 +823,44 @@ select.inp{cursor:pointer}
 }
 ::selection{background:rgba(240,120,48,.3);color:#fff}
 
-/* ── DARK terminal overrides ── */
-:root:not(.light) .titlebar{background:rgba(10,10,10,.96)!important}
-:root:not(.light) .sidebar{background:#080808!important}
-:root:not(.light) .chat-messages{background:#060606}
-:root:not(.light) #accessGate{background:rgba(0,0,0,.97)!important}
-:root:not(.light) .gate-card{background:#0a0a0a!important}
-:root:not(.light) .gate-brand{text-shadow:0 0 16px rgba(240,120,48,.3)}
-:root:not(.light) .sb-item.active{text-shadow:0 0 6px rgba(240,120,48,.2)}
-
-/* ── LIGHT terminal overrides ── */
-:root.light .sidebar{background:#EAEAEC!important;border-right-color:rgba(0,0,0,.08)!important}
-:root.light .chat-messages{background:#F0F0F2}
-:root.light #accessGate{background:rgba(244,244,245,.98)!important}
-:root.light .gate-card{background:#fff!important;border-color:rgba(0,0,0,.1)!important}
+/* ── Theme-aware overrides ── */
 :root.light .gate-brand{color:#1a1a1a}
 :root.light .gate-brand span{color:var(--orange)}
-:root.light .sb-theme-btn .ico-sun{display:block}
-:root.light .sb-theme-btn .ico-moon{display:none}
 :root.light .sidebar-overlay{background:rgba(0,0,0,.3)}
-:root.light .code-block{background:#EAEAEC;border-color:rgba(0,0,0,.1)}
-:root.light .code-header{background:#E0E0E3;border-color:rgba(0,0,0,.08)}
-:root.light .code-block pre code{color:#333}
 :root.light .msg.user .msg-bubble{background:rgba(224,104,32,.08);border-color:rgba(224,104,32,.18)}
-:root.light .msg.assistant .msg-bubble{background:#EAEAEC;border-color:rgba(0,0,0,.08);color:var(--text-2)}
 :root.light .engine-banner{background:rgba(224,104,32,.04)!important;border-color:rgba(224,104,32,.12)!important}
-:root.light .tx-card{background:rgba(59,130,246,.04);border-color:rgba(59,130,246,.15)}
-:root.light .tx-card-header{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.1)}
 :root.light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
 :root.light ::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.22)}
-:root.light .stat-card:hover,.provider-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)!important}
+:root:not(.light) .gate-brand{text-shadow:0 0 16px rgba(240,120,48,.3)}
+
+/* ── ORLIX Banner ── */
+.orlix-banner{font-family:var(--mono);font-size:9px;line-height:1.15;margin-bottom:16px;user-select:none;overflow-x:auto;white-space:pre}
+.orlix-banner .art-orli{color:var(--text-1)}
+.orlix-banner .art-x{color:var(--orange)}
+.orlix-banner .art-sub{display:block;margin-top:6px;font-size:.72rem;color:var(--text-3);letter-spacing:.08em;white-space:normal}
+@media(max-width:480px){.orlix-banner{font-size:5.5px}}
+
+/* ── Theme Picker ── */
+.tp-current{display:flex;align-items:center;gap:8px;padding:11px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:default}
+.tp-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;border:1px solid rgba(128,128,128,.3)}
+.tp-name{flex:1;font-size:.78rem;color:var(--text-1);font-weight:500}
+.tp-filter-wrap{position:relative;margin-bottom:8px}
+.tp-filter-wrap .tp-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.72rem;color:var(--text-3);pointer-events:none}
+.tp-filter{width:100%;padding:8px 10px 8px 28px;background:var(--bg-3);border:1px solid var(--border);border-radius:6px;color:var(--text-1);font-family:var(--mono);font-size:.76rem;outline:none}
+.tp-filter::placeholder{color:var(--text-3)}
+.tp-filter:focus{border-color:var(--orange)}
+.tp-list{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.tp-list::-webkit-scrollbar{width:4px}
+.tp-list::-webkit-scrollbar-thumb{background:rgba(128,128,128,.3);border-radius:2px}
+.tp-card{padding:10px 12px;border:1px solid rgba(128,128,128,.2);border-radius:8px;cursor:pointer;transition:all .15s;position:relative}
+.tp-card:hover{border-color:rgba(128,128,128,.4)}
+.tp-card.active{box-shadow:0 0 0 1px var(--orange)}
+.tp-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.tp-card-name{font-size:.76rem;font-weight:600}
+.tp-card-badge{font-size:.58rem;padding:1px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.06em;opacity:.7}
+.tp-card-sample{font-size:.68rem;font-family:var(--mono);line-height:1.4;margin-bottom:6px}
+.tp-card-dots{display:flex;gap:3px;justify-content:flex-end}
+.tp-card-dots span{width:8px;height:8px;border-radius:50%;border:1px solid rgba(128,128,128,.15)}
 </style>
 </head>
 <body>
@@ -992,10 +983,9 @@ select.inp{cursor:pointer}
       <div class="sb-item" data-view="gallery"><span class="ic"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg></span>gallery</div>
     </div>
     <div class="sb-footer">
-      <button class="sb-theme-btn" id="themeToggle" aria-label="Toggle theme">
-        <svg class="ico-moon" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 14A8 8 0 117 3a6 6 0 0010 11z"/></svg>
-        <svg class="ico-sun" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>
-        Theme
+      <button class="sb-theme-btn" id="themeToggle" aria-label="Change theme">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="3"/><path d="M10 3v1M10 16v1M3 10h1M16 10h1M5.6 5.6l.7.7M13.7 13.7l.7.7M5.6 14.4l.7-.7M13.7 6.3l.7-.7"/></svg>
+        <span id="sbThemeName">Dark</span>
       </button>
 <div class="sb-ver"><span class="sb-status"></span>system_active<br>orlix v0.6.0 · terminal</div>
     </div>
@@ -1006,6 +996,12 @@ select.inp{cursor:pointer}
 
     <!-- ═══ OVERVIEW ═══ -->
     <div class="view active" id="view-overview">
+      <pre class="orlix-banner"><span class="art-orli"> ██████╗ ██████╗ ██╗     ██╗</span><span class="art-x">██╗  ██╗</span>
+<span class="art-orli">██╔═══██╗██╔══██╗██║     ██║</span><span class="art-x">╚██╗██╔╝</span>
+<span class="art-orli">██║   ██║██████╔╝██║     ██║</span><span class="art-x"> ╚███╔╝ </span>
+<span class="art-orli">██║   ██║██╔══██╗██║     ██║</span><span class="art-x"> ██╔██╗ </span>
+<span class="art-orli">╚██████╔╝██║  ██║███████╗██║</span><span class="art-x">██╔╝ ██╗</span>
+<span class="art-orli"> ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝</span><span class="art-x">╚═╝  ╚═╝</span><span class="art-sub">Base Chain Intelligence  ●  orlix.xyz</span></pre>
       <div class="page-hd">
         <div class="file">$ orlix status --full</div>
         <h1>Overview</h1>
@@ -1297,6 +1293,20 @@ select.inp{cursor:pointer}
         <div class="file">$ orlix config --list</div>
         <h1>Settings</h1>
         <div class="sub">Local configuration. Changes apply immediately.</div>
+      </div>
+      <div class="panel" id="themePanel">
+        <div class="panel-hd"><span class="ttl">terminal theme</span></div>
+        <div class="panel-body">
+          <div class="tp-current">
+            <span class="tp-dot" id="tpDot"></span>
+            <span class="tp-name" id="tpName">Dark</span>
+          </div>
+          <div class="tp-filter-wrap">
+            <span class="tp-ico">&gt;</span>
+            <input type="text" class="tp-filter" id="tpFilter" placeholder="Filter themes..." autocomplete="off">
+          </div>
+          <div class="tp-list" id="tpList"></div>
+        </div>
       </div>
       <div class="panel">
         <div class="panel-hd"><span class="ttl">AI providers</span></div>
@@ -4119,17 +4129,140 @@ document.getElementById('previewCloseBtn').addEventListener('click', closePrevie
   });
 })();
 
-// Theme toggle
+// ══════ THEME SYSTEM ══════
+var THEMES=[
+  {id:'dark',n:'Dark',d:1,bg:'#000',bg2:'#0a0a0a',bg3:'#111',fg:'#c8c8c8',dim:'#444',dim2:'#222',accent:'#BFFF00',green:'#4ADE80',red:'#F87171',orange:'#F07830',cyan:'#22D3EE',purple:'#A78BFA',yellow:'#FBBF24',blue:'#60A5FA'},
+  {id:'noir-glass',n:'Noir Glass',bg:'#0c0c0c',bg2:'#141414',bg3:'#1c1c1c',fg:'#d4d4d4',dim:'#525252',dim2:'#262626',accent:'#a3e635',green:'#4ade80',red:'#f87171',orange:'#fb923c',cyan:'#22d3ee',purple:'#c084fc',yellow:'#facc15',blue:'#60a5fa'},
+  {id:'green-crt',n:'Green CRT',bg:'#000',bg2:'#010a01',bg3:'#021202',fg:'#33ff33',dim:'#0a5a0a',dim2:'#0a2a0a',accent:'#33ff33',green:'#33ff33',red:'#ff3333',orange:'#ff8833',cyan:'#33ffcc',purple:'#cc33ff',yellow:'#ffff33',blue:'#3388ff'},
+  {id:'amber-crt',n:'Amber CRT',bg:'#000',bg2:'#0a0600',bg3:'#120c00',fg:'#ffb833',dim:'#5a3a0a',dim2:'#2a1a05',accent:'#ffb833',green:'#ffb833',red:'#ff6633',orange:'#ffcc33',cyan:'#ffdd88',purple:'#ffaa55',yellow:'#ffee00',blue:'#ffcc66'},
+  {id:'dracula',n:'Dracula',bg:'#282a36',bg2:'#21222c',bg3:'#343746',fg:'#f8f8f2',dim:'#6272a4',dim2:'#44475a',accent:'#bd93f9',green:'#50fa7b',red:'#ff5555',orange:'#ffb86c',cyan:'#8be9fd',purple:'#bd93f9',yellow:'#f1fa8c',blue:'#6272a4'},
+  {id:'nord',n:'Nord',bg:'#2e3440',bg2:'#3b4252',bg3:'#434c5e',fg:'#d8dee9',dim:'#4c566a',dim2:'#3b4252',accent:'#88c0d0',green:'#a3be8c',red:'#bf616a',orange:'#d08770',cyan:'#88c0d0',purple:'#b48ead',yellow:'#ebcb8b',blue:'#5e81ac'},
+  {id:'gruvbox',n:'Gruvbox Dark',bg:'#1d2021',bg2:'#282828',bg3:'#3c3836',fg:'#ebdbb2',dim:'#665c54',dim2:'#3c3836',accent:'#b8bb26',green:'#b8bb26',red:'#fb4934',orange:'#fe8019',cyan:'#8ec07c',purple:'#d3869b',yellow:'#fabd2f',blue:'#83a598'},
+  {id:'tokyo',n:'Tokyo Night',bg:'#1a1b26',bg2:'#24283b',bg3:'#414868',fg:'#c0caf5',dim:'#565f89',dim2:'#3b4261',accent:'#7aa2f7',green:'#9ece6a',red:'#f7768e',orange:'#ff9e64',cyan:'#7dcfff',purple:'#bb9af7',yellow:'#e0af68',blue:'#7aa2f7'},
+  {id:'rose',n:'Rose Pine',bg:'#191724',bg2:'#1f1d2e',bg3:'#26233a',fg:'#e0def4',dim:'#6e6a86',dim2:'#403d52',accent:'#ebbcba',green:'#9ccfd8',red:'#eb6f92',orange:'#f6c177',cyan:'#9ccfd8',purple:'#c4a7e7',yellow:'#f6c177',blue:'#31748f'},
+  {id:'catppuccin',n:'Catppuccin Mocha',bg:'#1e1e2e',bg2:'#181825',bg3:'#313244',fg:'#cdd6f4',dim:'#585b70',dim2:'#313244',accent:'#cba6f7',green:'#a6e3a1',red:'#f38ba8',orange:'#fab387',cyan:'#94e2d5',purple:'#cba6f7',yellow:'#f9e2af',blue:'#89b4fa'},
+  {id:'one-dark',n:'One Dark',bg:'#282c34',bg2:'#21252b',bg3:'#2c313a',fg:'#abb2bf',dim:'#5c6370',dim2:'#3e4452',accent:'#61afef',green:'#98c379',red:'#e06c75',orange:'#d19a66',cyan:'#56b6c2',purple:'#c678dd',yellow:'#e5c07b',blue:'#61afef'},
+  {id:'monokai',n:'Monokai',bg:'#272822',bg2:'#1e1f1c',bg3:'#3e3d32',fg:'#f8f8f2',dim:'#75715e',dim2:'#3e3d32',accent:'#a6e22e',green:'#a6e22e',red:'#f92672',orange:'#fd971f',cyan:'#66d9ef',purple:'#ae81ff',yellow:'#e6db74',blue:'#66d9ef'},
+  {id:'solarized-dark',n:'Solarized Dark',bg:'#002b36',bg2:'#073642',bg3:'#073642',fg:'#839496',dim:'#586e75',dim2:'#073642',accent:'#268bd2',green:'#859900',red:'#dc322f',orange:'#cb4b16',cyan:'#2aa198',purple:'#6c71c4',yellow:'#b58900',blue:'#268bd2'},
+  {id:'solarized-light',n:'Solarized Light',bg:'#fdf6e3',bg2:'#eee8d5',bg3:'#eee8d5',fg:'#657b83',dim:'#93a1a1',dim2:'#eee8d5',accent:'#268bd2',green:'#859900',red:'#dc322f',orange:'#cb4b16',cyan:'#2aa198',purple:'#6c71c4',yellow:'#b58900',blue:'#268bd2'},
+  {id:'everforest',n:'Everforest',bg:'#2d353b',bg2:'#272e33',bg3:'#343f44',fg:'#d3c6aa',dim:'#859289',dim2:'#343f44',accent:'#a7c080',green:'#a7c080',red:'#e67e80',orange:'#e69875',cyan:'#7fbbb3',purple:'#d699b6',yellow:'#dbbc7f',blue:'#7fbbb3'},
+  {id:'night-owl',n:'Night Owl',bg:'#011627',bg2:'#0b2942',bg3:'#1d3b53',fg:'#d6deeb',dim:'#5f7e97',dim2:'#1d3b53',accent:'#82aaff',green:'#22da6e',red:'#ef5350',orange:'#f78c6c',cyan:'#7fdbca',purple:'#c792ea',yellow:'#ffeb95',blue:'#82aaff'},
+  {id:'material',n:'Material Dark',bg:'#212121',bg2:'#1a1a1a',bg3:'#303030',fg:'#eeffff',dim:'#546e7a',dim2:'#303030',accent:'#89ddff',green:'#c3e88d',red:'#ff5370',orange:'#f78c6c',cyan:'#89ddff',purple:'#c792ea',yellow:'#ffcb6b',blue:'#82aaff'},
+  {id:'material-ocean',n:'Material Ocean',bg:'#0f111a',bg2:'#090b10',bg3:'#1a1c25',fg:'#a6accd',dim:'#464b5d',dim2:'#1a1c25',accent:'#84ffff',green:'#c3e88d',red:'#ff5370',orange:'#f78c6c',cyan:'#89ddff',purple:'#c792ea',yellow:'#ffcb6b',blue:'#82aaff'},
+  {id:'palenight',n:'Palenight',bg:'#292d3e',bg2:'#1b1e2b',bg3:'#343a55',fg:'#a6accd',dim:'#676e95',dim2:'#343a55',accent:'#82aaff',green:'#c3e88d',red:'#ff5370',orange:'#f78c6c',cyan:'#89ddff',purple:'#c792ea',yellow:'#ffcb6b',blue:'#82aaff'},
+  {id:'synthwave',n:'Synthwave 84',bg:'#2b213a',bg2:'#241b2f',bg3:'#382c4d',fg:'#f0e8ff',dim:'#7c6b99',dim2:'#382c4d',accent:'#ff7edb',green:'#72f1b8',red:'#fe4450',orange:'#fede5d',cyan:'#36f9f6',purple:'#ff7edb',yellow:'#fede5d',blue:'#36f9f6'},
+  {id:'cyberpunk',n:'Cyberpunk',bg:'#000b1e',bg2:'#001233',bg3:'#002244',fg:'#0ff0fc',dim:'#005577',dim2:'#002244',accent:'#ff2a6d',green:'#05d9e8',red:'#ff2a6d',orange:'#ff6600',cyan:'#05d9e8',purple:'#d300c5',yellow:'#ffd700',blue:'#01c1d4'},
+  {id:'horizon',n:'Horizon',bg:'#1c1e26',bg2:'#16161c',bg3:'#232530',fg:'#d5d8da',dim:'#6c6f93',dim2:'#232530',accent:'#e95678',green:'#29d398',red:'#e95678',orange:'#fab795',cyan:'#59e3e3',purple:'#b877db',yellow:'#fac29a',blue:'#26bbd9'},
+  {id:'github-dark',n:'GitHub Dark',bg:'#0d1117',bg2:'#010409',bg3:'#161b22',fg:'#c9d1d9',dim:'#484f58',dim2:'#161b22',accent:'#58a6ff',green:'#3fb950',red:'#f85149',orange:'#d29922',cyan:'#39d2c0',purple:'#bc8cff',yellow:'#d29922',blue:'#58a6ff'},
+  {id:'github-light',n:'GitHub Light',bg:'#ffffff',bg2:'#f6f8fa',bg3:'#f0f0f0',fg:'#24292f',dim:'#8b949e',dim2:'#f0f0f0',accent:'#0969da',green:'#1a7f37',red:'#cf222e',orange:'#bc4c00',cyan:'#0969da',purple:'#8250df',yellow:'#9a6700',blue:'#0969da'},
+  {id:'kanagawa',n:'Kanagawa',bg:'#1f1f28',bg2:'#16161d',bg3:'#2a2a37',fg:'#dcd7ba',dim:'#727169',dim2:'#2a2a37',accent:'#7e9cd8',green:'#98bb6c',red:'#c34043',orange:'#ffa066',cyan:'#7fb4ca',purple:'#957fb8',yellow:'#e6c384',blue:'#7e9cd8'},
+  {id:'panda',n:'Panda',bg:'#292a2b',bg2:'#242526',bg3:'#333435',fg:'#e6e6e6',dim:'#757575',dim2:'#333435',accent:'#19f9d8',green:'#19f9d8',red:'#ff2c6d',orange:'#ffb86c',cyan:'#19f9d8',purple:'#b084eb',yellow:'#ffcc95',blue:'#45a9f9'},
+  {id:'cobalt2',n:'Cobalt2',bg:'#193549',bg2:'#15232d',bg3:'#1f4662',fg:'#ffffff',dim:'#0d3a58',dim2:'#1f4662',accent:'#ffc600',green:'#3ad900',red:'#ff628c',orange:'#ff9d00',cyan:'#80fcff',purple:'#ff9d00',yellow:'#ffc600',blue:'#0088ff'},
+  {id:'moonlight',n:'Moonlight',bg:'#222436',bg2:'#1e2030',bg3:'#2f334d',fg:'#c8d3f5',dim:'#636da6',dim2:'#2f334d',accent:'#82aaff',green:'#c3e88d',red:'#ff757f',orange:'#ff966c',cyan:'#86e1fc',purple:'#c099ff',yellow:'#ffc777',blue:'#82aaff'},
+  {id:'vitesse-dark',n:'Vitesse Dark',bg:'#121212',bg2:'#1e1e1e',bg3:'#252525',fg:'#dbd7ca',dim:'#6b6b6b',dim2:'#252525',accent:'#4d9375',green:'#4d9375',red:'#cb7676',orange:'#d4976c',cyan:'#5eaab5',purple:'#b07bac',yellow:'#d4b879',blue:'#6394bf'},
+  {id:'vitesse-light',n:'Vitesse Light',bg:'#ffffff',bg2:'#f7f7f7',bg3:'#eeeeee',fg:'#393a34',dim:'#aaaaaa',dim2:'#eeeeee',accent:'#1e754f',green:'#1e754f',red:'#ab5959',orange:'#b07d48',cyan:'#2e808f',purple:'#a65bb8',yellow:'#998418',blue:'#296aa3'},
+  {id:'vesper',n:'Vesper',bg:'#101010',bg2:'#1a1a1a',bg3:'#232323',fg:'#b3b3b3',dim:'#585858',dim2:'#232323',accent:'#ffc799',green:'#99ffad',red:'#ff6666',orange:'#ffc799',cyan:'#99ffd5',purple:'#d4a0ff',yellow:'#ffe066',blue:'#99ccff'},
+  {id:'oxocarbon',n:'Oxocarbon',bg:'#161616',bg2:'#262626',bg3:'#353535',fg:'#f2f4f8',dim:'#525252',dim2:'#353535',accent:'#78a9ff',green:'#42be65',red:'#ee5396',orange:'#ff832b',cyan:'#3ddbd9',purple:'#be95ff',yellow:'#ffe97b',blue:'#78a9ff'},
+  {id:'fairy-floss',n:'Fairy Floss',bg:'#5a5475',bg2:'#4f4a68',bg3:'#6a6488',fg:'#f8f8f0',dim:'#8077a8',dim2:'#6a6488',accent:'#c5a3ff',green:'#addb67',red:'#ff857f',orange:'#ffb86c',cyan:'#80ffea',purple:'#c5a3ff',yellow:'#ffea00',blue:'#76d6ff'},
+  {id:'shades-purple',n:'Shades of Purple',bg:'#1e1e3f',bg2:'#1a1a37',bg3:'#2d2b55',fg:'#ffffff',dim:'#6943ff',dim2:'#2d2b55',accent:'#fad000',green:'#a5ff90',red:'#ff628c',orange:'#ff9d00',cyan:'#80ffea',purple:'#9effff',yellow:'#fad000',blue:'#a599e9'},
+  {id:'snazzy',n:'Snazzy',bg:'#282a36',bg2:'#1e1e28',bg3:'#34353e',fg:'#e2e4e5',dim:'#686868',dim2:'#34353e',accent:'#57c7ff',green:'#5af78e',red:'#ff5c57',orange:'#ff6ac1',cyan:'#9aedfe',purple:'#ff6ac1',yellow:'#f3f99d',blue:'#57c7ff'},
+  {id:'spacegray',n:'Spacegray',bg:'#2c2c2c',bg2:'#222222',bg3:'#3a3a3a',fg:'#b7b7b7',dim:'#666666',dim2:'#3a3a3a',accent:'#b294bb',green:'#b5bd68',red:'#cc6666',orange:'#de935f',cyan:'#8abeb7',purple:'#b294bb',yellow:'#f0c674',blue:'#81a2be'},
+  {id:'zenburn',n:'Zenburn',bg:'#3f3f3f',bg2:'#383838',bg3:'#494949',fg:'#dcdccc',dim:'#7f9f7f',dim2:'#494949',accent:'#f0dfaf',green:'#7f9f7f',red:'#cc9393',orange:'#dfaf8f',cyan:'#8cd0d3',purple:'#dc8cc3',yellow:'#f0dfaf',blue:'#94bff3'},
+  {id:'ayu-dark',n:'Ayu Dark',bg:'#0a0e14',bg2:'#0d1016',bg3:'#131721',fg:'#b3b1ad',dim:'#475367',dim2:'#131721',accent:'#e6b450',green:'#c2d94c',red:'#ff3333',orange:'#ff8f40',cyan:'#95e6cb',purple:'#d2a6ff',yellow:'#e6b450',blue:'#39bae6'},
+  {id:'ayu-light',n:'Ayu Light',bg:'#fafafa',bg2:'#f0f0f0',bg3:'#e8e8e8',fg:'#5c6166',dim:'#abb0b6',dim2:'#e8e8e8',accent:'#ff9940',green:'#86b300',red:'#f07171',orange:'#ff9940',cyan:'#4cbf99',purple:'#a37acc',yellow:'#f2ae49',blue:'#399ee6'},
+  {id:'ayu-mirage',n:'Ayu Mirage',bg:'#1f2430',bg2:'#191e28',bg3:'#272d38',fg:'#cbccc6',dim:'#5c6773',dim2:'#272d38',accent:'#ffcc66',green:'#bae67e',red:'#ff3333',orange:'#ffa759',cyan:'#95e6cb',purple:'#d4bfff',yellow:'#ffcc66',blue:'#73d0ff'},
+  {id:'andromeda',n:'Andromeda',bg:'#23262e',bg2:'#1e2025',bg3:'#2b2e38',fg:'#d5ced9',dim:'#6e7a8a',dim2:'#2b2e38',accent:'#ffe66d',green:'#96e072',red:'#ee5d43',orange:'#f39c12',cyan:'#00e8c6',purple:'#c74ded',yellow:'#ffe66d',blue:'#7cb7ff'},
+  {id:'afterglow',n:'Afterglow',bg:'#212121',bg2:'#1a1a1a',bg3:'#2c2c2c',fg:'#d0d0d0',dim:'#505050',dim2:'#2c2c2c',accent:'#b4b4b4',green:'#b4c973',red:'#ac4142',orange:'#e87d3e',cyan:'#53beaf',purple:'#b07bac',yellow:'#e5b567',blue:'#6c99bb'},
+  {id:'3024-night',n:'3024 Night',bg:'#090300',bg2:'#130c06',bg3:'#1e150b',fg:'#a5a2a2',dim:'#5c5855',dim2:'#1e150b',accent:'#db2d20',green:'#01a252',red:'#db2d20',orange:'#e8bbd0',cyan:'#b5e4f4',purple:'#a16a94',yellow:'#fded02',blue:'#01a0e4'},
+  {id:'3024-day',n:'3024 Day',bg:'#f7f7f7',bg2:'#eeeeee',bg3:'#e0e0e0',fg:'#4a4543',dim:'#807d7c',dim2:'#e0e0e0',accent:'#db2d20',green:'#01a252',red:'#db2d20',orange:'#e8bbd0',cyan:'#b5e4f4',purple:'#a16a94',yellow:'#fded02',blue:'#01a0e4'},
+  {id:'adventure',n:'Adventure',bg:'#1e1e33',bg2:'#151528',bg3:'#272742',fg:'#dec278',dim:'#666b7a',dim2:'#272742',accent:'#7dd88a',green:'#7dd88a',red:'#d0555f',orange:'#dea97d',cyan:'#78b9c4',purple:'#b489dd',yellow:'#eee07d',blue:'#69a3d3'},
+  {id:'blueberry',n:'Blueberry',bg:'#1d1e26',bg2:'#171820',bg3:'#262731',fg:'#d1d3de',dim:'#5b5e72',dim2:'#262731',accent:'#7a88cf',green:'#7cc379',red:'#e06e73',orange:'#c9956b',cyan:'#70c0ba',purple:'#ad82cb',yellow:'#d6c67b',blue:'#7a88cf'},
+  {id:'atom-light',n:'Atom One Light',bg:'#fafafa',bg2:'#f0f0f0',bg3:'#e5e5e6',fg:'#383a42',dim:'#a0a1a7',dim2:'#e5e5e6',accent:'#4078f2',green:'#50a14f',red:'#e45649',orange:'#c18401',cyan:'#0184bc',purple:'#a626a4',yellow:'#c18401',blue:'#4078f2'},
+  {id:'tokyo-storm',n:'Tokyo Night Storm',bg:'#24283b',bg2:'#1f2335',bg3:'#292e42',fg:'#c0caf5',dim:'#545c7e',dim2:'#292e42',accent:'#7aa2f7',green:'#9ece6a',red:'#f7768e',orange:'#ff9e64',cyan:'#7dcfff',purple:'#bb9af7',yellow:'#e0af68',blue:'#7aa2f7'},
+  {id:'aizen',n:'Aizen Dark',bg:'#151520',bg2:'#0e0e18',bg3:'#1e1e2e',fg:'#c8c8d8',dim:'#4a4a5e',dim2:'#1e1e2e',accent:'#7c7cf0',green:'#76d672',red:'#e06c75',orange:'#d4956b',cyan:'#5ed7d0',purple:'#b78fe0',yellow:'#e5c890',blue:'#6db3f2'}
+];
+function _hRgb(h){var x=h.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];return parseInt(x.slice(0,2),16)+','+parseInt(x.slice(2,4),16)+','+parseInt(x.slice(4,6),16);}
+function _isLt(h){var x=h.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];var r=parseInt(x.slice(0,2),16),g=parseInt(x.slice(2,4),16),b=parseInt(x.slice(4,6),16);return(r*299+g*587+b*114)/1000>128;}
+function _lsh(h,a){var x=h.replace('#','');if(x.length===3)x=x[0]+x[0]+x[1]+x[1]+x[2]+x[2];return '#'+[0,2,4].map(function(i){return Math.min(255,Math.max(0,parseInt(x.slice(i,i+2),16)+a)).toString(16).padStart(2,'0');}).join('');}
+
+function applyTheme(id){
+  var t=THEMES.find(function(x){return x.id===id;})||THEMES[0];
+  var s=document.documentElement.style;
+  var lt=_isLt(t.bg);
+  s.setProperty('--bg',t.bg);
+  s.setProperty('--bg-2',t.bg2);
+  s.setProperty('--bg-3',t.bg3);
+  s.setProperty('--bg-4',_lsh(t.bg3,lt?-12:12));
+  s.setProperty('--bg-glass','rgba('+_hRgb(t.bg)+',.94)');
+  s.setProperty('--text-1',t.fg);
+  s.setProperty('--text-2',t.dim);
+  s.setProperty('--text-3',t.dim2);
+  var ar=_hRgb(t.accent);
+  s.setProperty('--orange',t.accent);
+  s.setProperty('--orange-dim','rgba('+ar+',.08)');
+  s.setProperty('--orange-glow','rgba('+ar+',.2)');
+  var pr=_hRgb(t.purple),gr=_hRgb(t.green),rr=_hRgb(t.red),br=_hRgb(t.blue||t.cyan);
+  s.setProperty('--purple',t.purple);s.setProperty('--purple-dim','rgba('+pr+',.07)');
+  s.setProperty('--green',t.green);s.setProperty('--green-dim','rgba('+gr+',.07)');
+  s.setProperty('--red',t.red);s.setProperty('--red-dim','rgba('+rr+',.07)');
+  s.setProperty('--blue',t.blue||t.cyan);s.setProperty('--blue-dim','rgba('+br+',.07)');
+  var fr=_hRgb(t.fg);
+  s.setProperty('--border','rgba('+fr+',.07)');
+  s.setProperty('--border-hover','rgba('+fr+',.14)');
+  s.setProperty('--border-accent','rgba('+ar+',.3)');
+  s.setProperty('--dim-2','rgba('+fr+',.14)');
+  s.setProperty('--line','rgba('+fr+',.06)');
+  s.setProperty('--line-bright','rgba('+fr+',.1)');
+  document.body.style.background=t.bg;
+  if(lt)document.documentElement.classList.add('light');
+  else document.documentElement.classList.remove('light');
+  localStorage.setItem('orlix-theme',id);
+  var dot=document.getElementById('tpDot');
+  var nm=document.getElementById('tpName');
+  var sb=document.getElementById('sbThemeName');
+  if(dot)dot.style.background=t.accent;
+  if(nm)nm.textContent=t.n;
+  if(sb)sb.textContent=t.n;
+}
+function renderThemeCards(filter){
+  var list=document.getElementById('tpList');if(!list)return;
+  var cur=localStorage.getItem('orlix-theme')||'dark';
+  var q=(filter||'').toLowerCase();
+  var f=THEMES.filter(function(t){return !q||t.n.toLowerCase().indexOf(q)>-1||t.id.indexOf(q)>-1;});
+  list.innerHTML=f.map(function(t){
+    var a=t.id===cur;
+    var dots=[t.fg,t.red,t.green,t.yellow,t.blue||t.cyan,t.cyan,t.purple,t.orange];
+    return '<div class="tp-card'+(a?' active':'')+'" data-tid="'+t.id+'" style="background:'+t.bg+';border-color:'+(a?t.accent:'rgba(128,128,128,.2)')+'">'+
+      '<div class="tp-card-top"><span class="tp-card-name" style="color:'+t.fg+'">'+t.n+'</span>'+(t.d?'<span class="tp-card-badge" style="background:'+t.dim2+';color:'+t.dim+'">DEFAULT</span>':'')+'</div>'+
+      '<div class="tp-card-sample"><span style="color:'+t.green+'">$ orlix status</span><br><span style="color:'+t.accent+'">▸ online</span> <span style="color:'+t.fg+'">v0.6.0</span></div>'+
+      '<div class="tp-card-dots">'+dots.map(function(c){return '<span style="background:'+c+'"></span>';}).join('')+'</div></div>';
+  }).join('');
+  list.querySelectorAll('.tp-card').forEach(function(el){
+    el.addEventListener('click',function(){
+      applyTheme(el.dataset.tid);
+      renderThemeCards(document.getElementById('tpFilter')?document.getElementById('tpFilter').value:'');
+    });
+  });
+}
 (function(){
-  var r=document.documentElement;
-  if(localStorage.getItem('orlix-theme')==='light')r.classList.add('light');
+  var saved=localStorage.getItem('orlix-theme')||'dark';
+  if(saved==='light')saved='github-light';
+  applyTheme(saved);
+  var fi=document.getElementById('tpFilter');
+  if(fi){fi.addEventListener('input',function(){renderThemeCards(this.value);});renderThemeCards('');}
   var btn=document.getElementById('themeToggle');
-  if(btn)btn.addEventListener('click',function(){
-    var l=r.classList.toggle('light');
-    localStorage.setItem('orlix-theme',l?'light':'dark');
+  if(btn)btn.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.sb-item').forEach(function(el){el.classList.remove('active');});
+    document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
+    var si=document.querySelector('.sb-item[data-view="settings"]');
+    var sv=document.getElementById('view-settings');
+    if(si)si.classList.add('active');
+    if(sv)sv.classList.add('active');
+    setTimeout(function(){var tp=document.getElementById('themePanel');if(tp)tp.scrollIntoView({behavior:'smooth',block:'start'});},100);
   });
   window.addEventListener('storage',function(e){
-    if(e.key==='orlix-theme'){e.newValue==='light'?r.classList.add('light'):r.classList.remove('light');}
+    if(e.key==='orlix-theme'&&e.newValue){applyTheme(e.newValue);}
   });
 })();
 </script>
