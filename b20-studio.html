@@ -1759,7 +1759,7 @@ async function onMint() {
 
 <script src="/wallet-dist/wallet.js" defer></script>
 <script>
-(function(){var r=document.documentElement;if(localStorage.getItem('b20_theme')==='light')r.classList.add('light');var btn=document.getElementById('themeToggle');if(btn)btn.addEventListener('click',function(){var l=r.classList.toggle('light');localStorage.setItem('b20_theme',l?'light':'dark');});})();
+(function(){var r=document.documentElement;if(localStorage.getItem('orlix_theme')==='light')r.classList.add('light');var btn=document.getElementById('themeToggle');if(btn)btn.addEventListener('click',function(){var l=r.classList.toggle('light');localStorage.setItem('orlix_theme',l?'light':'dark');});window.addEventListener('storage',function(e){if(e.key==='orlix_theme'){e.newValue==='light'?r.classList.add('light'):r.classList.remove('light');}});})();
 </script>
 </body>
 </html>
