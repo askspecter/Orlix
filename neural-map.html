@@ -873,7 +873,7 @@ function addRooftopDetails(group, topY, bw, bd, height) {
 }
 
 // ── Tree ──────────────────────────────────────────────────────
-function createTree(x, z) {
+function createTree(x, z, groundY) {
   const grp = new THREE.Group();
   const trunkH = 2 + Math.random() * 2;
   const trunk = new THREE.Mesh(
@@ -895,8 +895,110 @@ function createTree(x, z) {
     foliage.castShadow = true;
     grp.add(foliage);
   }
-  grp.position.set(x, 0, z);
+  grp.position.set(x, groundY || 0, z);
   scene.add(grp);
+}
+
+// ── Hyper-real procedural terrain ──────────────────────────────
+// Single displaced heightfield replaces the old cone "mountains":
+// ridged-fBm peaks, rolling foothills, a carved river valley, and
+// per-vertex material blending (grass → dirt → rock → snow) driven
+// by altitude AND slope — the same recipe AAA terrain systems use.
+let terrainSampleH = null;
+function buildRealisticTerrain(isMobile) {
+  // Deterministic hash-based value noise (build-time only)
+  const hash = (x, y) => {
+    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+    return n - Math.floor(n);
+  };
+  const vnoise = (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = hash(xi, yi), b = hash(xi + 1, yi);
+    const c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  };
+  const fbm = (x, y, oct) => {
+    let s = 0, amp = 0.5, f = 1, norm = 0;
+    for (let o = 0; o < oct; o++) { s += amp * vnoise(x * f, y * f); norm += amp; amp *= 0.5; f *= 2.03; }
+    return s / norm;
+  };
+  // Ridged fBm — sharp mountain spines instead of smooth blobs
+  const ridged = (x, y, oct) => {
+    let s = 0, amp = 0.5, f = 1, norm = 0;
+    for (let o = 0; o < oct; o++) {
+      const n = 1 - Math.abs(vnoise(x * f, y * f) * 2 - 1);
+      s += amp * n * n; norm += amp; amp *= 0.52; f *= 2.1;
+    }
+    return s / norm;
+  };
+  const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+  // Distance to the river polyline — the valley is carved, not painted
+  const RIV = [[-212, -210], [-190, -130], [-172, -50], [-164, 30], [-167, 100], [-156, 165], [-150, 188]];
+  const riverDist = (x, z) => {
+    let best = 1e9;
+    for (let i = 0; i < RIV.length - 1; i++) {
+      const ax = RIV[i][0], az = RIV[i][1], bx = RIV[i + 1][0], bz = RIV[i + 1][1];
+      const dx = bx - ax, dz = bz - az;
+      const t = Math.min(1, Math.max(0, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz)));
+      best = Math.min(best, Math.hypot(x - (ax + dx * t), z - (az + dz * t)));
+    }
+    return best;
+  };
+
+  const H = (x, z) => {
+    const r = Math.hypot(x, z);
+    const outside = sstep(155, 215, r);              // downtown stays perfectly flat
+    const seaSide = sstep(140, 205, z);              // land dives under the +Z ocean
+    const hills = fbm(x * 0.013 + 7.3, z * 0.013 - 2.1, 4) * 10;
+    // Main range — ridged spines up to ~165 units, breathtaking scale
+    const band = sstep(230, 340, r) * (1 - sstep(680, 880, r));
+    const spine = Math.pow(ridged(x * 0.0034 + 3.7, z * 0.0034 + 9.2, 5), 1.7);
+    const detail = fbm(x * 0.02 + 1.1, z * 0.02 + 4.4, 4) * 20;
+    const mountains = band * (spine * 165 + detail);
+    let h = outside * (hills + mountains);
+    h *= sstep(12, 42, riverDist(x, z)) * 0.98 + 0.02; // carve the river valley
+    return h * (1 - seaSide) + seaSide * -4 - 0.6;
+  };
+  terrainSampleH = H;
+
+  const SIZE = 1700;
+  const SEG = isMobile ? 128 : 300;
+  const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, H(pos.getX(i), pos.getZ(i)));
+  geo.computeVertexNormals();
+
+  // Per-vertex material blend — altitude + slope decide the surface
+  const nrm = geo.attributes.normal;
+  const colors = new Float32Array(pos.count * 3);
+  const cGrass = new THREE.Color(0x17331f), cGrass2 = new THREE.Color(0x0f2716);
+  const cDirt = new THREE.Color(0x2e2a22);
+  const cRock = new THREE.Color(0x353c4c), cRock2 = new THREE.Color(0x272e3c);
+  const cSnow = new THREE.Color(0xd8e2ee);
+  const tmp = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i);
+    const slope = 1 - nrm.getY(i);                   // 0 flat → 1 cliff
+    const patch = fbm(x * 0.05, z * 0.05, 3);
+    tmp.copy(cGrass).lerp(cGrass2, patch);           // mottled grassland
+    tmp.lerp(cDirt, sstep(0.12, 0.3, slope) * 0.7);  // dirt on mild slopes
+    const rockMix = Math.max(sstep(0.28, 0.5, slope), sstep(26, 60, y) * 0.85);
+    tmp.lerp(patch > 0.5 ? cRock : cRock2, rockMix); // exposed rock on cliffs & altitude
+    const snowLine = 68 + patch * 18;                // wandering snow line
+    const snow = sstep(snowLine, snowLine + 16, y) * (1 - sstep(0.42, 0.62, slope));
+    tmp.lerp(cSnow, snow);                           // snow settles only on gentler faces
+    colors[i * 3] = tmp.r; colors[i * 3 + 1] = tmp.g; colors[i * 3 + 2] = tmp.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  const terrain = new THREE.Mesh(geo,
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0.02 }));
+  terrain.receiveShadow = !isMobile;
+  scene.add(terrain);
 }
 
 // ── Scenic diorama (mountains, hills, river, ocean, ships) ─────
@@ -963,71 +1065,25 @@ function buildScenery(isMobile) {
     scene.add(b);
   });
 
-  // ── Mountains — soft, smooth silhouette ringing the city (not the +Z sea) ──
-  // Smooth (high-segment) cones + muted dark blue-grey so they read as a distant
-  // backdrop, not jagged cardboard triangles.
-  const rockMats = [
-    new THREE.MeshStandardMaterial({ color: 0x171b24, roughness: 0.92, metalness: 0.04 }),
-    new THREE.MeshStandardMaterial({ color: 0x1d2230, roughness: 0.92, metalness: 0.04 }),
-    new THREE.MeshStandardMaterial({ color: 0x141926, roughness: 0.92, metalness: 0.04 })
-  ];
-  const snowMat = new THREE.MeshStandardMaterial({ color: 0xdfe7ef, roughness: 0.35, metalness: 0.05 });
-  const M = 22;
-  for (let i = 0; i < M; i++) {
-    const ang = (i / M) * Math.PI * 2 + (Math.random() - 0.5) * 0.18;
-    const dirZ = Math.sin(ang);
-    if (dirZ > 0.35) continue; // keep the ocean (+Z) horizon open
-    const r = 250 + Math.random() * 70;          // pushed back → distant backdrop
-    const x = Math.cos(ang) * r;
-    const z = dirZ * r;
-    const h = 30 + Math.random() * 55;
-    const baseR = h * (0.7 + Math.random() * 0.35);
-    const mtn = new THREE.Mesh(new THREE.ConeGeometry(baseR, h, 24), rockMats[i % rockMats.length]);
-    mtn.position.set(x, h / 2 - 2, z);
-    scene.add(mtn);
-    // subtle snow cap only on the tallest peaks
-    if (h > 60) {
-      const capH = h * 0.22;
-      const cap = new THREE.Mesh(new THREE.ConeGeometry(baseR * 0.3, capH, 24), snowMat);
-      cap.position.set(x, h - capH / 2 - 2, z);
-      scene.add(cap);
-    }
-  }
+  // ── Terrain — hyper-real displaced heightfield (mountains, foothills, valley) ──
+  buildRealisticTerrain(isMobile);
 
-  // ── Hills — green belt between city edge (~150) and mountains (~200) ──
-  const hillMats = [
-    new THREE.MeshStandardMaterial({ color: 0x14331c, roughness: 0.95, metalness: 0 }),
-    new THREE.MeshStandardMaterial({ color: 0x183a20, roughness: 0.95, metalness: 0 }),
-    new THREE.MeshStandardMaterial({ color: 0x102b18, roughness: 0.95, metalness: 0 })
-  ];
-  for (let i = 0; i < 26; i++) {
-    const ang = Math.random() * Math.PI * 2;
-    if (Math.sin(ang) > 0.5) continue; // keep ocean side clear-ish
-    const r = 155 + Math.random() * 45;
-    const x = Math.cos(ang) * r;
-    const z = Math.sin(ang) * r;
-    const hr = 8 + Math.random() * 16;
-    const hh = 4 + Math.random() * 10;
-    const hill = new THREE.Mesh(
-      new THREE.SphereGeometry(hr, 10, 8),
-      hillMats[Math.floor(Math.random() * hillMats.length)]
-    );
-    hill.scale.set(1, hh / hr, 1);
-    hill.position.set(x, -1, z);
-    scene.add(hill);
-  }
-
-  // ── Forests — tree clusters on the green belt (not on ocean side) ──
+  // ── Forests — tree clusters hugging the terrain contours ──
   let planted = 0;
-  for (let c = 0; c < 12 && planted < 56; c++) {
+  const maxTrees = isMobile ? 40 : 90;
+  for (let c = 0; c < 30 && planted < maxTrees; c++) {
     const ang = Math.random() * Math.PI * 2;
     if (Math.sin(ang) > 0.45) continue;
-    const r = 158 + Math.random() * 78;
+    const r = 158 + Math.random() * 110;
     const cx = Math.cos(ang) * r;
     const cz = Math.sin(ang) * r;
-    const n = 3 + Math.floor(Math.random() * 4);
-    for (let k = 0; k < n && planted < 56; k++) {
-      createTree(cx + (Math.random() - 0.5) * 22, cz + (Math.random() - 0.5) * 22);
+    const n = 3 + Math.floor(Math.random() * 5);
+    for (let k = 0; k < n && planted < maxTrees; k++) {
+      const tx = cx + (Math.random() - 0.5) * 26;
+      const tz = cz + (Math.random() - 0.5) * 26;
+      const gy = terrainSampleH ? terrainSampleH(tx, tz) : 0;
+      if (gy < -0.5 || gy > 26) continue;   // no trees underwater or on high rock
+      createTree(tx, tz, gy - 0.15);
       planted++;
     }
   }
@@ -1780,15 +1836,9 @@ function initCity(data) {
   ground.receiveShadow = !isMobile;
   scene.add(ground);
 
-  // Surrounding natural terrain — countryside around the city
-  const terrainMat = new THREE.MeshStandardMaterial({ color: 0x0c1f14, roughness: 0.95, metalness: 0 });
-  const terrain = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), terrainMat);
-  terrain.rotation.x = -Math.PI / 2;
-  terrain.position.y = -0.5;
-  terrain.receiveShadow = !isMobile;
-  scene.add(terrain);
-
   // ── Scenic diorama: ocean, river, mountains, hills, forests, ships ──
+  // (the flat countryside plane was replaced by the displaced heightfield
+  //  built inside buildScenery → buildRealisticTerrain)
   buildScenery(isMobile);
 
   // Horizon glow cylinder
@@ -1892,6 +1942,9 @@ function initCity(data) {
   // ── Lighting ────────────────────────────────────────────────────
   const ambLight = new THREE.AmbientLight(0x223355, 0.95);
   scene.add(ambLight);
+  // Hemisphere sky/ground bounce — sells the terrain as a real landscape
+  const hemiLight = new THREE.HemisphereLight(0x39466a, 0x0e1410, 0.55);
+  scene.add(hemiLight);
   const dirLight = new THREE.DirectionalLight(0xaabbdd, 1.5);
   dirLight.position.set(-80, 150, 60);
   dirLight.target.position.set(0, 0, 0);
@@ -1945,6 +1998,7 @@ function initCity(data) {
       scene.background = new THREE.Color(0x05060E);
       scene.fog = new THREE.FogExp2(0x05060E, 0.0020);
       ambLight.color.set(0x2a3a55); ambLight.intensity = 0.95;
+      hemiLight.color.set(0x39466a); hemiLight.groundColor.set(0x0e1410); hemiLight.intensity = 0.55;
       dirLight.color.set(0x9fb4d8); dirLight.intensity = 1.5;
       stars.visible = true; moon.visible = true; sunSphere.visible = false;
       horizon.visible = true;
@@ -1967,6 +2021,7 @@ function initCity(data) {
       scene.background = new THREE.Color(0xAFCAE6);
       scene.fog = new THREE.FogExp2(0xBACFE4, 0.0011);
       ambLight.color.set(0xFFF1DD); ambLight.intensity = 0.85;
+      hemiLight.color.set(0xbfd8ff); hemiLight.groundColor.set(0x35422c); hemiLight.intensity = 0.8;
       dirLight.color.set(0xFFE2B0); dirLight.intensity = 2.9;
       stars.visible = false; moon.visible = false; sunSphere.visible = true;
       horizon.visible = false;
