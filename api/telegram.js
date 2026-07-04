@@ -4,6 +4,7 @@
 
 const { ethers } = require('ethers');
 const INV = require('./_investigate.js');
+const { stalkScanThrottled } = require('./stalk-cron.js');
 
 const ANTHROPIC_KEY = () => process.env.BANKR_LLM_KEY || process.env.ANTHROPIC_API_KEY || '';
 const TG_TOKEN      = () => process.env.TELEGRAM_BOT_TOKEN || '';
@@ -1131,6 +1132,11 @@ module.exports = async function handler(req, res) {
   const incoming = req.headers['x-telegram-bot-api-secret-token'] || '';
   if (!webhookSecret || incoming !== webhookSecret) return res.status(200).json({ ok: true });
 
+  // Stalk mode without a paid cron: piggyback a throttled scan on live webhook
+  // traffic. It self-limits to once every ~5 min via Redis and runs concurrently
+  // with message handling (which is I/O-bound), so it never delays a reply.
+  const stalkJob = stalkScanThrottled(300, 40).catch(() => {});
+
   const update = req.body || {};
 
   // ── Callback queries (inline button presses) ──────────────────────────────
@@ -1574,5 +1580,6 @@ Rules: 'token' if you see a contract address or a coin/ticker being discussed; '
   try { await cmdChat(chatId, text, lang); }
   catch (e) { await send(chatId, `⚠️ Error: ${e.message}`); }
 
+  await stalkJob;   // let the piggybacked stalk scan finish on this common path
   return res.status(200).json({ ok: true });
 };

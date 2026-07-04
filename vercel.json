@@ -35,9 +35,6 @@
     "api/telegram.js":     { "maxDuration": 60 },
     "api/stalk-cron.js":   { "maxDuration": 60 }
   },
-  "crons": [
-    { "path": "/api/stalk-cron", "schedule": "*/5 * * * *" }
-  ],
   "redirects": [
     { "source": "/app.html",          "destination": "/app",          "permanent": true },
     { "source": "/docs.html",         "destination": "/docs",         "permanent": true },

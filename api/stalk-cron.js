@@ -1,7 +1,9 @@
-// Orlix AI — Stalk Mode cron
+// Orlix AI — Stalk Mode scanner
 // Scans every wallet registered via /stalk and DMs the owner the moment it
-// moves. Registered as a Vercel cron (see vercel.json). Also invocable
-// manually: GET /api/stalk-cron?key=<TELEGRAM_WEBHOOK_SECRET>
+// moves. Two ways to trigger it:
+//   1) Opportunistically from the Telegram webhook (throttled ~5 min) — works
+//      on Vercel Hobby with no cron needed. See stalkScan() import in telegram.js.
+//   2) Manually / external cron: GET /api/stalk-cron?key=<TELEGRAM_WEBHOOK_SECRET>
 
 const INV = require('./_investigate.js');
 
@@ -17,13 +19,14 @@ async function tg(method, body) {
 }
 const short = a => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '?';
 
-async function scan() {
-  // 'stalk:all' is a set of "chatId:wallet" pairs
+// Core scan. `limit` caps how many wallets we touch per run so we stay well
+// under the function timeout even when called inline from the webhook.
+async function stalkScan(limit = 40) {
   const all = await INV.redis('SMEMBERS', 'stalk:all').catch(() => null);
   if (!Array.isArray(all) || !all.length) return { scanned: 0, alerts: 0 };
 
   let alerts = 0;
-  for (const pair of all.slice(0, 60)) {          // cap per run to stay under the timeout
+  for (const pair of all.slice(0, limit)) {
     const sep = pair.lastIndexOf(':');
     const chatId = pair.slice(0, sep);
     const wallet = pair.slice(sep + 1);
@@ -38,9 +41,8 @@ async function scan() {
     if (newest.hash === lastSeen) continue;         // nothing new
 
     await INV.redis('SET', seenKey, newest.hash);
-    if (!lastSeen) continue;                          // first observation → set baseline, don't alert
+    if (!lastSeen) continue;                          // first observation → baseline only
 
-    // Build a short alert for the newest tx(s)
     const fresh = [];
     for (const t of txs) { if (t.hash === lastSeen) break; fresh.push(t); }
     const t = newest;
@@ -48,7 +50,7 @@ async function scan() {
     const val = t.value ? (Number(t.value) / 1e18).toFixed(4) : '0';
     const dir = isOut ? '📤 SENT' : '📥 RECEIVED';
     const peer = isOut ? t.to : t.from;
-    let msg = `🚨 *STALK ALERT*\n\`${short(wallet)}\` ${INV.label(wallet) ? '('+INV.label(wallet)+')' : ''}just moved\n\n`;
+    let msg = `🚨 *STALK ALERT*\n\`${short(wallet)}\`${INV.label(wallet) ? ' (' + INV.label(wallet) + ')' : ''} just moved\n\n`;
     msg += `${dir} *${val} ETH* ${isOut ? '→' : '←'} \`${short(peer)}\`${INV.label(peer) ? ' 🏦 ' + INV.label(peer) : ''}\n`;
     if (fresh.length > 1) msg += `_+${fresh.length - 1} more new tx_\n`;
     msg += `\n[🔍 Tx](https://basescan.org/tx/${t.hash}) · [Wallet](https://basescan.org/address/${wallet})`;
@@ -58,17 +60,29 @@ async function scan() {
   return { scanned: all.length, alerts };
 }
 
+// Throttled wrapper — only actually scans if >minGapSec has passed since the
+// last run (tracked in Redis). Safe to call on every webhook hit.
+async function stalkScanThrottled(minGapSec = 300, limit = 40) {
+  const last = await INV.redis('GET', 'stalk:lastscan').catch(() => null);
+  const now = Math.floor(Date.now() / 1000);
+  if (last && now - Number(last) < minGapSec) return { skipped: true };
+  // claim the slot first so concurrent invocations don't double-scan
+  await INV.redis('SET', 'stalk:lastscan', String(now));
+  return stalkScan(limit);
+}
+
 module.exports = async function handler(req, res) {
-  // Vercel cron sends a GET; allow a manual key too. Cron requests carry a
-  // special header, but we also accept the webhook secret for manual runs.
   const key = process.env.TELEGRAM_WEBHOOK_SECRET || '';
   const isCron = !!req.headers['x-vercel-cron'];
   const manualOk = key && req.query && req.query.key === key;
   if (!isCron && !manualOk) return res.status(403).json({ ok: false, error: 'forbidden' });
   try {
-    const out = await scan();
+    const out = await stalkScan(60);
     return res.status(200).json({ ok: true, ...out });
   } catch (e) {
     return res.status(200).json({ ok: false, error: e.message });
   }
 };
+
+module.exports.stalkScan = stalkScan;
+module.exports.stalkScanThrottled = stalkScanThrottled;
