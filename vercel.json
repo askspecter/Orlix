@@ -32,8 +32,7 @@
     "api/b20-tokens.js":   { "maxDuration": 15 },
     "api/x402.js":         { "maxDuration": 60 },
     "api/song.js":         { "maxDuration": 60 },
-    "api/telegram.js":     { "maxDuration": 60 },
-    "api/x-agent.js":     { "maxDuration": 30 }
+    "api/telegram.js":     { "maxDuration": 60 }
   },
   "redirects": [
     { "source": "/app.html",          "destination": "/app",          "permanent": true },

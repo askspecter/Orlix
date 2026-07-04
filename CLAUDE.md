@@ -7,7 +7,6 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 ```
 /
 ├── api/                    # Vercel serverless functions
-│   ├── x-agent.js          # Autonomous X/Twitter reply bot
 │   ├── b20-skill.js        # B20 token deployment API
 │   ├── b20-tokens.js       # Recently deployed B20 tokens
 │   ├── b20.js              # B20 standard info
@@ -41,10 +40,6 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 │   ├── token.html          # Token detail page
 │   └── agentic-flow.html   # Agentic flow visualization
 │
-├── .claude/
-│   └── skills/
-│       └── bankr-twitter-agent/  # Twitter agent skill
-│
 ├── .github/
 │   └── workflows/
 │       └── sync-opensource.yml   # Auto-sync to tylerbroqs/orlixai
@@ -61,15 +56,6 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - Chain ID hex: mainnet `0x2105`, sepolia `0x14a34`, vibenet `0x509F455`
 - RPC: mainnet `https://mainnet.base.org`, sepolia `https://sepolia.base.org`, vibenet `https://rpc.vibes.base.org`
 
-### X Agent (`/api/x-agent.js`)
-- Runs on cron every 2 minutes via cron-job.org (POST with `X_CRON_SECRET` header)
-- Uses Bearer token for reading mentions, OAuth 1.0a for posting
-- Token detection: `$TICKER` or `0x...` contract address in mention text
-- Live data from DexScreener API
-- Persona detection: developer / trader / marketer / default
-- Redis (Upstash) for `since_id` tracking and execution lock
-- Env vars: `X_API_KEY`, `X_API_KEY_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET`, `X_BEARER_TOKEN`, `X_BOT_USERNAME`, `X_CRON_SECRET`
-
 ### Base City (`/neural-map.html`)
 - Three.js r128 (non-module, CDN)
 - 15×15 grid, BLOCK=18, STREET=12, CELL=30
@@ -82,7 +68,7 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - Explorer: `https://robinhoodchain.blockscout.com`
 - Network type: Arbitrum L2, ETH native currency
 - DexScreener chain ID: `'robinhood'` (used in API filters)
-- Supported in: `analyze.js`, `chat.js`, `token-search.js`, `x-agent.js`, `x402.js`, `x402-market.js`, `app.html`, `index.html`
+- Supported in: `analyze.js`, `chat.js`, `token-search.js`, `x402.js`, `x402-market.js`, `app.html`, `index.html`
 - NOT supported in B20 files (B20 is Base-only)
 - Multi-chain filter pattern: `p.chainId === 'base' || p.chainId === 'robinhood'`
 - `analyze.js` uses a CHAINS config object with `chain` query param (defaults to `'base'`)
@@ -102,15 +88,6 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 ## Environment Variables
 
 ```env
-# X Agent
-X_API_KEY=
-X_API_KEY_SECRET=
-X_ACCESS_TOKEN=
-X_ACCESS_TOKEN_SECRET=
-X_BEARER_TOKEN=
-X_BOT_USERNAME=OrlixAI
-X_CRON_SECRET=
-
 # AI
 ANTHROPIC_API_KEY=
 BANKR_LLM_KEY=
@@ -126,7 +103,7 @@ UPSTASH_REDIS_REST_TOKEN=
 ## Deployment
 - Platform: Vercel (auto-deploy from main branch of aureliusai-code/orlix)
 - Domain: orlix.xyz
-- Function timeout: most endpoints 10s, b20-skill 30s
+- Function timeout: most endpoints 10s, b20-skill/telegram 30-60s
 
 ## Common Commands
 ```bash
