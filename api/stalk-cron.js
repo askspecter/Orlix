@@ -48,12 +48,15 @@ async function stalkScan(limit = 40) {
     const t = newest;
     const isOut = t.from?.toLowerCase() === wallet.toLowerCase();
     const val = t.value ? (Number(t.value) / 1e18).toFixed(4) : '0';
-    const dir = isOut ? '📤 SENT' : '📥 RECEIVED';
+    const dir = isOut ? 'SENT' : 'RECEIVED';
     const peer = isOut ? t.to : t.from;
-    let msg = `🚨 *STALK ALERT*\n\`${short(wallet)}\`${INV.label(wallet) ? ' (' + INV.label(wallet) + ')' : ''} just moved\n\n`;
-    msg += `${dir} *${val} ETH* ${isOut ? '→' : '←'} \`${short(peer)}\`${INV.label(peer) ? ' 🏦 ' + INV.label(peer) : ''}\n`;
-    if (fresh.length > 1) msg += `_+${fresh.length - 1} more new tx_\n`;
-    msg += `\n[🔍 Tx](https://basescan.org/tx/${t.hash}) · [Wallet](https://basescan.org/address/${wallet})`;
+    let msg = '```\n';
+    msg += `stalk alert :: ${short(wallet)}${INV.label(wallet) ? ' (' + INV.label(wallet) + ')' : ''}\n`;
+    msg += '─'.repeat(30) + '\n';
+    msg += `${dir}  ${val} ETH  ${isOut ? '->' : '<-'}  ${short(peer)}${INV.label(peer) ? ' (' + INV.label(peer) + ')' : ''}\n`;
+    if (fresh.length > 1) msg += `+${fresh.length - 1} more new tx\n`;
+    msg += '```\n';
+    msg += `[tx](https://basescan.org/tx/${t.hash}) · [wallet](https://basescan.org/address/${wallet})`;
     await tg('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true });
     alerts++;
   }

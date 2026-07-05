@@ -134,23 +134,49 @@ function isSystem(addr) {
   return !a || SYSTEM.has(a) || /^0x0+$/.test(a) || a.endsWith('dead');
 }
 
+// Launchpad factories / deployers + AMM infra. Tokens minted through these keep
+// the real human creator OFF the contract (owner()==factory), so we resolve the
+// creator from who receives the initial creator allocation instead.
+const FACTORY = {
+  '0x660eaaedebc968f8f3694354fa8ec0b4c5ba8d12': 'Bankr/Clanker',
+};
+const INFRA = new Set([
+  '0x498581ff718922c3f8e6a244956af099b2652b2b', // Uniswap v4 PoolManager (Base)
+  '0x827922686190790b37229fd06084350e74485b72', // Uniswap v3 pos manager-ish
+  '0x2626664c2603336e57b271c5c0b26f421741e481', // Uniswap universal router
+  '0x6ff5693b99212da76ad316178a184ab56d299b43', // router
+]);
+function factoryName(addr) { return FACTORY[addr?.toLowerCase()] || null; }
+function isInfra(addr) {
+  const a = addr?.toLowerCase();
+  return isSystem(a) || !!FACTORY[a] || INFRA.has(a);
+}
+
 async function firstFunder(wallet) {
-  // Basescan: earliest normal txs, look for first inbound with value > 0
+  wallet = wallet.toLowerCase();
+  // 1) earliest normal tx that actually sent ETH in (real funding)
   const j = await bscan({ module: 'account', action: 'txlist', address: wallet,
-    startblock: '0', endblock: '99999999', page: '1', offset: '50', sort: 'asc' });
+    startblock: '0', endblock: '99999999', page: '1', offset: '80', sort: 'asc' });
   const txs = Array.isArray(j.result) ? j.result : [];
   for (const t of txs) {
-    if (t.to?.toLowerCase() === wallet.toLowerCase() && BigInt(t.value || '0') > 0n && t.isError === '0') {
+    if (t.to?.toLowerCase() === wallet && BigInt(t.value || '0') > 0n && t.isError === '0' && !isSystem(t.from)) {
       return { from: t.from.toLowerCase(), value: Number(t.value) / 1e18, ts: Number(t.timeStamp), hash: t.hash };
     }
   }
-  // Fallback: internal txs (funded by a contract / bridge)
+  // 2) internal value transfer (funded by a contract / bridge / disperser)
   const ij = await bscan({ module: 'account', action: 'txlistinternal', address: wallet,
-    startblock: '0', endblock: '99999999', page: '1', offset: '50', sort: 'asc' });
+    startblock: '0', endblock: '99999999', page: '1', offset: '80', sort: 'asc' });
   const itxs = Array.isArray(ij.result) ? ij.result : [];
   for (const t of itxs) {
-    if (t.to?.toLowerCase() === wallet.toLowerCase() && BigInt(t.value || '0') > 0n) {
+    if (t.to?.toLowerCase() === wallet && BigInt(t.value || '0') > 0n && !isSystem(t.from)) {
       return { from: t.from.toLowerCase(), value: Number(t.value) / 1e18, ts: Number(t.timeStamp), hash: t.hash, internal: true };
+    }
+  }
+  // 3) gasless / smart-wallet: no ETH ever came in → whoever FIRST interacted with
+  //    (created / relayed for) this address is its controller. value=0 but it's the link.
+  for (const t of txs) {
+    if (t.to?.toLowerCase() === wallet && !isSystem(t.from) && t.from.toLowerCase() !== wallet) {
+      return { from: t.from.toLowerCase(), value: 0, ts: Number(t.timeStamp), hash: t.hash, gasless: true };
     }
   }
   return null;
@@ -214,31 +240,93 @@ async function walletCluster(wallet) {
 // ── 3. DEPLOYER RAP SHEET — every token a creator has launched ───────────────
 async function contractCreator(token) {
   token = token.toLowerCase();
-  // Primary: Blockscout V2 address endpoint carries the creator + creation tx.
+  let onchainCreator = null, creationHash = null;
+
+  // Blockscout V2 address endpoint carries the on-chain creator + creation tx.
   const r = await fetch(`${BLOCKSCOUT}/addresses/${token}`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
   if (r && r.ok) {
     const d = await r.json().catch(() => ({}));
-    const creator = d.creator_address_hash?.toLowerCase();
-    if (creator && !isSystem(creator)) return { creator, hash: d.creation_transaction_hash || null };
+    const c = d.creator_address_hash?.toLowerCase();
+    if (c && !isSystem(c)) { onchainCreator = c; creationHash = d.creation_transaction_hash || null; }
   }
-  // Fallback A: etherscan-style getcontractcreation
-  const j = await bscan({ module: 'contract', action: 'getcontractcreation', contractaddresses: token });
-  const row = Array.isArray(j.result) && j.result.length ? j.result[0] : null;
-  if (row && row.contractCreator && !isSystem(row.contractCreator)) {
-    return { creator: row.contractCreator.toLowerCase(), hash: row.txHash };
+  if (!onchainCreator) {
+    const j = await bscan({ module: 'contract', action: 'getcontractcreation', contractaddresses: token });
+    const row = Array.isArray(j.result) && j.result.length ? j.result[0] : null;
+    if (row?.contractCreator && !isSystem(row.contractCreator)) { onchainCreator = row.contractCreator.toLowerCase(); creationHash = row.txHash; }
   }
-  // Fallback B (factory / ERC-4337 deploys, e.g. tokens minted via handleOps):
-  // the wallet that received the very first mint (from 0x0) is the dev.
-  const tj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token,
-    page: '1', offset: '20', sort: 'asc' });
+
+  // If the on-chain creator is a real EOA (not a launchpad factory), use it.
+  if (onchainCreator && !factoryName(onchainCreator)) {
+    return { creator: onchainCreator, hash: creationHash, via: 'onchain' };
+  }
+
+  // Factory/launchpad token (Bankr/Clanker etc): the human creator is whoever
+  // receives the initial creator allocation from the deploy/LP cluster. Scan the
+  // first transfers, mark the mint→LP forwarding chain as infra, and take the
+  // first sizeable transfer to a real EOA — that's the dev's allocation.
+  const factory = onchainCreator && factoryName(onchainCreator) ? factoryName(onchainCreator) : 'factory';
+  const supply = await tokenSupply(token);
+  const tj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: '1', offset: '60', sort: 'asc' });
   const txs = Array.isArray(tj.result) ? tj.result : [];
+  const dec = txs[0]?.tokenDecimal ? Number(txs[0].tokenDecimal) : 18;
+  // Distribution sources = the mint recipient + big pass-through holders (factory,
+  // LP locker, treasury) — but NOT the AMM pool/router (those are trading venues,
+  // and receiving FROM the pool means a *buy*, not a creator allocation).
+  const distSrc = new Set();
+  for (const t of txs) {
+    const to = t.to?.toLowerCase();
+    if (INFRA.has(to)) continue;   // never treat the pool/router as a distribution source
+    if (t.from?.toLowerCase() === '0x0000000000000000000000000000000000000000') distSrc.add(to);
+    if (supply && Number(t.value) / 10 ** dec >= supply * 0.40) distSrc.add(to);
+  }
+  const minAlloc = supply ? supply * 0.003 : 0;   // ≥0.3% of supply
+  const maxAlloc = supply ? supply * 0.40 : Infinity;
+  for (const t of txs) {
+    const to = t.to?.toLowerCase(), from = t.from?.toLowerCase();
+    if (!to || isInfra(to) || distSrc.has(to) || to === token) continue;
+    const amt = Number(t.value) / 10 ** dec;
+    if (minAlloc && (amt < minAlloc || amt > maxAlloc)) continue;
+    if (!from || !distSrc.has(from)) continue;   // must come from the deploy cluster
+    return { creator: to, hash: t.hash, via: 'factory-alloc', factory, onchain: onchainCreator };
+  }
+
+  // Fee-recipient signal (Clanker-style): the creator earns LP fees, paid out from
+  // the locker over time. Scan RECENT transfers and find the EOA that keeps
+  // receiving from the distribution cluster (not the pool). That's the dev.
+  if (distSrc.size) {
+    const rj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: '1', offset: '1000', sort: 'desc' });
+    const rtxs = Array.isArray(rj.result) ? rj.result : [];
+    const tally = new Map();  // addr → { amt, count }
+    for (const t of rtxs) {
+      const from = t.from?.toLowerCase(), to = t.to?.toLowerCase();
+      if (!distSrc.has(from)) continue;
+      if (!to || isInfra(to) || distSrc.has(to) || to === token) continue;
+      const e = tally.get(to) || { amt: 0, count: 0 };
+      e.amt += Number(t.value) / 10 ** dec; e.count++;
+      tally.set(to, e);
+    }
+    // rank by payout count first (recurring = fee recipient), then amount
+    const best = [...tally.entries()].sort((a, b) => (b[1].count - a[1].count) || (b[1].amt - a[1].amt))[0];
+    if (best) return { creator: best[0], hash: null, via: 'fee-recipient', factory, onchain: onchainCreator };
+  }
+
+  // Last resort: first mint recipient (may be the factory — better than nothing)
   for (const t of txs) {
     if (t.from?.toLowerCase() === '0x0000000000000000000000000000000000000000') {
       const to = t.to?.toLowerCase();
-      if (to && !isSystem(to)) return { creator: to, hash: t.hash, viaMint: true };
+      if (to && !isSystem(to)) return { creator: to, hash: t.hash, via: 'first-mint', factory, onchain: onchainCreator };
     }
   }
-  return null;
+  return onchainCreator ? { creator: onchainCreator, hash: creationHash, via: 'factory', factory } : null;
+}
+
+// total supply (human units) via RPC totalSupply()
+async function tokenSupply(token) {
+  const hex = await rpc('eth_call', [{ to: token, data: '0x18160ddd' }, 'latest']).catch(() => null);
+  if (!hex || hex === '0x') return null;
+  const decHex = await rpc('eth_call', [{ to: token, data: '0x313ce567' }, 'latest']).catch(() => null);
+  const dec = decHex && decHex !== '0x' ? parseInt(decHex, 16) : 18;
+  try { return Number(BigInt(hex)) / 10 ** dec; } catch { return null; }
 }
 
 async function deployerRapSheet(token) {
@@ -288,7 +376,7 @@ async function deployerRapSheet(token) {
       mcap: dx?.marketCap || dx?.fdv || 0,
       liq: dx?.liquidity?.usd || 0,
       ch24: dx?.priceChange?.h24 ?? null,
-      dead: dx ? (dx.liquidity?.usd || 0) < 1000 : null,
+      dead: (dx?.liquidity?.usd || 0) < 1000,   // unlisted or drained = dead
       url: dx?.url || null,
     });
   }));
@@ -405,8 +493,98 @@ async function rugDossier(token) {
   return out;
 }
 
+// ── 6. NET WORTH — full portfolio valuation of a wallet ──────────────────────
+// ETH + every ERC-20 the wallet holds, each priced via DexScreener, summed.
+async function netWorth(wallet) {
+  wallet = wallet.toLowerCase();
+  const ck = `inv:networth:${wallet}`;
+  const cached = await cacheGet(ck);
+  if (cached) return cached;
+
+  const [ethHex, tokRes, ethPx] = await Promise.all([
+    rpc('eth_getBalance', [wallet, 'latest']).catch(() => null),
+    fetch(`${BLOCKSCOUT}/addresses/${wallet}/token-balances`, { signal: AbortSignal.timeout(9000) })
+      .then(r => r.ok ? r.json() : null).catch(() => null),
+    dexData(WETH).then(d => d?.priceUsd ? Number(d.priceUsd) : 0).catch(() => 0),
+  ]);
+
+  const ethBal = ethHex ? Number(BigInt(ethHex)) / 1e18 : 0;
+  const ethUsd = ethBal * (ethPx || 0);
+  const holdings = [];
+  const list = Array.isArray(tokRes) ? tokRes : [];
+  // Value the top token positions (cap DexScreener calls)
+  const candidates = list
+    .filter(t => t.token?.type === 'ERC-20' && t.value && Number(t.value) > 0)
+    .map(t => ({
+      addr: (t.token.address || '').toLowerCase(),
+      symbol: t.token.symbol || '?',
+      amount: Number(t.value) / 10 ** (Number(t.token.decimals) || 18),
+    }))
+    .slice(0, 40);
+
+  await Promise.all(candidates.map(async c => {
+    const dx = await dexData(c.addr).catch(() => null);
+    const px = dx?.priceUsd ? Number(dx.priceUsd) : 0;
+    c.usd = c.amount * px;
+    c.px = px;
+    if (c.usd >= 1) holdings.push(c);   // ignore dust / unpriced
+  }));
+  holdings.sort((a, b) => b.usd - a.usd);
+  const tokenUsd = holdings.reduce((s, h) => s + h.usd, 0);
+  const out = {
+    wallet, ethBal, ethUsd, tokenUsd, total: ethUsd + tokenUsd,
+    holdings: holdings.slice(0, 15), tokenCount: holdings.length,
+  };
+  await cacheSet(ck, out, 300);
+  return out;
+}
+
+// ── 7. LINK — how are two wallets connected? ─────────────────────────────────
+// Direct transfers between them + shared counterparties/funders. Answers
+// "are these the same person / working together?"
+async function linkWallets(a, b) {
+  a = a.toLowerCase(); b = b.toLowerCase();
+  const pull = w => bscan({ module: 'account', action: 'txlist', address: w,
+    startblock: '0', endblock: '99999999', page: '1', offset: '400', sort: 'desc' })
+    .then(j => Array.isArray(j.result) ? j.result : []);
+  const [ta, tb] = await Promise.all([pull(a), pull(b)]);
+
+  // Direct transfers between a and b
+  const direct = [];
+  for (const t of ta) {
+    const f = t.from?.toLowerCase(), to = t.to?.toLowerCase();
+    if ((f === a && to === b) || (f === b && to === a)) {
+      direct.push({ from: f, to, value: Number(t.value) / 1e18, ts: Number(t.timeStamp), hash: t.hash });
+    }
+  }
+  // Shared counterparties (excluding each other + system)
+  const peers = w => txs => {
+    const s = new Set();
+    for (const t of txs) {
+      for (const p of [t.from?.toLowerCase(), t.to?.toLowerCase()]) {
+        if (p && p !== w && p !== a && p !== b && !isSystem(p) && !label(p)) s.add(p);
+      }
+    }
+    return s;
+  };
+  const pa = peers(a)(ta), pb = peers(b)(tb);
+  const shared = [...pa].filter(p => pb.has(p)).slice(0, 10);
+  // Shared funders specifically
+  const [fa, fb] = await Promise.all([firstFunder(a).catch(() => null), firstFunder(b).catch(() => null)]);
+  const sameFunder = fa && fb && fa.from === fb.from ? fa.from : null;
+
+  return {
+    a, b, direct: direct.slice(0, 5),
+    shared, sameFunder,
+    funderA: fa ? { addr: fa.from, label: label(fa.from) } : null,
+    funderB: fb ? { addr: fb.from, label: label(fb.from) } : null,
+    connected: direct.length > 0 || shared.length > 0 || !!sameFunder,
+  };
+}
+
 module.exports = {
-  short, fmtUsd, ageFrom, label,
+  short, fmtUsd, ageFrom, label, isSystem,
   traceFunding, walletCluster, deployerRapSheet, earlyBuyers, rugDossier,
+  netWorth, linkWallets,
   contractCreator, firstFunder, dexData, rpc, bscan, redis,
 };
