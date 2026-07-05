@@ -213,17 +213,31 @@ async function walletCluster(wallet) {
 
 // ── 3. DEPLOYER RAP SHEET — every token a creator has launched ───────────────
 async function contractCreator(token) {
+  token = token.toLowerCase();
   // Primary: Blockscout V2 address endpoint carries the creator + creation tx.
   const r = await fetch(`${BLOCKSCOUT}/addresses/${token}`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
   if (r && r.ok) {
     const d = await r.json().catch(() => ({}));
     const creator = d.creator_address_hash?.toLowerCase();
-    if (creator) return { creator, hash: d.creation_transaction_hash || null };
+    if (creator && !isSystem(creator)) return { creator, hash: d.creation_transaction_hash || null };
   }
-  // Fallback: etherscan-style getcontractcreation (some deployers only resolve here)
+  // Fallback A: etherscan-style getcontractcreation
   const j = await bscan({ module: 'contract', action: 'getcontractcreation', contractaddresses: token });
   const row = Array.isArray(j.result) && j.result.length ? j.result[0] : null;
-  if (row && row.contractCreator) return { creator: row.contractCreator.toLowerCase(), hash: row.txHash };
+  if (row && row.contractCreator && !isSystem(row.contractCreator)) {
+    return { creator: row.contractCreator.toLowerCase(), hash: row.txHash };
+  }
+  // Fallback B (factory / ERC-4337 deploys, e.g. tokens minted via handleOps):
+  // the wallet that received the very first mint (from 0x0) is the dev.
+  const tj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token,
+    page: '1', offset: '20', sort: 'asc' });
+  const txs = Array.isArray(tj.result) ? tj.result : [];
+  for (const t of txs) {
+    if (t.from?.toLowerCase() === '0x0000000000000000000000000000000000000000') {
+      const to = t.to?.toLowerCase();
+      if (to && !isSystem(to)) return { creator: to, hash: t.hash, viaMint: true };
+    }
+  }
   return null;
 }
 
@@ -236,16 +250,33 @@ async function deployerRapSheet(token) {
   const cc = await contractCreator(token);
   if (!cc?.creator) { const out = { token, creator: null, deploys: [] }; await cacheSet(ck, out, 900); return out; }
 
-  // Scan the creator's outbound txs for contract-creation (to == null → contractAddress)
+  const createdMap = new Map();   // tokenAddr → earliest ts
+  const add = (addr, ts) => {
+    addr = addr.toLowerCase();
+    if (isSystem(addr)) return;
+    if (!createdMap.has(addr) || ts < createdMap.get(addr)) createdMap.set(addr, ts);
+  };
+
+  // Source 1 — traditional deploys: creator's txs with (to empty → contractAddress)
   const j = await bscan({ module: 'account', action: 'txlist', address: cc.creator,
     startblock: '0', endblock: '99999999', page: '1', offset: '2000', sort: 'asc' });
-  const txs = Array.isArray(j.result) ? j.result : [];
-  const created = [];
-  for (const t of txs) {
-    if ((!t.to || t.to === '') && t.contractAddress) {
-      created.push({ addr: t.contractAddress.toLowerCase(), ts: Number(t.timeStamp) });
+  for (const t of (Array.isArray(j.result) ? j.result : [])) {
+    if ((!t.to || t.to === '') && t.contractAddress) add(t.contractAddress, Number(t.timeStamp));
+  }
+
+  // Source 2 — factory / ERC-4337 deploys: tokens where THIS wallet received the
+  // very first mint (from 0x0). Catches memecoins launched via handleOps/factories.
+  const tj = await bscan({ module: 'account', action: 'tokentx', address: cc.creator,
+    page: '1', offset: '2000', sort: 'asc' });
+  for (const t of (Array.isArray(tj.result) ? tj.result : [])) {
+    if (t.from?.toLowerCase() === '0x0000000000000000000000000000000000000000' && t.contractAddress) {
+      add(t.contractAddress, Number(t.timeStamp));
     }
   }
+  // always include the token we were asked about
+  add(token, cc.ts || Math.floor(Date.now() / 1000));
+
+  const created = [...createdMap.entries()].map(([addr, ts]) => ({ addr, ts })).sort((a, b) => a.ts - b.ts);
   // Enrich up to ~10 most recent deploys with market data (parallel, capped)
   const recent = created.slice(-12).reverse();
   const enriched = [];
