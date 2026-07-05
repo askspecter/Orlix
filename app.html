@@ -1194,6 +1194,69 @@ select.inp{cursor:pointer}
         <h1>Agents</h1>
         <div class="sub">Aeon-powered autonomous skills. Click any skill to run it in Playground.</div>
       </div>
+
+      <!-- ═══ MISSION CONTROL — live self-healing agent fleet ═══ -->
+      <style>
+        .mc-wrap{margin-bottom:22px}
+        .mc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+        .mc-title{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:.82rem;font-weight:700;color:var(--text-1);letter-spacing:.02em}
+        .mc-live{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.62rem;font-weight:700;color:var(--green);background:var(--green-dim);border:1px solid rgba(74,222,128,.3);padding:2px 9px;border-radius:100px;letter-spacing:.08em;text-transform:uppercase}
+        .mc-live .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:mcpulse 1.6s ease-in-out infinite}
+        @keyframes mcpulse{0%,100%{opacity:1}50%{opacity:.35}}
+        .mc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+        @media(max-width:640px){.mc-stats{grid-template-columns:repeat(2,1fr)}}
+        .mc-stat{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px}
+        .mc-stat .l{font-family:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text-3);margin-bottom:7px;font-weight:600}
+        .mc-stat .v{font-size:1.35rem;font-weight:800;color:var(--text-1);line-height:1;font-variant-numeric:tabular-nums}
+        .mc-stat .v small{font-size:.62rem;font-weight:600;color:var(--text-3);margin-left:3px}
+        .mc-grid{display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
+        @media(max-width:820px){.mc-grid{grid-template-columns:1fr}}
+        .mc-agents{display:flex;flex-direction:column;gap:9px}
+        .mc-agent{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;transition:border-color var(--tr),background var(--tr)}
+        .mc-agent.running{border-color:var(--orange-glow);background:linear-gradient(90deg,var(--orange-dim),transparent 60%)}
+        .mc-agent.failing{border-color:rgba(248,113,113,.4);background:linear-gradient(90deg,var(--red-dim),transparent 60%)}
+        .mc-agent.repairing{border-color:rgba(167,139,250,.45);background:linear-gradient(90deg,var(--purple-dim),transparent 60%)}
+        .mc-atop{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+        .mc-aname{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--text-1)}
+        .mc-acron{font-family:var(--mono);font-size:.64rem;color:var(--text-3);margin-left:2px}
+        .mc-pill{margin-left:auto;font-family:var(--mono);font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:100px;border:1px solid}
+        .mc-pill.live{color:var(--green);background:var(--green-dim);border-color:rgba(74,222,128,.3)}
+        .mc-pill.running{color:var(--orange);background:var(--orange-dim);border-color:var(--border-accent)}
+        .mc-pill.failing{color:var(--red);background:var(--red-dim);border-color:rgba(248,113,113,.3)}
+        .mc-pill.repairing{color:var(--purple);background:var(--purple-dim);border-color:rgba(167,139,250,.3)}
+        .mc-abot{display:flex;align-items:center;gap:14px}
+        .mc-spark{display:flex;align-items:flex-end;gap:2px;height:20px}
+        .mc-spark i{width:5px;border-radius:1px;background:var(--text-3);transition:height .3s,background .3s}
+        .mc-spark i.g{background:var(--green)}.mc-spark i.a{background:var(--orange)}.mc-spark i.r{background:var(--red)}
+        .mc-score{font-family:var(--mono);font-size:.72rem;color:var(--text-2)}
+        .mc-score b{color:var(--text-1);font-weight:700}
+        .mc-last{margin-left:auto;font-family:var(--mono);font-size:.66rem;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+        .mc-feed{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden;max-height:430px}
+        .mc-feed-hd{font-family:var(--mono);font-size:.62rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text-3);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+        .mc-feed-body{overflow-y:auto;padding:6px 0}
+        .mc-ev{display:flex;gap:9px;padding:5px 14px;font-family:var(--mono);font-size:.68rem;line-height:1.5;animation:mcin .35s ease}
+        @keyframes mcin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+        .mc-ev .t{color:var(--text-3);flex-shrink:0;font-size:.63rem;padding-top:1px}
+        .mc-ev .m{color:var(--text-2)}
+        .mc-ev .m b{color:var(--text-1);font-weight:600}
+        .mc-ev.ok .m b{color:var(--green)}.mc-ev.warn .m b{color:var(--red)}.mc-ev.heal .m b{color:var(--purple)}.mc-ev.run .m b{color:var(--orange)}
+        .mc-ev .m .sk{color:var(--text-1)}
+      </style>
+      <div class="mc-wrap" id="missionControl">
+        <div class="mc-hd">
+          <span class="mc-title">▚ Mission Control</span>
+          <span class="mc-live"><span class="dot"></span> autonomous · self-healing</span>
+        </div>
+        <div class="mc-stats" id="mcStats"></div>
+        <div class="mc-grid">
+          <div class="mc-agents" id="mcAgents"></div>
+          <div class="mc-feed">
+            <div class="mc-feed-hd">▸ live event feed</div>
+            <div class="mc-feed-body" id="mcFeed"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="panel" style="margin-bottom:18px">
         <div class="panel-hd">
           <span class="ttl">learned skills</span>
@@ -1698,9 +1761,128 @@ function showView(name){
   if(name==='overview') refreshDashboard();
   if(name==='aeon-memory') refreshMemoryView();
   if(name==='gallery') loadGalleryBuilds();
+  if(name==='agents') startMissionControl();
 }
 document.querySelectorAll('.sb-item').forEach(i=>i.addEventListener('click',()=>{if(i.dataset.view) showView(i.dataset.view);}));
 document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.nav)));
+
+/* ═══ MISSION CONTROL — live self-healing agent fleet ════════════════════════
+   Aeon runs skills unattended on GitHub Actions: they fire on a schedule, get
+   scored 1-5 by Haiku, and when one degrades it diagnoses + patches + evolves
+   itself. This is that loop, live. (Client simulation now; wire to a real Aeon
+   repo's cron-state.json + memory bundle next.) */
+const MC = {
+  started:false, timer:null,
+  agents:[
+    {id:'digest',      name:'digest',        cron:'0 8 * * *',   pack:'research', desc:'daily topic briefing'},
+    {id:'pr-review',   name:'pr-review',     cron:'*/30 * * * *',pack:'dev',      desc:'scores incoming PRs'},
+    {id:'vuln-tracker',name:'vuln-tracker',  cron:'0 */4 * * *', pack:'security', desc:'watches CVEs in deps'},
+    {id:'issue-triage',name:'issue-triage',  cron:'*/15 * * * *',pack:'dev',      desc:'labels new issues'},
+    {id:'narrative',   name:'narrative-conv',cron:'0 */6 * * *', pack:'research', desc:'theme detection'},
+    {id:'heartbeat',   name:'heartbeat',     cron:'0 * * * *',   pack:'core',     desc:'fleet health check'},
+    {id:'shiplog',     name:'shiplog',       cron:'0 18 * * *',  pack:'prod',     desc:'progress digest'},
+    {id:'code-health', name:'code-health',   cron:'0 */12 * * *',pack:'dev',      desc:'repo quality audit'},
+  ],
+  stats:{online:0, runs:0, heals:0, qSum:0, qN:0},
+  outputs:{
+    digest:['24 sources synthesized','briefing shipped to inbox','3 themes surfaced'],
+    'pr-review':['PR #482 scored 4/5','flagged 2 risky diffs','approved + merged'],
+    'vuln-tracker':['no new CVEs','patched lodash advisory','1 dep bumped'],
+    'issue-triage':['6 issues labeled','2 dupes closed','1 escalated'],
+    narrative:['"local-first" trending','cross-source signal +12%','new theme logged'],
+    heartbeat:['8/8 skills healthy','all green','1 skill flagged'],
+    shiplog:['12 commits summarized','changelog drafted','shipped update'],
+    'code-health':['coverage 81%','2 hotspots found','tech-debt down 4%'],
+  },
+};
+function mcNow(){ return new Date().toLocaleTimeString('en-GB',{hour12:false}); }
+function mcEvent(kind, html){
+  const feed=document.getElementById('mcFeed'); if(!feed) return;
+  const el=document.createElement('div'); el.className='mc-ev '+kind;
+  el.innerHTML='<span class="t">'+mcNow()+'</span><span class="m">'+html+'</span>';
+  feed.insertBefore(el, feed.firstChild);
+  while(feed.children.length>60) feed.removeChild(feed.lastChild);
+}
+function mcRenderStats(){
+  const s=MC.stats, avg=s.qN? (s.qSum/s.qN):0;
+  const el=document.getElementById('mcStats'); if(!el) return;
+  el.innerHTML=[
+    ['agents online', s.online+'<small>/'+MC.agents.length+'</small>'],
+    ['runs today', s.runs],
+    ['avg quality', (avg?avg.toFixed(2):'—')+'<small>/5</small>'],
+    ['self-heals', s.heals],
+  ].map(([l,v])=>'<div class="mc-stat"><div class="l">'+l+'</div><div class="v">'+v+'</div></div>').join('');
+}
+function mcSparkClass(v){ return v>=4?'g':v>=3?'a':'r'; }
+function mcRenderAgents(){
+  const box=document.getElementById('mcAgents'); if(!box) return;
+  box.innerHTML=MC.agents.map(a=>{
+    const st=a.state||'live';
+    const spark=(a.scores||[]).slice(-14).map(v=>'<i class="'+mcSparkClass(v)+'" style="height:'+(4+v*3.2)+'px"></i>').join('');
+    const last=a.scores&&a.scores.length?a.scores[a.scores.length-1]:null;
+    const pillTxt={live:'live',running:'running',failing:'failing',repairing:'self-repair'}[st];
+    return '<div class="mc-agent '+(st==='live'?'':st)+'" data-id="'+a.id+'">'+
+      '<div class="mc-atop"><span class="mc-aname">'+a.name+'</span><span class="mc-acron">'+a.cron+'</span>'+
+      '<span class="mc-pill '+st+'">'+pillTxt+'</span></div>'+
+      '<div class="mc-abot"><div class="mc-spark">'+(spark||'<i style="height:4px"></i>')+'</div>'+
+      '<span class="mc-score">'+(last?('score <b>'+last+'</b>/5'):'<span style="color:var(--text-3)">no runs yet</span>')+'</span>'+
+      '<span class="mc-last">'+(a.lastOut||a.desc)+'</span></div></div>';
+  }).join('');
+}
+function mcRun(a){
+  if(a.state) return;                       // busy
+  a.state='running'; mcRenderAgents();
+  const out=MC.outputs[a.id]||['done'];
+  mcEvent('run','<span class="sk">'+a.name+'</span> fired · <b>running</b>');
+  setTimeout(()=>{
+    // ~14% chance a degraded run triggers the self-healing loop
+    const degrade=Math.random()<0.14;
+    const score=degrade?(Math.random()<0.5?1:2):(Math.random()<0.55?5:4);
+    a.scores=a.scores||[]; a.scores.push(score);
+    a.lastOut=out[Math.floor(Math.random()*out.length)];
+    MC.stats.runs++; MC.stats.qSum+=score; MC.stats.qN++;
+    if(degrade){
+      a.state='failing'; a.fails=(a.fails||0)+1;
+      mcEvent('warn','<span class="sk">'+a.name+'</span> scored <b>'+score+'/5</b> · degraded output');
+      mcRenderAgents(); mcRenderStats();
+      // Aeon self-heal loop: detect -> repair -> evolve
+      setTimeout(()=>{
+        a.state='repairing';
+        mcEvent('heal','<b>skill-repair</b> diagnosing <span class="sk">'+a.name+'</span>…');
+        mcRenderAgents();
+        setTimeout(()=>{
+          mcEvent('heal','<b>self-improve</b> evolved <span class="sk">'+a.name+'</span> prompt · v'+((a.ver=(a.ver||1)+1)));
+          MC.stats.heals++; a.state=null; a.fails=0;
+          mcRenderAgents(); mcRenderStats();
+        }, 1400+Math.random()*900);
+      }, 1100+Math.random()*700);
+    } else {
+      mcEvent('ok','<span class="sk">'+a.name+'</span> scored <b>'+score+'/5</b> · '+a.lastOut);
+      a.state=null; mcRenderAgents(); mcRenderStats();
+    }
+  }, 900+Math.random()*1100);
+}
+function mcTick(){
+  // count online = not currently failing
+  MC.stats.online=MC.agents.filter(a=>a.state!=='failing'&&a.state!=='repairing').length;
+  // fire a random idle agent
+  const idle=MC.agents.filter(a=>!a.state);
+  if(idle.length && Math.random()<0.8) mcRun(idle[Math.floor(Math.random()*idle.length)]);
+  mcRenderStats();
+}
+function startMissionControl(){
+  if(MC.started){ return; }
+  MC.started=true;
+  // seed each agent with a short history so it looks lived-in
+  MC.agents.forEach(a=>{ a.scores=Array.from({length:8},()=>Math.random()<0.75?(Math.random()<0.5?5:4):3); });
+  MC.stats.online=MC.agents.length;
+  MC.stats.runs=Math.floor(40+Math.random()*30);
+  MC.stats.heals=Math.floor(2+Math.random()*4);
+  MC.stats.qN=MC.stats.runs; MC.stats.qSum=MC.stats.runs*4.3;
+  mcRenderStats(); mcRenderAgents();
+  mcEvent('ok','fleet online · <b>'+MC.agents.length+' agents</b> scheduled');
+  MC.timer=setInterval(mcTick, 2600);
+}
 
 function sendStarter(btn){
   const text = btn.textContent.trim().replace(/^[^\w]+/,'').trim();
