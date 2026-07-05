@@ -92,7 +92,17 @@ async function send(chatId, text, extra = {}) {
   }
 }
 
+// Strip em/en dashes from AI-generated text — the model likes them, we don't.
+// " — " between clauses becomes a clean comma; a bare dash becomes a colon/hyphen.
+function deDash(s) {
+  if (!s) return s;
+  return s
+    .replace(/ [—–] /g, ', ')
+    .replace(/[—–]/g, '-');
+}
+
 async function sendLong(chatId, text) {
+  text = deDash(text);
   const MAX = 3900;
   if (text.length <= MAX) return send(chatId, text);
   const chunks = [];
@@ -307,10 +317,10 @@ async function cmdAnalyze(chatId, address, lang = 'en') {
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 700,
-          system: `You are an expert crypto security analyst for Base and Robinhood Chain tokens. ${langInstruction} ONLY use Telegram markdown: *bold* and _italic_. NEVER use # or ## headers or --- rules. Use *bold text* for section titles. You CAN use > for important warnings. Be concise but specific — cite actual numbers from the data.`,
+          system: `You are an expert crypto security analyst for Base and Robinhood Chain tokens. ${langInstruction} ONLY use Telegram markdown: *bold* and _italic_. NEVER use # or ## headers or --- rules. Use *bold text* for section titles. You CAN use > for important warnings. Be concise but specific and cite actual numbers from the data. NEVER use the em-dash or en-dash character ("—" / "–"); use a period, comma, colon, or the word "and" instead. Keep a clean plain terminal style.`,
           messages: [{
             role: 'user',
-            content: `Analyze this Base token. Format:\n\n* Red Flags*\n• [specific flags or: None detected]\n\n* Green Flags*\n• [specific positives or: None detected]\n\n* Risk Assessment*\n[liquidity risk, price manipulation, rug pull probability — cite Liq/MCap ratio and buy/sell data]\n\n* Verdict: SAFE / CAUTION / HIGH RISK / SCAM LIKELY*\n[One sentence with key reason]\n\nData:\n${ctx}`,
+            content: `Analyze this Base token. Format:\n\n*Red Flags*\n- [specific flags or: None detected]\n\n*Green Flags*\n- [specific positives or: None detected]\n\n*Risk Assessment*\n[liquidity risk, price manipulation, rug pull probability, citing Liq/MCap ratio and buy/sell data]\n\n*Verdict: SAFE / CAUTION / HIGH RISK / SCAM LIKELY*\n[One sentence with key reason]\n\nData:\n${ctx}`,
           }],
         }),
       });
@@ -424,7 +434,7 @@ async function cmdChat(chatId, text, lang) {
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 2000,
-      system: `You are Orlix AI — a highly intelligent, versatile AI assistant running inside Telegram.
+      system: `You are Orlix AI, a highly intelligent, versatile AI assistant running inside Telegram.
 
 ${isID ? 'PENTING: Pengguna menulis dalam Bahasa Indonesia. Balas SELALU dalam Bahasa Indonesia yang baik dan natural.' : 'Reply in English.'}
 
@@ -437,10 +447,11 @@ Your capabilities:
 
 FORMATTING RULES (STRICT):
 - ONLY use Telegram-compatible markdown: *bold*, _italic_, \`code\`, \`\`\`code blocks\`\`\`
-- NEVER use # headers, ## headers, ### headers, or --- horizontal rules — Telegram does NOT render them
+- NEVER use # headers, ## headers, ### headers, or --- horizontal rules; Telegram does NOT render them
+- NEVER use the em-dash or en-dash character ("—" / "–"). Use a period, comma, colon, or the word "and". This is a hard rule.
 - For section titles, use *bold text* on its own line instead of # or ## headers
 - For separators, use a blank line instead of ---
-- You CAN use > for important notes or warnings · it looks good as an agent-style callout
+- You CAN use > for important notes or warnings; it looks good as an agent-style callout
 - Write clean, professional responses without raw # symbols showing
 - When relevant, mention /analyze, /swap, /top, /watch, $TICKER
 - Keep replies under 3000 characters when possible`,
@@ -1566,7 +1577,7 @@ module.exports = async function handler(req, res) {
 
 First, describe what the image shows (a chart, a DM, a group chat, a wallet, a tweet, a contract, etc) and pull out anything an investigator would care about: ticker, token name, price, a contract address, a wallet address, a tx hash, timestamps, usernames, claims.
 
-Telegram markdown ONLY: *bold*, _italic_, \`code\`. NEVER use # headers or --- rules. Use *bold* on its own line for section titles. Keep it tight.
+Telegram markdown ONLY: *bold*, _italic_, \`code\`. NEVER use # headers or --- rules. NEVER use the em-dash or en-dash ("—" / "–"); use a period, comma, or colon. Use *bold* on its own line for section titles. Keep it tight and plain-terminal.
 
 Then, on the VERY LAST line, output a machine-readable clue block EXACTLY in this format (no other text after it):
 CLUE|type=<token|wallet|none>|address=<0x... or NONE>|ticker=<SYMBOL or NONE>
