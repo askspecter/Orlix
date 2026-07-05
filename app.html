@@ -1245,8 +1245,9 @@ select.inp{cursor:pointer}
       <div class="mc-wrap" id="missionControl">
         <div class="mc-hd">
           <span class="mc-title">▚ Mission Control</span>
-          <span class="mc-live"><span class="dot"></span> autonomous · self-healing</span>
+          <span class="mc-live" id="mcMode"><span class="dot"></span> autonomous · self-healing</span>
         </div>
+        <div id="mcSource" style="font-family:var(--mono);font-size:.66rem;color:var(--text-3);margin:-4px 0 12px">connecting to Aeon repo…</div>
         <div class="mc-stats" id="mcStats"></div>
         <div class="mc-grid">
           <div class="mc-agents" id="mcAgents"></div>
@@ -1870,16 +1871,72 @@ function mcTick(){
   if(idle.length && Math.random()<0.8) mcRun(idle[Math.floor(Math.random()*idle.length)]);
   mcRenderStats();
 }
-function startMissionControl(){
+function mcAge(iso){
+  if(!iso) return null;
+  const s=Math.max(0,(Date.now()-new Date(iso).getTime())/1000);
+  if(s<3600) return Math.floor(s/60)+'m'; if(s<86400) return Math.floor(s/3600)+'h';
+  return Math.floor(s/86400)+'d';
+}
+function mcRenderSource(live){
+  const el=document.getElementById('mcSource'), mode=document.getElementById('mcMode');
+  if(!el) return;
+  if(live && live.configured){
+    const hb=live.heartbeat&&live.heartbeat.last_dispatch?(' · heartbeat '+(mcAge(live.heartbeat.last_dispatch)||'?')+' ago'):'';
+    el.innerHTML='connected → <b style="color:var(--text-2)">'+live.repo+'</b> · '+
+      live.stats.total+' skills, '+live.stats.enabled+' enabled, '+live.stats.reactive+' reactive'+hb;
+  } else {
+    el.innerHTML='demo mode · set <b style="color:var(--text-2)">AEON_REPO</b> to connect a live Aeon fleet';
+  }
+  // If the connected instance is actually running scored skills, flip to LIVE data
+  if(mode){
+    const isLive = live && live.configured && (MC.mode==='live');
+    mode.innerHTML='<span class="dot"></span> '+(isLive?'live · '+live.repo.split('/')[1]:'autonomous · self-healing');
+  }
+}
+async function mcFetchLive(){
+  try{
+    const r=await fetch('/api/aeon',{headers:{Accept:'application/json'}});
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(e){ return null; }
+}
+function mcBuildFromLive(live){
+  // Only agents that are enabled AND have real scored history drive the live fleet.
+  const withHist=live.agents.filter(a=>a.enabled && a.history && a.history.length);
+  if(withHist.length<3) return false;                 // not enough real signal → keep sim
+  MC.agents=withHist.slice(0,10).map(a=>({
+    id:a.name, name:a.name, cron:a.cron, pack:a.pack, desc:a.pack+' skill',
+    scores:a.history.slice(), lastOut:a.lastStatus||('score '+(a.score||a.history[a.history.length-1])),
+    state:(a.lastStatus&&/fail|error/i.test(a.lastStatus))?'failing':null,
+  }));
+  const scores=MC.agents.flatMap(a=>a.scores);
+  MC.stats={ online:MC.agents.filter(a=>a.state!=='failing').length, runs:scores.length, heals:0,
+    qSum:scores.reduce((s,v)=>s+v,0), qN:scores.length };
+  return true;
+}
+async function startMissionControl(){
   if(MC.started){ return; }
   MC.started=true;
-  // seed each agent with a short history so it looks lived-in
+  const live=await mcFetchLive();
+  MC.live=live;
+  if(live && live.configured && mcBuildFromLive(live)){
+    MC.mode='live';
+    mcRenderSource(live);
+    mcRenderStats(); mcRenderAgents();
+    mcEvent('ok','live fleet loaded from <b>'+live.repo+'</b> · '+MC.agents.length+' active skills');
+    MC.timer=setInterval(mcTick, 2600);   // continues from real history, animates new runs
+    return;
+  }
+  // Demo mode: rich simulation, but header shows the REAL repo stats + heartbeat
+  MC.mode='sim';
+  mcRenderSource(live);
   MC.agents.forEach(a=>{ a.scores=Array.from({length:8},()=>Math.random()<0.75?(Math.random()<0.5?5:4):3); });
   MC.stats.online=MC.agents.length;
   MC.stats.runs=Math.floor(40+Math.random()*30);
   MC.stats.heals=Math.floor(2+Math.random()*4);
   MC.stats.qN=MC.stats.runs; MC.stats.qSum=MC.stats.runs*4.3;
   mcRenderStats(); mcRenderAgents();
+  if(live && live.configured) mcEvent('ok','watching <b>'+live.repo+'</b> · '+live.stats.enabled+'/'+live.stats.total+' skills enabled');
   mcEvent('ok','fleet online · <b>'+MC.agents.length+' agents</b> scheduled');
   MC.timer=setInterval(mcTick, 2600);
 }

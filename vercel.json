@@ -33,7 +33,8 @@
     "api/x402.js":         { "maxDuration": 60 },
     "api/song.js":         { "maxDuration": 60 },
     "api/telegram.js":     { "maxDuration": 60 },
-    "api/stalk-cron.js":   { "maxDuration": 60 }
+    "api/stalk-cron.js":   { "maxDuration": 60 },
+    "api/aeon.js":         { "maxDuration": 15 }
   },
   "redirects": [
     { "source": "/app.html",          "destination": "/app",          "permanent": true },
