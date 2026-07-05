@@ -249,8 +249,8 @@ async function cmdAnalyze(chatId, address, lang = 'en') {
   const fmtUsd = (n) => `$${fmt(n, 0)}`;
   const priceStr = dex?.priceUsd
     ? `$${dex.priceUsd < 0.0001 ? dex.priceUsd.toFixed(10) : dex.priceUsd < 0.01 ? dex.priceUsd.toFixed(8) : dex.priceUsd.toFixed(6)}`
-    : '—';
-  const fmtChange = (v) => v == null ? '—' : (v >= 0 ? `+${v}%` : `${v}%`);
+    : '-';
+  const fmtChange = (v) => v == null ? '-' : (v >= 0 ? `+${v}%` : `${v}%`);
   const ageStr = dex?.pairCreatedAt
     ? `${Math.floor((Date.now() - dex.pairCreatedAt) / 86400000)}d`
     : '?';
@@ -280,7 +280,7 @@ async function cmdAnalyze(chatId, address, lang = 'en') {
     card += `* DEX:* ${dex.dexId} · ${dex.pairName} · Age: ${ageStr}\n`;
     if (dex.url) card += `[ View Chart](${dex.url})\n`;
   } else {
-    card += `\n_ Not listed on any DEX — token may be very new or unlisted_\n`;
+    card += `\n_ Not listed on any DEX · token may be very new or unlisted_\n`;
   }
 
   const key = ANTHROPIC_KEY();
@@ -396,9 +396,9 @@ async function cmdPrice(chatId, address) {
   const best  = (pairs.length ? pairs : (data.pairs || [])).sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
   if (!best) return send(chatId, 'Token not listed on any DEX.');
 
-  const price = best.priceUsd ? `$${Number(best.priceUsd).toFixed(8)}` : '—';
+  const price = best.priceUsd ? `$${Number(best.priceUsd).toFixed(8)}` : '-';
   const ch24  = best.priceChange?.h24;
-  const chStr = ch24 == null ? '—' : (ch24 >= 0 ? `+${ch24}%` : `${ch24}%`);
+  const chStr = ch24 == null ? '-' : (ch24 >= 0 ? `+${ch24}%` : `${ch24}%`);
   const sym   = best.baseToken?.symbol || '?';
 
   let msg = `*${sym} PRICE*\n`;
@@ -440,7 +440,7 @@ FORMATTING RULES (STRICT):
 - NEVER use # headers, ## headers, ### headers, or --- horizontal rules — Telegram does NOT render them
 - For section titles, use *bold text* on its own line instead of # or ## headers
 - For separators, use a blank line instead of ---
-- You CAN use > for important notes or warnings — it looks good as an agent-style callout
+- You CAN use > for important notes or warnings · it looks good as an agent-style callout
 - Write clean, professional responses without raw # symbols showing
 - When relevant, mention /analyze, /swap, /top, /watch, $TICKER
 - Keep replies under 3000 characters when possible`,
@@ -513,14 +513,14 @@ async function cmdTickerPrice(chatId, ticker, lang) {
   const sym   = pair.baseToken?.symbol || ticker.toUpperCase();
   const name  = pair.baseToken?.name || '';
   const addr  = pair.baseToken?.address || '';
-  const price = pair.priceUsd ? `$${Number(pair.priceUsd) < 0.0001 ? Number(pair.priceUsd).toFixed(10) : Number(pair.priceUsd) < 0.01 ? Number(pair.priceUsd).toFixed(8) : Number(pair.priceUsd).toFixed(6)}` : '—';
+  const price = pair.priceUsd ? `$${Number(pair.priceUsd) < 0.0001 ? Number(pair.priceUsd).toFixed(10) : Number(pair.priceUsd) < 0.01 ? Number(pair.priceUsd).toFixed(8) : Number(pair.priceUsd).toFixed(6)}` : '-';
   const ch1h  = pair.priceChange?.h1;
   const ch24h = pair.priceChange?.h24;
   const liq   = pair.liquidity?.usd || 0;
   const vol   = pair.volume?.h24 || 0;
   const mcap  = pair.marketCap || pair.fdv || 0;
   const chain = pair.chainId === 'robinhood' ? 'Robinhood' : 'Base';
-  const arrow = (v) => v == null ? '—' : v >= 0 ? `+${v}%` : `${v}%`;
+  const arrow = (v) => v == null ? '-' : v >= 0 ? `+${v}%` : `${v}%`;
 
   let msg = `*$${sym}*`;
   if (name) msg += ` - ${name}`;
@@ -659,8 +659,8 @@ async function cmdSwap(chatId, userId, args, lang) {
     return tg('sendMessage', {
       chat_id: chatId, parse_mode: 'Markdown', disable_web_page_preview: true,
       text: isID
-        ? `*Swap Token*\n\n*Format:*\n\`/swap 0.001 ETH ORLIX\` — Swap langsung\n\`/swap 1000000 ORLIX ETH\`\n\`/swap ETH BRETT\` — Lihat harga\n\n_Swap apapun di Base via Uniswap V3_`
-        : `*Swap Token*\n\n*Usage:*\n\`/swap 0.001 ETH ORLIX\` — Execute swap\n\`/swap 1000000 ORLIX ETH\`\n\`/swap ETH BRETT\` — View price\n\n_Swap any token on Base via Uniswap V3_`,
+        ? `*Swap Token*\n\n*Format:*\n\`/swap 0.001 ETH ORLIX\` · Swap langsung\n\`/swap 1000000 ORLIX ETH\`\n\`/swap ETH BRETT\` · Lihat harga\n\n_Swap apapun di Base via Uniswap V3_`
+        : `*Swap Token*\n\n*Usage:*\n\`/swap 0.001 ETH ORLIX\` · Execute swap\n\`/swap 1000000 ORLIX ETH\`\n\`/swap ETH BRETT\` · View price\n\n_Swap any token on Base via Uniswap V3_`,
       reply_markup: { inline_keyboard: [
         [{ text: 'Swap ETH -> ORLIX', url: `https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=${ORLIX_CA}` }],
         [{ text: 'ORLIX Chart', url: `https://dexscreener.com/base/${ORLIX_CA}` }],
@@ -794,11 +794,11 @@ async function cmdTop(chatId, lang) {
     const top = Object.values(seen).sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0)).slice(0, 10);
     if (!top.length) return send(chatId, `${isID ? 'Gagal memuat data market.' : 'Failed to load market data.'}`);
 
-    let msg = `*${isID ? 'Top Token — Base & Robinhood' : 'Top Tokens — Base & Robinhood'}*\n\n`;
+    let msg = `*${isID ? 'Top Token · Base & Robinhood' : 'Top Tokens · Base & Robinhood'}*\n\n`;
     for (let i = 0; i < top.length; i++) {
       const p = top[i];
       const sym = p.baseToken?.symbol || '?';
-      const pr  = p.priceUsd ? `$${Number(p.priceUsd) < 0.01 ? Number(p.priceUsd).toFixed(6) : Number(p.priceUsd).toFixed(4)}` : '—';
+      const pr  = p.priceUsd ? `$${Number(p.priceUsd) < 0.01 ? Number(p.priceUsd).toFixed(6) : Number(p.priceUsd).toFixed(4)}` : '-';
       const ch  = p.priceChange?.h24;
       const arr = ch == null ? '' : ch >= 0 ? `+${ch}%` : `${ch}%`;
       const vol = p.volume?.h24 || 0;
@@ -839,9 +839,9 @@ async function cmdTrace(chatId, wallet, lang = 'en') {
   let body = `target  ${INV.short(wallet)}\n\nmoney trail (source is up):\n`;
   res.hops.forEach((h, i) => {
     const branch = i === 0 ? '└─' : '  '.repeat(i) + '└─';
-    if (h.end) { body += `${branch} [trail ends — no inbound funding]\n`; return; }
+    if (h.end) { body += `${branch} [trail ends · no inbound funding]\n`; return; }
     const who = h.label ? h.label.toUpperCase() : INV.short(h.from);
-    const amt = h.gasless ? 'controlled-by' : (h.value ? `${h.value.toFixed(4)} ETH` : '—');
+    const amt = h.gasless ? 'controlled-by' : (h.value ? `${h.value.toFixed(4)} ETH` : '-');
     const when = h.ts ? `${INV.ageFrom(h.ts)} ago` : '';
     const tag = h.gasless ? '  [smart-wallet]' : h.internal ? '  [internal]' : '';
     body += `${branch} ${pad(amt, 14)} <- ${pad(who, 16)} ${when}${tag}\n`;
@@ -864,7 +864,7 @@ async function cmdCluster(chatId, wallet, lang = 'en') {
   const f = res.funder;
   let body = `target  ${INV.short(wallet)}\nfunder  ${f.label ? f.label.toUpperCase() : INV.short(f.addr)}\n\n`;
   if (!res.siblings.length) {
-    body += 'no side wallets — funder seeded nobody else\n(clean, or a public exchange)\n';
+    body += 'no side wallets · funder seeded nobody else\n(clean, or a public exchange)\n';
   } else {
     body += `side wallets from same funder (${res.siblings.length}):\n`;
     res.siblings.forEach(s => { body += `${pad(INV.short(s.addr), 16)} ${pad(s.value.toFixed(3) + ' ETH', 12)} ${INV.ageFrom(s.ts)} ago\n`; });
@@ -891,7 +891,7 @@ async function cmdDeployer(chatId, token, lang = 'en') {
     const sym = d.symbol ? `$${d.symbol}` : INV.short(d.addr);
     const tag = d.dead === true ? 'DEAD' : d.dead === false ? 'LIVE' : ' ?  ';
     if (d.dead) dead++;
-    body += ` [${tag}] ${pad(sym, 12)} mc ${pad(d.mcap ? INV.fmtUsd(d.mcap) : '—', 8)} liq ${INV.fmtUsd(d.liq)}\n`;
+    body += ` [${tag}] ${pad(sym, 12)} mc ${pad(d.mcap ? INV.fmtUsd(d.mcap) : '-', 8)} liq ${INV.fmtUsd(d.liq)}\n`;
   });
   if (res.deploys.length > 2) {
     const rate = res.deploys.length ? Math.round((dead / res.deploys.length) * 100) : 0;
@@ -931,7 +931,7 @@ async function cmdDossier(chatId, token, lang = 'en') {
   const bar = n => { const f = Math.round(n / 10); return '['.padEnd(1) + '#'.repeat(f) + '.'.repeat(10 - f) + ']'; };
   let body = `${d.name} ($${d.symbol})\n${INV.short(d.token)}\n\n`;
   body += `risk   ${bar(d.score)} ${d.score}/100  ${d.verdict}\n\n`;
-  body += `price  ${d.price ? '$' + Number(d.price).toPrecision(4) : '—'}${d.ch24 != null ? `(${d.ch24 >= 0 ? '+' : ''}${d.ch24}% 24h)` : ''}\n`;
+  body += `price  ${d.price ? '$' + Number(d.price).toPrecision(4) : '-'}${d.ch24 != null ? `(${d.ch24 >= 0 ? '+' : ''}${d.ch24}% 24h)` : ''}\n`;
   body += `mcap   ${INV.fmtUsd(d.mcap)}\nliq    ${INV.fmtUsd(d.liq)}\nage    ${d.ageStr}\n`;
   if (d.dev) {
     body += `\ndev wallet\n addr    ${INV.short(d.dev.addr)}\n age     ${d.dev.age}\n funded  ${d.dev.fundedBy}\n`;
@@ -999,7 +999,7 @@ async function cmdStalk(chatId, userId, wallet, lang = 'en') {
       body += `\nstop: /unstalk <addr>\n`;
       return send(chatId, term('stalk --list', body));
     }
-    return send(chatId, term('stalk', 'usage: /stalk 0x...\n\nalerts you the moment that wallet\nmoves — sells, buys, transfers.'));
+    return send(chatId, term('stalk', 'usage: /stalk 0x...\n\nalerts you the moment that wallet\nmoves · sells, buys, transfers.'));
   }
   wallet = wallet.toLowerCase();
   const latest = await INV.bscan({ module: 'account', action: 'txlist', address: wallet, page: '1', offset: '1', sort: 'desc' });
@@ -1033,7 +1033,7 @@ async function smartDetect(chatId, userId, text, lang) {
       const isContract = code && code !== '0x' && code.length > 4;
 
       if (isContract) {
-        await send(chatId, isID ? `*Kontrak terdeteksi* — menganalisa token...` : `*Contract detected* — analyzing token...`);
+        await send(chatId, isID ? `*Kontrak terdeteksi* · menganalisa token...` : `*Contract detected* · analyzing token...`);
         const gate = await aiAllowed(chatId, userId);
         if (gate.ok) {
           await cmdAnalyze(chatId, addr, lang);
@@ -1045,7 +1045,7 @@ async function smartDetect(chatId, userId, text, lang) {
           let msg = `*${tok?.name || 'Unknown'} (${tok?.symbol || '?'})*\n`;
           msg += `\`${addr.slice(0,6)}...${addr.slice(-4)}\` · ${chain}\n\n`;
           if (dx) {
-            const price = dx.priceUsd ? `$${dx.priceUsd < 0.01 ? dx.priceUsd.toFixed(8) : dx.priceUsd.toFixed(6)}` : '—';
+            const price = dx.priceUsd ? `$${dx.priceUsd < 0.01 ? dx.priceUsd.toFixed(8) : dx.priceUsd.toFixed(6)}` : '-';
             const ch24 = dx.priceChange24h;
             msg += `*${isID ? 'Harga' : 'Price'}:* ${price}\n`;
             msg += `*24h:* ${ch24 >= 0 ? '' : ''} ${ch24}%\n`;
@@ -1065,7 +1065,7 @@ async function smartDetect(chatId, userId, text, lang) {
           });
         }
       } else {
-        await send(chatId, isID ? `*Dompet terdeteksi* — memuat info...` : `*Wallet detected* — loading info...`);
+        await send(chatId, isID ? `*Dompet terdeteksi* · memuat info...` : `*Wallet detected* · loading info...`);
         await cmdWatch(chatId, addr, lang);
       }
     } catch (e) {
@@ -1106,7 +1106,7 @@ async function setupBot() {
     { command: 'trace',   description: 'Follow a wallet\'s money trail' },
     { command: 'cluster', description: 'Find a wallet\'s side wallets' },
     { command: 'deployer',description: 'Every token a deployer launched' },
-    { command: 'early',   description: 'First buyers — who still holds' },
+    { command: 'early',   description: 'First buyers · who still holds' },
     { command: 'networth',description: 'Full portfolio value of a wallet' },
     { command: 'link',    description: 'How two wallets are connected' },
     { command: 'stalk',   description: 'Alert me when a wallet moves' },
@@ -1268,14 +1268,14 @@ module.exports = async function handler(req, res) {
     const session = sessions.get(chatId);
     const accessLine = session?.verified
       ? (isID ? `\n _Wallet terverifikasi · ${session.balance} ORLIX_` : `\n _Wallet verified · ${session.balance} ORLIX_`)
-      : (isID ? `\n _Fitur AI: hold 10M $ORLIX di agent wallet kamu — /wallet lalu setor, cek /balance_` : `\n _AI features: hold 10M $ORLIX in your agent wallet — /wallet, deposit, then /balance_`);
+      : (isID ? `\n _Fitur AI: hold 10M $ORLIX di agent wallet kamu · /wallet lalu setor, cek /balance_` : `\n _AI features: hold 10M $ORLIX in your agent wallet · /wallet, deposit, then /balance_`);
 
     await tg('sendMessage', {
       chat_id: chatId, parse_mode: 'Markdown', disable_web_page_preview: true,
-      text: '```\norlix ai — base chain intelligence\n```\n' +
+      text: '```\norlix ai · base chain intelligence\n```\n' +
       (isID
-        ? `hi ${firstName}. agen onchain untuk *Base & Robinhood*.\nkasih satu petunjuk — wallet, token, screenshot — saya bongkar sisanya.\n\n`
-        : `hi ${firstName}. onchain agent for *Base & Robinhood*.\ngive me one clue — a wallet, a token, a screenshot — i'll find the rest.\n\n`) +
+        ? `hi ${firstName}. agen onchain untuk *Base & Robinhood*.\nkasih satu petunjuk. wallet, token, atau screenshot. saya bongkar sisanya.\n\n`
+        : `hi ${firstName}. onchain agent for *Base & Robinhood*.\ngive me one clue. a wallet, a token, a screenshot. i'll find the rest.\n\n`) +
       '```\n' +
       'detective\n' +
       '  trace     money trail to its source\n' +
@@ -1387,7 +1387,7 @@ module.exports = async function handler(req, res) {
     const verified = isVerified(chatId);
     await send(chatId,
       '```\norlix:~$ help --all\n```\n' +
-      `access: ${isID ? 'hold 10M $ORLIX di agent wallet' : 'hold 10M $ORLIX in your agent wallet'} — /wallet ${verified ? '[ok]' : '[locked]'}\n\n` +
+      `access: ${isID ? 'hold 10M $ORLIX di agent wallet' : 'hold 10M $ORLIX in your agent wallet'} · /wallet ${verified ? '[ok]' : '[locked]'}\n\n` +
       '```\n' +
       'detective  (needs 10M $ORLIX)\n' +
       '  dossier <token>    risk report + rug score\n' +
@@ -1595,8 +1595,8 @@ Rules: 'token' if you see a contract address or a coin/ticker being discussed; '
         }
         if (addr && /^0x[0-9a-f]{40}$/i.test(addr)) {
           await send(chatId, isID
-            ? `_Menemukan petunjuk di gambar — memulai investigasi otomatis pada_ \`${INV.short(addr)}\`...`
-            : ` _Found a clue in the image — auto-investigating_ \`${INV.short(addr)}\`...`);
+            ? `_Menemukan petunjuk di gambar · memulai investigasi otomatis pada_ \`${INV.short(addr)}\`...`
+            : ` _Found a clue in the image · auto-investigating_ \`${INV.short(addr)}\`...`);
           try {
             if (clue.type === 'wallet') await cmdTrace(chatId, addr, lang);
             else await cmdDossier(chatId, addr, lang);
