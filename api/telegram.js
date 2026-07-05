@@ -4,7 +4,7 @@
 
 const { ethers } = require('ethers');
 const INV = require('./_investigate.js');
-const { stalkScanThrottled } = require('./stalk-cron.js');
+const { stalkScanThrottled } = require('./_stalk-cron.js');
 
 const ANTHROPIC_KEY = () => process.env.BANKR_LLM_KEY || process.env.ANTHROPIC_API_KEY || '';
 const TG_TOKEN      = () => process.env.TELEGRAM_BOT_TOKEN || '';

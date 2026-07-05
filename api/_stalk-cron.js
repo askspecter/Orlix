@@ -1,9 +1,8 @@
-// Orlix AI — Stalk Mode scanner
-// Scans every wallet registered via /stalk and DMs the owner the moment it
-// moves. Two ways to trigger it:
-//   1) Opportunistically from the Telegram webhook (throttled ~5 min) — works
-//      on Vercel Hobby with no cron needed. See stalkScan() import in telegram.js.
-//   2) Manually / external cron: GET /api/stalk-cron?key=<TELEGRAM_WEBHOOK_SECRET>
+// Orlix AI — Stalk Mode scanner (module, not a routed function)
+// Underscore-prefixed so Vercel does NOT count it toward the Hobby 12-function
+// limit; it's imported by telegram.js. Scans every wallet registered via /stalk
+// and DMs the owner the moment it moves. Triggered opportunistically from the
+// Telegram webhook (throttled ~5 min) via stalkScanThrottled() — no cron needed.
 
 const INV = require('./_investigate.js');
 
