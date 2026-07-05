@@ -916,20 +916,25 @@ async function cmdDeployer(chatId, token, lang = 'en') {
     ] } });
 }
 
-// /early <token> — first buyers and who's still holding
+// /early <token> — first real buyers (or earliest holders) and who's still holding
 async function cmdEarly(chatId, token, lang = 'en') {
   typing(chatId);
   await running(chatId, `early ${INV.short(token)} --first-buyers`);
   const res = await INV.earlyBuyers(token, 12);
-  if (!res.buyers.length) return send(chatId, '```\nno early transfer data for ' + INV.short(token) + '\n```');
-  let body = `token  ${INV.short(token)}\n\n#   wallet             held   status\n`;
+  if (!res.buyers.length) return send(chatId, '```\nno early buyer data for ' + INV.short(token) + '\n```');
+  const label = res.mode === 'pool-buys' ? 'first buyers (from pool)' : 'earliest holders';
+  let body = `${res.symbol ? '$' + res.symbol : INV.short(token)}${res.ageStr ? ' · age ' + res.ageStr : ''}\n`;
+  body += `${label} · deployer/LP excluded\n\n#   wallet             held   status\n`;
   let diamonds = 0, sold = 0;
   res.buyers.forEach((b, i) => {
     if (b.status === 'diamond') diamonds++; if (b.status === 'sold') sold++;
     const st = b.status === 'diamond' ? 'DIAMOND' : b.status === 'sold' ? 'SOLD' : 'TRIM';
-    body += `${pad(i + 1, 3)} ${pad(INV.short(b.addr), 16)} ${pad(b.pctLeft.toFixed(0) + '%', 5)} ${st}\n`;
+    const val = b.valueUsd > 1 ? ' ' + INV.fmtUsd(b.valueUsd) : '';
+    body += `${pad(i + 1, 3)} ${pad(INV.short(b.addr), 16)} ${pad(b.pctLeft.toFixed(0) + '%', 5)} ${pad(st, 7)}${val}\n`;
   });
   body += `\n${diamonds} diamond · ${sold} fully sold · ${res.buyers.length} total\n`;
+  if (res.mode === 'earliest-holders')
+    body += `note: pool trades not readable on this DEX;\nshowing earliest real holders instead.\n`;
   await tg('sendMessage', { chat_id: chatId, text: term(`early ${INV.short(token)}`, body), parse_mode: 'Markdown', disable_web_page_preview: true,
     reply_markup: { inline_keyboard: [[{ text: 'chart', url: dxLink(token) }]] } });
 }

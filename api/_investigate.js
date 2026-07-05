@@ -392,36 +392,81 @@ async function deployerRapSheet(token) {
 // ── 4. EARLY BUYERS — first wallets to receive the token, and who held ───────
 async function earlyBuyers(token, n = 12) {
   token = token.toLowerCase();
-  const ck = `inv:early:${token}`;
+  const ck = `inv:early2:${token}`;
   const cached = await cacheGet(ck);
   if (cached) return cached;
 
-  const j = await bscan({ module: 'account', action: 'tokentx', contractaddress: token,
-    page: '1', offset: '400', sort: 'asc' });
-  const txs = Array.isArray(j.result) ? j.result : [];
-  const dec = txs[0]?.tokenDecimal ? Number(txs[0].tokenDecimal) : 18;
-  const firstBuyers = [];
-  const seen = new Set();
-  for (const t of txs) {
-    const to = t.to?.toLowerCase();
-    if (!to || seen.has(to)) continue;
-    if (isSystem(to) || to === token) continue;   // skip burn/mint/entrypoint/self
-    if (label(to)) continue;
-    // skip the LP pair / router (they receive tokens as liquidity)
-    seen.add(to);
-    firstBuyers.push({ addr: to, ts: Number(t.timeStamp), got: Number(t.value) / 10 ** dec });
-    if (firstBuyers.length >= n) break;
+  // Identify the DEX pool + price so we can tell a real BUY (token leaves the
+  // pool to a wallet) from mint / LP-setup / dev distribution transfers.
+  const dx = await dexData(token).catch(() => null);
+  const pool = dx?.pairAddress ? dx.pairAddress.toLowerCase() : null;
+  const price = dx?.priceUsd ? Number(dx.priceUsd) : 0;
+
+  // Scan the token's earliest transfers.
+  const txs = [];
+  for (let page = 1; page <= 3; page++) {
+    const j = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: String(page), offset: '1000', sort: 'asc' });
+    const r = Array.isArray(j.result) ? j.result : [];
+    txs.push(...r);
+    if (r.length < 1000) break;
+    if (pool && r.some(t => t.from?.toLowerCase() === pool)) break;  // reached pool trading
   }
-  // Current balance → still holding?
+  const dec = txs[0]?.tokenDecimal ? Number(txs[0].tokenDecimal) : 18;
+  const supply = await tokenSupply(token).catch(() => null);
+  const creator = (await contractCreator(token).catch(() => null))?.creator;
+
+  // Build the "distribution / infrastructure" exclusion set: the mint recipient,
+  // any ≥40% holder (deployer/locker/treasury), the resolved creator, and any
+  // address that fans tokens out to many wallets (an airdrop/distribution hub).
+  const distSrc = new Set(), fanout = {};
+  for (const t of txs) {
+    const to = t.to?.toLowerCase(), from = t.from?.toLowerCase();
+    if (from === '0x0000000000000000000000000000000000000000') distSrc.add(to);
+    if (supply && Number(t.value) / 10 ** dec >= supply * 0.40) distSrc.add(to);
+    (fanout[from] = fanout[from] || new Set()).add(to);
+  }
+  const hubs = new Set(Object.entries(fanout).filter(([, s]) => s.size >= 15).map(([a]) => a));
+  if (creator) distSrc.add(creator);
+  const excluded = a => isSystem(a) || isInfra(a) || distSrc.has(a) || hubs.has(a) || a === token || a === pool || !!label(a);
+
+  // Preferred: real BUYS = token leaves the pool (or an AMM router) to a fresh EOA.
+  const buyFrom = pool ? new Set([pool, ...INFRA]) : new Set(INFRA);
+  const collect = (validFrom) => {
+    const out = [], seen = new Set();
+    for (const t of txs) {
+      const to = t.to?.toLowerCase(), from = t.from?.toLowerCase();
+      if (!to || !validFrom(from) || excluded(to)) continue;
+      const amt = Number(t.value) / 10 ** dec;
+      if (seen.has(to)) { const b = out.find(x => x.addr === to); if (b) b.got += amt; continue; }
+      seen.add(to); out.push({ addr: to, ts: Number(t.timeStamp), got: amt });
+    }
+    return out;
+  };
+  let buyers = collect(f => buyFrom.has(f));
+  let mode = 'pool-buys';
+  if (buyers.length < 4) {                       // pool buys not visible (exotic DEX / airdrop token)
+    buyers = collect(() => true);                // fall back to earliest real holders
+    mode = 'earliest-holders';
+  }
+  const firstBuyers = buyers.slice(0, n);
+
+  // Current balance → still holding? + USD value of what's left
   await Promise.all(firstBuyers.map(async b => {
     const bal = await rpc('eth_call', [{ to: token,
       data: '0x70a08231' + b.addr.slice(2).padStart(64, '0') }, 'latest']).catch(() => null);
     const cur = bal && bal !== '0x' ? Number(BigInt(bal)) / 10 ** dec : 0;
     b.holding = cur;
     b.pctLeft = b.got > 0 ? Math.min(100, (cur / b.got) * 100) : 0;
+    b.valueUsd = price ? cur * price : 0;
     b.status = b.pctLeft >= 90 ? 'diamond' : b.pctLeft <= 5 ? 'sold' : 'trimmed';
   }));
-  const out = { token, buyers: firstBuyers };
+
+  const ageStr = dx?.pairCreatedAt ? ageFrom(dx.pairCreatedAt / 1000)
+    : (txs[0]?.timeStamp ? ageFrom(Number(txs[0].timeStamp)) : null);
+  const out = {
+    token, symbol: dx?.baseToken?.symbol || null, ageStr,
+    poolFound: !!pool, mode, buyers: firstBuyers,
+  };
   await cacheSet(ck, out, 900);
   return out;
 }
