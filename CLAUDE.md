@@ -61,6 +61,11 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - 15×15 grid, BLOCK=18, STREET=12, CELL=30
 - MeshPhongMaterial + emissiveMap for window glow
 - UnrealBloomPass disabled on mobile
+- Scene layout: peninsula city — ocean wraps the front (+Z) and left (-X) sides, snowy mountains on +X/-Z, river + bridges on the +X flank
+- Two ocean planes (front sea + left bay) share one wave function sampled in WORLD space so the seam at z=170 / x=-170 stays invisible
+- Full moon at (600, 180, -520), `fog:false` on its material (beyond the FogExp2 falloff it vanishes otherwise); sized for the default camera pose
+- UFO saucer patrols above downtown; tractor beam + underglow are night-only (toggled alongside searchlights in `toggleDayNight`)
+- Intro camera: start (30,190,330) → end (15,125,275) — aerial framing that shows the whole peninsula
 
 ### Robinhood Chain Integration (added July 2026)
 - Chain ID: 4663 (hex `0x1237`)
@@ -117,3 +122,4 @@ git add -A && git commit -m "..." && git push origin main
 ## Session History
 - `session_01EQsBP8bax8HwLDVovqZxYx` — Added Robinhood Chain (mainnet July 1 2026) to analytics/search/chat. Files: analyze.js, chat.js, token-search.js, x-agent.js, x402.js, x402-market.js, app.html, index.html. Created video animation (later removed). B20 files NOT touched.
 - `session_01Dhpc62Y19RJMuV1gFB1hmh` — Continuation of Robinhood Chain integration. Updated CLAUDE.md with persistent memory.
+- `session_01RwaoCkty8pyct6jvvJenAn` — Base City scene revamp to match design mock: peninsula terrain (ocean wraps +Z and -X), river/bridges mirrored to +X flank, second ocean plane + shore/foam/reflection for the left bay, ships split across both waters, waterfront piers with lamps, bigger full moon repositioned upper-right, UFO with night-only tractor beam, aerial intro end pose. File: neural-map.html only.

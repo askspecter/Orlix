@@ -604,8 +604,11 @@ let cars = [], people = [], trafficLights = [];
 let clouds = [], fillerWinks = [], searchlights = null, moonHalo = null, redEye = null;
 
 // Scenic environment (diorama)
-let ships = [], oceanMesh = null, oceanBaseY = null, envTime = 0;
-let shoreFoam = null, cityReflection = null, groundHaze = [];
+let ships = [], oceanMesh = null, oceanMesh2 = null, oceanBaseY = null, envTime = 0;
+let shoreFoam = null, cityReflection = null, cityReflection2 = null, groundHaze = [];
+
+// UFO hovering over the skyline
+let ufo = null, ufoBeam = null, ufoGlow = null, ufoLights = [];
 
 // Cyberpunk megacity layer
 let hoverCars = [], floatStructs = [], skywayRails = [], holoBillboards = [], lightShafts = null, orbitRings = [];
@@ -631,8 +634,8 @@ const intro = {
   active: true,
   frame: 0,
   totalFrames: 260,
-  startPos: new THREE.Vector3(30, 170, 250),
-  endPos: new THREE.Vector3(0, 60, 175),
+  startPos: new THREE.Vector3(30, 190, 330),
+  endPos: new THREE.Vector3(15, 125, 275),
 };
 
 function toggleFlyMode() {
@@ -1002,7 +1005,8 @@ function buildRealisticTerrain(isMobile) {
   const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
   // Distance to the river polyline — the valley is carved, not painted
-  const RIV = [[-212, -210], [-190, -130], [-172, -50], [-164, 30], [-167, 100], [-156, 165], [-150, 188]];
+  // (river runs down the +X flank; the -X side is open ocean now)
+  const RIV = [[212, -210], [190, -130], [172, -50], [164, 30], [167, 100], [156, 165], [150, 188]];
   const riverDist = (x, z) => {
     let best = 1e9;
     for (let i = 0; i < RIV.length - 1; i++) {
@@ -1017,7 +1021,9 @@ function buildRealisticTerrain(isMobile) {
   const H = (x, z) => {
     const r = Math.hypot(x, z);
     const outside = sstep(155, 215, r);              // downtown stays perfectly flat
-    const seaSide = sstep(140, 205, z);              // land dives under the +Z ocean
+    // Peninsula: the land dives under the sea toward +Z (front) AND -X (left),
+    // so the city reads as a headland with mountains only at its back
+    const seaSide = Math.max(sstep(140, 205, z), sstep(160, 225, -x));
     const hills = fbm(x * 0.013 + 7.3, z * 0.013 - 2.1, 4) * 10;
     // Main range — ridged spines up to ~165 units, breathtaking scale
     const band = sstep(230, 340, r) * (1 - sstep(680, 880, r));
@@ -1078,11 +1084,11 @@ function buildScenery(isMobile) {
     opacity: 0.9
   });
 
-  // ── Ocean — on the +Z side of the city ─────────────────────
-  const oceanSegs = isMobile ? [70, 36] : [140, 70];
-  const ocean = new THREE.Mesh(new THREE.PlaneGeometry(1400, 600, oceanSegs[0], oceanSegs[1]), waterMat);
+  // ── Ocean — wraps the peninsula: +Z (front) and -X (left) ───
+  const oceanSegs = isMobile ? [80, 36] : [160, 70];
+  const ocean = new THREE.Mesh(new THREE.PlaneGeometry(1600, 600, oceanSegs[0], oceanSegs[1]), waterMat);
   ocean.rotation.x = -Math.PI / 2;
-  ocean.position.set(0, -0.3, 470); // far side, z from ~170 outward
+  ocean.position.set(0, -0.3, 470); // front side, z from ~170 outward
   ocean.receiveShadow = !isMobile;
   scene.add(ocean);
   oceanMesh = ocean;
@@ -1090,14 +1096,26 @@ function buildScenery(isMobile) {
   // store flat reference positions for wave animation
   ocean.geometry.userData.base = ocean.geometry.attributes.position.array.slice();
 
-  // Shoreline transition strip (lighter sand/foam where land meets sea)
-  const shore = new THREE.Mesh(
-    new THREE.PlaneGeometry(900, 26),
-    new THREE.MeshStandardMaterial({ color: 0x1a3a3a, roughness: 0.7, metalness: 0.05 })
-  );
+  // Left flank of the bay — abuts the front ocean at z=170 with no overlap
+  const ocean2Segs = isMobile ? [36, 48] : [70, 100];
+  const ocean2 = new THREE.Mesh(new THREE.PlaneGeometry(630, 870, ocean2Segs[0], ocean2Segs[1]), waterMat);
+  ocean2.rotation.x = -Math.PI / 2;
+  ocean2.position.set(-485, -0.3, -265); // x from -170 outward, z -700..170
+  ocean2.receiveShadow = !isMobile;
+  scene.add(ocean2);
+  oceanMesh2 = ocean2;
+  ocean2.geometry.userData.base = ocean2.geometry.attributes.position.array.slice();
+
+  // Shoreline transition strips (lighter sand/foam where land meets sea)
+  const shoreMat = new THREE.MeshStandardMaterial({ color: 0x1a3a3a, roughness: 0.7, metalness: 0.05 });
+  const shore = new THREE.Mesh(new THREE.PlaneGeometry(900, 26), shoreMat);
   shore.rotation.x = -Math.PI / 2;
   shore.position.set(0, -0.25, 172);
   scene.add(shore);
+  const shoreL = new THREE.Mesh(new THREE.PlaneGeometry(26, 760), shoreMat);
+  shoreL.rotation.x = -Math.PI / 2;
+  shoreL.position.set(-178, -0.25, -200);
+  scene.add(shoreL);
 
   // Breaking foam line — noisy white speckle texture drifting along the shore
   {
@@ -1115,14 +1133,19 @@ function buildScenery(isMobile) {
     ctx.globalAlpha = 1;
     const foamTex = new THREE.CanvasTexture(c);
     foamTex.wrapS = THREE.RepeatWrapping;
-    const foam = new THREE.Mesh(
-      new THREE.PlaneGeometry(900, 14),
-      new THREE.MeshBasicMaterial({ map: foamTex, transparent: true, opacity: 0.4, depthWrite: false })
-    );
+    const foamMat = new THREE.MeshBasicMaterial({ map: foamTex, transparent: true, opacity: 0.4, depthWrite: false });
+    const foam = new THREE.Mesh(new THREE.PlaneGeometry(900, 14), foamMat);
     foam.rotation.x = -Math.PI / 2;
     foam.position.set(0, -0.14, 181);
     scene.add(foam);
-    shoreFoam = { tex: foamTex, mat: foam.material };
+    // Foam along the left (-X) shore — same texture, long axis turned onto Z
+    const foamLGeo = new THREE.PlaneGeometry(760, 14);
+    foamLGeo.rotateX(-Math.PI / 2);
+    foamLGeo.rotateY(Math.PI / 2);
+    const foamL = new THREE.Mesh(foamLGeo, foamMat);
+    foamL.position.set(-187, -0.14, -200);
+    scene.add(foamL);
+    shoreFoam = { tex: foamTex, mat: foamMat };
   }
 
   // City glow reflected on the water — warm smear fading out to sea
@@ -1145,20 +1168,26 @@ function buildScenery(isMobile) {
       ctx.fillRect(sx, 0, sw, sh);
     }
     const reflTex = new THREE.CanvasTexture(c);
-    cityReflection = new THREE.Mesh(
-      new THREE.PlaneGeometry(560, 260),
-      new THREE.MeshBasicMaterial({ map: reflTex, transparent: true, opacity: 0.55,
-        blending: THREE.AdditiveBlending, depthWrite: false })
-    );
+    const reflMat = new THREE.MeshBasicMaterial({ map: reflTex, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false });
+    cityReflection = new THREE.Mesh(new THREE.PlaneGeometry(560, 260), reflMat);
     cityReflection.rotation.x = -Math.PI / 2;
     cityReflection.position.set(0, -0.1, 320);
     scene.add(cityReflection);
+    // Mirror smear on the left bay — bright edge hugs the -X shoreline
+    const reflLGeo = new THREE.PlaneGeometry(560, 260);
+    reflLGeo.rotateX(-Math.PI / 2);
+    reflLGeo.rotateY(-Math.PI / 2);
+    const reflL = new THREE.Mesh(reflLGeo, reflMat);
+    reflL.position.set(-320, -0.1, -80);
+    scene.add(reflL);
+    cityReflection2 = reflL;
   }
 
   // ── River — one smooth continuous channel from the hills to the sea ──
   // Wide segments with rounded joints at every bend so it never looks broken.
   const riverPts = [
-    [-212, -210], [-190, -130], [-172, -50], [-164, 30], [-167, 100], [-156, 165], [-150, 188]
+    [212, -210], [190, -130], [172, -50], [164, 30], [167, 100], [156, 165], [150, 188]
   ];
   const RW = 17; // river width
   for (let i = 0; i < riverPts.length - 1; i++) {
@@ -1182,7 +1211,7 @@ function buildScenery(isMobile) {
   }
   // Two small bridges crossing the river
   const bridgeMat = new THREE.MeshPhongMaterial({ color: 0x2a2622, shininess: 15 });
-  [[-170, -30], [-165, 95]].forEach(([bx, bz]) => {
+  [[170, -30], [165, 95]].forEach(([bx, bz]) => {
     const b = new THREE.Mesh(new THREE.BoxGeometry(24, 1.2, 6), bridgeMat);
     b.position.set(bx, 1.0, bz);
     scene.add(b);
@@ -1196,7 +1225,8 @@ function buildScenery(isMobile) {
   const maxTrees = isMobile ? 40 : 90;
   for (let c = 0; c < 30 && planted < maxTrees; c++) {
     const ang = Math.random() * Math.PI * 2;
-    if (Math.sin(ang) > 0.45) continue;
+    if (Math.sin(ang) > 0.45) continue;        // front is open sea
+    if (Math.cos(ang) < -0.5) continue;        // left flank is open sea too
     const r = 158 + Math.random() * 110;
     const cx = Math.cos(ang) * r;
     const cz = Math.sin(ang) * r;
@@ -1212,7 +1242,7 @@ function buildScenery(isMobile) {
   }
 
   // ── Ships — boats sailing slowly back and forth on the ocean ──
-  const shipCount = 4;
+  const shipCount = isMobile ? 4 : 6;
   for (let i = 0; i < shipCount; i++) {
     const grp = new THREE.Group();
     // Hull — tapered box body
@@ -1263,11 +1293,19 @@ function buildScenery(isMobile) {
     grp.add(new THREE.PointLight(0xffaa44, 0.9, 60));
     grp.children[grp.children.length - 1].position.set(0, 4, 12);
 
-    // Straight path across the ocean (z stays > 180)
-    const ax = -380 + Math.random() * 260;
-    const az = 240 + Math.random() * 360;
-    const bx = ax + 220 + Math.random() * 200;
-    const bz = az + (Math.random() - 0.5) * 120;
+    // Straight path across open water — front sea or the left bay
+    let ax, az, bx, bz;
+    if (i % 2 === 0) {                       // front ocean (z stays > 180)
+      ax = -380 + Math.random() * 460;
+      az = 240 + Math.random() * 300;
+      bx = ax + 200 + Math.random() * 180;
+      bz = az + (Math.random() - 0.5) * 120;
+    } else {                                 // left bay (x stays < -250)
+      ax = -520 + Math.random() * 200;
+      az = -320 + Math.random() * 280;
+      bx = ax + (Math.random() - 0.5) * 100;
+      bz = az + 260 + Math.random() * 220;
+    }
     grp.position.set(ax, 0, az);
     scene.add(grp);
     ships.push({
@@ -1277,6 +1315,35 @@ function buildScenery(isMobile) {
       spd: 0.0009 + Math.random() * 0.0011,
       phase: Math.random() * Math.PI * 2
     });
+  }
+
+  // ── Waterfront piers — wooden docks reaching into the front sea ──
+  const deckMat = new THREE.MeshPhongMaterial({ color: 0x241c12, shininess: 8 });
+  const postMat = new THREE.MeshPhongMaterial({ color: 0x1a140d });
+  const lampMat = new THREE.MeshBasicMaterial({ color: 0xffc46a });
+  for (const px of [-72, 8, 88]) {
+    const pier = new THREE.Group();
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.5, 36), deckMat);
+    deck.position.set(0, 0.55, 0);
+    pier.add(deck);
+    // pilings + warm lamps along the deck
+    for (let k = 0; k < 4; k++) {
+      const lz = -15 + k * 10;
+      for (const side of [-1, 1]) {
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 2.6, 6), postMat);
+        post.position.set(side * 1.9, -0.5, lz);
+        pier.add(post);
+      }
+      if (k % 2 === 1) continue;             // lamps on alternating pilings only
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.4, 5), postMat);
+      pole.position.set(1.9, 2.0, lz);
+      pier.add(pole);
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.34, 8, 8), lampMat);
+      bulb.position.set(1.9, 3.3, lz);
+      pier.add(bulb);
+    }
+    pier.position.set(px, 0, 180);
+    scene.add(pier);
   }
 }
 
@@ -1912,7 +1979,7 @@ function initCity(data) {
     // a hot spot so reflections get a moon/sun glint
     const hot = new THREE.Mesh(new THREE.SphereGeometry(10, 8, 8),
       new THREE.MeshBasicMaterial({ color: night ? 0x9fb8ff : 0xfff0c8 }));
-    hot.position.set(-45, 55, -55);
+    hot.position.set(45, 55, -60);
     es.add(hot);
     const old = envRT;
     envRT = pmrem.fromScene(es, 0.04, 0.1, 300);
@@ -2137,11 +2204,12 @@ function initCity(data) {
   }
   const moonTex = new THREE.CanvasTexture(moonCanvas);
   const moon = new THREE.Mesh(
-    new THREE.SphereGeometry(22, 32, 32),
+    new THREE.SphereGeometry(42, 32, 32),
     new THREE.MeshStandardMaterial({ map: moonTex, roughness: 1, metalness: 0,
-      emissive: 0xf5f2e0, emissiveMap: moonTex, emissiveIntensity: 0.55 })
+      emissive: 0xf5f2e0, emissiveMap: moonTex, emissiveIntensity: 0.75, fog: false })
   );
-  moon.position.set(-130, 150, -190);
+  // Full moon in the upper-right of the default view, above the ridgeline
+  moon.position.set(600, 180, -520);
   scene.add(moon);
 
   // Soft halo around the moon — makes the night sky feel atmospheric
@@ -2159,7 +2227,7 @@ function initCity(data) {
       blending: THREE.AdditiveBlending, depthWrite: false, fog: false
     }));
     moonHalo.position.copy(moon.position);
-    moonHalo.scale.set(120, 120, 1);
+    moonHalo.scale.set(230, 230, 1);
     scene.add(moonHalo);
   }
 
@@ -2245,9 +2313,12 @@ function initCity(data) {
       if (moonHalo) moonHalo.visible = true;
       if (searchlights) searchlights.visible = true;
       if (lightShafts) lightShafts.visible = true;
+      if (ufoBeam) ufoBeam.visible = true;
+      if (ufoGlow) ufoGlow.visible = true;
       holoBillboards.forEach(b => { b.grp.visible = true; });
       rimMagenta.intensity = 1.1; rimCyan.intensity = 0.9;
       if (cityReflection) cityReflection.visible = true;
+      if (cityReflection2) cityReflection2.visible = true;
       groundHaze.forEach(h => h.sp.material.color.set(0x6a7898));
       applyEnvironment(true);
       btn.innerHTML = '<span class="hbtn-ico">🌙</span><span class="hbtn-txt"> Night</span>';
@@ -2270,9 +2341,12 @@ function initCity(data) {
       if (moonHalo) moonHalo.visible = false;
       if (searchlights) searchlights.visible = false;
       if (lightShafts) lightShafts.visible = false;
+      if (ufoBeam) ufoBeam.visible = false;
+      if (ufoGlow) ufoGlow.visible = false;
       holoBillboards.forEach(b => { b.grp.visible = false; });
       rimMagenta.intensity = 0; rimCyan.intensity = 0;
       if (cityReflection) cityReflection.visible = false;
+      if (cityReflection2) cityReflection2.visible = false;
       groundHaze.forEach(h => h.sp.material.color.set(0xdde6f0));
       applyEnvironment(false);
       btn.innerHTML = '<span class="hbtn-ico">☀️</span><span class="hbtn-txt"> Day</span>';
@@ -2497,6 +2571,69 @@ function initCity(data) {
     redEye = { g, nav, strobe, t: Math.random() };
   }
 
+  // ── UFO — a saucer hovering over the skyline with a tractor beam ──
+  {
+    ufo = new THREE.Group();
+    // Hull — flattened disc with a metallic sheen
+    const hull = new THREE.Mesh(
+      new THREE.CylinderGeometry(8.5, 13.5, 3.4, 28),
+      new THREE.MeshStandardMaterial({ color: 0x2c313d, roughness: 0.35, metalness: 0.9 })
+    );
+    ufo.add(hull);
+    const skirt = new THREE.Mesh(
+      new THREE.CylinderGeometry(13.5, 9.5, 1.8, 28),
+      new THREE.MeshStandardMaterial({ color: 0x232732, roughness: 0.4, metalness: 0.85 })
+    );
+    skirt.position.y = -2.6;
+    ufo.add(skirt);
+    // Glowing dome cockpit
+    const dome = new THREE.Mesh(
+      new THREE.SphereGeometry(5.6, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: 0x3a4a5a, roughness: 0.15, metalness: 0.2,
+        emissive: 0x7fd4ff, emissiveIntensity: 1.4, transparent: true, opacity: 0.92 })
+    );
+    dome.position.y = 1.6;
+    ufo.add(dome);
+    // Chasing rim lights around the hull edge
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      const lite = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0x9fe0ff, transparent: true, opacity: 0.8 })
+      );
+      lite.position.set(Math.cos(a) * 12.4, -1.0, Math.sin(a) * 12.4);
+      ufo.add(lite);
+      ufoLights.push(lite);
+    }
+    // Soft underglow
+    const glowC = document.createElement('canvas');
+    glowC.width = glowC.height = 128;
+    const gctx = glowC.getContext('2d');
+    const gg = gctx.createRadialGradient(64, 64, 4, 64, 64, 64);
+    gg.addColorStop(0, 'rgba(160,220,255,0.9)');
+    gg.addColorStop(1, 'rgba(160,220,255,0)');
+    gctx.fillStyle = gg; gctx.fillRect(0, 0, 128, 128);
+    ufoGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(glowC), transparent: true, opacity: 0.7,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    ufoGlow.position.y = -2.5;
+    ufoGlow.scale.set(34, 34, 1);
+    ufo.add(ufoGlow);
+    // Tractor beam — faint additive cone widening toward the rooftops
+    ufoBeam = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.4, 15, 95, 20, 1, true),
+      new THREE.MeshBasicMaterial({
+        color: 0xaee2ff, transparent: true, opacity: 0.09,
+        blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false
+      })
+    );
+    ufoBeam.position.y = -50;
+    ufo.add(ufoBeam);
+    ufo.position.set(45, 205, -50);
+    scene.add(ufo);
+  }
+
   // ── Input setup ────────────────────────────────────────────────
   setupFlyInput(renderer.domElement);
 
@@ -2713,17 +2850,20 @@ function initCity(data) {
 
     // ── Scenic environment: ocean waves + ships ───────────────
     envTime += 0.016;
-    if (oceanMesh) {
-      const pos = oceanMesh.geometry.attributes.position;
-      const base = oceanMesh.geometry.userData.base;
+    // Waves sampled in WORLD space so the two ocean planes stay seamless
+    for (const om of [oceanMesh, oceanMesh2]) {
+      if (!om) continue;
+      const pos = om.geometry.attributes.position;
+      const base = om.geometry.userData.base;
+      const px = om.position.x, pz = om.position.z;
       for (let i = 0; i < pos.count; i++) {
         const ix = i * 3;
-        const bx = base[ix], by = base[ix + 1];
+        const wx = base[ix] + px, wz = pz - base[ix + 1];
         // layered swell + cross-chop — reads as real water, not a sine sheet
-        const wave = Math.sin(bx * 0.04 + envTime * 1.3) * 0.30
-                   + Math.cos(by * 0.05 + envTime * 0.9) * 0.20
-                   + Math.sin((bx + by) * 0.09 + envTime * 1.9) * 0.11
-                   + Math.sin(bx * 0.13 - by * 0.07 + envTime * 2.6) * 0.05;
+        const wave = Math.sin(wx * 0.04 + envTime * 1.3) * 0.30
+                   + Math.cos(wz * 0.05 + envTime * 0.9) * 0.20
+                   + Math.sin((wx + wz) * 0.09 + envTime * 1.9) * 0.11
+                   + Math.sin(wx * 0.13 - wz * 0.07 + envTime * 2.6) * 0.05;
         pos.array[ix + 2] = wave;
       }
       pos.needsUpdate = true;
@@ -2767,6 +2907,24 @@ function initCity(data) {
     if (searchlights && searchlights.visible) {
       searchlights.children[0].rotation.y += 0.008;
       searchlights.children[1].rotation.y -= 0.006;
+    }
+    // UFO — lazy patrol loop over downtown, chasing rim lights, breathing beam
+    if (ufo) {
+      const ut = cityTime * 0.1;
+      ufo.position.set(
+        40 + Math.cos(ut) * 60,
+        204 + Math.sin(cityTime * 0.55) * 4,
+        -45 + Math.sin(ut * 0.8) * 50
+      );
+      ufo.rotation.y += 0.012;
+      ufo.rotation.z = Math.sin(cityTime * 0.4) * 0.05;
+      for (let li = 0; li < ufoLights.length; li++) {
+        ufoLights[li].material.opacity =
+          0.25 + 0.75 * (0.5 + 0.5 * Math.sin(cityTime * 5 - li * 0.55));
+      }
+      if (ufoBeam && ufoBeam.visible) {
+        ufoBeam.material.opacity = 0.07 + 0.045 * Math.sin(cityTime * 1.6);
+      }
     }
     // Red-eye flight across the sky
     if (redEye) {
