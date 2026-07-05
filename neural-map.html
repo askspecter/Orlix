@@ -610,6 +610,11 @@ let shoreFoam = null, cityReflection = null, cityReflection2 = null, groundHaze 
 // UFO hovering over the skyline
 let ufo = null, ufoBeam = null, ufoGlow = null, ufoLights = [];
 
+// Realism detail pass — car light FX, water glints, harbor life, birds
+let carLightFx = [], waterSparkles = [], buoys = [];
+let lighthouseBeams = null, lighthouseLamp = null;
+let birdFlock = null, birdList = [];
+
 // Cyberpunk megacity layer
 let hoverCars = [], floatStructs = [], skywayRails = [], holoBillboards = [], lightShafts = null, orbitRings = [];
 
@@ -662,6 +667,84 @@ function toggleFlyMode() {
   }
 }
 
+// ── Shared FX textures/geometry (built once, reused everywhere) ──
+let _glowSpriteTex = null;
+function getGlowSpriteTex() {
+  if (!_glowSpriteTex) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(32, 32, 2, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(0.35, 'rgba(255,255,255,0.35)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
+    _glowSpriteTex = new THREE.CanvasTexture(c);
+  }
+  return _glowSpriteTex;
+}
+let _beamPoolGeo = null, _beamPoolTex = null;
+function getBeamPoolGeo() {
+  if (!_beamPoolGeo) {
+    _beamPoolGeo = new THREE.PlaneGeometry(3.6, 9);
+    _beamPoolGeo.rotateX(-Math.PI / 2);   // texture top lands on the -Z (near-car) edge
+  }
+  return _beamPoolGeo;
+}
+function getBeamPoolTex() {
+  if (!_beamPoolTex) {
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = 128;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 128);
+    g.addColorStop(0, 'rgba(255,240,200,0.6)');
+    g.addColorStop(0.5, 'rgba(255,235,190,0.22)');
+    g.addColorStop(1, 'rgba(255,230,180,0)');
+    ctx.fillStyle = g;
+    // taper the pool into a headlight fan
+    ctx.beginPath();
+    ctx.moveTo(22, 0); ctx.lineTo(42, 0); ctx.lineTo(60, 128); ctx.lineTo(4, 128);
+    ctx.closePath(); ctx.fill();
+    _beamPoolTex = new THREE.CanvasTexture(c);
+  }
+  return _beamPoolTex;
+}
+let _wakeGeo = null, _wakeTex = null;
+function getWakeGeo() {
+  if (!_wakeGeo) {
+    _wakeGeo = new THREE.PlaneGeometry(7, 20);
+    _wakeGeo.rotateX(-Math.PI / 2);   // texture bottom = near-hull (+Z) edge
+  }
+  return _wakeGeo;
+}
+function getWakeTex() {
+  if (!_wakeTex) {
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = 128;
+    const ctx = c.getContext('2d');
+    // V-shaped foam wedge, brightest at the hull, dissolving astern
+    const g = ctx.createLinearGradient(0, 128, 0, 0);
+    g.addColorStop(0, 'rgba(225,240,245,0.55)');
+    g.addColorStop(0.4, 'rgba(215,235,242,0.2)');
+    g.addColorStop(1, 'rgba(210,232,240,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(26, 128); ctx.lineTo(38, 128); ctx.lineTo(62, 0); ctx.lineTo(2, 0);
+    ctx.closePath(); ctx.fill();
+    // churned-water speckle
+    for (let i = 0; i < 90; i++) {
+      const fy = Math.random() * 128;
+      const spread = 6 + (1 - fy / 128) * 24;
+      ctx.globalAlpha = 0.12 + Math.random() * 0.25 * (fy / 128);
+      ctx.fillStyle = '#e8f4f8';
+      ctx.fillRect(32 + (Math.random() - 0.5) * spread * 2, fy, 1 + Math.random() * 2, 1);
+    }
+    ctx.globalAlpha = 1;
+    _wakeTex = new THREE.CanvasTexture(c);
+  }
+  return _wakeTex;
+}
+
 function createCar(ax, az, bx, bz, isBus) {
   const grp = new THREE.Group();
   const isTruck = !isBus && Math.random() > 0.82;
@@ -690,6 +773,26 @@ function createCar(ax, az, bx, bz, isBus) {
   hl.position.set(0, bh/2+0.27, bl/2+0.06); grp.add(hl);
   const tl = new THREE.Mesh(lgeo, new THREE.MeshBasicMaterial({color:0xFF2200}));
   tl.position.set(0, bh/2+0.27, -bl/2-0.06); grp.add(tl);
+
+  // Night light FX — headlight/taillight glows + a lit pool on the asphalt
+  const headGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: getGlowSpriteTex(), color: 0xfff3cf, transparent: true, opacity: 0.85,
+    blending: THREE.AdditiveBlending, depthWrite: false }));
+  headGlow.position.set(0, bh/2 + 0.27, bl/2 + 0.5);
+  headGlow.scale.set(1.8, 1.1, 1);
+  grp.add(headGlow);
+  const tailGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: getGlowSpriteTex(), color: 0xff2a1a, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false }));
+  tailGlow.position.set(0, bh/2 + 0.27, -bl/2 - 0.4);
+  tailGlow.scale.set(1.2, 0.8, 1);
+  grp.add(tailGlow);
+  const pool = new THREE.Mesh(getBeamPoolGeo(), new THREE.MeshBasicMaterial({
+    map: getBeamPoolTex(), transparent: true, opacity: 0.17,
+    blending: THREE.AdditiveBlending, depthWrite: false }));
+  pool.position.set(0, 0.1, bl/2 + 4.7);
+  grp.add(pool);
+  carLightFx.push(headGlow, tailGlow, pool);
 
   const wR = isBus ? 0.37 : 0.27;
   const wgeo = new THREE.CylinderGeometry(wR, wR, bw*1.05, 7);
@@ -1292,6 +1395,12 @@ function buildScenery(isMobile) {
     grp.add(lamp);
     grp.add(new THREE.PointLight(0xffaa44, 0.9, 60));
     grp.children[grp.children.length - 1].position.set(0, 4, 12);
+    // Foam wake trailing astern
+    const wake = new THREE.Mesh(getWakeGeo(), new THREE.MeshBasicMaterial({
+      map: getWakeTex(), transparent: true, opacity: 0.4,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+    wake.position.set(0, 0.15, -18);
+    grp.add(wake);
 
     // Straight path across open water — front sea or the left bay
     let ax, az, bx, bz;
@@ -1344,6 +1453,123 @@ function buildScenery(isMobile) {
     }
     pier.position.set(px, 0, 180);
     scene.add(pier);
+  }
+
+  // ── Lighthouse — rocky islet out in the left bay, rotating twin beams ──
+  {
+    const lh = new THREE.Group();
+    const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(10, 1),
+      new THREE.MeshStandardMaterial({ color: 0x39404d, roughness: 0.95, flatShading: true }));
+    rock.scale.set(1.5, 0.55, 1.2);
+    rock.position.y = -1.5;
+    lh.add(rock);
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.8, 17, 12),
+      new THREE.MeshStandardMaterial({ color: 0xd9d2c4, roughness: 0.7 }));
+    tower.position.y = 11;
+    lh.add(tower);
+    // red day-marker band halfway up
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(2.36, 2.46, 2.6, 12),
+      new THREE.MeshStandardMaterial({ color: 0x8c3030, roughness: 0.7 }));
+    band.position.y = 9.5;
+    lh.add(band);
+    const gallery = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 0.7, 12),
+      new THREE.MeshStandardMaterial({ color: 0x30343c }));
+    gallery.position.y = 19.8;
+    lh.add(gallery);
+    lighthouseLamp = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.35, 2.2, 10),
+      new THREE.MeshStandardMaterial({ color: 0xfff1c0, emissive: 0xffe9a8, emissiveIntensity: 1.6 }));
+    lighthouseLamp.position.y = 21.2;
+    lh.add(lighthouseLamp);
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(1.9, 2.2, 10),
+      new THREE.MeshStandardMaterial({ color: 0x8c3030, roughness: 0.6 }));
+    cap.position.y = 23.4;
+    lh.add(cap);
+    // Twin opposed beams sweep the bay all night
+    lighthouseBeams = new THREE.Group();
+    for (const dir of [1, -1]) {
+      const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 4.5, 70, 10, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0xfff3c8, transparent: true, opacity: 0.08,
+          blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, fog: false })
+      );
+      beam.geometry.rotateZ(dir * Math.PI / 2);   // wide mouth points away from the lamp
+      beam.geometry.translate(dir * 35, 0, 0);
+      lighthouseBeams.add(beam);
+    }
+    lighthouseBeams.position.y = 21.2;
+    lh.add(lighthouseBeams);
+    lh.position.set(-360, 0, -420);
+    scene.add(lh);
+  }
+
+  // ── Navigation buoys — bobbing, blinking channel markers ──
+  const buoySpots = [[-46, 208, 0xcc3333], [64, 218, 0x33aa44], [-138, 212, 0xcc3333],
+                     [-262, 110, 0x33aa44], [-276, -140, 0xcc3333]];
+  for (const [bx2, bz2, bc] of buoySpots) {
+    const b = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.ConeGeometry(1.0, 2.4, 8),
+      new THREE.MeshStandardMaterial({ color: bc, roughness: 0.6, metalness: 0.2 }));
+    body.position.y = 0.9;
+    b.add(body);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.4, 5),
+      new THREE.MeshStandardMaterial({ color: 0x222222 }));
+    mast.position.y = 2.6;
+    b.add(mast);
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 8),
+      new THREE.MeshBasicMaterial({ color: bc, transparent: true, opacity: 1 }));
+    beacon.position.y = 3.4;
+    b.add(beacon);
+    b.position.set(bx2, 0, bz2);
+    scene.add(b);
+    buoys.push({ grp: b, beacon, phase: Math.random() * Math.PI * 2, blink: Math.random() * 2 });
+  }
+
+  // ── Water sparkles — light glints twinkling on the swell ──
+  const mkSparkles = (count, region) => {
+    const g = new THREE.BufferGeometry();
+    const p = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const [sx2, sz2] = region();
+      p[i * 3] = sx2; p[i * 3 + 1] = 0.45; p[i * 3 + 2] = sz2;
+    }
+    g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({
+      color: 0xaac8ff, size: 1.05, transparent: true, opacity: 0.3,
+      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true }));
+    scene.add(pts);
+    return pts;
+  };
+  waterSparkles = [
+    mkSparkles(isMobile ? 70 : 150, () => [-420 + Math.random() * 880, 190 + Math.random() * 380]),
+    mkSparkles(isMobile ? 40 : 90,  () => [-640 + Math.random() * 400, -480 + Math.random() * 600]),
+  ];
+
+  // ── Seagulls wheeling over the bay mouth (day only) ──
+  {
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = 32;
+    const ctx = c.getContext('2d');
+    ctx.strokeStyle = 'rgba(40,46,58,0.9)';
+    ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(6, 22); ctx.quadraticCurveTo(20, 6, 32, 18);
+    ctx.quadraticCurveTo(44, 6, 58, 22);
+    ctx.stroke();
+    const bTex = new THREE.CanvasTexture(c);
+    birdFlock = new THREE.Group();
+    const nBirds = isMobile ? 5 : 9;
+    for (let i = 0; i < nBirds; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: bTex, transparent: true, depthWrite: false }));
+      sp.scale.set(4.2, 2.1, 1);
+      birdFlock.add(sp);
+      birdList.push({ sp, r: 26 + Math.random() * 46, a: Math.random() * Math.PI * 2,
+        spd: 0.004 + Math.random() * 0.004, y: 55 + Math.random() * 30,
+        wob: Math.random() * Math.PI * 2 });
+    }
+    birdFlock.position.set(-210, 0, 125);
+    birdFlock.visible = false;   // night is the default scene state
+    scene.add(birdFlock);
   }
 }
 
@@ -2315,6 +2541,11 @@ function initCity(data) {
       if (lightShafts) lightShafts.visible = true;
       if (ufoBeam) ufoBeam.visible = true;
       if (ufoGlow) ufoGlow.visible = true;
+      carLightFx.forEach(o => { o.visible = true; });
+      if (lighthouseBeams) lighthouseBeams.visible = true;
+      if (lighthouseLamp) lighthouseLamp.material.emissiveIntensity = 1.6;
+      if (birdFlock) birdFlock.visible = false;
+      waterSparkles.forEach(s => s.material.color.set(0xaac8ff));
       holoBillboards.forEach(b => { b.grp.visible = true; });
       rimMagenta.intensity = 1.1; rimCyan.intensity = 0.9;
       if (cityReflection) cityReflection.visible = true;
@@ -2343,6 +2574,11 @@ function initCity(data) {
       if (lightShafts) lightShafts.visible = false;
       if (ufoBeam) ufoBeam.visible = false;
       if (ufoGlow) ufoGlow.visible = false;
+      carLightFx.forEach(o => { o.visible = false; });
+      if (lighthouseBeams) lighthouseBeams.visible = false;
+      if (lighthouseLamp) lighthouseLamp.material.emissiveIntensity = 0.15;
+      if (birdFlock) birdFlock.visible = true;
+      waterSparkles.forEach(s => s.material.color.set(0xfff0c2));
       holoBillboards.forEach(b => { b.grp.visible = false; });
       rimMagenta.intensity = 0; rimCyan.intensity = 0;
       if (cityReflection) cityReflection.visible = false;
@@ -2453,6 +2689,74 @@ function initCity(data) {
     }
   }
 
+  // ── Zebra crosswalks on every internal intersection ──
+  {
+    const c = document.createElement('canvas');
+    c.width = c.height = 256;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'rgba(228,228,232,0.5)';   // worn paint on wet asphalt
+    // top & bottom bands — bars run with the traffic
+    for (let sx = 26; sx <= 214; sx += 36) {
+      ctx.fillRect(sx, 10, 18, 36);
+      ctx.fillRect(sx, 210, 18, 36);
+    }
+    // left & right bands
+    for (let sy = 26; sy <= 214; sy += 36) {
+      ctx.fillRect(10, sy, 36, 18);
+      ctx.fillRect(210, sy, 36, 18);
+    }
+    const cwTex = new THREE.CanvasTexture(c);
+    const cwMat = new THREE.MeshBasicMaterial({ map: cwTex, transparent: true, depthWrite: false });
+    const cwGeo = new THREE.PlaneGeometry(STREET, STREET);
+    cwGeo.rotateX(-Math.PI / 2);
+    for (const cz of centers) {
+      for (const cx of centers) {
+        if (Math.abs(cz) > half || Math.abs(cx) > half) continue;  // skip perimeter ring
+        const cw = new THREE.Mesh(cwGeo, cwMat);
+        cw.position.set(cx, 0.075, cz);
+        scene.add(cw);
+      }
+    }
+  }
+
+  // ── Mid-block street lamps — poles march down every street, not just corners ──
+  if (!isMobile) {
+    const lampGlowMat = new THREE.MeshBasicMaterial({
+      color: 0xFF9933, transparent: true, opacity: 0.05, side: THREE.DoubleSide });
+    const armGeo = new THREE.CylinderGeometry(0.07, 0.07, 2.0, 5);
+    const addStreetLamp = (x, z, horizontal, side) => {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 8, 6), mPole);
+      pole.position.set(x, 4, z);
+      scene.add(pole);
+      // arm leans out over the roadway
+      const arm = new THREE.Mesh(armGeo, mPole);
+      arm.rotation.x = horizontal ? Math.PI / 2 : 0;
+      arm.rotation.z = horizontal ? 0 : Math.PI / 2;
+      const ox = horizontal ? 0 : -side * 1.0;
+      const oz = horizontal ? -side * 1.0 : 0;
+      arm.position.set(x + ox, 7.9, z + oz);
+      scene.add(arm);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 8, 8), mLamp);
+      head.position.set(x + ox * 2, 7.75, z + oz * 2);
+      scene.add(head);
+      const glow = new THREE.Mesh(new THREE.CircleGeometry(3.4, 12), lampGlowMat);
+      glow.rotation.x = -Math.PI / 2;
+      glow.position.set(x + ox * 3, 0.11, z + oz * 3);
+      scene.add(glow);
+    };
+    const blockCenters = [];
+    for (let b = 0; b < BLOCKS; b++) blockCenters.push(b * period - half + blockSpan / 2);
+    let flip = 1;
+    for (const sc of centers) {
+      if (Math.abs(sc) > half) continue;   // perimeter ring stays bare
+      for (const bc of blockCenters) {
+        flip = -flip;   // alternate sides so lamps stagger like a real avenue
+        addStreetLamp(bc, sc + flip * (STREET * 0.5 + 0.9), true,  flip);
+        addStreetLamp(sc + flip * (STREET * 0.5 + 0.9), bc, false, flip);
+      }
+    }
+  }
+
   // Street lamps + traffic lights at every street intersection
   for (const cz of centers) {
     for (const cx of centers) {
@@ -2500,6 +2804,31 @@ function initCity(data) {
     buildingGroups.set(node.id, {group:grp, node, pos:{x:s.x, z:s.z}});
     buildingTopPositions.push({x: s.x, y: node._buildingHeight || 10, z: s.z});
   });
+
+  // ── Helipads crown a few of the tallest towers ──
+  if (buildingTopPositions.length > 3) {
+    const hc = document.createElement('canvas');
+    hc.width = hc.height = 128;
+    const hx = hc.getContext('2d');
+    hx.fillStyle = '#14161c';
+    hx.beginPath(); hx.arc(64, 64, 62, 0, Math.PI * 2); hx.fill();
+    hx.strokeStyle = '#e8c860'; hx.lineWidth = 5;
+    hx.beginPath(); hx.arc(64, 64, 52, 0, Math.PI * 2); hx.stroke();
+    hx.strokeStyle = '#f2f2f2'; hx.lineWidth = 10;
+    hx.beginPath();
+    hx.moveTo(46, 38); hx.lineTo(46, 90);
+    hx.moveTo(82, 38); hx.lineTo(82, 90);
+    hx.moveTo(46, 64); hx.lineTo(82, 64);
+    hx.stroke();
+    const hTex = new THREE.CanvasTexture(hc);
+    const hMat = new THREE.MeshBasicMaterial({ map: hTex, transparent: true });
+    for (const bt of buildingTopPositions.slice(1, 4)) {   // #0 carries the searchlights
+      const pad = new THREE.Mesh(new THREE.CircleGeometry(4.4, 24), hMat);
+      pad.rotation.x = -Math.PI / 2;
+      pad.position.set(bt.x, bt.y + 0.18, bt.z);
+      scene.add(pad);
+    }
+  }
 
   // Fill EVERY remaining slot with a building — full, dense city (no empty lots)
   for (let i = sorted.length; i < slotList.length; i++) {
@@ -2907,6 +3236,32 @@ function initCity(data) {
     if (searchlights && searchlights.visible) {
       searchlights.children[0].rotation.y += 0.008;
       searchlights.children[1].rotation.y -= 0.006;
+    }
+    // Lighthouse beams sweep the bay; lamp room pulses as the lens passes
+    if (lighthouseBeams && lighthouseBeams.visible) {
+      lighthouseBeams.rotation.y += 0.02;
+      if (lighthouseLamp) lighthouseLamp.material.emissiveIntensity =
+        1.3 + 0.5 * Math.sin(cityTime * 2.4);
+    }
+    // Buoys ride the swell and blink their channel lights
+    for (const bo of buoys) {
+      bo.grp.position.y = -0.15 + Math.sin(envTime * 1.3 + bo.phase) * 0.35;
+      bo.grp.rotation.z = Math.sin(envTime * 1.1 + bo.phase) * 0.08;
+      bo.grp.rotation.x = Math.cos(envTime * 0.9 + bo.phase) * 0.06;
+      bo.beacon.material.opacity = ((envTime + bo.blink) % 2) < 0.3 ? 1 : 0.12;
+    }
+    // Light glints twinkle on the water
+    for (let si = 0; si < waterSparkles.length; si++) {
+      waterSparkles[si].material.opacity =
+        0.14 + 0.2 * Math.abs(Math.sin(envTime * 1.4 + si * 2.1));
+    }
+    // Seagulls wheel over the bay in daylight
+    if (birdFlock && birdFlock.visible) {
+      for (const b of birdList) {
+        b.a += b.spd;
+        b.sp.position.set(Math.cos(b.a) * b.r,
+          b.y + Math.sin(cityTime * 2 + b.wob) * 2.5, Math.sin(b.a) * b.r);
+      }
     }
     // UFO — lazy patrol loop over downtown, chasing rim lights, breathing beam
     if (ufo) {

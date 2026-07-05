@@ -66,6 +66,7 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - Full moon at (600, 180, -520), `fog:false` on its material (beyond the FogExp2 falloff it vanishes otherwise); sized for the default camera pose
 - UFO saucer patrols above downtown; tractor beam + underglow are night-only (toggled alongside searchlights in `toggleDayNight`)
 - Intro camera: start (30,190,330) → end (15,125,275) — aerial framing that shows the whole peninsula
+- Realism details: zebra crosswalks at internal intersections, staggered mid-block street lamps (desktop only), car headlight/taillight glows + asphalt light pools (night-only), helipads on towers #2-4 (#1 carries searchlights), ship foam wakes, lighthouse islet in the left bay with rotating twin beams (night-only), bobbing/blinking nav buoys, twinkling water sparkles, seagull flock over the bay (day-only)
 
 ### Robinhood Chain Integration (added July 2026)
 - Chain ID: 4663 (hex `0x1237`)
@@ -122,4 +123,4 @@ git add -A && git commit -m "..." && git push origin main
 ## Session History
 - `session_01EQsBP8bax8HwLDVovqZxYx` — Added Robinhood Chain (mainnet July 1 2026) to analytics/search/chat. Files: analyze.js, chat.js, token-search.js, x-agent.js, x402.js, x402-market.js, app.html, index.html. Created video animation (later removed). B20 files NOT touched.
 - `session_01Dhpc62Y19RJMuV1gFB1hmh` — Continuation of Robinhood Chain integration. Updated CLAUDE.md with persistent memory.
-- `session_01RwaoCkty8pyct6jvvJenAn` — Base City scene revamp to match design mock: peninsula terrain (ocean wraps +Z and -X), river/bridges mirrored to +X flank, second ocean plane + shore/foam/reflection for the left bay, ships split across both waters, waterfront piers with lamps, bigger full moon repositioned upper-right, UFO with night-only tractor beam, aerial intro end pose. File: neural-map.html only.
+- `session_01RwaoCkty8pyct6jvvJenAn` — Base City scene revamp to match design mock: peninsula terrain (ocean wraps +Z and -X), river/bridges mirrored to +X flank, second ocean plane + shore/foam/reflection for the left bay, ships split across both waters, waterfront piers with lamps, bigger full moon repositioned upper-right, UFO with night-only tractor beam, aerial intro end pose. Follow-up realism pass: crosswalks, mid-block lamps, car light FX, helipads, ship wakes, lighthouse, buoys, water sparkles, day-only seagulls. File: neural-map.html only.
