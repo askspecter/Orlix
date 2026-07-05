@@ -64,7 +64,6 @@
     { "source": "/b20",          "destination": "/b20-studio.html" },
     { "source": "/montage",      "destination": "/montage.html" },
     { "source": "/base-city",     "destination": "/neural-map.html" },
-    { "source": "/zero",          "destination": "/zero.html" },
-    { "source": "/mission-control", "destination": "/mission-control.html" }
+    { "source": "/zero",          "destination": "/zero.html" }
   ]
 }
