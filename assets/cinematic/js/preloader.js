@@ -7,10 +7,10 @@ import { prefersReducedMotion } from './utils.js';
 const BOOT_LINES = [
   ['mount', '/dev/base', 'ok'],
   ['link', 'robinhood_chain', 'ok'],
-  ['load', 'claude.agent', 'ok'],
-  ['compile', 'smoke.frag + grade.lut', 'ok'],
-  ['sync', 'dexscreener.feed', 'ok'],
-  ['roll', 'film — 5 chapters', 'ok'],
+  ['load', '19 frontier models', 'ok'],
+  ['start', 'orlix-terminal', 'ok'],
+  ['attach', 'aeon.framework', 'ok'],
+  ['status', 'all systems operational', 'ok'],
 ];
 
 export class Preloader {
