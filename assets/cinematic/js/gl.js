@@ -18,65 +18,72 @@ uniform float u_scroll;  // 0..1 page progress
 uniform float u_grade;   // 0 ember -> 1 violet
 uniform float u_intro;   // 0..1 fade-in
 
-float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
+mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 
-float noise(vec2 p){
-  vec2 i = floor(p), f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(mix(hash(i), hash(i + vec2(1.,0.)), u.x),
-             mix(hash(i + vec2(0.,1.)), hash(i + vec2(1.,1.)), u.x), u.y);
+/* eclipse rim: a dark disc occluding a light source — the glow spills
+   out from behind its edge, focused toward one direction */
+float arcGlow(vec2 st, vec2 c, float r, vec2 dir, float focus){
+  float d = length(st - c) - r;
+  float rim  = exp(-abs(d) * 70.0);
+  float halo = exp(-abs(d) * 10.0) * 0.32;
+  float outerBias = mix(0.22, 1.0, smoothstep(-0.015, 0.015, d));
+  float w = pow(max(dot(normalize(st - c), dir), 0.0), focus);
+  return (rim + halo) * outerBias * w;
 }
 
-float fbm(vec2 p){
-  float v = 0.0, a = 0.5;
-  mat2 r = mat2(0.8, 0.6, -0.6, 0.8);
-  for (int i = 0; i < 4; i++){
-    v += a * noise(p);
-    p = r * p * 2.05 + 11.5;
-    a *= 0.5;
-  }
-  return v;
+/* crisp hairline with a soft under-glow, fading along its length */
+float lineGlow(vec2 st, vec2 p, vec2 n, float len){
+  vec2 tp = st - p;
+  float dist = abs(dot(tp, n));
+  vec2 tang = vec2(n.y, -n.x);
+  float along = dot(tp, tang);
+  float fade = exp(-along * along / (len * len));
+  return (exp(-dist * 260.0) + exp(-dist * 45.0) * 0.22) * fade;
 }
 
 void main(){
   vec2 uv = gl_FragCoord.xy / u_res;
   vec2 st = (gl_FragCoord.xy - 0.5 * u_res) / min(u_res.x, u_res.y);
+  float t = u_time * 0.4;
 
-  // scroll acts as a slow camera dolly: drift + gentle zoom
-  float t = u_time * 0.05;
-  vec2 cam = vec2(t * 0.6, -u_scroll * 2.4 + t * 0.25);
-  vec2 q = st * (1.35 - 0.25 * u_scroll) + cam;
+  // the whole composition turns slowly as the film scrolls
+  st = rot(u_scroll * 0.38 - 0.04) * st;
 
-  // layered smoke
-  float n1 = fbm(q * 1.6);
-  float n2 = fbm(q * 3.2 + n1 * 1.4 - t);
-  float smoke = fbm(q * 2.2 + vec2(n1, n2) * 1.1);
-  smoke = smoothstep(0.25, 0.95, smoke);
+  vec3 base    = vec3(0.012, 0.011, 0.012);
+  vec3 ember   = vec3(0.94, 0.47, 0.19);
+  vec3 emberHot= vec3(1.0, 0.72, 0.38);
+  vec3 viol    = vec3(0.62, 0.50, 0.98);
+  vec3 violHot = vec3(0.82, 0.72, 1.0);
+  vec3 tint    = mix(ember, viol, u_grade);
+  vec3 tintHot = mix(emberHot, violHot, u_grade);
 
-  // palettes: ember night -> violet depth
-  vec3 base  = vec3(0.027, 0.026, 0.028);
-  vec3 ember = vec3(0.94, 0.47, 0.19);
-  vec3 viol  = vec3(0.55, 0.45, 0.95);
-  vec3 tint  = mix(ember, viol, u_grade);
+  vec3 col = base;
 
-  vec3 col = base + smoke * mix(vec3(0.055, 0.045, 0.042), tint * 0.16, 0.55 + 0.45 * u_grade * 0.3);
+  float breatheA = 0.86 + 0.14 * sin(t * 0.9);
+  float breatheB = 0.86 + 0.14 * sin(t * 0.7 + 2.1);
 
-  // horizon glow that sinks as you scroll
-  float horizon = exp(-abs(st.y + 0.42 - u_scroll * 0.5) * 3.2);
-  col += tint * horizon * 0.075;
+  // two eclipse edges hugging opposite corners, sliding with scroll
+  vec2 c1 = vec2(-0.92, -0.72 + u_scroll * 0.16);
+  vec2 c2 = vec2( 0.96,  0.74 - u_scroll * 0.18);
+  float g1 = arcGlow(st, c1, 0.58, normalize(vec2( 0.80,  0.60)), 4.5) * breatheA;
+  float g2 = arcGlow(st, c2, 0.60, normalize(vec2(-0.75, -0.66)), 4.5) * breatheB;
 
-  // mouse-follow light (dynamic key light)
+  // hairline diagonals kissing the arcs, out near the corners
+  float l1 = lineGlow(st, vec2(-0.62,  0.44), normalize(vec2(0.55, 0.84)), 0.26) * breatheB;
+  float l2 = lineGlow(st, vec2( 0.64, -0.46), normalize(vec2(0.55, 0.84)), 0.26) * breatheA;
+
+  col += tint    * (g1 + g2) * 0.55;
+  col += tintHot * (g1 * g1 + g2 * g2) * 0.40;  // white-hot core right at the rim
+  col += tint    * (l1 + l2) * 0.34;
+  col += tintHot * (l1 * l1 + l2 * l2) * 0.26;
+
+  // faint ambient lift so the black isn't dead flat
+  col += tint * 0.008 * max(0.0, 1.0 - length(st));
+
+  // mouse key light, very subtle
   vec2 m = u_mouse - uv;
   m.x *= u_res.x / u_res.y;
-  float light = exp(-dot(m, m) * 7.0);
-  col += tint * light * (0.10 + 0.08 * smoke);
-
-  // faint starfield in the dark regions
-  float stars = step(0.9985, hash(floor(gl_FragCoord.xy / 1.5)));
-  col += stars * (1.0 - smoke) * 0.35 * vec3(0.9, 0.9, 1.0);
-
-  // subtle scanline shimmer, film feel
-  col *= 1.0 - 0.035 * sin(gl_FragCoord.y * 1.7 + u_time * 2.0);
+  col += tint * exp(-dot(m, m) * 7.0) * 0.05;
 
   col *= u_intro;
   gl_FragColor = vec4(col, 1.0);

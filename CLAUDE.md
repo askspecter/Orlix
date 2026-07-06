@@ -82,7 +82,7 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 
 ### Cinematic Homepage (`/index.html`, added July 2026)
 - Awwwards-style scroll film: preloader → hero → manifesto → horizontal "reel" → 3D depth descent → finale → film credits
-- Stack: GSAP 3.12 + ScrollTrigger + Lenis (self-hosted in `assets/cinematic/vendor/`), Motion (vanilla Framer Motion sibling, dynamic import with hand-rolled spring fallback), raw WebGL fragment shader backdrop (`gl.js` — fbm smoke, mouse light, scroll-driven grade ember→violet)
+- Stack: GSAP 3.12 + ScrollTrigger + Lenis (self-hosted in `assets/cinematic/vendor/`), Motion (vanilla Framer Motion sibling, dynamic import with hand-rolled spring fallback), raw WebGL fragment shader backdrop (`gl.js` — eclipse rim-light: black field, ember arc glows hugging corners + hairline diagonals, mouse light, scroll-driven grade ember→violet; NOT smoke/clouds, per owner request)
 - Modules in `assets/cinematic/js/`: app.js (orchestrator), scenes.js (all ScrollTrigger scenes), gl.js, cursor.js, preloader.js, menu.js, tilt.js, magnetic.js, utils.js
 - Terminal-agent theme: ALL type is JetBrains Mono (400/500/600, self-hosted latin subset in `assets/cinematic/fonts/`) — no display face. Boot-sequence preloader, shell-prompt hero with typewriter, terminal-window card chrome, scramble/decode text effects (utils.js), CRT scanlines
 - Gotchas: ScrollTriggers below the reel pin must be created AFTER the pin (chapter indicator/progress are created last in scenes.js); don't combine CSS `translateY(%)` initial states with GSAP `yPercent` (px component gets baked in — set initial state via gsap.set instead)
