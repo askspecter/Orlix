@@ -4,6 +4,7 @@
 
 const { ethers } = require('ethers');
 const INV = require('./_investigate.js');
+const REP = require('./_reputation.js');
 const { stalkScanThrottled } = require('./_stalk-cron.js');
 
 const ANTHROPIC_KEY = () => process.env.BANKR_LLM_KEY || process.env.ANTHROPIC_API_KEY || '';
@@ -844,6 +845,7 @@ async function cmdTrace(chatId, wallet, lang = 'en') {
   typing(chatId);
   await running(chatId, `trace ${INV.short(wallet)} --follow-funding`);
   const res = await INV.traceFunding(wallet, 6);
+  REP.recordTrace(res).catch(() => {});
   if (!res.hops.length || (res.hops.length === 1 && res.hops[0].end)) {
     return send(chatId, '```\nno inbound funding found for ' + INV.short(wallet) + '\n```');
   }
@@ -871,6 +873,7 @@ async function cmdCluster(chatId, wallet, lang = 'en') {
   typing(chatId);
   await running(chatId, `cluster ${INV.short(wallet)} --side-wallets`);
   const res = await INV.walletCluster(wallet);
+  REP.recordCluster(res).catch(() => {});
   if (!res.funder) return send(chatId, '```\nno funder found for ' + INV.short(wallet) + '\n```');
   const f = res.funder;
   let body = `target  ${INV.short(wallet)}\nfunder  ${f.label ? f.label.toUpperCase() : INV.short(f.addr)}\n\n`;
@@ -891,6 +894,7 @@ async function cmdDeployer(chatId, token, lang = 'en') {
   typing(chatId);
   await running(chatId, `deployer ${INV.short(token)} --rap-sheet`);
   const res = await INV.deployerRapSheet(token);
+  REP.recordDeployer(res).catch(() => {});
   if (!res.creator) return send(chatId, '```\ncould not resolve deployer for ' + INV.short(token) + '\n```');
   let body = `deployer  ${INV.short(res.creator)}\n`;
   if (res.via) body += `resolved  ${res.via}${res.factory && res.factory !== 'factory' ? 'via ' + res.factory : ''}\n`;
@@ -944,6 +948,7 @@ async function cmdDossier(chatId, token, lang = 'en') {
   typing(chatId);
   await running(chatId, `dossier ${INV.short(token)} --risk-scan`);
   const d = await INV.rugDossier(token);
+  REP.recordDossier(d).catch(() => {});
   const bar = n => { const f = Math.round(n / 10); return '['.padEnd(1) + '#'.repeat(f) + '.'.repeat(10 - f) + ']'; };
   let body = `${d.name} ($${d.symbol})\n${INV.short(d.token)}\n\n`;
   body += `risk   ${bar(d.score)} ${d.score}/100  ${d.verdict}\n\n`;
@@ -1003,6 +1008,59 @@ async function cmdLink(chatId, a, b, lang = 'en') {
   }
   body += `\n>> likely connected / same operator\n`;
   await tg('sendMessage', { chat_id: chatId, text: term(`link`, body), parse_mode: 'Markdown', disable_web_page_preview: true });
+}
+
+// /rep <wallet> — everything Orlix's reputation graph knows about a target
+async function cmdRep(chatId, addr, lang = 'en') {
+  typing(chatId);
+  await running(chatId, `rep ${INV.short(addr)} --reputation`);
+  const r = await REP.getReputation(addr);
+  if (!r.known) {
+    return send(chatId, term(`rep ${INV.short(addr)}`,
+      `reputation  UNRATED\n\nno facts on this address yet.\nrun /dossier /deployer /trace /cluster\nto build its onchain reputation.`));
+  }
+  const lvl = { entity: 'KNOWN ENTITY', trusted: 'TRUSTED', neutral: 'NEUTRAL', caution: 'CAUTION', 'high-risk': 'HIGH RISK' }[r.level] || r.level.toUpperCase();
+  const bar = n => { const f = Math.round((n || 0) / 10); return '[' + '#'.repeat(f) + '.'.repeat(10 - f) + ']'; };
+  let body = `address  ${INV.short(addr)}\n`;
+  if (r.label) body += `entity   ${r.label}\n`;
+  body += `score    ${bar(r.score)} ${r.score}/100  ${lvl}\n`;
+  const w = r.w || {};
+  if (w.deploys != null) body += `\ndeployer · ${w.deploys} launches${w.dead ? ` · ${w.dead} dead` : ''}\n`;
+  if (w.fundedBy) body += `funded by  ${typeof w.fundedBy === 'string' && w.fundedBy.startsWith('0x') ? INV.short(w.fundedBy) : w.fundedBy}\n`;
+  if (w.clusters?.length) body += `cluster    ${w.clusters.length} side wallet(s)\n`;
+  if (r.flaggedConns > 0) body += `\n! ${r.flaggedConns} connection(s) are flagged\n`;
+  if (r.flags?.length) { body += `\nflags:\n`; r.flags.forEach(f => { body += `  ! ${f.note || f.type}\n`; }); }
+  await tg('sendMessage', { chat_id: chatId, text: term(`rep ${INV.short(addr)}`, body), parse_mode: 'Markdown', disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: [[{ text: 'dossier', callback_data: `dossier:${addr}` }, { text: 'trace', callback_data: `trace:${addr}` }]] } });
+}
+
+// ── Group Guardian — auto-scan CAs posted in group chats, warn on risky ones ──
+async function guardianScan(chatId, text) {
+  const m = text.match(/0x[0-9a-fA-F]{40}/);
+  if (!m) return;
+  const ca = m[0].toLowerCase();
+  // throttle: one scan per CA per group per 30 min
+  const seen = await INV.redis('GET', `guard:${chatId}:${ca}`).catch(() => null);
+  if (seen) return;
+  await INV.redis('SET', `guard:${chatId}:${ca}`, '1', 'EX', '1800').catch(() => {});
+  // is it even a contract/token?
+  const dx = await INV.dexData(ca).catch(() => null);
+  if (!dx) return;                                  // not a listed token → stay silent
+  const d = await INV.rugDossier(ca).catch(() => null);
+  if (!d) return;
+  REP.recordDossier(d).catch(() => {});
+  if (d.verdict === 'LOW RISK') return;             // don't spam groups on safe tokens
+  const ico = d.verdict === 'HIGH RISK' ? '🔴' : '🟠';
+  let msg = `${ico} *Orlix Guardian* — heads up on *$${d.symbol}*\n`;
+  msg += `risk *${d.score}/100 · ${d.verdict}*\n`;
+  if (d.dev) {
+    const rep = await REP.getReputation(d.dev.addr).catch(() => null);
+    if (rep?.flags?.length) msg += `dev \`${INV.short(d.dev.addr)}\`: ${rep.flags[0].note}\n`;
+    else if (d.dev.priorRugs) msg += `dev has ${d.dev.priorRugs} prior dead token(s)\n`;
+  }
+  if (d.flags?.length) msg += `• ${d.flags.slice(0, 2).join('\n• ')}\n`;
+  msg += `\n_not financial advice · /dossier ${INV.short(ca)} for full report_`;
+  await tg('sendMessage', { chat_id: chatId, text: msg, parse_mode: 'Markdown', disable_web_page_preview: true });
 }
 
 // Stalk mode — register a wallet for movement alerts
@@ -1125,6 +1183,7 @@ async function setupBot() {
     { command: 'early',   description: 'First buyers · who still holds' },
     { command: 'networth',description: 'Full portfolio value of a wallet' },
     { command: 'link',    description: 'How two wallets are connected' },
+    { command: 'rep',     description: 'Reputation score Orlix knows on a wallet' },
     { command: 'stalk',   description: 'Alert me when a wallet moves' },
     { command: 'price',   description: 'Quick token price' },
     { command: 'watch',   description: 'Wallet activity tracker' },
@@ -1272,8 +1331,19 @@ module.exports = async function handler(req, res) {
   const chatId    = message.chat?.id;
   const userId    = message.from?.id ?? chatId;
   const firstName = message.from?.first_name || 'friend';
-  const text      = (message.text || '').trim();
+  let text        = (message.text || '').trim();
   if (!chatId) return res.status(200).json({ ok: true });
+
+  // ── Group Guardian ─────────────────────────────────────────────────────────
+  // In group chats, auto-scan any contract address posted and warn if it's risky
+  // (free, non-spammy). Only respond to explicit commands otherwise — no AI chat.
+  const isGroup = message.chat?.type === 'group' || message.chat?.type === 'supergroup';
+  if (isGroup) {
+    text = text.replace(/^(\/[a-z_]+)@\w+/i, '$1');   // /dossier@OrlixBot -> /dossier
+    const isCmd = /^\/[a-z]/i.test(text);
+    if (!isCmd) { if (text) await guardianScan(chatId, text).catch(() => {}); return res.status(200).json({ ok: true }); }
+    guardianScan(chatId, text).catch(() => {});       // also scan CAs in command messages
+  }
 
   typing(chatId);
   const lang = detectLang(text);
@@ -1326,8 +1396,8 @@ module.exports = async function handler(req, res) {
       parse_mode: 'Markdown',
       disable_web_page_preview: true,
       text: '```\norlix:~$ menu\n```\n' + (isID
-        ? `*trading*\nswap · bridge · top · price · analyze\n\n*detective* _(10M $ORLIX)_\ndossier · trace · cluster · deployer\nearly · networth · link · stalk\n\n*wallet*\nwallet · balance · export\n\n_tempel 0x · ketik $TICKER · kirim screenshot_`
-        : `*trading*\nswap · bridge · top · price · analyze\n\n*detective* _(10M $ORLIX)_\ndossier · trace · cluster · deployer\nearly · networth · link · stalk\n\n*wallet*\nwallet · balance · export\n\n_paste 0x · type $TICKER · send a screenshot_`),
+        ? `*trading*\nswap · bridge · top · price · analyze\n\n*detective* _(10M $ORLIX)_\ndossier · trace · cluster · deployer\nearly · networth · link · rep · stalk\n\n*wallet*\nwallet · balance · export\n\n_tempel 0x · ketik $TICKER · kirim screenshot_`
+        : `*trading*\nswap · bridge · top · price · analyze\n\n*detective* _(10M $ORLIX)_\ndossier · trace · cluster · deployer\nearly · networth · link · rep · stalk\n\n*wallet*\nwallet · balance · export\n\n_paste 0x · type $TICKER · send a screenshot_`),
       reply_markup: { inline_keyboard: [
         [{ text: 'swap', callback_data: 'swap_menu' }, { text: 'top', callback_data: 'top' }],
         [{ text: 'dashboard', url: 'https://orlixai.xyz/app' },
@@ -1413,6 +1483,7 @@ module.exports = async function handler(req, res) {
       '  early <token>      first buyers, who holds\n' +
       '  networth <wallet>  full portfolio value\n' +
       '  link <a> <b>       how two wallets connect\n' +
+      '  rep <wallet>       reputation Orlix has learned\n' +
       '  stalk <wallet>     alert when it moves\n\n' +
       'trading\n' +
       '  swap · bridge · top · price · analyze\n\n' +
@@ -1424,7 +1495,10 @@ module.exports = async function handler(req, res) {
       '  paste 0x address    -> contract or wallet\n' +
       '  type $TICKER        -> instant price\n' +
       '  send a screenshot   -> auto-investigation\n' +
-      '  ask anything        -> ai chat\n' +
+      '  ask anything        -> ai chat\n\n' +
+      'group guardian\n' +
+      '  add me to a group and I auto-scan every\n' +
+      '  contract posted, warning on risky ones.\n' +
       '```\n' +
       `[orlixai.xyz](https://orlixai.xyz)`
     );
@@ -1488,6 +1562,7 @@ module.exports = async function handler(req, res) {
     { re: /^\/early\b/,    fn: (a) => cmdEarly(chatId, a, lang),           need: 'token'  },
     { re: /^\/(dossier|rugcheck|rug)\b/, fn: (a) => cmdDossier(chatId, a, lang), need: 'token' },
     { re: /^\/(networth|worth|portfolio)\b/, fn: (a) => cmdNetWorth(chatId, a, lang), need: 'wallet' },
+    { re: /^\/(rep|reputation)\b/, fn: (a) => cmdRep(chatId, a, lang), need: 'wallet' },
   ];
   for (const route of invRoute) {
     if (route.re.test(text)) {
