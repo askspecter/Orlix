@@ -2,7 +2,7 @@
    Every ScrollTrigger scene lives here. Each scene is a small,
    self-contained function so scenes can be reordered or removed. */
 
-import { qs, qsa, prefersReducedMotion } from './utils.js';
+import { qs, qsa, prefersReducedMotion, scramble, typeText } from './utils.js';
 
 export class Scenes {
   constructor({ gl, lenis }) {
@@ -27,13 +27,16 @@ export class Scenes {
   /* ── initial states so nothing flashes before the intro ── */
   _prepareHero() {
     gsap.set('.ht-char', { yPercent: 120, opacity: 0, filter: 'blur(18px)' });
+    gsap.set('.ht-caret', { autoAlpha: 0 });
     gsap.set('[data-intro]', { opacity: 0, y: 26, filter: 'blur(8px)' });
   }
 
   /* Called by app.js the moment the loader curtains start opening. */
   playHeroIntro(instant = false) {
+    const cmd = qs('#heroCmd');
     if (typeof gsap === 'undefined' || this.reduced || instant) {
-      gsap?.set('.ht-char, [data-intro]', { yPercent: 0, y: 0, opacity: 1, filter: 'blur(0px)' });
+      gsap?.set('.ht-char, .ht-caret, [data-intro]', { yPercent: 0, y: 0, autoAlpha: 1, filter: 'blur(0px)' });
+      if (cmd) cmd.textContent = cmd.dataset.type;
       return;
     }
     const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
@@ -41,9 +44,11 @@ export class Scenes {
       yPercent: 0, opacity: 1, filter: 'blur(0px)',
       duration: 1.5, stagger: { each: 0.075, from: 'center' },
     }, 0.1);
+    tl.to('.ht-caret', { autoAlpha: 1, duration: 0.1 }, 1.0);
     tl.to('[data-intro]', {
       opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.1, stagger: 0.12,
     }, 0.75);
+    tl.add(() => { if (cmd) typeText(cmd, cmd.dataset.type); }, 1.0);
 
     // Hero exits like a camera tilt: title drifts up, blurs out of focus
     gsap.to('.hero-title', {
@@ -77,9 +82,7 @@ export class Scenes {
         onToggle: (self) => {
           if (!self.isActive) return;
           num.textContent = scene.dataset.chapter;
-          gsap.fromTo(name,
-            { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' });
-          name.textContent = scene.dataset.chapterName;
+          scramble(name, scene.dataset.chapterName, { duration: 450 });
         },
       });
     });
@@ -138,6 +141,13 @@ export class Scenes {
     // Per-panel choreography rides the container animation
     qsa('.panel').forEach((panel) => {
       const titleParts = panel.querySelectorAll('[data-pt]');
+      // titles decode out of terminal noise the first time they enter frame
+      ScrollTrigger.create({
+        trigger: panel, containerAnimation: scrub,
+        start: 'left 75%', once: true,
+        onEnter: () => titleParts.forEach((s, i) =>
+          setTimeout(() => scramble(s, s.textContent, { duration: 600 }), i * 140)),
+      });
       gsap.fromTo(titleParts,
         { xPercent: (i) => (i ? 45 : -45), opacity: 0 },
         {

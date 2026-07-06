@@ -1,6 +1,8 @@
 /* ORLIX cinematic — fullscreen menu
    Circle clip-path reveal (CSS) + staggered link entrances (GSAP).
-   Locks Lenis while open. */
+   Link labels re-decode on hover, terminal style. Locks Lenis while open. */
+
+import { scramble } from './utils.js';
 
 export class Menu {
   constructor(lenis) {
@@ -20,6 +22,18 @@ export class Menu {
     this.links.forEach((a) => a.addEventListener('click', () => {
       if (this.open) this.toggle();
     }));
+    // hover: label decodes out of noise
+    this.links.forEach((a) => {
+      const word = a.querySelector('.ml-word');
+      if (!word) return;
+      const label = word.textContent;
+      let busy = false;
+      a.addEventListener('pointerenter', () => {
+        if (busy) return;
+        busy = true;
+        scramble(word, label, { duration: 420 }).then(() => { busy = false; });
+      });
+    });
   }
 
   toggle() {

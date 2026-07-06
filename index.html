@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="base:app_id" content="6a3a2afd1f81a7e95b2326fb">
 <title>ORLIX — An Interactive Film About On-Chain Intelligence</title>
-<meta name="description" content="Orlix is an AI-native market intelligence studio on Base. Analyze tokens, deploy B20s, explore Base City, transact with x402 — experienced as an interactive film.">
+<meta name="description" content="Orlix is an AI-native market intelligence terminal on Base. Analyze tokens, deploy B20s, explore Base City, transact with x402 — experienced as an interactive film.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
@@ -18,9 +18,9 @@
 <meta name="twitter:title" content="ORLIX — An Interactive Film About On-Chain Intelligence">
 <meta name="twitter:description" content="AI market analytics, B20 token creation, Base City and x402 — experienced as an interactive film.">
 <meta name="twitter:image" content="https://www.orlix.xyz/og-image.png">
-<meta name="theme-color" content="#070707">
+<meta name="theme-color" content="#050505">
 
-<link rel="preload" href="/assets/cinematic/fonts/Syne-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/cinematic/fonts/JetBrainsMono-600.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/cinematic/fonts/JetBrainsMono-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="stylesheet" href="/assets/cinematic/cinematic.css">
@@ -29,13 +29,14 @@
 </head>
 <body>
 
-<!-- ══ Preloader ══ -->
+<!-- ══ Preloader — boot sequence ══ -->
 <div class="loader" id="loader" aria-hidden="true">
   <div class="loader-grid">
-    <span class="loader-kicker">ORLIX PRESENTS</span>
+    <span class="loader-kicker">ORLIX OS — BOOT SEQUENCE</span>
     <div class="loader-word" aria-hidden="true">
       <span class="lw">O</span><span class="lw">R</span><span class="lw">L</span><span class="lw">I</span><span class="lw">X</span>
     </div>
+    <div class="loader-log" id="loaderLog" aria-hidden="true"></div>
     <div class="loader-meta">
       <span class="loader-count" id="loaderCount">000</span>
       <span class="loader-bar"><span class="loader-bar-fill" id="loaderBar"></span></span>
@@ -46,10 +47,11 @@
   <div class="loader-curtain lc-bottom"></div>
 </div>
 
-<!-- ══ WebGL backdrop + grain ══ -->
+<!-- ══ WebGL backdrop + film layers ══ -->
 <canvas id="gl" aria-hidden="true"></canvas>
 <div class="vignette" aria-hidden="true"></div>
 <div class="grain" aria-hidden="true"></div>
+<div class="scanlines" aria-hidden="true"></div>
 
 <!-- ══ Custom cursor ══ -->
 <div class="cursor" id="cursor" aria-hidden="true"><span class="cursor-label" id="cursorLabel"></span></div>
@@ -58,7 +60,7 @@
 <!-- ══ Header ══ -->
 <header class="head">
   <a class="head-brand" href="/" data-hover>ORLIX<sup>®</sup></a>
-  <div class="head-chapter" id="chapterTag"><span class="hc-num" id="chapterNum">00</span><span class="hc-sep">/</span><span class="hc-name" id="chapterName">SIGNAL</span></div>
+  <div class="head-chapter" id="chapterTag"><span class="hc-num" id="chapterNum">[00]</span><span class="hc-name" id="chapterName">SIGNAL</span></div>
   <button class="head-menu" id="menuBtn" data-hover aria-label="Open menu" aria-expanded="false">
     <span class="hm-txt">MENU</span>
     <span class="hm-lines"><i></i><i></i></span>
@@ -71,12 +73,12 @@
   <div class="menu-bg"></div>
   <div class="menu-inner">
     <ol class="menu-list">
-      <li><a href="/app"        data-hover data-cursor="PLAY"><em>01</em><span class="ml-word">Analytics</span><small>AI token intelligence</small></a></li>
-      <li><a href="/b20"        data-hover data-cursor="PLAY"><em>02</em><span class="ml-word">B20 Studio</span><small>Deploy tokens on Base</small></a></li>
-      <li><a href="/base-city"  data-hover data-cursor="PLAY"><em>03</em><span class="ml-word">Base City</span><small>3D ecosystem metropolis</small></a></li>
-      <li><a href="/zero"       data-hover data-cursor="PLAY"><em>04</em><span class="ml-word">Zero</span><small>x402 machine payments</small></a></li>
-      <li><a href="/docs"       data-hover data-cursor="READ"><em>05</em><span class="ml-word">Docs</span><small>Platform &amp; API</small></a></li>
-      <li><a href="/dashboard"  data-hover data-cursor="OPEN"><em>06</em><span class="ml-word">Dashboard</span><small>Classic overview</small></a></li>
+      <li><a href="/app"        data-hover data-cursor="RUN"><em>01</em><span class="ml-word">./analytics</span><small>AI token intelligence</small></a></li>
+      <li><a href="/b20"        data-hover data-cursor="RUN"><em>02</em><span class="ml-word">./b20-studio</span><small>Deploy tokens on Base</small></a></li>
+      <li><a href="/base-city"  data-hover data-cursor="FLY"><em>03</em><span class="ml-word">./base-city</span><small>3D ecosystem metropolis</small></a></li>
+      <li><a href="/zero"       data-hover data-cursor="PAY"><em>04</em><span class="ml-word">./zero</span><small>x402 machine payments</small></a></li>
+      <li><a href="/docs"       data-hover data-cursor="READ"><em>05</em><span class="ml-word">./docs</span><small>Platform &amp; API</small></a></li>
+      <li><a href="/dashboard"  data-hover data-cursor="OPEN"><em>06</em><span class="ml-word">./dashboard</span><small>Classic overview</small></a></li>
     </ol>
     <div class="menu-foot">
       <span>BASE · ROBINHOOD CHAIN</span>
@@ -88,13 +90,13 @@
 <main id="film">
 
   <!-- ══ CH 00 · Hero ══ -->
-  <section class="scene scene-hero" id="hero" data-chapter="00" data-chapter-name="SIGNAL">
-    <p class="hero-kicker" data-intro><span class="hk-dot"></span>ORLIX PRESENTS · AN INTERACTIVE PICTURE</p>
+  <section class="scene scene-hero" id="hero" data-chapter="[00]" data-chapter-name="SIGNAL">
+    <p class="hero-kicker" data-intro><span class="hk-prompt">agent@base:~/orlix$</span>&nbsp;<span class="hk-cmd" id="heroCmd" data-type="./premiere --film --chain=base"></span><span class="caret"></span></p>
     <h1 class="hero-title" id="heroTitle" aria-label="ORLIX">
-      <span class="ht-char">O</span><span class="ht-char">R</span><span class="ht-char">L</span><span class="ht-char">I</span><span class="ht-char">X</span>
+      <span class="ht-char">O</span><span class="ht-char">R</span><span class="ht-char">L</span><span class="ht-char">I</span><span class="ht-char">X</span><span class="ht-caret" aria-hidden="true"></span>
     </h1>
     <div class="hero-sub" data-intro>
-      <p>An AI-native market intelligence studio on <b>Base</b>.<br>Watch on-chain markets like a film — analyze, create, deploy.</p>
+      <p>An AI-native market intelligence terminal on <b>Base</b>.<br>Watch on-chain markets like a film — analyze, create, deploy.</p>
     </div>
     <div class="hero-meta" data-intro>
       <span>FEAT. CLAUDE AI</span><i></i><span>SHOT ON WEBGL</span><i></i><span>RATED B20</span>
@@ -106,81 +108,93 @@
   </section>
 
   <!-- ══ CH 01 · Manifesto ══ -->
-  <section class="scene scene-manifesto" id="manifesto" data-chapter="01" data-chapter-name="MANIFESTO">
+  <section class="scene scene-manifesto" id="manifesto" data-chapter="[01]" data-chapter-name="MANIFESTO">
     <div class="mani-pin">
-      <p class="mani-line" data-mani>Markets never sleep.</p>
-      <p class="mani-line" data-mani>They move at the speed<br>of machines.</p>
-      <p class="mani-line mani-accent" data-mani>Orlix teaches you<br>to see them.</p>
+      <p class="mani-line" data-mani><span class="mani-prompt">&gt;</span>Markets never sleep.</p>
+      <p class="mani-line" data-mani><span class="mani-prompt">&gt;</span>They move at the speed<br>of machines.</p>
+      <p class="mani-line mani-accent" data-mani><span class="mani-prompt">&gt;</span>Orlix teaches you<br>to see them.</p>
     </div>
   </section>
 
   <!-- ══ CH 02 · The Reel (horizontal) ══ -->
-  <section class="scene scene-reel" id="reel" data-chapter="02" data-chapter-name="THE REEL">
+  <section class="scene scene-reel" id="reel" data-chapter="[02]" data-chapter-name="THE REEL">
     <div class="reel-pin">
       <div class="reel-track" id="reelTrack">
 
         <article class="panel" data-grade="0.15">
-          <span class="panel-num">01</span>
+          <span class="panel-num">[01]</span>
           <div class="panel-card" data-tilt>
             <div class="pc-glare"></div>
             <div class="pc-body">
-              <span class="pc-tag">ORLIX APP</span>
-              <div class="pc-visual pv-analyze" aria-hidden="true">
-                <span class="pv-bar" style="--h:38%"></span><span class="pv-bar" style="--h:72%"></span><span class="pv-bar" style="--h:54%"></span><span class="pv-bar" style="--h:91%"></span><span class="pv-bar" style="--h:63%"></span><span class="pv-bar" style="--h:82%"></span><span class="pv-bar" style="--h:47%"></span>
-                <span class="pv-line"></span>
+              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — analyze.sh</span></div>
+              <div class="pc-main">
+                <span class="pc-tag">ORLIX APP</span>
+                <div class="pc-visual pv-analyze" aria-hidden="true">
+                  <span class="pv-bar" style="--h:38%"></span><span class="pv-bar" style="--h:72%"></span><span class="pv-bar" style="--h:54%"></span><span class="pv-bar" style="--h:91%"></span><span class="pv-bar" style="--h:63%"></span><span class="pv-bar" style="--h:82%"></span><span class="pv-bar" style="--h:47%"></span>
+                  <span class="pv-line"></span>
+                </div>
+                <p>AI token analytics across Base &amp; Robinhood Chain. DexScreener signals, holder x-rays, Claude-powered verdicts.</p>
+                <a class="pc-link" href="/app" data-hover data-cursor="RUN">ENTER SCENE <b>→</b></a>
               </div>
-              <p>AI token analytics across Base &amp; Robinhood Chain. DexScreener signals, holder x-rays, Claude-powered verdicts.</p>
-              <a class="pc-link" href="/app" data-hover data-cursor="PLAY">ENTER SCENE <b>→</b></a>
             </div>
           </div>
           <h2 class="panel-title"><span data-pt>ANA</span><span data-pt>LYZE</span></h2>
         </article>
 
         <article class="panel" data-grade="0.4">
-          <span class="panel-num">02</span>
+          <span class="panel-num">[02]</span>
           <div class="panel-card" data-tilt>
             <div class="pc-glare"></div>
             <div class="pc-body">
-              <span class="pc-tag">B20 STUDIO</span>
-              <div class="pc-visual pv-create" aria-hidden="true">
-                <code>&gt; b20 deploy --name ORLIX<br>&gt; supply 1,000,000,000<br>&gt; tx confirmed <b>✓</b> 2.4s</code>
+              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — deploy.sh</span></div>
+              <div class="pc-main">
+                <span class="pc-tag">B20 STUDIO</span>
+                <div class="pc-visual pv-create" aria-hidden="true">
+                  <code>&gt; b20 deploy --name ORLIX<br>&gt; supply 1,000,000,000<br>&gt; tx confirmed <b>✓</b> 2.4s</code>
+                </div>
+                <p>Deploy B20 tokens on Base in seconds. Gas-aware, AI-configured, native to the 0x…0B20 precompile.</p>
+                <a class="pc-link" href="/b20" data-hover data-cursor="RUN">ENTER SCENE <b>→</b></a>
               </div>
-              <p>Deploy B20 tokens on Base in seconds. Gas-aware, AI-configured, native to the 0x…0B20 precompile.</p>
-              <a class="pc-link" href="/b20" data-hover data-cursor="PLAY">ENTER SCENE <b>→</b></a>
             </div>
           </div>
           <h2 class="panel-title"><span data-pt>CRE</span><span data-pt>ATE</span></h2>
         </article>
 
         <article class="panel" data-grade="0.65">
-          <span class="panel-num">03</span>
+          <span class="panel-num">[03]</span>
           <div class="panel-card" data-tilt>
             <div class="pc-glare"></div>
             <div class="pc-body">
-              <span class="pc-tag">BASE CITY</span>
-              <div class="pc-visual pv-city" aria-hidden="true">
-                <span class="pv-tower" style="--h:52%;--d:0s"></span><span class="pv-tower" style="--h:78%;--d:.3s"></span><span class="pv-tower" style="--h:40%;--d:.6s"></span><span class="pv-tower" style="--h:92%;--d:.15s"></span><span class="pv-tower" style="--h:64%;--d:.45s"></span>
-                <span class="pv-moon"></span>
+              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — city.gl</span></div>
+              <div class="pc-main">
+                <span class="pc-tag">BASE CITY</span>
+                <div class="pc-visual pv-city" aria-hidden="true">
+                  <span class="pv-tower" style="--h:52%;--d:0s"></span><span class="pv-tower" style="--h:78%;--d:.3s"></span><span class="pv-tower" style="--h:40%;--d:.6s"></span><span class="pv-tower" style="--h:92%;--d:.15s"></span><span class="pv-tower" style="--h:64%;--d:.45s"></span>
+                  <span class="pv-moon"></span>
+                </div>
+                <p>A living 3D metropolis of the Base ecosystem. Neon towers, moonlit ocean, a patrolling UFO — in your browser.</p>
+                <a class="pc-link" href="/base-city" data-hover data-cursor="FLY">ENTER SCENE <b>→</b></a>
               </div>
-              <p>A living 3D metropolis of the Base ecosystem. Neon towers, moonlit ocean, a patrolling UFO — in your browser.</p>
-              <a class="pc-link" href="/base-city" data-hover data-cursor="FLY">ENTER SCENE <b>→</b></a>
             </div>
           </div>
           <h2 class="panel-title"><span data-pt>EXP</span><span data-pt>LORE</span></h2>
         </article>
 
         <article class="panel" data-grade="0.9">
-          <span class="panel-num">04</span>
+          <span class="panel-num">[04]</span>
           <div class="panel-card" data-tilt>
             <div class="pc-glare"></div>
             <div class="pc-body">
-              <span class="pc-tag">ZERO · x402</span>
-              <div class="pc-visual pv-zero" aria-hidden="true">
-                <span class="pv-ring"></span><span class="pv-ring"></span><span class="pv-ring"></span>
-                <b>402</b>
+              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — x402.pay</span></div>
+              <div class="pc-main">
+                <span class="pc-tag">ZERO · x402</span>
+                <div class="pc-visual pv-zero" aria-hidden="true">
+                  <span class="pv-ring"></span><span class="pv-ring"></span><span class="pv-ring"></span>
+                  <b>402</b>
+                </div>
+                <p>Machine-payable APIs. Premium analytics, chat and AI music behind x402 micro-payments — built for agents.</p>
+                <a class="pc-link" href="/zero" data-hover data-cursor="PAY">ENTER SCENE <b>→</b></a>
               </div>
-              <p>Machine-payable APIs. Premium analytics, chat and AI music behind x402 micro-payments — built for agents.</p>
-              <a class="pc-link" href="/zero" data-hover data-cursor="PAY">ENTER SCENE <b>→</b></a>
             </div>
           </div>
           <h2 class="panel-title"><span data-pt>TRAN</span><span data-pt>SACT</span></h2>
@@ -192,26 +206,26 @@
   </section>
 
   <!-- ══ CH 03 · Descent (depth camera) ══ -->
-  <section class="scene scene-depth" id="depth" data-chapter="03" data-chapter-name="DESCENT">
+  <section class="scene scene-depth" id="depth" data-chapter="[03]" data-chapter-name="DESCENT">
     <div class="depth-pin">
       <div class="depth-stage">
         <div class="depth-layer" data-z="1">
-          <p class="dl-label">SIGNALS</p>
+          <p class="dl-label"><b>[LAYER 01]</b> SIGNALS</p>
           <p class="dl-stat"><span class="count" data-count="24">0</span>/7</p>
           <p class="dl-sub">live market watch</p>
         </div>
         <div class="depth-layer" data-z="2">
-          <p class="dl-label">SURFACE</p>
+          <p class="dl-label"><b>[LAYER 02]</b> SURFACE</p>
           <p class="dl-stat"><span class="count" data-count="2">0</span> CHAINS</p>
           <p class="dl-sub">Base · Robinhood</p>
         </div>
         <div class="depth-layer" data-z="3">
-          <p class="dl-label">MACHINERY</p>
+          <p class="dl-label"><b>[LAYER 03]</b> MACHINERY</p>
           <p class="dl-stat"><span class="count" data-count="20">0</span>+ APIS</p>
           <p class="dl-sub">open + x402 premium</p>
         </div>
         <div class="depth-layer" data-z="4">
-          <p class="dl-label">CORE</p>
+          <p class="dl-label"><b>[LAYER 04]</b> CORE</p>
           <p class="dl-stat">&lt;<span class="count" data-count="60">0</span>s</p>
           <p class="dl-sub">B20 token deploys</p>
         </div>
@@ -222,15 +236,15 @@
   </section>
 
   <!-- ══ CH 04 · Finale ══ -->
-  <section class="scene scene-finale" id="finale" data-chapter="04" data-chapter-name="FINALE">
+  <section class="scene scene-finale" id="finale" data-chapter="[04]" data-chapter-name="FINALE">
     <p class="fin-kicker">THE PART WHERE YOU JOIN THE CAST</p>
     <h2 class="fin-title">
       <span class="fin-line"><span data-fin>ENTER</span></span>
       <span class="fin-line"><span data-fin>ORLIX</span></span>
     </h2>
     <div class="fin-actions">
-      <a class="fin-btn primary" href="/app" data-hover data-magnetic data-cursor="GO"><span>LAUNCH APP</span></a>
-      <a class="fin-btn ghost" href="/docs" data-hover data-magnetic data-cursor="READ"><span>READ THE DOCS</span></a>
+      <a class="fin-btn primary" href="/app" data-hover data-magnetic data-cursor="GO"><span>[ LAUNCH APP ]</span></a>
+      <a class="fin-btn ghost" href="/docs" data-hover data-magnetic data-cursor="READ"><span>[ READ THE DOCS ]</span></a>
     </div>
   </section>
 
@@ -238,6 +252,7 @@
 
 <!-- ══ Credits ══ -->
 <footer class="credits">
+  <p class="cr-cmd"><b>$</b> orlix --credits --roll</p>
   <div class="cr-roll">
     <div class="cr-row"><span>DIRECTED BY</span><b>ORLIX AI</b></div>
     <div class="cr-row"><span>WRITTEN BY</span><b>AEON FRAMEWORK</b></div>
@@ -258,6 +273,7 @@
 <noscript><style>
 .loader,.cursor,.cursor-dot{display:none}
 .scene,[data-intro],.ht-char,.mani-line,.fin-line span{opacity:1!important;transform:none!important;filter:none!important}
+.hk-cmd::after{content:attr(data-type)}
 .scene-manifesto,.scene-depth,.scene-reel{height:auto}
 .mani-pin{position:static;height:auto;display:block;padding:20vh 0}
 .mani-line{position:static;margin:8vh auto}
