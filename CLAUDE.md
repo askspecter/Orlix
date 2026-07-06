@@ -30,7 +30,8 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 │   └── x402-song.js        # Premium music generation
 │
 ├── *.html                  # Frontend pages (vanilla HTML/CSS/JS)
-│   ├── index.html          # Dashboard — Base ecosystem overview
+│   ├── index.html          # Cinematic homepage (Awwwards-style scroll film)
+│   ├── dashboard.html      # Dashboard — Base ecosystem overview (old index, served at /dashboard)
 │   ├── neural-map.html     # Base City 3D visualization (Three.js)
 │   ├── b20-studio.html     # B20 token deployment UI
 │   ├── app.html            # Token analytics app
@@ -79,6 +80,15 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - `analyze.js` uses a CHAINS config object with `chain` query param (defaults to `'base'`)
 - `app.html` has a chain selector dropdown that passes chain param to the analyze API
 
+### Cinematic Homepage (`/index.html`, added July 2026)
+- Awwwards-style scroll film: preloader → hero → manifesto → horizontal "reel" → 3D depth descent → finale → film credits
+- Stack: GSAP 3.12 + ScrollTrigger + Lenis (self-hosted in `assets/cinematic/vendor/`), Motion (vanilla Framer Motion sibling, dynamic import with hand-rolled spring fallback), raw WebGL fragment shader backdrop (`gl.js` — fbm smoke, mouse light, scroll-driven grade ember→violet)
+- Modules in `assets/cinematic/js/`: app.js (orchestrator), scenes.js (all ScrollTrigger scenes), gl.js, cursor.js, preloader.js, menu.js, tilt.js, magnetic.js, utils.js
+- Fonts self-hosted in `assets/cinematic/fonts/` (Syne 700/800 display + JetBrains Mono, latin subset)
+- Gotchas: ScrollTriggers below the reel pin must be created AFTER the pin (chapter indicator/progress are created last in scenes.js); don't combine CSS `translateY(%)` initial states with GSAP `yPercent` (px component gets baked in — set initial state via gsap.set instead)
+- Old dashboard preserved: `dashboard.html`, routed at `/dashboard` via vercel.json
+- Degrades gracefully: prefers-reduced-motion → static layout; missing vendor JS → plain readable page; noscript CSS unwinds pinned scenes
+
 ### B20 Studio (`/b20-studio.html`)
 - Chain ID comparison must be case-insensitive (MetaMask returns lowercase hex)
 - EIP-1559 gas: always pass `maxFeePerGas` + `maxPriorityFeePerGas` from API
@@ -123,3 +133,4 @@ git add -A && git commit -m "..." && git push origin main
 - `session_01EQsBP8bax8HwLDVovqZxYx` — Added Robinhood Chain (mainnet July 1 2026) to analytics/search/chat. Files: analyze.js, chat.js, token-search.js, x-agent.js, x402.js, x402-market.js, app.html, index.html. Created video animation (later removed). B20 files NOT touched.
 - `session_01Dhpc62Y19RJMuV1gFB1hmh` — Continuation of Robinhood Chain integration. Updated CLAUDE.md with persistent memory.
 - `session_01RwaoCkty8pyct6jvvJenAn` — Base City scene revamp to match design mock: peninsula terrain (ocean wraps +Z and -X), river/bridges mirrored to +X flank, second ocean plane + shore/foam/reflection for the left bay, ships split across both waters, waterfront piers with lamps, bigger full moon repositioned upper-right, UFO with night-only tractor beam, aerial intro end pose. File: neural-map.html only.
+- `session_01RKMQuccsPyPAroZDB3eV6g` — Built cinematic Awwwards-style homepage (new index.html + assets/cinematic/). Old dashboard moved to dashboard.html (/dashboard route added to vercel.json). Self-hosted GSAP/ScrollTrigger/Lenis/Motion + Syne/JetBrains Mono fonts. Branch: claude/orlix-cinematic-website-f8zbid.

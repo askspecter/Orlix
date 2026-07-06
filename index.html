@@ -4,970 +4,275 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="base:app_id" content="6a3a2afd1f81a7e95b2326fb">
-<title>Orlix AI — Agentic AI Playground on Base</title>
-<meta name="description" content="Orlix AI is an agentic playground on Base. Search the web, fetch URLs, analyze GitHub repos, query Base blockchain live — all from one interface. Powered by Aeon Framework.">
+<title>ORLIX — An Interactive Film About On-Chain Intelligence</title>
+<meta name="description" content="Orlix is an AI-native market intelligence studio on Base. Analyze tokens, deploy B20s, explore Base City, transact with x402 — experienced as an interactive film.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://www.orlixai.xyz/">
-<meta property="og:title" content="Orlix AI — Agentic AI Playground on Base">
-<meta property="og:description" content="Search the web, fetch URLs, analyze GitHub repos, query Base blockchain live. 16 skill shortcuts. Powered by Aeon Framework.">
-<meta property="og:image" content="https://www.orlixai.xyz/og-image.png">
+<meta property="og:url" content="https://www.orlix.xyz/">
+<meta property="og:title" content="ORLIX — An Interactive Film About On-Chain Intelligence">
+<meta property="og:description" content="AI market analytics, B20 token creation, Base City and x402 — experienced as an interactive film.">
+<meta property="og:image" content="https://www.orlix.xyz/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Orlix AI — Agentic AI Playground on Base">
-<meta name="twitter:description" content="Search the web, fetch URLs, analyze GitHub repos, query Base blockchain live. 16 skill shortcuts. Powered by Aeon Framework.">
-<meta name="twitter:image" content="https://www.orlixai.xyz/og-image.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="twitter:title" content="ORLIX — An Interactive Film About On-Chain Intelligence">
+<meta name="twitter:description" content="AI market analytics, B20 token creation, Base City and x402 — experienced as an interactive film.">
+<meta name="twitter:image" content="https://www.orlix.xyz/og-image.png">
+<meta name="theme-color" content="#070707">
+
+<link rel="preload" href="/assets/cinematic/fonts/Syne-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/cinematic/fonts/JetBrainsMono-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/cinematic/cinematic.css">
 <link rel="prefetch" href="/app">
 <link rel="prefetch" href="/docs">
-<link rel="prefetch" href="/token">
-
-<style>
-/* ── Variables ── */
-:root{
-  --bg:#0a0a0a;--bg-2:#111111;--bg-3:#181818;--bg-4:#202020;
-  --border:rgba(255,255,255,.07);--border-hover:rgba(255,255,255,.14);
-  --text-1:#E0E0E0;--text-2:#8a8a8a;--text-3:#505050;
-  --orange:#F07830;--orange-dim:rgba(240,120,48,.08);--orange-glow:rgba(240,120,48,.2);
-  --purple:#A78BFA;--purple-dim:rgba(167,139,250,.07);
-  --green:#4ADE80;--green-dim:rgba(74,222,128,.07);
-  --red:#F87171;
-  --blue:#60A5FA;--blue-dim:rgba(96,165,250,.07);
-  --radius:4px;
-  --mono:'JetBrains Mono',monospace;
-  --font:'JetBrains Mono',monospace;
-  --tr:.15s cubic-bezier(.4,0,.2,1);
-}
-:root.light{
-  --bg:#F4F4F5;--bg-2:#EAEAEC;--bg-3:#DDDDE0;--bg-4:#D0D0D4;
-  --border:rgba(0,0,0,.1);--border-hover:rgba(0,0,0,.18);
-  --text-1:#1a1a1a;--text-2:#555555;--text-3:#999999;
-  --orange-dim:rgba(224,104,32,.08);--orange-glow:rgba(224,104,32,.15);
-  --purple-dim:rgba(139,92,246,.1);--green-dim:rgba(34,197,94,.1);--blue-dim:rgba(59,130,246,.1);
-}
-
-/* ── Reset ── */
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{background:var(--bg);color:var(--text-2);font-family:var(--font);font-size:13px;line-height:1.6;overflow-x:hidden}
-a{color:inherit;text-decoration:none}
-img{max-width:100%;display:block}
-::selection{background:var(--orange);color:#fff}
-
-/* ── Wordmark helpers ── */
-.wm{display:block}.wm-light{display:none}
-:root.light .wm-dark{display:none}:root.light .wm-light{display:block}:root.light .wm{filter:none!important}
-:root.light .footer-brand img{filter:invert(1)}
-
-/* ── Titlebar ── */
-.titlebar{position:fixed;top:0;left:0;right:0;z-index:100;height:48px;display:flex;align-items:center;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
-.tb-in{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1200px;margin:0 auto;padding:0 24px}
-.tb-left{display:flex;align-items:center;gap:10px}
-.tb-brand{display:flex;align-items:center;text-decoration:none}
-.tb-sep{color:var(--text-3);font-size:.72rem;margin:0 2px}
-.tb-path{color:var(--text-3);font-size:.72rem;letter-spacing:.02em}
-.tb-nav{display:flex;align-items:center;gap:0}
-.tb-nav a{padding:5px 10px;font-size:.72rem;font-weight:500;color:var(--text-3);border-radius:var(--radius);transition:color var(--tr),background var(--tr);white-space:nowrap}
-.tb-nav a:hover{color:var(--text-1);background:rgba(255,255,255,.05)}
-.tb-right{display:flex;align-items:center;gap:10px}
-.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:statusBlink 2.5s ease-in-out infinite}
-@keyframes statusBlink{0%,100%{opacity:1}50%{opacity:.35}}
-.theme-toggle{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:var(--radius);background:var(--bg-3);border:1px solid var(--border);color:var(--text-3);cursor:pointer;transition:border-color var(--tr),color var(--tr);flex-shrink:0}
-.theme-toggle:hover{border-color:var(--border-hover);color:var(--text-1)}
-.theme-toggle .ico-sun{display:none}.theme-toggle .ico-moon{display:block}
-:root.light .theme-toggle .ico-sun{display:block}:root.light .theme-toggle .ico-moon{display:none}
-:root.light .titlebar{background:rgba(244,244,245,.92)!important;border-bottom-color:rgba(0,0,0,.08)}
-:root.light .tb-brand img{filter:invert(1)}
-.tb-cta{display:inline-flex;align-items:center;padding:5px 14px;background:var(--orange);color:#fff;font-size:.72rem;font-weight:600;border-radius:var(--radius);transition:background var(--tr),transform var(--tr);flex-shrink:0}
-.tb-cta:hover{background:#e06820;transform:translateY(-1px)}
-.ham{display:none;flex-direction:column;gap:4px;cursor:pointer;background:none;border:none;padding:4px}
-.ham span{display:block;width:16px;height:1.5px;background:var(--text-1);border-radius:2px;transition:all var(--tr)}
-.mob-nav{display:none;position:fixed;top:48px;left:0;right:0;bottom:0;z-index:99;background:var(--bg);flex-direction:column;padding:4px 0 32px;overflow-y:auto}
-.mob-nav.open{display:flex}
-.mob-nav a{font-size:.8rem;color:var(--text-2);padding:10px 20px;border-bottom:1px solid var(--border);transition:color var(--tr)}
-.mob-nav a:hover{color:var(--text-1);background:rgba(255,255,255,.03)}
-.mob-nav .mob-cta{margin:12px 16px 0;text-align:center;background:var(--orange);color:#fff;padding:10px;border-radius:var(--radius);font-weight:600;border-bottom:none}
-:root.light .mob-nav{background:var(--bg)}
-
-/* ── Hero ── */
-.hero{padding:96px 24px 56px;background:var(--bg);position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 60% 50% at 50% 0%,black 20%,transparent 100%);pointer-events:none}
-.hero-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;position:relative;z-index:1}
-.hero-text{display:flex;flex-direction:column}
-.hero-tag{font-size:.65rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.hero-tag .tag-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(74,222,128,.5)}
-.hero h1{font-size:clamp(2.2rem,4.5vw,3rem);font-weight:800;letter-spacing:-.04em;line-height:1.05;color:var(--text-1);margin-bottom:16px;transition:transform .25s ease,text-shadow .25s ease;cursor:default}
-.hero h1:hover{transform:scale(1.02);text-shadow:0 0 30px rgba(240,120,48,.12)}
-.hero h1 .accent{color:var(--orange);transition:filter .25s ease}
-.hero h1:hover .accent{filter:brightness(1.15)}
-.hero-sub{font-size:.85rem;color:var(--text-2);line-height:1.7;margin-bottom:24px;max-width:420px}
-.hero-actions{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
-.btn-cta{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;font-size:.78rem;font-weight:600;border-radius:var(--radius);transition:all var(--tr);font-family:var(--font);cursor:pointer;border:1px solid transparent;text-decoration:none}
-.btn-cta.primary{background:var(--orange);color:#fff;border-color:rgba(240,120,48,.4)}
-.btn-cta.primary:hover{background:#e06820;transform:translateY(-1px);box-shadow:0 6px 20px rgba(240,120,48,.2)}
-.btn-cta.ghost{background:transparent;color:var(--text-2);border-color:var(--border)}
-.btn-cta.ghost:hover{color:var(--text-1);border-color:var(--border-hover);background:rgba(255,255,255,.03)}
-.hero-meta{display:flex;align-items:center;gap:16px;font-size:.68rem;color:var(--text-3)}
-.hero-meta .hm-item{display:flex;align-items:center;gap:4px}
-.hero-meta .hm-val{color:var(--text-1);font-weight:600}
-.hero-meta .hm-sep{width:1px;height:10px;background:var(--border);display:block}
-
-/* ── Terminal Window ── */
-.term-window{background:var(--bg-2);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.45),0 0 40px rgba(240,120,48,.03)}
-.term-header{height:30px;display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--bg-3);border-bottom:1px solid var(--border)}
-.term-dots{display:flex;gap:5px}
-.term-dots span{width:7px;height:7px;border-radius:50%}
-.term-dots span:nth-child(1){background:#ff5f57;opacity:.7}
-.term-dots span:nth-child(2){background:#febc2e;opacity:.7}
-.term-dots span:nth-child(3){background:#28c840;opacity:.7}
-.term-title{font-size:.62rem;color:var(--text-3);letter-spacing:.02em;margin-left:auto}
-.term-body{padding:16px;font-family:var(--mono);font-size:.75rem;line-height:1.8;min-height:200px}
-.term-input{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.term-prompt{color:var(--green);font-weight:600;flex-shrink:0}
-.term-cmd{color:var(--text-1)}
-.term-cursor{display:inline-block;width:7px;height:13px;background:var(--orange);animation:cursorBlink .7s step-end infinite;vertical-align:text-bottom;margin-left:1px}
-@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
-.term-output{margin-top:8px;color:var(--text-3);font-size:.72rem;line-height:1.7}
-.term-output .out-line{display:block;white-space:pre}
-.term-output .t-val{color:var(--text-2)}
-.term-output .t-green{color:var(--green)}
-.term-output .t-orange{color:var(--orange)}
-.term-output .t-dim{color:var(--text-3)}
-:root.light .term-window{border-color:rgba(0,0,0,.12);box-shadow:0 20px 50px rgba(0,0,0,.12)}
-:root.light .term-dots span:nth-child(1){opacity:.5}:root.light .term-dots span:nth-child(2){opacity:.5}:root.light .term-dots span:nth-child(3){opacity:.5}
-
-/* ── Section ── */
-.section{padding:48px 24px}
-.section-inner{max-width:1200px;margin:0 auto}
-.section-hd{margin-bottom:24px}
-.section-hd.center{text-align:center}
-.section-tag{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:10px;font-family:var(--mono)}
-.section-title{font-size:1.3rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;color:var(--text-1);margin-bottom:6px}
-.section-desc{font-size:.8rem;color:var(--text-2);max-width:460px;line-height:1.6}
-.section-hd.center .section-desc{margin:0 auto}
-
-/* ── Bento Grid ── */
-.bento-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px}
-.bento-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow:hidden;position:relative;transition:border-color .2s,box-shadow .2s,transform .2s}
-.bento-card:hover{border-color:var(--border-hover);box-shadow:0 8px 24px rgba(0,0,0,.35);transform:translateY(-2px)}
-.bento-card::before{content:'';position:absolute;inset:0;border-radius:inherit;background:radial-gradient(400px circle at var(--mx,-9999px) var(--my,-9999px),rgba(240,120,48,.1),transparent 50%);opacity:0;transition:opacity .35s;pointer-events:none;z-index:0}
-.bento-card:hover::before{opacity:1}
-
-/* Card placements */
-.card-chat{grid-column:1/8;grid-row:1/3}
-.card-models-count{grid-column:8/13;grid-row:1/2}
-.card-speed{grid-column:8/11;grid-row:2/3}
-.card-network{grid-column:11/13;grid-row:2/3}
-.card-token{grid-column:1/5;grid-row:3/4}
-.card-wallet{grid-column:5/9;grid-row:3/4}
-.card-telegram{grid-column:9/13;grid-row:3/4}
-.card-basecity{grid-column:1/7;grid-row:4/5}
-.card-b20{grid-column:7/13;grid-row:4/5}
-.card-chat:hover{box-shadow:0 8px 24px rgba(240,120,48,.08);border-color:rgba(240,120,48,.2)}
-
-/* Card label */
-.card-label{font-size:.63rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:14px;display:flex;align-items:center;gap:6px}
-.card-label .label-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 4px var(--green)}
-
-/* Card: Chat */
-.chat-messages{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
-.chat-msg{display:flex;gap:10px;align-items:flex-start}
-.chat-msg.user{flex-direction:row-reverse}
-.chat-avatar{width:24px;height:24px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;flex-shrink:0}
-.avatar-user{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(240,120,48,.2)}
-.avatar-ai{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
-.chat-bubble{max-width:80%;padding:8px 12px;border-radius:var(--radius);font-size:.78rem;line-height:1.5}
-.bubble-user{background:var(--bg-4);color:var(--text-1);border:1px solid var(--border)}
-.bubble-ai{background:var(--bg-3);color:var(--text-2);border:1px solid var(--border)}
-.bubble-ai .highlight{color:var(--green);font-family:var(--mono);font-size:.75rem}
-.chat-input-bar{display:flex;align-items:center;gap:10px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px}
-.chat-input-bar span{flex:1;font-size:.75rem;color:var(--text-3)}
-.chat-send{width:24px;height:24px;background:var(--orange);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;flex-shrink:0}
-
-/* Card: Model Count */
-.models-count-big{font-size:clamp(3.5rem,7vw,5rem);font-weight:800;letter-spacing:-.05em;line-height:1;background:linear-gradient(135deg,var(--orange) 0%,var(--purple) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
-.models-count-label{font-size:.78rem;color:var(--text-3);margin-bottom:16px}
-.provider-tags{display:flex;flex-wrap:wrap;gap:4px}
-.provider-tag{font-size:.65rem;font-weight:600;padding:3px 8px;border-radius:var(--radius);border:1px solid var(--border);color:var(--text-3);background:var(--bg-3)}
-
-/* Card: Speed */
-.speed-big{font-size:2.4rem;font-weight:800;letter-spacing:-.04em;color:var(--green);line-height:1;margin-bottom:4px}
-.speed-label{font-size:.72rem;color:var(--text-3)}
-.speed-bar-wrap{margin-top:12px;display:flex;flex-direction:column;gap:5px}
-.speed-bar-row{display:flex;align-items:center;gap:6px;font-size:.68rem;color:var(--text-3)}
-.speed-bar{flex:1;height:3px;background:var(--bg-4);border-radius:2px;overflow:hidden}
-.speed-bar-fill{height:100%;border-radius:2px;background:var(--green);transition:width 1.2s ease}
-
-/* Card: Network */
-.network-icon{font-size:1rem;font-weight:800;color:var(--blue);font-family:var(--mono);margin-bottom:8px}
-.network-title{font-size:.88rem;font-weight:700;color:var(--text-1);margin-bottom:4px}
-.network-desc{font-size:.72rem;color:var(--text-3);line-height:1.4}
-.network-badge{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(96,165,250,.2);padding:2px 7px;border-radius:var(--radius);margin-top:10px}
-
-/* Card: Token */
-.token-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.token-name{font-size:.88rem;font-weight:700;color:var(--text-1)}
-.token-ticker{font-size:.68rem;font-family:var(--mono);color:var(--text-3);background:var(--bg-4);padding:2px 6px;border-radius:var(--radius)}
-.token-price{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;color:var(--text-1);margin-bottom:2px}
-.token-change-pos{font-size:.72rem;font-weight:600;color:var(--green);font-family:var(--mono)}
-.token-stats-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0}
-.token-stat{padding:6px 8px;background:var(--bg-3);border-radius:var(--radius);border:1px solid var(--border)}
-.token-stat-label{font-size:.6rem;color:var(--text-3);margin-bottom:1px;text-transform:uppercase;letter-spacing:.06em}
-.token-stat-val{font-size:.78rem;font-weight:700;color:var(--text-1);font-family:var(--mono)}
-.ai-verdict{display:flex;align-items:center;gap:6px;background:var(--green-dim);border:1px solid rgba(74,222,128,.15);border-radius:var(--radius);padding:6px 10px;font-size:.72rem;color:var(--green);font-weight:600}
-
-/* Card: Wallet */
-.wallet-title{font-size:.78rem;font-weight:600;color:var(--text-1);margin-bottom:10px}
-.wallet-addr{font-size:.65rem;font-family:var(--mono);color:var(--text-3);background:var(--bg-3);padding:5px 8px;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tx-list{display:flex;flex-direction:column;gap:6px}
-.tx-item{display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg-3);border-radius:var(--radius);border:1px solid var(--border)}
-.tx-arrow{width:24px;height:24px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:.72rem;flex-shrink:0}
-.tx-in{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.15)}
-.tx-out{background:rgba(248,113,113,.09);color:var(--red);border:1px solid rgba(248,113,113,.15)}
-.tx-info{flex:1;min-width:0}
-.tx-type{font-size:.72rem;font-weight:600;color:var(--text-1)}
-.tx-hash{font-size:.6rem;font-family:var(--mono);color:var(--text-3)}
-.tx-meta{text-align:right;flex-shrink:0}
-.tx-amount{font-size:.72rem;font-weight:700;font-family:var(--mono)}
-.tx-time{font-size:.6rem;color:var(--text-3)}
-
-/* Card: Telegram */
-.tg-title{font-size:.88rem;font-weight:700;color:var(--text-1);margin-bottom:4px}
-.tg-desc{font-size:.72rem;color:var(--text-3);margin-bottom:14px}
-.cmd-list{display:flex;flex-direction:column;gap:6px}
-.cmd-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:var(--bg-3);border-radius:var(--radius);border:1px solid var(--border)}
-.cmd-code{font-family:var(--mono);font-size:.72rem;font-weight:500;padding:1px 6px;border-radius:var(--radius);white-space:nowrap;flex-shrink:0}
-.cmd-orange{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(240,120,48,.2)}
-.cmd-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.15)}
-.cmd-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.15)}
-.cmd-desc{font-size:.68rem;color:var(--text-3);padding-top:1px}
-
-/* Card: Base City */
-.basecity-preview{position:relative;height:140px;background:linear-gradient(180deg,#0a0e1a 0%,#0f1628 60%,#0a0a0a 100%);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
-.basecity-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(96,165,250,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(96,165,250,.06) 1px,transparent 1px);background-size:20px 20px;transform:perspective(400px) rotateX(45deg);transform-origin:center bottom}
-.basecity-buildings{position:absolute;bottom:0;left:0;right:0;height:90px;display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:0 14px}
-.bc-building{width:10px;border-radius:2px 2px 0 0;opacity:.7}
-.basecity-glow{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);width:180px;height:70px;background:radial-gradient(ellipse,rgba(96,165,250,.12) 0%,transparent 70%)}
-.basecity-label{position:absolute;top:8px;right:8px;font-size:.55rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(96,165,250,.2);padding:1px 5px;border-radius:var(--radius)}
-.basecity-title{font-size:.85rem;font-weight:700;color:var(--text-1);margin-bottom:3px}
-.basecity-desc{font-size:.72rem;color:var(--text-3);line-height:1.4;margin-bottom:10px}
-.basecity-stats{display:flex;gap:14px}
-.basecity-stat-val{font-size:.85rem;font-weight:700;color:var(--text-1)}
-.basecity-stat-label{font-size:.58rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
-
-/* Card: B20 */
-.b20-preview{padding:10px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px}
-.b20-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.b20-chain-pill{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(96,165,250,.2);padding:2px 5px;border-radius:var(--radius)}
-.b20-field{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.72rem}
-.b20-field:last-child{border-bottom:none}
-.b20-field-label{color:var(--text-3)}
-.b20-field-val{color:var(--text-1);font-weight:600;font-family:var(--mono)}
-.b20-deploy-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;margin-top:10px;background:var(--orange);color:#fff;font-size:.72rem;font-weight:700;border:1px solid rgba(240,120,48,.4);border-radius:var(--radius);cursor:default}
-.b20-title{font-size:.85rem;font-weight:700;color:var(--text-1);margin-bottom:3px}
-.b20-desc{font-size:.72rem;color:var(--text-3);line-height:1.4}
-
-/* ── Provider Grid (Models) ── */
-.models-section{padding:48px 24px;border-top:1px solid var(--border)}
-.prov-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
-.prov-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s}
-.prov-card:hover{border-color:var(--border-hover);box-shadow:0 8px 24px rgba(0,0,0,.35);transform:translateY(-2px)}
-.prov-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
-.prov-icon{width:26px;height:26px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;background:var(--bg-3);border:1px solid var(--border)}
-.prov-name{font-size:.78rem;font-weight:600;color:var(--text-1)}
-.prov-body{padding:4px 0}
-.model-row{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;font-size:.72rem;transition:background var(--tr)}
-.model-row:hover{background:rgba(255,255,255,.03)}
-.m-name{color:var(--text-2)}
-.m-tag{font-size:.58rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:var(--radius)}
-.m-tag.best{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(240,120,48,.2)}
-.m-tag.fast{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,.2)}
-.m-tag.code{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
-.m-tag.new{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)}
-
-/* ── Footer ── */
-footer{padding:48px 32px 32px;background:var(--bg-2);border-top:1px solid var(--border)}
-.footer-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;margin-bottom:40px;align-items:start}
-.footer-brand .logo-text{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;color:var(--text-1);margin-bottom:10px}
-.footer-tagline{font-size:.85rem;color:var(--text-3);line-height:1.6;margin-bottom:20px;max-width:260px}
-.social-row{display:flex;flex-wrap:nowrap;align-items:center;gap:10px}
-.social-btn{width:34px;height:34px;border-radius:var(--radius);background:var(--bg-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:.85rem;transition:all var(--tr);text-decoration:none}
-.social-btn:hover{border-color:var(--border-hover);color:var(--text-1);background:var(--bg-4)}
-.footer-col{padding-top:20px}
-.footer-col h4{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-1);margin-bottom:16px}
-.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
-.footer-col ul li a{font-size:.85rem;color:var(--text-3);transition:color .15s;text-decoration:none}
-.footer-col ul li a:hover{color:var(--text-1)}
-.footer-bottom{max-width:1200px;margin:0 auto;padding-top:28px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.footer-copy{font-size:.78rem;color:var(--text-3)}
-.systems-status{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--green)}
-.status-pulse{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(74,222,128,.6);animation:statusPulse 2s ease-in-out infinite}
-@keyframes statusPulse{0%,100%{box-shadow:0 0 4px rgba(74,222,128,.4)}50%{box-shadow:0 0 12px rgba(74,222,128,.8)}}
-
-/* ── Fade-up ── */
-.fade-up{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
-.fade-up.visible{opacity:1;transform:translateY(0)}
-.fade-up-d1{transition-delay:.08s}
-.fade-up-d2{transition-delay:.16s}
-.fade-up-d3{transition-delay:.24s}
-.fade-up-d4{transition-delay:.32s}
-
-/* ── Responsive ── */
-@media(max-width:1024px){
-  .tb-nav{display:none}
-  .ham{display:flex}
-  .hero-inner{grid-template-columns:1fr;gap:32px}
-  .hero-text{align-items:center;text-align:center}
-  .hero-sub{max-width:480px}
-  .hero-actions{justify-content:center}
-  .hero-meta{justify-content:center}
-}
-@media(max-width:768px){
-  .titlebar{height:44px}
-  .tb-in{padding:0 16px}
-  .mob-nav{top:44px}
-  .tb-cta{display:none}
-  .hero{padding:68px 16px 36px}
-  .hero h1{font-size:2rem}
-  .hero-sub{font-size:.78rem;margin-bottom:20px}
-  .btn-cta{padding:8px 16px;font-size:.75rem}
-  .bento-grid{grid-template-columns:1fr;gap:6px}
-  .card-chat,.card-models-count,.card-speed,.card-network,
-  .card-token,.card-wallet,.card-telegram,.card-basecity,.card-b20{grid-column:1;grid-row:auto}
-  .bento-card{padding:14px}
-  .section{padding:32px 16px}
-  .models-section{padding:32px 16px}
-  .section-title{font-size:1.15rem}
-  .prov-grid{grid-template-columns:1fr 1fr;gap:6px}
-  .footer-grid{grid-template-columns:1fr 1fr;gap:24px}
-  .footer-brand{grid-column:1/-1}
-  .footer-col{padding-top:0}
-  .footer-bottom{flex-direction:column;gap:10px;text-align:center}
-  footer{padding:32px 12px 20px}
-  .footer-tagline{font-size:.78rem}
-  .footer-col h4{font-size:.72rem;margin-bottom:12px}
-  .footer-col ul{gap:8px}
-  .footer-col ul li a{font-size:.78rem}
-  .basecity-preview{height:120px}
-  .chat-messages{gap:8px}
-  .chat-bubble{font-size:.72rem}
-  .term-body{min-height:160px;padding:12px;font-size:.7rem}
-}
-@media(max-width:480px){
-  .hero-actions{flex-direction:column;width:100%}
-  .hero-actions .btn-cta{width:100%;justify-content:center}
-  .hero-meta{flex-wrap:wrap;justify-content:center;gap:8px}
-  .hero-meta .hm-sep{display:none}
-  .footer-grid{grid-template-columns:1fr;gap:20px}
-  .prov-grid{grid-template-columns:1fr}
-}
-
-/* ── CRT ── */
-.crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
-:root.light .crt-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);opacity:.3}
-</style>
 </head>
 <body>
-<div class="crt-scan"></div>
 
-<!-- ── TITLEBAR ── -->
-<nav class="titlebar">
-  <div class="tb-in">
-    <div class="tb-left">
-      <a href="/" class="tb-brand"><img class="wm wm-dark" src="/orlix-wordmark.png" alt="ORLIX" style="height:24px"><img class="wm wm-light" src="/orlix-wordmark-light.png" alt="ORLIX" style="height:24px"></a>
-      <span class="tb-sep">/</span>
-      <span class="tb-path">home</span>
-      <span class="status-dot" style="margin-left:6px"></span>
+<!-- ══ Preloader ══ -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-grid">
+    <span class="loader-kicker">ORLIX PRESENTS</span>
+    <div class="loader-word" aria-hidden="true">
+      <span class="lw">O</span><span class="lw">R</span><span class="lw">L</span><span class="lw">I</span><span class="lw">X</span>
     </div>
-    <div class="tb-nav">
-      <a href="#features">Features</a>
-      <a href="#models">Models</a>
-      <a href="/docs">Docs</a>
-      <a href="/token">$ORLIX</a>
-      <a href="/b20">B20</a>
-      <a href="/base-city">Base City</a>
-      <a href="/changelog">Changelog</a>
+    <div class="loader-meta">
+      <span class="loader-count" id="loaderCount">000</span>
+      <span class="loader-bar"><span class="loader-bar-fill" id="loaderBar"></span></span>
+      <span class="loader-note">A BASE ECOSYSTEM PICTURE</span>
     </div>
-    <div class="tb-right">
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <svg class="ico-moon" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 14A8 8 0 117 3a6 6 0 0010 11z"/></svg>
-        <svg class="ico-sun" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>
-      </button>
-      <a href="/app" class="tb-cta">Launch App</a>
-      <button class="ham" id="ham" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+  <div class="loader-curtain lc-top"></div>
+  <div class="loader-curtain lc-bottom"></div>
+</div>
+
+<!-- ══ WebGL backdrop + grain ══ -->
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ══ Custom cursor ══ -->
+<div class="cursor" id="cursor" aria-hidden="true"><span class="cursor-label" id="cursorLabel"></span></div>
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+<!-- ══ Header ══ -->
+<header class="head">
+  <a class="head-brand" href="/" data-hover>ORLIX<sup>®</sup></a>
+  <div class="head-chapter" id="chapterTag"><span class="hc-num" id="chapterNum">00</span><span class="hc-sep">/</span><span class="hc-name" id="chapterName">SIGNAL</span></div>
+  <button class="head-menu" id="menuBtn" data-hover aria-label="Open menu" aria-expanded="false">
+    <span class="hm-txt">MENU</span>
+    <span class="hm-lines"><i></i><i></i></span>
+  </button>
+  <span class="head-progress" id="headProgress" aria-hidden="true"></span>
+</header>
+
+<!-- ══ Fullscreen menu ══ -->
+<nav class="menu" id="menu" aria-hidden="true">
+  <div class="menu-bg"></div>
+  <div class="menu-inner">
+    <ol class="menu-list">
+      <li><a href="/app"        data-hover data-cursor="PLAY"><em>01</em><span class="ml-word">Analytics</span><small>AI token intelligence</small></a></li>
+      <li><a href="/b20"        data-hover data-cursor="PLAY"><em>02</em><span class="ml-word">B20 Studio</span><small>Deploy tokens on Base</small></a></li>
+      <li><a href="/base-city"  data-hover data-cursor="PLAY"><em>03</em><span class="ml-word">Base City</span><small>3D ecosystem metropolis</small></a></li>
+      <li><a href="/zero"       data-hover data-cursor="PLAY"><em>04</em><span class="ml-word">Zero</span><small>x402 machine payments</small></a></li>
+      <li><a href="/docs"       data-hover data-cursor="READ"><em>05</em><span class="ml-word">Docs</span><small>Platform &amp; API</small></a></li>
+      <li><a href="/dashboard"  data-hover data-cursor="OPEN"><em>06</em><span class="ml-word">Dashboard</span><small>Classic overview</small></a></li>
+    </ol>
+    <div class="menu-foot">
+      <span>BASE · ROBINHOOD CHAIN</span>
+      <span>ORLIX.XYZ — MMXXVI</span>
     </div>
   </div>
 </nav>
-<div class="mob-nav" id="mobNav">
-  <a href="/">Home</a>
-  <a href="#features">Features</a>
-  <a href="#models">Models</a>
-  <a href="/docs">Docs</a>
-  <a href="/token">$ORLIX</a>
-  <a href="/b20">B20</a>
-  <a href="/base-city">Base City</a>
-  <a href="/changelog">Changelog</a>
-  <a href="/app" class="mob-cta">Launch App</a>
-</div>
 
-<!-- ── HERO ── -->
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-text">
-      <div class="hero-tag fade-up"><span class="tag-dot"></span> MULTI-CHAIN AI TERMINAL</div>
-      <h1 class="fade-up fade-up-d1">Orlix <span class="accent">AI</span></h1>
-      <p class="hero-sub fade-up fade-up-d2">19 frontier models. 2 chains. One interface for onchain intelligence, token analysis, and contract deployment.</p>
-      <div class="hero-actions fade-up fade-up-d3">
-        <a href="/app" class="btn-cta primary">Launch Terminal</a>
-        <a href="/docs" class="btn-cta ghost">Documentation</a>
-      </div>
-      <div class="hero-meta fade-up fade-up-d4">
-        <div class="hm-item"><span class="hm-val">19</span> Models</div>
-        <span class="hm-sep"></span>
-        <div class="hm-item"><span class="hm-val">2</span> Chains</div>
-        <span class="hm-sep"></span>
-        <div class="hm-item"><span class="hm-val">&lt;1s</span> Latency</div>
-        <span class="hm-sep"></span>
-        <div class="hm-item"><span class="hm-val">24/7</span> Uptime</div>
-      </div>
+<main id="film">
+
+  <!-- ══ CH 00 · Hero ══ -->
+  <section class="scene scene-hero" id="hero" data-chapter="00" data-chapter-name="SIGNAL">
+    <p class="hero-kicker" data-intro><span class="hk-dot"></span>ORLIX PRESENTS · AN INTERACTIVE PICTURE</p>
+    <h1 class="hero-title" id="heroTitle" aria-label="ORLIX">
+      <span class="ht-char">O</span><span class="ht-char">R</span><span class="ht-char">L</span><span class="ht-char">I</span><span class="ht-char">X</span>
+    </h1>
+    <div class="hero-sub" data-intro>
+      <p>An AI-native market intelligence studio on <b>Base</b>.<br>Watch on-chain markets like a film — analyze, create, deploy.</p>
     </div>
-    <div class="term-window fade-up fade-up-d2">
-      <div class="term-header">
-        <div class="term-dots"><span></span><span></span><span></span></div>
-        <span class="term-title">orlix-terminal</span>
-      </div>
-      <div class="term-body">
-        <div class="term-input">
-          <span class="term-prompt">$</span>
-          <span class="term-cmd" id="termCmd"></span><span class="term-cursor"></span>
-        </div>
-        <div class="term-output" id="termOutput"></div>
-      </div>
+    <div class="hero-meta" data-intro>
+      <span>FEAT. CLAUDE AI</span><i></i><span>SHOT ON WEBGL</span><i></i><span>RATED B20</span>
     </div>
-  </div>
-</section>
-
-<!-- ── FEATURES ── -->
-<section class="section" id="features">
-  <div class="section-inner">
-    <div class="section-hd fade-up">
-      <div class="section-tag">// features</div>
-      <h2 class="section-title">Built-in modules</h2>
-      <p class="section-desc">AI chat, onchain analytics, wallet monitoring, and deployment tools in one terminal.</p>
+    <div class="hero-cue" data-intro>
+      <span class="cue-line"></span>
+      <span>SCROLL TO BEGIN</span>
     </div>
+  </section>
 
-    <div class="bento-grid">
+  <!-- ══ CH 01 · Manifesto ══ -->
+  <section class="scene scene-manifesto" id="manifesto" data-chapter="01" data-chapter-name="MANIFESTO">
+    <div class="mani-pin">
+      <p class="mani-line" data-mani>Markets never sleep.</p>
+      <p class="mani-line" data-mani>They move at the speed<br>of machines.</p>
+      <p class="mani-line mani-accent" data-mani>Orlix teaches you<br>to see them.</p>
+    </div>
+  </section>
 
-      <!-- Chat -->
-      <div class="bento-card card-chat fade-up">
-        <div class="card-label"><span class="label-dot"></span> AI Chat</div>
-        <div class="chat-messages">
-          <div class="chat-msg user">
-            <div class="chat-avatar avatar-user">U</div>
-            <div class="chat-bubble bubble-user">What's the current sentiment on $BRETT on Base? Compare with $DEGEN liquidity.</div>
-          </div>
-          <div class="chat-msg">
-            <div class="chat-avatar avatar-ai">AI</div>
-            <div class="chat-bubble bubble-ai">
-              Analyzing Base network data for $BRETT and $DEGEN...<br><br>
-              <span class="highlight">$BRETT</span> -- Price: $0.1847 -- 24h: <span style="color:var(--green)">+12.4%</span> -- Liq: $8.2M<br>
-              <span class="highlight">$DEGEN</span> -- Price: $0.00831 -- 24h: <span style="color:var(--red)">-3.1%</span> -- Liq: $14.7M<br><br>
-              Sentiment on $BRETT is strongly bullish. On-chain accumulation patterns show whale addresses adding positions. $DEGEN has higher liquidity but weaker momentum. Verdict: <span style="color:var(--green)">BRETT has the edge</span> short-term.
+  <!-- ══ CH 02 · The Reel (horizontal) ══ -->
+  <section class="scene scene-reel" id="reel" data-chapter="02" data-chapter-name="THE REEL">
+    <div class="reel-pin">
+      <div class="reel-track" id="reelTrack">
+
+        <article class="panel" data-grade="0.15">
+          <span class="panel-num">01</span>
+          <div class="panel-card" data-tilt>
+            <div class="pc-glare"></div>
+            <div class="pc-body">
+              <span class="pc-tag">ORLIX APP</span>
+              <div class="pc-visual pv-analyze" aria-hidden="true">
+                <span class="pv-bar" style="--h:38%"></span><span class="pv-bar" style="--h:72%"></span><span class="pv-bar" style="--h:54%"></span><span class="pv-bar" style="--h:91%"></span><span class="pv-bar" style="--h:63%"></span><span class="pv-bar" style="--h:82%"></span><span class="pv-bar" style="--h:47%"></span>
+                <span class="pv-line"></span>
+              </div>
+              <p>AI token analytics across Base &amp; Robinhood Chain. DexScreener signals, holder x-rays, Claude-powered verdicts.</p>
+              <a class="pc-link" href="/app" data-hover data-cursor="PLAY">ENTER SCENE <b>→</b></a>
             </div>
           </div>
-        </div>
-        <div class="chat-input-bar">
-          <span>Ask anything about tokens, wallets, or any topic...</span>
-          <div class="chat-send">></div>
-        </div>
-      </div>
+          <h2 class="panel-title"><span data-pt>ANA</span><span data-pt>LYZE</span></h2>
+        </article>
 
-      <!-- Model Count -->
-      <div class="bento-card card-models-count fade-up fade-up-d1">
-        <div class="card-label">Models available</div>
-        <div class="models-count-big">19</div>
-        <div class="models-count-label">frontier AI models</div>
-        <div class="provider-tags">
-          <span class="provider-tag">Anthropic</span>
-          <span class="provider-tag">OpenAI</span>
-          <span class="provider-tag">Google</span>
-          <span class="provider-tag">xAI</span>
-          <span class="provider-tag">Meta</span>
-          <span class="provider-tag">Mistral</span>
-          <span class="provider-tag">DeepSeek</span>
-          <span class="provider-tag">Alibaba</span>
-        </div>
-      </div>
-
-      <!-- Speed -->
-      <div class="bento-card card-speed fade-up fade-up-d2">
-        <div class="card-label">Response speed</div>
-        <div class="speed-big">&lt;1s</div>
-        <div class="speed-label">first token latency</div>
-        <div class="speed-bar-wrap">
-          <div class="speed-bar-row"><span>Haiku</span><div class="speed-bar"><div class="speed-bar-fill" data-w="95" style="width:0"></div></div><span>0.4s</span></div>
-          <div class="speed-bar-row"><span>Sonnet</span><div class="speed-bar"><div class="speed-bar-fill" data-w="80" style="width:0;background:var(--orange)"></div></div><span>0.7s</span></div>
-          <div class="speed-bar-row"><span>Opus</span><div class="speed-bar"><div class="speed-bar-fill" data-w="65" style="width:0;background:var(--purple)"></div></div><span>0.9s</span></div>
-        </div>
-      </div>
-
-      <!-- Network -->
-      <div class="bento-card card-network fade-up fade-up-d3">
-        <div class="network-icon">&lt;/&gt;</div>
-        <div class="network-title">Multi-Chain</div>
-        <div class="network-desc">Native tools for Base and Robinhood Chain.</div>
-        <div class="network-badge"><span style="width:4px;height:4px;border-radius:50%;background:var(--blue);display:inline-block"></span> Layer 2</div>
-      </div>
-
-      <!-- Token -->
-      <div class="bento-card card-token fade-up">
-        <div class="card-label">Token Analyzer</div>
-        <div class="token-header">
-          <div class="token-name">Brett</div>
-          <div class="token-ticker">$BRETT</div>
-        </div>
-        <div class="token-price">$0.1847</div>
-        <div class="token-change-pos">+12.4% (24h)</div>
-        <div class="token-stats-row">
-          <div class="token-stat"><div class="token-stat-label">Liquidity</div><div class="token-stat-val">$8.2M</div></div>
-          <div class="token-stat"><div class="token-stat-label">Vol 24h</div><div class="token-stat-val">$1.4M</div></div>
-          <div class="token-stat"><div class="token-stat-label">Holders</div><div class="token-stat-val">42.3K</div></div>
-          <div class="token-stat"><div class="token-stat-label">Mkt Cap</div><div class="token-stat-val">$184M</div></div>
-        </div>
-        <div class="ai-verdict"><span style="font-family:var(--mono);font-weight:700">&gt;</span> AI Verdict: Strong accumulation signal</div>
-      </div>
-
-      <!-- Wallet -->
-      <div class="bento-card card-wallet fade-up fade-up-d1">
-        <div class="card-label">Wallet Watcher</div>
-        <div class="wallet-title">Watching: Vitalik.eth</div>
-        <div class="wallet-addr">0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045</div>
-        <div class="tx-list">
-          <div class="tx-item">
-            <div class="tx-arrow tx-in">+</div>
-            <div class="tx-info"><div class="tx-type">Received ETH</div><div class="tx-hash">0x4f2a...b91e</div></div>
-            <div class="tx-meta"><div class="tx-amount" style="color:var(--green)">+2.41 ETH</div><div class="tx-time">3 min ago</div></div>
+        <article class="panel" data-grade="0.4">
+          <span class="panel-num">02</span>
+          <div class="panel-card" data-tilt>
+            <div class="pc-glare"></div>
+            <div class="pc-body">
+              <span class="pc-tag">B20 STUDIO</span>
+              <div class="pc-visual pv-create" aria-hidden="true">
+                <code>&gt; b20 deploy --name ORLIX<br>&gt; supply 1,000,000,000<br>&gt; tx confirmed <b>✓</b> 2.4s</code>
+              </div>
+              <p>Deploy B20 tokens on Base in seconds. Gas-aware, AI-configured, native to the 0x…0B20 precompile.</p>
+              <a class="pc-link" href="/b20" data-hover data-cursor="PLAY">ENTER SCENE <b>→</b></a>
+            </div>
           </div>
-          <div class="tx-item">
-            <div class="tx-arrow tx-out">-</div>
-            <div class="tx-info"><div class="tx-type">Sent USDC</div><div class="tx-hash">0xa12c...3f7d</div></div>
-            <div class="tx-meta"><div class="tx-amount" style="color:var(--red)">-5,000 USDC</div><div class="tx-time">11 min ago</div></div>
+          <h2 class="panel-title"><span data-pt>CRE</span><span data-pt>ATE</span></h2>
+        </article>
+
+        <article class="panel" data-grade="0.65">
+          <span class="panel-num">03</span>
+          <div class="panel-card" data-tilt>
+            <div class="pc-glare"></div>
+            <div class="pc-body">
+              <span class="pc-tag">BASE CITY</span>
+              <div class="pc-visual pv-city" aria-hidden="true">
+                <span class="pv-tower" style="--h:52%;--d:0s"></span><span class="pv-tower" style="--h:78%;--d:.3s"></span><span class="pv-tower" style="--h:40%;--d:.6s"></span><span class="pv-tower" style="--h:92%;--d:.15s"></span><span class="pv-tower" style="--h:64%;--d:.45s"></span>
+                <span class="pv-moon"></span>
+              </div>
+              <p>A living 3D metropolis of the Base ecosystem. Neon towers, moonlit ocean, a patrolling UFO — in your browser.</p>
+              <a class="pc-link" href="/base-city" data-hover data-cursor="FLY">ENTER SCENE <b>→</b></a>
+            </div>
           </div>
-          <div class="tx-item">
-            <div class="tx-arrow tx-in">+</div>
-            <div class="tx-info"><div class="tx-type">Swap on Uniswap</div><div class="tx-hash">0x7e91...d4a3</div></div>
-            <div class="tx-meta"><div class="tx-amount" style="color:var(--green)">+18.7 ETH</div><div class="tx-time">28 min ago</div></div>
+          <h2 class="panel-title"><span data-pt>EXP</span><span data-pt>LORE</span></h2>
+        </article>
+
+        <article class="panel" data-grade="0.9">
+          <span class="panel-num">04</span>
+          <div class="panel-card" data-tilt>
+            <div class="pc-glare"></div>
+            <div class="pc-body">
+              <span class="pc-tag">ZERO · x402</span>
+              <div class="pc-visual pv-zero" aria-hidden="true">
+                <span class="pv-ring"></span><span class="pv-ring"></span><span class="pv-ring"></span>
+                <b>402</b>
+              </div>
+              <p>Machine-payable APIs. Premium analytics, chat and AI music behind x402 micro-payments — built for agents.</p>
+              <a class="pc-link" href="/zero" data-hover data-cursor="PAY">ENTER SCENE <b>→</b></a>
+            </div>
           </div>
-        </div>
+          <h2 class="panel-title"><span data-pt>TRAN</span><span data-pt>SACT</span></h2>
+        </article>
+
       </div>
-
-      <!-- Telegram -->
-      <div class="bento-card card-telegram fade-up fade-up-d2">
-        <div class="tg-title">Telegram Bot</div>
-        <div class="tg-desc">Full Orlix power in your chat. Multi-chain: Base + Robinhood.</div>
-        <div class="cmd-list">
-          <div class="cmd-item"><span class="cmd-code cmd-orange">/analyze</span><span class="cmd-desc">Token risk analysis on Base & Robinhood</span></div>
-          <div class="cmd-item"><span class="cmd-code cmd-green">/swap</span><span class="cmd-desc">Swap ORLIX / ETH from Telegram</span></div>
-          <div class="cmd-item"><span class="cmd-code cmd-purple">/wallet</span><span class="cmd-desc">Agent wallet, deposit, export keys</span></div>
-          <div class="cmd-item"><span class="cmd-code" style="background:var(--blue-dim);color:var(--blue);border:1px solid rgba(96,165,250,.2)">/top</span><span class="cmd-desc">Top trending tokens + AI chat</span></div>
-        </div>
-      </div>
-
-      <!-- Base City -->
-      <a href="/base-city" class="bento-card card-basecity fade-up" style="color:inherit;cursor:pointer">
-        <div class="card-label">Base City</div>
-        <div class="basecity-preview">
-          <div class="basecity-grid-bg"></div>
-          <div class="basecity-buildings">
-            <div class="bc-building" style="height:30px;background:var(--blue)"></div>
-            <div class="bc-building" style="height:50px;background:var(--purple)"></div>
-            <div class="bc-building" style="height:65px;background:var(--orange)"></div>
-            <div class="bc-building" style="height:40px;background:var(--green)"></div>
-            <div class="bc-building" style="height:72px;background:var(--blue)"></div>
-            <div class="bc-building" style="height:28px;background:var(--purple)"></div>
-            <div class="bc-building" style="height:55px;background:var(--orange)"></div>
-            <div class="bc-building" style="height:45px;background:var(--green)"></div>
-            <div class="bc-building" style="height:35px;background:var(--blue)"></div>
-            <div class="bc-building" style="height:60px;background:var(--purple)"></div>
-            <div class="bc-building" style="height:68px;background:var(--orange)"></div>
-            <div class="bc-building" style="height:38px;background:var(--green)"></div>
-            <div class="bc-building" style="height:52px;background:var(--blue)"></div>
-            <div class="bc-building" style="height:42px;background:var(--purple)"></div>
-            <div class="bc-building" style="height:33px;background:var(--orange)"></div>
-          </div>
-          <div class="basecity-glow"></div>
-          <div class="basecity-label">3D</div>
-        </div>
-        <div class="basecity-title">3D Network Visualization</div>
-        <div class="basecity-desc">Explore Base ecosystem as an interactive 3D city. Every building is a live protocol.</div>
-        <div class="basecity-stats">
-          <div><div class="basecity-stat-val">15x15</div><div class="basecity-stat-label">Grid</div></div>
-          <div><div class="basecity-stat-val">225</div><div class="basecity-stat-label">Blocks</div></div>
-          <div><div class="basecity-stat-val">60fps</div><div class="basecity-stat-label">Render</div></div>
-        </div>
-      </a>
-
-      <!-- B20 -->
-      <a href="/b20" class="bento-card card-b20 fade-up fade-up-d1" style="color:inherit;cursor:pointer">
-        <div class="card-label">B20 Studio</div>
-        <div class="b20-preview">
-          <div class="b20-header-row">
-            <span style="font-size:.78rem;font-weight:700;color:var(--text-1)">Deploy Token</span>
-            <div class="b20-chain-pill">Base L2</div>
-          </div>
-          <div class="b20-field"><span class="b20-field-label">Name</span><span class="b20-field-val">MyToken</span></div>
-          <div class="b20-field"><span class="b20-field-label">Symbol</span><span class="b20-field-val">MTK</span></div>
-          <div class="b20-field"><span class="b20-field-label">Supply</span><span class="b20-field-val">1,000,000</span></div>
-          <div class="b20-field"><span class="b20-field-label">Standard</span><span class="b20-field-val">B20</span></div>
-          <div class="b20-deploy-btn">Deploy to Base</div>
-        </div>
-        <div class="b20-title">One-click Token Deployment</div>
-        <div class="b20-desc">Deploy B20-standard tokens on Base. Built-in AI config, gas estimation, and verification.</div>
-      </a>
-
+      <div class="reel-progress"><span id="reelBar"></span></div>
     </div>
+  </section>
+
+  <!-- ══ CH 03 · Descent (depth camera) ══ -->
+  <section class="scene scene-depth" id="depth" data-chapter="03" data-chapter-name="DESCENT">
+    <div class="depth-pin">
+      <div class="depth-stage">
+        <div class="depth-layer" data-z="1">
+          <p class="dl-label">SIGNALS</p>
+          <p class="dl-stat"><span class="count" data-count="24">0</span>/7</p>
+          <p class="dl-sub">live market watch</p>
+        </div>
+        <div class="depth-layer" data-z="2">
+          <p class="dl-label">SURFACE</p>
+          <p class="dl-stat"><span class="count" data-count="2">0</span> CHAINS</p>
+          <p class="dl-sub">Base · Robinhood</p>
+        </div>
+        <div class="depth-layer" data-z="3">
+          <p class="dl-label">MACHINERY</p>
+          <p class="dl-stat"><span class="count" data-count="20">0</span>+ APIS</p>
+          <p class="dl-sub">open + x402 premium</p>
+        </div>
+        <div class="depth-layer" data-z="4">
+          <p class="dl-label">CORE</p>
+          <p class="dl-stat">&lt;<span class="count" data-count="60">0</span>s</p>
+          <p class="dl-sub">B20 token deploys</p>
+        </div>
+        <div class="depth-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <p class="depth-cap">CAMERA DESCENDING INTO THE ORLIX STACK</p>
+    </div>
+  </section>
+
+  <!-- ══ CH 04 · Finale ══ -->
+  <section class="scene scene-finale" id="finale" data-chapter="04" data-chapter-name="FINALE">
+    <p class="fin-kicker">THE PART WHERE YOU JOIN THE CAST</p>
+    <h2 class="fin-title">
+      <span class="fin-line"><span data-fin>ENTER</span></span>
+      <span class="fin-line"><span data-fin>ORLIX</span></span>
+    </h2>
+    <div class="fin-actions">
+      <a class="fin-btn primary" href="/app" data-hover data-magnetic data-cursor="GO"><span>LAUNCH APP</span></a>
+      <a class="fin-btn ghost" href="/docs" data-hover data-magnetic data-cursor="READ"><span>READ THE DOCS</span></a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══ Credits ══ -->
+<footer class="credits">
+  <div class="cr-roll">
+    <div class="cr-row"><span>DIRECTED BY</span><b>ORLIX AI</b></div>
+    <div class="cr-row"><span>WRITTEN BY</span><b>AEON FRAMEWORK</b></div>
+    <div class="cr-row"><span>PRODUCED ON</span><b>BASE</b></div>
+    <div class="cr-row"><span>CO-STARRING</span><b>ROBINHOOD CHAIN</b></div>
+    <div class="cr-row"><span>SCORE BY</span><b>AI MUSIC ENGINE</b></div>
+    <div class="cr-row"><span>SHOT ON</span><b>WEBGL &amp; THREE.JS</b></div>
   </div>
-</section>
-
-<!-- ── MODELS ── -->
-<section class="models-section" id="models">
-  <div style="max-width:1200px;margin:0 auto">
-    <div class="section-hd center" style="margin-bottom:24px">
-      <div class="section-tag" style="display:flex;justify-content:center">// models</div>
-      <h2 class="section-title fade-up">Model library</h2>
-      <p class="section-desc fade-up fade-up-d1">19 frontier models from 10 providers. Switch mid-conversation.</p>
-    </div>
-
-    <div class="prov-grid">
-      <!-- Anthropic -->
-      <div class="prov-card fade-up">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#FF9F58">A</div>
-          <span class="prov-name">Anthropic</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">Claude Opus 4.8</span><span class="m-tag best">BEST</span></div>
-          <div class="model-row"><span class="m-name">Claude Sonnet 5</span><span class="m-tag fast">FAST</span></div>
-          <div class="model-row"><span class="m-name">Claude Haiku 4.5</span><span class="m-tag fast">FAST</span></div>
-        </div>
-      </div>
-
-      <!-- OpenAI -->
-      <div class="prov-card fade-up fade-up-d1">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#74AA9C">GPT</div>
-          <span class="prov-name">OpenAI</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">GPT-5.4</span><span class="m-tag best">BEST</span></div>
-          <div class="model-row"><span class="m-name">GPT-5 Nano</span><span class="m-tag fast">FAST</span></div>
-          <div class="model-row"><span class="m-name">GPT-5.2 Codex</span><span class="m-tag code">CODE</span></div>
-        </div>
-      </div>
-
-      <!-- Google -->
-      <div class="prov-card fade-up fade-up-d2">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#4285F4">G</div>
-          <span class="prov-name">Google</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">Gemini 3.1 Pro</span><span class="m-tag best">BEST</span></div>
-          <div class="model-row"><span class="m-name">Gemini 3 Flash</span><span class="m-tag fast">FAST</span></div>
-        </div>
-      </div>
-
-      <!-- xAI -->
-      <div class="prov-card fade-up fade-up-d3">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#AAAAAA;font-size:.65rem">xAI</div>
-          <span class="prov-name">xAI</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">Grok 4.20</span><span class="m-tag best">BEST</span></div>
-          <div class="model-row"><span class="m-name">Grok 4.1 Fast</span><span class="m-tag fast">FAST</span></div>
-        </div>
-      </div>
-
-      <!-- DeepSeek -->
-      <div class="prov-card fade-up">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#4BC3FF;font-size:.65rem">DS</div>
-          <span class="prov-name">DeepSeek</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">DeepSeek V3.2</span><span class="m-tag new">NEW</span></div>
-        </div>
-      </div>
-
-      <!-- Moonshot -->
-      <div class="prov-card fade-up fade-up-d1">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#A78BFA">K</div>
-          <span class="prov-name">Moonshot</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">Kimi K2.7 Code</span><span class="m-tag code">CODE</span></div>
-          <div class="model-row"><span class="m-name">Kimi K2.6</span><span class="m-tag new">NEW</span></div>
-        </div>
-      </div>
-
-      <!-- Alibaba -->
-      <div class="prov-card fade-up fade-up-d2">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#FF6400;font-size:.65rem">ALI</div>
-          <span class="prov-name">Alibaba</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">Qwen3 Coder</span><span class="m-tag code">CODE</span></div>
-          <div class="model-row"><span class="m-name">Qwen3.7 Plus</span><span class="m-tag new">NEW</span></div>
-          <div class="model-row"><span class="m-name">Qwen3.6 Flash</span><span class="m-tag fast">FAST</span></div>
-        </div>
-      </div>
-
-      <!-- Z.ai -->
-      <div class="prov-card fade-up fade-up-d3">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#94a3b8">Z</div>
-          <span class="prov-name">Z.ai</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">GLM-5.1</span><span class="m-tag new">NEW</span></div>
-          <div class="model-row"><span class="m-name">GLM-5 Turbo</span><span class="m-tag fast">FAST</span></div>
-        </div>
-      </div>
-
-      <!-- Mimo -->
-      <div class="prov-card fade-up">
-        <div class="prov-hd">
-          <div class="prov-icon" style="color:#7ee0a8">M</div>
-          <span class="prov-name">Mimo</span>
-        </div>
-        <div class="prov-body">
-          <div class="model-row"><span class="m-name">Mimo 2.5 Pro</span><span class="m-tag new">NEW</span></div>
-        </div>
-      </div>
-    </div>
+  <div class="cr-nav">
+    <a href="/app" data-hover>App</a><a href="/b20" data-hover>B20</a><a href="/base-city" data-hover>Base City</a><a href="/zero" data-hover>Zero</a><a href="/docs" data-hover>Docs</a><a href="/changelog" data-hover>Changelog</a><a href="/privacy" data-hover>Privacy</a><a href="/terms" data-hover>Terms</a>
   </div>
-</section>
-
-<!-- ── FOOTER (UNCHANGED) ── -->
-<footer>
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <img class="wm wm-dark" src="/orlix-wordmark.png" alt="ORLIX" style="height:28px;margin-bottom:12px;"><img class="wm wm-light" src="/orlix-wordmark-light.png" alt="ORLIX" style="height:28px;margin-bottom:12px;">
-      <p class="footer-tagline">Personal AI Operating System — 19 frontier models and onchain intelligence in one unified interface.</p>
-      <div class="social-row">
-        <a href="https://t.me/orlixai_bot" target="_blank" rel="noopener" class="social-btn" title="Telegram" aria-label="Telegram">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/></svg>
-        </a>
-        <a href="https://x.com/orlixai" target="_blank" rel="noopener" class="social-btn" title="Twitter/X" aria-label="Twitter">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.261 5.635L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
-        </a>
-        <a href="https://github.com/tylerbroqs" target="_blank" rel="noopener" class="social-btn" title="GitHub" aria-label="GitHub">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-        </a>
-      </div>
-    </div>
-
-    <div class="footer-col">
-      <h4>Product</h4>
-      <ul>
-        <li><a href="app.html">Launch App</a></li>
-        <li><a href="#features">Features</a></li>
-        <li><a href="#models">Models</a></li>
-        <li><a href="docs.html">Documentation</a></li>
-        <li><a href="changelog.html">Changelog</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <h4>Company</h4>
-      <ul>
-        <li><a href="privacy.html">Privacy Policy</a></li>
-        <li><a href="terms.html">Terms of Service</a></li>
-      </ul>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    <span class="footer-copy">&copy; 2026 Orlix AI &middot; orlixai.xyz &middot; All rights reserved</span>
-    <div class="systems-status">
-      <div class="status-pulse"></div>
-      All systems operational
-    </div>
+  <div class="cr-end">
+    <span>© MMXXVI ORLIX — NO TOKENS WERE HARMED IN THE MAKING OF THIS WEBSITE</span>
+    <a class="cr-top" href="#hero" id="toTop" data-hover data-cursor="UP">BACK TO TITLE ↑</a>
   </div>
 </footer>
 
-<!-- ── JS ── -->
-<script>
-(function(){
-  // Theme
-  var s=localStorage.getItem('orlix-theme');
-  if(s==='light')document.documentElement.classList.add('light');
-  var t=document.getElementById('themeToggle');
-  if(t)t.onclick=function(){
-    document.documentElement.classList.toggle('light');
-    localStorage.setItem('orlix-theme',document.documentElement.classList.contains('light')?'light':'dark');
-  };
+<noscript><style>
+.loader,.cursor,.cursor-dot{display:none}
+.scene,[data-intro],.ht-char,.mani-line,.fin-line span{opacity:1!important;transform:none!important;filter:none!important}
+.scene-manifesto,.scene-depth,.scene-reel{height:auto}
+.mani-pin{position:static;height:auto;display:block;padding:20vh 0}
+.mani-line{position:static;margin:8vh auto}
+.reel-pin{height:auto;overflow:visible}
+.reel-track{flex-direction:column;height:auto}
+.panel{flex-basis:auto;min-height:100svh}
+.depth-pin{position:static;height:auto}
+.depth-stage{height:auto;display:flex;flex-direction:column;gap:12vh;padding:12vh 0}
+.depth-layer{position:static}
+.depth-rings{display:none}
+</style></noscript>
 
-  // Hamburger
-  var ham=document.getElementById('ham'),mob=document.getElementById('mobNav');
-  if(ham&&mob){
-    ham.onclick=function(){mob.classList.toggle('open')};
-    mob.querySelectorAll('a').forEach(function(a){a.onclick=function(){mob.classList.remove('open')}});
-  }
-
-  // Smooth scroll
-  document.querySelectorAll('a[href^="#"]').forEach(function(a){
-    a.addEventListener('click',function(e){
-      var t=document.querySelector(this.getAttribute('href'));
-      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}
-    });
-  });
-
-  // Fade-up observer
-  var els=document.querySelectorAll('.fade-up');
-  if(!('IntersectionObserver' in window)){
-    els.forEach(function(el){el.classList.add('visible')});
-  } else {
-    var obs=new IntersectionObserver(function(entries){
-      entries.forEach(function(en){
-        if(en.isIntersecting){en.target.classList.add('visible');obs.unobserve(en.target)}
-      });
-    },{threshold:.1,rootMargin:'0px 0px -30px 0px'});
-    els.forEach(function(el){obs.observe(el)});
-  }
-
-  // Cursor spotlight on cards
-  document.querySelectorAll('.bento-card').forEach(function(card){
-    card.addEventListener('mousemove',function(e){
-      var r=card.getBoundingClientRect();
-      card.style.setProperty('--mx',(e.clientX-r.left)+'px');
-      card.style.setProperty('--my',(e.clientY-r.top)+'px');
-    });
-  });
-
-  // Speed bar animation
-  setTimeout(function(){
-    document.querySelectorAll('.speed-bar-fill[data-w]').forEach(function(el){
-      el.style.width=el.getAttribute('data-w')+'%';
-    });
-  },800);
-
-  // Terminal session animation
-  var sessions=[
-    {
-      cmd:'orlix analyze $BRETT --chain base',
-      out:[
-        '  <span class="t-dim">Token:</span>  <span class="t-val">Brett ($BRETT)</span>',
-        '  <span class="t-dim">Chain:</span>  <span class="t-val">Base (L2)</span>',
-        '  <span class="t-dim">Price:</span>  <span class="t-val">$0.1847</span> <span class="t-green">+12.4%</span>',
-        '  <span class="t-dim">Liq:</span>    <span class="t-val">$8.2M</span>',
-        '',
-        '  <span class="t-orange">AI Verdict:</span> <span class="t-val">Bullish accumulation detected</span>',
-      ]
-    },
-    {
-      cmd:'orlix search "top gainers" --24h',
-      out:[
-        '  <span class="t-dim">#1</span>  <span class="t-val">$BRETT</span>   <span class="t-green">+12.4%</span>  <span class="t-dim">$8.2M liq</span>',
-        '  <span class="t-dim">#2</span>  <span class="t-val">$DEGEN</span>   <span class="t-green">+8.7%</span>   <span class="t-dim">$14.7M liq</span>',
-        '  <span class="t-dim">#3</span>  <span class="t-val">$TOSHI</span>   <span class="t-green">+6.2%</span>   <span class="t-dim">$3.1M liq</span>',
-        '',
-        '  <span class="t-dim">3 results from Base network</span>',
-      ]
-    },
-    {
-      cmd:'orlix wallet watch vitalik.eth',
-      out:[
-        '  <span class="t-dim">Watching:</span> <span class="t-val">0xd8dA...6045</span>',
-        '',
-        '  <span class="t-green">IN </span> <span class="t-val">+2.41 ETH</span>    <span class="t-dim">3 min ago</span>',
-        '  <span class="t-orange">OUT</span> <span class="t-val">-5,000 USDC</span>  <span class="t-dim">11 min ago</span>',
-        '  <span class="t-green">IN </span> <span class="t-val">+18.7 ETH</span>    <span class="t-dim">28 min ago</span>',
-      ]
-    },
-    {
-      cmd:'orlix deploy --standard b20 --name "MyToken"',
-      out:[
-        '  <span class="t-dim">Deploying to Base (chain 8453)...</span>',
-        '  <span class="t-dim">Standard:</span> <span class="t-val">B20</span>',
-        '  <span class="t-dim">Name:</span>     <span class="t-val">MyToken (MTK)</span>',
-        '  <span class="t-dim">Supply:</span>   <span class="t-val">1,000,000</span>',
-        '',
-        '  <span class="t-green">Ready to deploy. Connect wallet to proceed.</span>',
-      ]
-    },
-    {
-      cmd:'orlix top --chain robinhood --limit 5',
-      out:[
-        '  <span class="t-dim">#1</span>  <span class="t-val">$RH</span>     <span class="t-green">+18.2%</span>  <span class="t-dim">$22.1M liq</span>',
-        '  <span class="t-dim">#2</span>  <span class="t-val">$HOOD</span>   <span class="t-green">+9.4%</span>   <span class="t-dim">$8.6M liq</span>',
-        '  <span class="t-dim">#3</span>  <span class="t-val">$ARB</span>    <span class="t-green">+5.1%</span>   <span class="t-dim">$45.3M liq</span>',
-        '',
-        '  <span class="t-dim">Robinhood Chain (4663)</span>',
-      ]
-    },
-  ];
-
-  var cmdEl=document.getElementById('termCmd');
-  var outEl=document.getElementById('termOutput');
-  if(!cmdEl||!outEl) return;
-
-  var si=0;
-
-  function runSession(){
-    var session=sessions[si];
-    var ci=0;
-    cmdEl.textContent='';
-    outEl.innerHTML='';
-
-    function typeChar(){
-      if(ci<session.cmd.length){
-        cmdEl.textContent+=session.cmd[ci];
-        ci++;
-        setTimeout(typeChar,35+Math.random()*25);
-      } else {
-        setTimeout(showOutput,400);
-      }
-    }
-
-    function showOutput(){
-      var lines=session.out;
-      var li=0;
-      function addLine(){
-        if(li<lines.length){
-          var span=document.createElement('span');
-          span.className='out-line';
-          span.innerHTML=lines[li];
-          outEl.appendChild(span);
-          li++;
-          setTimeout(addLine,60);
-        } else {
-          setTimeout(clearAndNext,3500);
-        }
-      }
-      addLine();
-    }
-
-    function clearAndNext(){
-      si=(si+1)%sessions.length;
-      cmdEl.textContent='';
-      outEl.innerHTML='';
-      setTimeout(runSession,300);
-    }
-
-    typeChar();
-  }
-
-  setTimeout(runSession,1000);
-})();
-</script>
-
+<script src="/assets/cinematic/vendor/gsap.min.js"></script>
+<script src="/assets/cinematic/vendor/ScrollTrigger.min.js"></script>
+<script src="/assets/cinematic/vendor/lenis.min.js"></script>
+<script type="module" src="/assets/cinematic/js/app.js"></script>
 </body>
 </html>
