@@ -61,15 +61,11 @@ export class Scenes {
     });
   }
 
-  /* ── header progress bar + shader scroll uniform ── */
+  /* ── shader scroll uniform ── */
   _globalProgress() {
-    const bar = qs('#headProgress');
     ScrollTrigger.create({
       trigger: document.body, start: 'top top', end: 'max',
-      onUpdate: (self) => {
-        bar.style.transform = `scaleX(${self.progress})`;
-        this.gl?.setScroll(self.progress);
-      },
+      onUpdate: (self) => this.gl?.setScroll(self.progress),
     });
   }
 
@@ -120,7 +116,6 @@ export class Scenes {
   /* ── CH02: horizontal reel with scroll-driven camera ── */
   _reel() {
     const track = qs('#reelTrack');
-    const bar = qs('#reelBar');
     const dist = () => track.scrollWidth - window.innerWidth;
 
     const scrub = gsap.to(track, {
@@ -130,11 +125,8 @@ export class Scenes {
         trigger: '#reel', pin: '.reel-pin', start: 'top top',
         end: () => `+=${dist()}`,
         scrub: 0.8, invalidateOnRefresh: true, anticipatePin: 1,
-        onUpdate: (self) => {
-          bar.style.transform = `scaleX(${self.progress})`;
-          // grade drifts ember → violet across the reel
-          this.gl?.setGrade(0.15 + self.progress * 0.75);
-        },
+        // grade drifts ember → violet across the reel
+        onUpdate: (self) => this.gl?.setGrade(0.15 + self.progress * 0.75),
       },
     });
 
