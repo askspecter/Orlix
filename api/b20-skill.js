@@ -13,6 +13,7 @@
 'use strict';
 
 const { ethers } = require('ethers');
+const turnkey = require('./_turnkey');
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -798,6 +799,82 @@ async function handleReceipt(body, res) {
   }
 }
 
+// ── Agent Deploy (custodial, Turnkey-signed, guardrailed) ──────────────────────
+// 1Claw-style: agent submits a deploy intent; the signing key lives in Turnkey's
+// secure enclave and never touches Orlix. Deploy allowlist is enforced HERE, in
+// the proxy, before the signer is ever reached — prompt injection cannot bypass it.
+const crypto = require('crypto');
+
+function agentAllowed(agentKey) {
+  const raw = (process.env.B20_AGENT_ALLOWLIST || '').trim();
+  if (!raw || !agentKey) return false;                 // fail closed
+  return raw.split(',').map(s => s.trim()).filter(Boolean).some(k => {
+    if (k.length !== agentKey.length) return false;
+    try { return crypto.timingSafeEqual(Buffer.from(k), Buffer.from(agentKey)); } catch { return false; }
+  });
+}
+
+async function handleAgentDeploy(req, body, res) {
+  // GUARDRAIL first — before any signer/provider access
+  const agentKey = req.headers['x-orlix-key'] || body.agent_key || '';
+  if (!agentAllowed(agentKey)) {
+    res.statusCode = 403;
+    return res.end(JSON.stringify({ ok: false, error: 'Forbidden: agent not on deploy allowlist' }));
+  }
+  if (!turnkey.isConfigured())
+    return res.end(JSON.stringify({ ok: false, error: 'Signer not configured (Turnkey env missing)' }));
+
+  const net    = 'mainnet'; // B20 agent deploys target Base mainnet
+  const signer = turnkey.signerAddress();
+
+  // Admin defaults to the server signer wallet (agent never holds a key)
+  if (!body.admin && !body.adminless) body.admin = signer;
+
+  const { errors, warnings, config } = parseConfig(body);
+  if (errors.length) return res.end(JSON.stringify({ ok: false, error: 'Invalid intent', details: errors }));
+
+  const salt     = body.salt ?? ethers.hexlify(ethers.randomBytes(32));
+  const calldata = buildCreateCalldata(config, salt);
+
+  let gas, nonce, predicted = null;
+  try {
+    [gas, nonce] = await Promise.all([
+      fetchGas(net),
+      rpc(net, 'eth_getTransactionCount', [signer, 'pending']).then(n => parseInt(n ?? '0x0', 16)),
+    ]);
+    try {
+      const data = FACTORY_IFACE.encodeFunctionData('getB20Address', [config.variant === 'stablecoin' ? 1 : 0, signer, salt]);
+      const r = await ethCall(net, B20_FACTORY, data);
+      if (r && r !== '0x') predicted = ABI_CODER.decode(['address'], r)[0];
+    } catch {}
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: `Chain query failed: ${e.message}` }));
+  }
+
+  const unsigned = ethers.Transaction.from({
+    type: 2, chainId: CHAIN_ID[net], to: B20_FACTORY, value: 0, data: calldata,
+    gasLimit: 700000,
+    maxFeePerGas:         BigInt(gas.raw.maxFeePerGas),
+    maxPriorityFeePerGas: BigInt(gas.raw.maxPriorityFeePerGas),
+    nonce,
+  }).unsignedSerialized;
+
+  let txHash;
+  try {
+    const signedRaw = await turnkey.signTransaction(unsigned);
+    txHash = await rpc(net, 'eth_sendRawTransaction', [signedRaw]);
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: `Sign/broadcast failed: ${e.message}` }));
+  }
+
+  return res.end(JSON.stringify({
+    ok: true, status: 'broadcast', txHash, predictedAddress: predicted,
+    explorerUrl: `${EXPLORER[net]}/tx/${txHash}`,
+    token: { name: config.name, symbol: config.symbol, variant: config.variant, decimals: config.decimals, admin: config.admin },
+    signer, network: net, chainId: CHAIN_ID[net], warnings,
+  }));
+}
+
 function handleManifest(res) {
   return res.end(JSON.stringify({
     schema:      'orlix-skill/3.0',
@@ -837,6 +914,7 @@ module.exports = async (req, res) => {
     if (action === 'token_info' || action === 'token') return handleTokenInfo(body, res);
     if (action === 'validate')                         return handleValidate(body, res);
     if (action === 'prepare' || action === 'deploy')   return handlePrepare(body, res);
+    if (action === 'agent_deploy')                     return handleAgentDeploy(req, body, res);
     if (action === 'receipt')                          return handleReceipt(body, res);
 
     return res.end(JSON.stringify({

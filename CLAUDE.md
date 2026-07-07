@@ -112,7 +112,7 @@ VENICE_API_KEY=        # Venice (api.venice.ai) — uncensored, open-source, no 
 # Blockchain
 BASESCAN_API_KEY=
 
-# B20 Agent Deploy (custodial, Turnkey-signed) — /api/b20-agent
+# B20 Agent Deploy (custodial, Turnkey-signed) — /api/b20-skill?action=agent_deploy
 TURNKEY_API_PUBLIC_KEY=   # P-256 API key public (from Turnkey dashboard)
 TURNKEY_API_PRIVATE_KEY=  # P-256 API key private (shown once — save it)
 TURNKEY_ORGANIZATION_ID=  # Turnkey org / sub-org id
