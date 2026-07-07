@@ -3,14 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cotty — the multiplayer terminal</title>
-<meta name="description" content="Host your shell, let teammates join from a terminal or browser — watch together, type together. End-to-end encrypted, per-guest permissions, one Go binary. Open source, MIT.">
-<link rel="canonical" href="https://orlixai.xyz/cotty/">
+<title>Cotty · the multiplayer terminal</title>
+<meta name="description" content="Host your shell, let teammates join from a terminal or browser. Watch together, type together. End-to-end encrypted, per-guest permissions, one Go binary. Open source, MIT.">
+<link rel="canonical" href="https://orlixai.xyz/cotty">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://orlixai.xyz/cotty/">
-<meta property="og:title" content="Cotty — the multiplayer terminal">
-<meta property="og:description" content="Your shell. Your guests. Your rules. A shared live terminal with E2EE, permissions, presence, and an audit trail — one Go binary, MIT licensed, by Orlix.">
+<meta property="og:url" content="https://orlixai.xyz/cotty">
+<meta property="og:title" content="Cotty · the multiplayer terminal">
+<meta property="og:description" content="Your shell. Your guests. Your rules. A shared live terminal with E2EE, permissions, presence, and an audit trail. One Go binary, MIT licensed, by Orlix.">
 <meta name="theme-color" content="#070708">
+<link rel="preload" href="/assets/cinematic/fonts/JetBrainsMono-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/cinematic/fonts/JetBrainsMono-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23070708'/%3E%3Ctext x='8' y='12' font-family='monospace' font-size='11' font-weight='bold' fill='%23ff9500' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E">
 <style>
   :root {
@@ -32,21 +35,21 @@
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     line-height: 1.65; -webkit-font-smoothing: antialiased; }
-  code, pre, kbd, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  code, pre, kbd, .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
   a { color: var(--orange); text-decoration: none; }
   a:hover { text-decoration: underline; }
   ::selection { background: rgba(255,149,0,.28); }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 0 22px; }
 
-  /* ── nav ─────────────────────────────────────────────────────────── */
+  /* nav */
   header.site { position: sticky; top: 0; z-index: 10;
     background: rgba(7,7,8,.82); backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border); }
   header.site .row { display: flex; align-items: center; justify-content: space-between;
     height: 58px; }
-  .brand { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700;
+  .brand { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-weight: 700;
     font-size: 17px; letter-spacing: 4px; color: var(--gold); }
   .brand b { color: var(--orange); }
   .brand .by { color: var(--dim); font-weight: 400; letter-spacing: 0;
@@ -59,7 +62,7 @@
   nav a.gh:hover { border-color: var(--orange); }
   @media (max-width: 640px) { nav a:not(.gh) { display: none; } }
 
-  /* ── hero ────────────────────────────────────────────────────────── */
+  /* hero */
   .hero { position: relative; padding: 72px 0 30px; text-align: center; overflow: hidden; }
   .hero .glow { position: absolute; inset: -40% -20% auto; height: 130%;
     background: radial-gradient(ellipse 55% 45% at 50% 20%, rgba(255,149,0,.13), transparent 70%);
@@ -95,7 +98,7 @@
   .copy:hover { color: var(--text); border-color: var(--orange); }
   .copy.done { color: var(--green); border-color: var(--green); }
 
-  /* ── terminal demo ───────────────────────────────────────────────── */
+  /* terminal demo */
   .demo-wrap { padding: 44px 0 0; }
   .demo-note { text-align: center; color: var(--dim); font-size: 12.5px; margin: 12px 0 0; }
   .term { max-width: 820px; margin: 0 auto; background: #0a0a0c;
@@ -108,7 +111,7 @@
   .term .dot.r { background: var(--red); } .term .dot.y { background: var(--yellow); }
   .term .dot.g { background: var(--green); }
   .term .title { margin-left: 8px; color: var(--dim); font-size: 12px;
-    font-family: ui-monospace, Menlo, Consolas, monospace; }
+    font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
   .term pre { margin: 0; padding: 20px 22px; font-size: 13.5px; line-height: 1.6;
     min-height: 335px; overflow-x: auto; }
   .term .c  { color: var(--muted); }
@@ -120,9 +123,9 @@
     background: var(--orange); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 
-  /* ── sections ────────────────────────────────────────────────────── */
+  /* sections */
   section { padding: 84px 0 6px; }
-  .eyebrow { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--orange);
+  .eyebrow { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; color: var(--orange);
     font-size: 13px; letter-spacing: 2px; margin: 0 0 10px; }
   h2 { font-size: clamp(22px, 3vw, 30px); margin: 0 0 12px; letter-spacing: -.4px; }
   .lead { color: var(--muted); max-width: 680px; margin: 0 0 36px; font-size: 16px; }
@@ -132,20 +135,20 @@
   .card { background: var(--panel); border: 1px solid var(--border);
     border-radius: 13px; padding: 22px; transition: border-color .15s; }
   .card:hover { border-color: var(--border-hi); }
-  .card .ic { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--orange);
+  .card .ic { font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; color: var(--orange);
     font-size: 15px; margin-bottom: 10px; }
   .card h3 { margin: 0 0 8px; font-size: 16px; }
   .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
   .card code { background: var(--panel-2); border: 1px solid var(--border);
     border-radius: 5px; padding: 1px 6px; font-size: 12.5px; color: var(--gold); }
 
-  /* ── e2ee ────────────────────────────────────────────────────────── */
+  /* e2ee */
   .split { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; align-items: center; }
   @media (max-width: 820px) { .split { grid-template-columns: 1fr; } }
   .split ul { margin: 0; padding: 0; list-style: none; }
   .split li { padding: 9px 0 9px 30px; position: relative; color: var(--muted);
     font-size: 15px; }
-  .split li::before { content: "✓"; position: absolute; left: 0; top: 8px;
+  .split li::before { content: "+"; position: absolute; left: 0; top: 8px;
     color: var(--green); font-weight: 700; }
   .split li b { color: var(--text); font-weight: 600; }
   pre.block { background: var(--panel); border: 1px solid var(--border);
@@ -156,12 +159,12 @@
   pre.block .au { color: var(--gold); }
   pre.block .g { color: var(--green); }
 
-  /* ── quickstart ──────────────────────────────────────────────────── */
+  /* quickstart */
   .steps { display: grid; gap: 14px; counter-reset: step; }
   .step { display: grid; grid-template-columns: 44px 1fr; gap: 18px;
     background: var(--panel); border: 1px solid var(--border); border-radius: 13px;
     padding: 20px 22px; }
-  .step .n { counter-increment: step; font-family: ui-monospace, Menlo, Consolas, monospace;
+  .step .n { counter-increment: step; font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
     color: var(--burnt); font-size: 24px; font-weight: 700; }
   .step .n::before { content: "0" counter(step); }
   .step h3 { margin: 0 0 6px; font-size: 15.5px; }
@@ -170,7 +173,7 @@
     border-radius: 9px; padding: 12px 15px; font-size: 13px; overflow-x: auto; }
   .step .c { color: var(--dim); }
 
-  /* ── footer ──────────────────────────────────────────────────────── */
+  /* footer */
   .bottom-cta { text-align: center; padding: 90px 0 30px; }
   .bottom-cta h2 { margin-bottom: 22px; }
   footer { margin-top: 70px; border-top: 1px solid var(--border);
@@ -194,7 +197,7 @@
       <a href="#features">Features</a>
       <a href="#security">Security</a>
       <a href="#quickstart">Quick start</a>
-      <a class="gh" href="https://github.com/tylerbroqs/cotty">GitHub&nbsp;→</a>
+      <a class="gh" href="https://github.com/tylerbroqs/cotty">GitHub&nbsp;&gt;</a>
     </nav>
   </div>
 </header>
@@ -217,7 +220,7 @@
 
     <h1 class="headline">Your shell. Your guests. <em>Your rules.</em></h1>
     <p class="sub">Cotty is the multiplayer terminal: host your shell, teammates
-      join from a terminal or a browser — watch together, and type together
+      join from a terminal or a browser. Watch together, and type together
       when you allow it. End-to-end encrypted, with per-guest permissions and
       a "who typed what" audit trail.</p>
 
@@ -236,7 +239,7 @@
     <div class="term mono">
       <div class="bar">
         <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="title">cotty host — end-to-end encrypted</div>
+        <div class="title">cotty host · end-to-end encrypted</div>
       </div>
       <pre id="replay" aria-label="A scripted replay of a real Cotty session"></pre>
     </div>
@@ -248,44 +251,44 @@
   <div class="wrap">
     <p class="eyebrow">## features</p>
     <h2>Not screen sharing. A shared session.</h2>
-    <p class="lead">Guests connect to the live PTY — the things pair debugging
+    <p class="lead">Guests connect to the live PTY: the things pair debugging
       and incident response actually need, none of the video blur.</p>
     <div class="grid">
       <div class="card">
         <div class="ic">&gt;_</div>
         <h3>Multiplayer, not a movie</h3>
         <p>Guests attach to the live terminal. Grant write access and their
-          keystrokes land in the same shell — no lag-smeared pixels.</p>
+          keystrokes land in the same shell, with no lag-smeared pixels.</p>
       </div>
       <div class="card">
-        <div class="ic">🔒</div>
+        <div class="ic">[#]</div>
         <h3>End-to-end encrypted</h3>
         <p>Relayed sessions are sealed with AES-256-GCM by default. The key
-          rides in the URL fragment — it never touches the wire, and the relay
+          rides in the URL fragment: it never touches the wire, and the relay
           only ever sees ciphertext.</p>
       </div>
       <div class="card">
-        <div class="ic">⇄</div>
+        <div class="ic">&lt;-&gt;</div>
         <h3>Works behind NAT</h3>
         <p>The host dials <i>out</i> to a relay you can self-host with one
           command. No port forwarding, no firewall tickets, no daemons.</p>
       </div>
       <div class="card">
-        <div class="ic">🌐</div>
+        <div class="ic">://</div>
         <h3>Join from a browser</h3>
         <p>Every relay serves an embedded xterm.js client, decryption included
-          via WebCrypto. Send a link — teammates install nothing.</p>
+          via WebCrypto. Send a link and teammates install nothing.</p>
       </div>
       <div class="card">
-        <div class="ic">✋</div>
+        <div class="ic">+/-</div>
         <h3>Per-guest permissions</h3>
         <p>Everyone joins view-only with a name. <code>cotty ctl allow alice</code>,
-          <code>deny</code>, <code>kick</code> — live, from any terminal on the
+          <code>deny</code>, <code>kick</code>, live, from any terminal on the
           host machine.</p>
       </div>
       <div class="card">
-        <div class="ic">☰</div>
-        <h3>Audit trail &amp; recording</h3>
+        <div class="ic">===</div>
+        <h3>Audit trail and recording</h3>
         <p>Every applied keystroke attributed by participant, plus joins and
           permission changes. Record sessions as asciicast v2 and replay them
           with <code>cotty replay</code> or asciinema.</p>
@@ -300,16 +303,16 @@
     <h2>The relay can't read your session.</h2>
     <div class="split">
       <ul>
-        <li><b>AES-256-GCM by default</b> for every relayed session — opt out,
+        <li><b>AES-256-GCM by default</b> for every relayed session: opt out,
           never opt in.</li>
         <li><b>The key never touches the network.</b> It lives in the URL
           fragment, which clients strip before any request is made.</li>
-        <li><b>Wrong key fails loudly</b> — a guest without the key is refused
+        <li><b>Wrong key fails loudly:</b> a guest without the key is refused
           with an explanation, not shown garbage.</li>
         <li><b>No accounts, no telemetry.</b> Sessions are protected by a
           random join code; everything runs on machines you control.</li>
       </ul>
-      <pre class="block mono"><span class="c"># the host prints a join URL —</span>
+      <pre class="block mono"><span class="c"># the host prints a join URL,</span>
 <span class="c"># the key stays after the #, off the wire</span>
 
 cotty join "wss://relay/ws?code=<span class="au">XJ4K2P</span><span class="o">#k=8D0Uy…</span>"
@@ -326,14 +329,14 @@ cotty join "wss://relay/ws?code=<span class="au">XJ4K2P</span><span class="o">#k
   <div class="wrap">
     <p class="eyebrow">## quick start</p>
     <h2>Sharing a shell in under a minute.</h2>
-    <p class="lead">On your LAN in ten seconds — or across the internet with a
+    <p class="lead">On your LAN in ten seconds, or across the internet with a
       relay you host yourself.</p>
     <div class="steps mono">
       <div class="step">
         <div class="n"></div>
         <div>
           <h3>Install</h3>
-          <p>One static binary — host, client, relay, and web UI included.</p>
+          <p>One static binary: host, client, relay, and web UI included.</p>
           <pre>go install github.com/tylerbroqs/cotty/cmd/cotty@latest</pre>
         </div>
       </div>
@@ -350,7 +353,7 @@ cotty host --relay relay.example.com:7374   <span class="c"># behind NAT, E2EE</
         <div class="n"></div>
         <div>
           <h3>Teammates join</h3>
-          <p>From any terminal — or from a browser, nothing to install.</p>
+          <p>From any terminal, or from a browser with nothing to install.</p>
           <pre>cotty join -name alice "wss://relay/ws?code=XJ4K2P#k=…"</pre>
         </div>
       </div>
@@ -358,9 +361,9 @@ cotty host --relay relay.example.com:7374   <span class="c"># behind NAT, E2EE</
         <div class="n"></div>
         <div>
           <h3>Stay in control</h3>
-          <p>Grant, revoke, and kick — live, without ending the session.</p>
+          <p>Grant, revoke, and kick, live, without ending the session.</p>
           <pre>cotty ctl allow alice   <span class="c"># let alice type</span>
-cotty ctl kick bob      <span class="c"># bye, bob</span></pre>
+cotty ctl kick bob      <span class="c"># remove bob</span></pre>
         </div>
       </div>
     </div>
@@ -378,7 +381,7 @@ cotty ctl kick bob      <span class="c"># bye, bob</span></pre>
 
 <footer>
   <div class="wrap row">
-    <div>© Orlix — MIT licensed. Built in the open.</div>
+    <div>© Orlix · MIT licensed. Built in the open.</div>
     <div>
       <a href="https://github.com/tylerbroqs/cotty">GitHub</a> ·
       <a href="https://github.com/tylerbroqs/cotty/blob/main/LICENSE">License</a> ·
@@ -394,7 +397,7 @@ cotty ctl kick bob      <span class="c"># bye, bob</span></pre>
   btn.addEventListener('click', function () {
     navigator.clipboard.writeText('go install github.com/tylerbroqs/cotty/cmd/cotty@latest')
       .then(function () {
-        btn.textContent = 'Copied!';
+        btn.textContent = 'Copied';
         btn.classList.add('done');
         setTimeout(function () {
           btn.textContent = 'Copy';
@@ -432,7 +435,7 @@ cotty ctl kick bob      <span class="c"># bye, bob</span></pre>
     { t: '\n', pause: 100 },
     { t: 'alice$ ', c: 'au', pause: 250 },
     { t: 'tail -f /var/log/app.log', type: true },
-    { t: '   # alice’s keys, your shell', c: 'd', pause: 2600 }
+    { t: '   # alice keys, your shell', c: 'd', pause: 2600 }
   ];
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

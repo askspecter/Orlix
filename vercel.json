@@ -52,7 +52,8 @@
     { "source": "/neural-map.html",   "destination": "/base-city",     "permanent": true },
     { "source": "/neural-map",        "destination": "/base-city",     "permanent": true },
     { "source": "/zero.html",         "destination": "/zero",          "permanent": true },
-    { "source": "/dashboard.html",    "destination": "/dashboard",     "permanent": true }
+    { "source": "/dashboard.html",    "destination": "/dashboard",     "permanent": true },
+    { "source": "/cotty.html",        "destination": "/cotty",         "permanent": true }
   ],
   "rewrites": [
     { "source": "/app",          "destination": "/app.html" },
@@ -67,6 +68,7 @@
     { "source": "/base-city",     "destination": "/neural-map.html" },
     { "source": "/zero",          "destination": "/zero.html" },
     { "source": "/mission-control", "destination": "/mission-control.html" },
-    { "source": "/dashboard",       "destination": "/dashboard.html" }
+    { "source": "/dashboard",       "destination": "/dashboard.html" },
+    { "source": "/cotty",           "destination": "/cotty.html" }
   ]
 }
