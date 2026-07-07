@@ -118,6 +118,7 @@ TURNKEY_API_PRIVATE_KEY=  # P-256 API key private (shown once — save it)
 TURNKEY_ORGANIZATION_ID=  # Turnkey org / sub-org id
 TURNKEY_SIGN_WITH=        # signer wallet ETH address (fund with ETH on Base for gas)
 B20_AGENT_ALLOWLIST=      # comma-separated agent keys allowed to deploy (fail-closed)
+B20_AGENT_DAILY_LIMIT=    # optional, max deploys per rolling 24h (default 25) — gas-drain cap
 
 # State
 UPSTASH_REDIS_REST_URL=

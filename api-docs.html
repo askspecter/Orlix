@@ -455,7 +455,7 @@ footer a:hover{color:var(--text-1)}
 
           <div class="status-row"><span class="status-code ok">200</span> <ic>ok:true</ic> — signed &amp; broadcast (or <ic>ok:false</ic> with an <ic>error</ic> field)</div>
           <div class="status-row"><span class="status-code err">403</span> Agent key missing or not on the deploy allowlist</div>
-          <div class="status-row"><span class="status-code err">200</span> <ic>Invalid intent</ic> — see <ic>details[]</ic> · <ic>Signer not configured</ic> · <ic>Sign/broadcast failed</ic></div>
+          <div class="status-row"><span class="status-code err">200</span> <ic>ok:false</ic> — <ic>Deploy would revert</ic> (simulated first, no gas spent) · <ic>Daily deploy limit reached</ic> · <ic>Invalid intent</ic> (<ic>details[]</ic>) · <ic>Signer not configured</ic></div>
         </div>
       </div>
 
@@ -470,7 +470,7 @@ footer a:hover{color:var(--text-1)}
 
       <div class="info-box green">
         <span class="info-icon">⛽</span>
-        <span>Gas is paid by the server signer wallet, so it must hold ETH on Base. B20 is Base-only — agent deploys always target Base mainnet.</span>
+        <span>Gas is paid by the server signer wallet, so it must hold ETH on Base. Every deploy is <strong>simulated first</strong> — a tx that would revert is rejected before it is ever signed, so gas is never wasted. A rolling daily deploy cap protects the wallet, and deploys are serialized to keep nonces safe. B20 is Base-only.</span>
       </div>
     </section>
 
