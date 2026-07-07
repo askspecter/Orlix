@@ -167,11 +167,31 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
 .f-links a{color:var(--text-3);font-size:.78rem;transition:color var(--tr)}
 .f-links a:hover{color:var(--orange)}
 
+/* MOBILE DOCS TOC (off-canvas drawer, Base/GitBook style) */
+.docs-toc-btn{display:none;align-items:center;gap:9px;width:100%;margin:0 0 22px;padding:11px 14px;
+  background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);
+  font-family:var(--mono);font-size:.8rem;cursor:pointer;transition:border-color var(--tr)}
+.docs-toc-btn:hover{border-color:var(--border-b)}
+.docs-toc-btn svg{width:15px;height:15px;flex-shrink:0;color:var(--orange)}
+.docs-scrim{display:none;position:fixed;inset:0;z-index:115;background:rgba(0,0,0,.55);opacity:0;transition:opacity .25s}
+.docs-scrim.open{opacity:1}
+.docs-sidebar-close{display:none}
+
 /* RESPONSIVE */
 @media(max-width:720px){
   .docs-layout{grid-template-columns:1fr}
-  .docs-sidebar{display:none}
   .docs-content{padding:24px 0 60px}
+  .docs-toc-btn{display:flex}
+  .docs-scrim.open{display:block}
+  .docs-sidebar{
+    position:fixed;top:0;left:0;z-index:120;width:84%;max-width:300px;height:100dvh;
+    background:var(--bg);border-right:1px solid var(--border);
+    transform:translateX(-100%);transition:transform .28s ease;
+    padding:16px 0 32px;box-shadow:2px 0 44px rgba(0,0,0,.55);display:block
+  }
+  .docs-sidebar.open{transform:translateX(0)}
+  .docs-sidebar-close{display:flex;justify-content:flex-end;padding:0 14px 6px}
+  .docs-sidebar-close button{background:none;border:none;color:var(--text-2);font-size:1.3rem;line-height:1;cursor:pointer;padding:4px 8px}
 }
 @media(max-width:560px){.tbl-row{grid-template-columns:1fr;gap:6px}}
 @media(max-width:480px){body{font-size:14px}}
@@ -218,7 +238,8 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   <div class="docs-layout">
 
     <!-- sidebar -->
-    <nav class="docs-sidebar">
+    <nav class="docs-sidebar" id="docsSidebar">
+      <div class="docs-sidebar-close"><button id="docsTocClose" aria-label="Close contents">✕</button></div>
       <div class="sidebar-section">
         <span class="s-label">getting started</span>
         <div class="sidebar-nav">
@@ -247,9 +268,15 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
         </div>
       </div>
     </nav>
+    <div class="docs-scrim" id="docsScrim"></div>
 
     <!-- content -->
     <div class="docs-content">
+
+      <button class="docs-toc-btn" id="docsTocBtn" aria-label="Open contents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        Contents
+      </button>
 
       <div class="crumb">
         <span class="root">~</span><span class="sep">/</span><span class="here">orlix</span><span class="sep">/</span>docs<span class="sep">/</span>index.md
@@ -561,6 +588,16 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   if(t)t.onclick=function(){document.documentElement.classList.toggle('light');localStorage.setItem('orlix-theme',document.documentElement.classList.contains('light')?'light':'dark')};
   var h=document.getElementById('ham'),m=document.getElementById('mobNav');
   if(h&&m)h.onclick=function(){m.classList.toggle('open')};
+
+  // Mobile docs TOC drawer (slide-out)
+  var sb=document.getElementById('docsSidebar'),sc=document.getElementById('docsScrim'),
+      tb=document.getElementById('docsTocBtn'),tc=document.getElementById('docsTocClose');
+  function openToc(){if(sb)sb.classList.add('open');if(sc)sc.classList.add('open')}
+  function closeToc(){if(sb)sb.classList.remove('open');if(sc)sc.classList.remove('open')}
+  if(tb)tb.onclick=openToc;
+  if(sc)sc.onclick=closeToc;
+  if(tc)tc.onclick=closeToc;
+  if(sb)sb.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeToc)});
 })();
 </script>
 </body>
