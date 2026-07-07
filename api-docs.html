@@ -116,6 +116,7 @@ p{color:var(--text-2);margin-bottom:14px}
 }
 .method{font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;flex-shrink:0}
 .method.get{background:rgba(74,222,128,.12);color:var(--green)}
+.method.post{background:rgba(240,120,48,.12);color:var(--orange)}
 .endpoint-path{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-1)}
 .endpoint-desc{font-size:13px;color:var(--text-3);margin-left:auto}
 .endpoint-body{padding:20px}
@@ -272,6 +273,7 @@ footer a:hover{color:var(--text-1)}
       <div class="sidebar-label">Endpoints</div>
       <ul>
         <li><a href="#token-search">GET /api/token-search</a></li>
+        <li><a href="#b20-agent">POST /api/b20-skill (agent deploy)</a></li>
       </ul>
     </div>
     <div class="sidebar-group">
@@ -388,6 +390,87 @@ footer a:hover{color:var(--text-1)}
           <input class="try-input" id="search-q" value="BNKR" placeholder="Token symbol e.g. BNKR" onkeydown="if(event.key==='Enter')trySearch()">
         </div>
         <div class="try-result" id="search-result"><p class="try-empty">Enter a symbol and click Run.</p></div>
+      </div>
+    </section>
+
+    <!-- /api/b20-skill agent_deploy -->
+    <section id="b20-agent">
+      <h2>POST /api/b20-skill · Agent Deploy</h2>
+      <p>Deploy a <a href="https://docs.base.org/base-chain/specs/upgrades/beryl/b20" target="_blank" rel="noopener">B20 token</a> on Base by submitting a <strong>deploy intent</strong> — a name, a symbol, nothing more. Orlix builds the transaction, signs it, and broadcasts it for you. Your agent never handles a private key.</p>
+
+      <div class="info-box blue">
+        <span class="info-icon">🔐</span>
+        <span>The signing key lives inside a <strong>Turnkey secure enclave</strong> — it is never in Orlix memory, disk, or logs. The deploy allowlist is enforced in this proxy <em>before</em> the key is ever reached, so a prompt-injected or compromised agent cannot bypass it.</span>
+      </div>
+
+      <div class="info-box orange">
+        <span class="info-icon">🔑</span>
+        <span>This endpoint <strong>requires authentication</strong>. Send your agent key in the <ic>X-Orlix-Key</ic> header. Keys not on the server allowlist get <ic>403</ic>. (This is the one authenticated endpoint — all others are open.)</span>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">https://orlixai.xyz/api/b20-skill</span>
+        </div>
+        <div class="endpoint-body">
+          <h3>Headers</h3>
+          <table class="field-table">
+            <thead><tr><th>Header</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><span class="field-name">X-Orlix-Key</span></td><td style="color:var(--orange)">Yes</td><td class="field-desc">Your agent key. Must be on the server deploy allowlist.</td></tr>
+              <tr><td><span class="field-name">Content-Type</span></td><td style="color:var(--orange)">Yes</td><td class="field-desc"><ic>application/json</ic></td></tr>
+            </tbody>
+          </table>
+
+          <h3>Body parameters</h3>
+          <table class="field-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><span class="field-name">action</span></td><td><span class="field-type">string</span></td><td style="color:var(--orange)">Yes</td><td class="field-desc">Must be <ic>"agent_deploy"</ic></td></tr>
+              <tr><td><span class="field-name">name</span></td><td><span class="field-type">string</span></td><td style="color:var(--orange)">Yes</td><td class="field-desc">Token name, ≤ 64 chars (e.g. <ic>Orlix Agent Token</ic>)</td></tr>
+              <tr><td><span class="field-name">symbol</span></td><td><span class="field-type">string</span></td><td style="color:var(--orange)">Yes</td><td class="field-desc">Ticker, ≤ 11 chars, letters/numbers (e.g. <ic>OAT</ic>)</td></tr>
+              <tr><td><span class="field-name">variant</span></td><td><span class="field-type">string</span></td><td>No</td><td class="field-desc"><ic>"asset"</ic> (default) or <ic>"stablecoin"</ic></td></tr>
+              <tr><td><span class="field-name">decimals</span></td><td><span class="field-type">number</span></td><td>No</td><td class="field-desc">6–18 for asset (default 18); forced to 6 for stablecoin</td></tr>
+              <tr><td><span class="field-name">admin</span></td><td><span class="field-type">string</span></td><td>No</td><td class="field-desc">Admin/mint-role address. Defaults to the server signer wallet.</td></tr>
+              <tr><td><span class="field-name">salt</span></td><td><span class="field-type">string</span></td><td>No</td><td class="field-desc">32-byte hex CREATE2 salt. Random if omitted.</td></tr>
+            </tbody>
+          </table>
+
+          <h3>Response structure</h3>
+          <div class="code-block">
+            <div class="code-header"><span class="lang">JSON</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre>{
+  <span class="s">"ok"</span>:               <span class="v">true</span>,
+  <span class="s">"status"</span>:           <span class="s">"broadcast"</span>,
+  <span class="s">"txHash"</span>:            <span class="s">"0x…"</span>,        <span class="c">// broadcast to Base mainnet</span>
+  <span class="s">"predictedAddress"</span>:  <span class="s">"0x…"</span>,        <span class="c">// deterministic token address</span>
+  <span class="s">"explorerUrl"</span>:       <span class="s">"https://basescan.org/tx/0x…"</span>,
+  <span class="s">"token"</span>: { <span class="s">"name"</span>: <span class="s">"…"</span>, <span class="s">"symbol"</span>: <span class="s">"…"</span>, <span class="s">"variant"</span>: <span class="s">"asset"</span>, <span class="s">"decimals"</span>: <span class="v">18</span> },
+  <span class="s">"signer"</span>:            <span class="s">"0x…"</span>,        <span class="c">// Turnkey-managed wallet that paid gas</span>
+  <span class="s">"chainId"</span>:           <span class="v">8453</span>
+}</pre>
+          </div>
+          <p>Then poll for the deployed token address with <ic>{ "action": "receipt", "tx_hash": "0x…" }</ic> once the tx is mined.</p>
+
+          <div class="status-row"><span class="status-code ok">200</span> <ic>ok:true</ic> — signed &amp; broadcast (or <ic>ok:false</ic> with an <ic>error</ic> field)</div>
+          <div class="status-row"><span class="status-code err">403</span> Agent key missing or not on the deploy allowlist</div>
+          <div class="status-row"><span class="status-code err">200</span> <ic>Invalid intent</ic> — see <ic>details[]</ic> · <ic>Signer not configured</ic> · <ic>Sign/broadcast failed</ic></div>
+        </div>
+      </div>
+
+      <h3 id="ex-b20-curl">cURL</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="lang">BASH</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+        <pre>curl -s https://orlixai.xyz/api/b20-skill \
+  -H <span class="s">'Content-Type: application/json'</span> \
+  -H <span class="s">'X-Orlix-Key: YOUR_AGENT_KEY'</span> \
+  -d <span class="s">'{"action":"agent_deploy","name":"Orlix Agent Token","symbol":"OAT"}'</span></pre>
+      </div>
+
+      <div class="info-box green">
+        <span class="info-icon">⛽</span>
+        <span>Gas is paid by the server signer wallet, so it must hold ETH on Base. B20 is Base-only — agent deploys always target Base mainnet.</span>
       </div>
     </section>
 

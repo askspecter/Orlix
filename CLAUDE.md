@@ -112,6 +112,13 @@ VENICE_API_KEY=        # Venice (api.venice.ai) — uncensored, open-source, no 
 # Blockchain
 BASESCAN_API_KEY=
 
+# B20 Agent Deploy (custodial, Turnkey-signed) — /api/b20-skill?action=agent_deploy
+TURNKEY_API_PUBLIC_KEY=   # P-256 API key public (from Turnkey dashboard)
+TURNKEY_API_PRIVATE_KEY=  # P-256 API key private (shown once — save it)
+TURNKEY_ORGANIZATION_ID=  # Turnkey org / sub-org id
+TURNKEY_SIGN_WITH=        # signer wallet ETH address (fund with ETH on Base for gas)
+B20_AGENT_ALLOWLIST=      # comma-separated agent keys allowed to deploy (fail-closed)
+
 # State
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=

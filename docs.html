@@ -243,6 +243,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
           <a href="#cli">CLI reference</a>
           <a href="#config">Configuration</a>
           <a href="#integrations">Integrations</a>
+          <a href="#b20-deploy">B20 token deployment</a>
         </div>
       </div>
     </nav>
@@ -502,6 +503,34 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
         </div>
 
         <p class="muted" style="margin-top:16px">// all adapter credentials are stored encrypted in ~/.orlix/credentials — never transmitted to Orlix servers.</p>
+      </div>
+
+      <div class="doc-section" id="b20-deploy">
+        <h2><span class="num">12</span> B20 token deployment</h2>
+        <p>An Orlix agent can deploy a <a href="https://docs.base.org/base-chain/specs/upgrades/beryl/b20" target="_blank" rel="noopener">B20 token</a> on Base by submitting a <strong>deploy intent</strong> — a name and a symbol. The agent never touches a private key: it describes what it wants, and Orlix constructs, signs, and broadcasts the transaction on its behalf.</p>
+
+        <p>This follows the same guardrail model as the rest of Orlix — authority is enforced <em>before</em> an action can run, not left to the agent's own judgement.</p>
+
+        <div class="tbl">
+          <div class="tbl-row"><div class="key">Enclave signer</div><div class="desc">The signing key is generated inside a Turnkey secure enclave (HSM/TEE) and never enters Orlix memory, disk, or logs. Orlix only holds an API key that authorizes remote signing. <span class="badge done">custodial</span></div></div>
+          <div class="tbl-row"><div class="key">Deploy allowlist</div><div class="desc">Only agents whose key is on the allowlist may deploy. The check runs in the signing proxy, before the key is ever reached — a prompt-injected or compromised agent cannot bypass it.</div></div>
+          <div class="tbl-row"><div class="key">Chain lock</div><div class="desc">B20 is Base-only. Agent deploys always target Base mainnet; nothing else is signable through this path.</div></div>
+          <div class="tbl-row"><div class="key">Receipts</div><div class="desc">Every deploy returns a broadcast tx hash and the deterministic token address — logged like any other agent action.</div></div>
+        </div>
+
+        <h3>Deploy from an agent</h3>
+        <div class="code-block">
+          <div class="cb-bar"><span>shell</span></div>
+          <div class="cb-body">
+            <div><span class="cmd">curl -s https://orlixai.xyz/api/b20-skill \</span></div>
+            <div><span class="cmd">  -H <span class="val">'X-Orlix-Key: YOUR_AGENT_KEY'</span> \</span></div>
+            <div><span class="cmd">  -d <span class="val">'{"action":"agent_deploy","name":"Orlix Agent Token","symbol":"OAT"}'</span></span></div>
+            <div><span class="ok">✓ status: broadcast</span></div>
+            <div><span class="ok">✓ txHash: 0x… · token: 0x… · chain: base (8453)</span></div>
+          </div>
+        </div>
+
+        <p class="muted" style="margin-top:16px">// full request/response schema, parameters, and status codes live in the <a href="api-docs.html#b20-agent">API reference</a>. The signer wallet pays gas, so it must hold ETH on Base.</p>
       </div>
 
     </div>
