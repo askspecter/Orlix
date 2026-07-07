@@ -879,8 +879,11 @@ module.exports = async function handler(req, res) {
     const key = process.env.VENICE_API_KEY || '';
     if (!key) return res.status(503).json({ error: { message: 'Service temporarily unavailable.' } });
     try {
+      // Frontend ids are prefixed "venice/<realId>" so they route here; strip
+      // the prefix to get the actual Venice model name (e.g. venice-uncensored).
+      const veniceModel = (bodyObj.model || '').replace(/^venice\//, '');
       const body = {
-        model:      bodyObj.model,
+        model:      veniceModel,
         messages:   bodyObj.messages || [],
         max_tokens: bodyObj.max_tokens || 4096,
       };
