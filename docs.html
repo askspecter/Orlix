@@ -69,6 +69,28 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none}
 .theme-toggle .ico-sun{display:none}.theme-toggle .ico-moon{display:block}
 :root.light .theme-toggle .ico-sun{display:block}:root.light .theme-toggle .ico-moon{display:none}
 .nav-cta{display:flex;align-items:center;padding:8px 18px;background:var(--orange);color:#fff;font-size:.82rem;font-weight:700;border-radius:4px;transition:background .18s,transform .18s;flex-shrink:0;text-decoration:none}
+
+/* nav icon buttons + kebab (⋮) menu + docs search overlay */
+.nav-icobtn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:4px;background:var(--bg-3,#1A1A1E);border:1px solid var(--border);color:var(--text-2);cursor:pointer;transition:all .18s;flex-shrink:0}
+.nav-icobtn:hover{border-color:var(--border-b);color:var(--text-1)}
+.nav-icobtn svg{width:16px;height:16px}
+.kebab-wrap{position:relative;display:flex}
+.kebab-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:190px;background:var(--bg-2);border:1px solid var(--border-b);border-radius:8px;padding:6px;z-index:200;display:none;box-shadow:0 10px 34px rgba(0,0,0,.45)}
+.kebab-menu.open{display:block}
+.kbi{display:flex;align-items:center;gap:11px;width:100%;padding:10px 11px;border-radius:6px;background:none;border:none;color:var(--text-2);font-family:var(--font);font-size:.84rem;cursor:pointer;text-align:left}
+.kbi:hover{background:rgba(255,255,255,.05);color:var(--text-1)}
+.kbi svg{width:16px;height:16px;flex-shrink:0}
+.kbi .ico-sun{display:none}.kbi .ico-moon{display:block}
+:root.light .kbi .ico-sun{display:block}:root.light .kbi .ico-moon{display:none}
+.docs-search{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);display:none;padding:72px 16px 0}
+.docs-search.open{display:block}
+.docs-search-box{max-width:520px;margin:0 auto;background:var(--bg-2);border:1px solid var(--border-b);border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.docs-search-box input{width:100%;padding:15px 18px;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text-1);font-size:1rem;font-family:var(--font);outline:none}
+.docs-search-results{max-height:60vh;overflow-y:auto;padding:6px}
+.docs-search-results a{display:block;padding:11px 14px;border-radius:6px;color:var(--text-2);font-size:.88rem;cursor:pointer}
+.docs-search-results a .sr-sec{color:var(--text-3);font-size:.72rem;margin-left:8px}
+.docs-search-results a:hover{background:var(--orange-dim);color:var(--orange)}
+.docs-search-empty{padding:16px 18px;color:var(--text-3);font-size:.85rem}
 .nav-cta:hover{background:#E06820;color:#fff;transform:translateY(-1px)}
 .ham{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
 .ham span{display:block;width:22px;height:2px;background:var(--text-1);border-radius:2px;transition:all .18s}
@@ -202,6 +224,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   .sidebar-nav{gap:2px}
   .sidebar-nav a{padding:11px 12px;font-size:.92rem}
 }
+@media(max-width:768px){.nav-icobtn{width:30px;height:30px}.nav-icobtn svg{width:15px;height:15px}.nav-cta{display:none}}
 @media(max-width:560px){.tbl-row{grid-template-columns:1fr;gap:6px}}
 @media(max-width:480px){body{font-size:14px}}
 @media(max-width:460px){.f-bottom{flex-direction:column;align-items:flex-start}.f-links{flex-wrap:wrap;gap:14px}}
@@ -223,15 +246,35 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
       <a href="/changelog">Changelog</a>
     </div>
     <div class="nav-right">
-      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <svg class="ico-moon" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 14A8 8 0 117 3a6 6 0 0010 11z"/></svg>
-        <svg class="ico-sun" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>
+      <button class="nav-icobtn" id="docsSearchBtn" aria-label="Search docs">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5l4 4"/></svg>
       </button>
+      <a href="/" class="nav-icobtn" aria-label="Home">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5l7-6 7 6"/><path d="M5 8.5V16h10V8.5"/></svg>
+      </a>
+      <div class="kebab-wrap">
+        <button class="nav-icobtn" id="kebabBtn" aria-label="More options">
+          <svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>
+        </button>
+        <div class="kebab-menu" id="kebabMenu">
+          <button class="kbi" id="themeToggle" type="button">
+            <svg class="ico-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 14A8 8 0 117 3a6 6 0 0010 11z"/></svg>
+            <svg class="ico-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>
+            <span>Switch theme</span>
+          </button>
+        </div>
+      </div>
       <a href="/app" class="nav-cta">Launch App →</a>
       <button class="ham" id="ham" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
   </div>
 </nav>
+<div class="docs-search" id="docsSearch">
+  <div class="docs-search-box">
+    <input id="docsSearchInput" placeholder="Search docs sections…" autocomplete="off" spellcheck="false">
+    <div class="docs-search-results" id="docsSearchResults"></div>
+  </div>
+</div>
 <div class="mob-nav" id="mobNav">
   <a href="/">Home</a>
   <a href="/docs">Docs</a>
@@ -606,6 +649,35 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   if(sc)sc.onclick=closeToc;
   if(tc)tc.onclick=closeToc;
   if(sb)sb.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeToc)});
+
+  // Kebab (⋮) menu — holds the dark/light toggle
+  var kb=document.getElementById('kebabBtn'),km=document.getElementById('kebabMenu');
+  if(kb&&km){
+    kb.addEventListener('click',function(e){e.stopPropagation();km.classList.toggle('open')});
+    document.addEventListener('click',function(e){if(km.classList.contains('open')&&!km.contains(e.target)&&e.target!==kb&&!kb.contains(e.target))km.classList.remove('open')});
+  }
+
+  // Docs search — filter/jump to sections
+  var dsBtn=document.getElementById('docsSearchBtn'),ds=document.getElementById('docsSearch'),
+      dsIn=document.getElementById('docsSearchInput'),dsRes=document.getElementById('docsSearchResults'),items=[];
+  document.querySelectorAll('.docs-sidebar .sidebar-section').forEach(function(sec){
+    var lbl=(sec.querySelector('.s-label')||{}).textContent||'';
+    sec.querySelectorAll('a[href^="#"]').forEach(function(a){items.push({t:a.textContent.trim(),h:a.getAttribute('href'),s:lbl});});
+  });
+  function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function renderSearch(q){
+    q=(q||'').toLowerCase();
+    var m=items.filter(function(i){return i.t.toLowerCase().indexOf(q)>-1||i.s.toLowerCase().indexOf(q)>-1;});
+    if(!m.length){dsRes.innerHTML='<div class="docs-search-empty">No sections found.</div>';return;}
+    dsRes.innerHTML=m.map(function(i){return '<a href="'+i.h+'">'+esc(i.t)+'<span class="sr-sec">'+esc(i.s)+'</span></a>';}).join('');
+    dsRes.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeSearch);});
+  }
+  function openSearch(){if(!ds)return;ds.classList.add('open');renderSearch('');if(dsIn){dsIn.value='';setTimeout(function(){dsIn.focus();},60);}}
+  function closeSearch(){if(ds)ds.classList.remove('open');}
+  if(dsBtn)dsBtn.addEventListener('click',openSearch);
+  if(dsIn)dsIn.addEventListener('input',function(){renderSearch(dsIn.value);});
+  if(ds)ds.addEventListener('click',function(e){if(e.target===ds)closeSearch();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSearch();});
 
   // Scroll-spy: highlight the sidebar link for the section in view
   var links={};
