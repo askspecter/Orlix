@@ -106,6 +106,8 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 # AI
 ANTHROPIC_API_KEY=
 BANKR_LLM_KEY=
+MIMO_API_KEY=          # Mimo (api.xiaomimimo.com) — primary chat engine
+VENICE_API_KEY=        # Venice (api.venice.ai) — uncensored, open-source, no data retention
 
 # Blockchain
 BASESCAN_API_KEY=
@@ -134,3 +136,4 @@ git add -A && git commit -m "..." && git push origin main
 - `session_01Dhpc62Y19RJMuV1gFB1hmh` — Continuation of Robinhood Chain integration. Updated CLAUDE.md with persistent memory.
 - `session_01RwaoCkty8pyct6jvvJenAn` — Base City scene revamp to match design mock: peninsula terrain (ocean wraps +Z and -X), river/bridges mirrored to +X flank, second ocean plane + shore/foam/reflection for the left bay, ships split across both waters, waterfront piers with lamps, bigger full moon repositioned upper-right, UFO with night-only tractor beam, aerial intro end pose. File: neural-map.html only.
 - `session_01RKMQuccsPyPAroZDB3eV6g` — Built cinematic Awwwards-style homepage (new index.html + assets/cinematic/). Old dashboard moved to dashboard.html (/dashboard route added to vercel.json). Self-hosted GSAP/ScrollTrigger/Lenis/Motion + Syne/JetBrains Mono fonts. Branch: claude/orlix-cinematic-website-f8zbid.
+- `session_01HPyQG1dNFKzZQeCRpX34pW` — Added Venice (api.venice.ai) as an uncensored LLM provider. New `venice-*` route in chat.js (OpenAI-compatible, streaming + non-streaming, `VENICE_API_KEY`) + "Venice Uncensored" (`venice-uncensored`) added to the PROVIDERS model dropdown in app.html. Router in chat.js now: mimo→xiaomimimo, venice→venice.ai, claude→bankr(Anthropic+MCP), else→bankr(OpenAI). Branch: claude/b20-mau-orlix-status-6ny1wr.
