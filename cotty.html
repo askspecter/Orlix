@@ -162,10 +162,11 @@
   /* quickstart */
   .steps { display: grid; gap: 14px; counter-reset: step; }
   .step { display: grid; grid-template-columns: 44px 1fr; gap: 18px;
+    align-items: baseline;
     background: var(--panel); border: 1px solid var(--border); border-radius: 13px;
     padding: 20px 22px; }
   .step .n { counter-increment: step; font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    color: var(--orange); font-size: 24px; font-weight: 700; }
+    color: var(--orange); font-size: 22px; font-weight: 700; line-height: 1; }
   .step .n::before { content: "0" counter(step); }
   .step h3 { margin: 0 0 6px; font-size: 15.5px; }
   .step p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
