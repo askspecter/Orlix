@@ -1,6 +1,7 @@
 // Vercel Serverless Function — /api/chat
 // Routes to providers:
 //   mimo-*   → api.xiaomimimo.com   (MIMO_API_KEY)
+//   venice-* → api.venice.ai        (VENICE_API_KEY) — OpenAI-compatible, uncensored, no data retention
 //   claude-* → llm.bankr.bot/v1/messages  (BANKR_LLM_KEY) — Anthropic format + Base MCP tools
 //   all else → llm.bankr.bot/v1/chat/completions (BANKR_LLM_KEY) — OpenAI-compatible
 
@@ -836,6 +837,7 @@ module.exports = async function handler(req, res) {
 
   const model    = (bodyObj.model || '').toLowerCase();
   const isMimo   = model.startsWith('mimo');
+  const isVenice = model.startsWith('venice');
   const isClaude = model.startsWith('claude');
 
   // ── Mimo ─────────────────────────────────────────────────────────────────
@@ -869,6 +871,45 @@ module.exports = async function handler(req, res) {
       });
       return res.status(r.status).setHeader('Content-Type', 'application/json').send(await r.text());
     } catch (e) { return res.status(502).json({ error: { message: 'Mimo error: ' + e.message } }); }
+  }
+
+  // ── Venice ───────────────────────────────────────────────────────────────
+  // OpenAI-compatible, open-source models, no data retention, uncensored.
+  if (isVenice) {
+    const key = process.env.VENICE_API_KEY || '';
+    if (!key) return res.status(503).json({ error: { message: 'Service temporarily unavailable.' } });
+    try {
+      const body = {
+        model:      bodyObj.model,
+        messages:   bodyObj.messages || [],
+        max_tokens: bodyObj.max_tokens || 4096,
+      };
+      if (bodyObj.temperature != null) body.temperature = bodyObj.temperature;
+      const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
+      if (bodyObj.stream) {
+        body.stream = true;
+        const r = await fetch('https://api.venice.ai/api/v1/chat/completions', {
+          method: 'POST', headers, body: JSON.stringify(body),
+        });
+        if (!r.ok) {
+          const errText = await r.text();
+          let msg = errText;
+          try { msg = JSON.parse(errText).error?.message || errText; } catch {}
+          return res.status(r.status).json({ error: { message: 'Venice: ' + msg } });
+        }
+        return pipeStream(r, res);
+      }
+      const r = await fetch('https://api.venice.ai/api/v1/chat/completions', {
+        method: 'POST', headers, body: JSON.stringify(body),
+      });
+      const text = await r.text();
+      if (!r.ok) {
+        let msg = text;
+        try { msg = JSON.parse(text).error?.message || text; } catch {}
+        return res.status(r.status).json({ error: { message: 'Venice: ' + msg } });
+      }
+      return res.status(200).setHeader('Content-Type', 'application/json').send(text);
+    } catch (e) { return res.status(502).json({ error: { message: 'Venice error: ' + e.message } }); }
   }
 
   // ── All other models → Bankr LLM Gateway ─────────────────────────────────
