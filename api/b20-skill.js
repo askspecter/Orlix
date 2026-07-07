@@ -814,9 +814,54 @@ function agentAllowed(agentKey) {
   });
 }
 
+// ── Upstash Redis (spend cap + deploy serialization) ───────────────────────────
+function _redisEnv() {
+  return {
+    url:   process.env.UPSTASH_REDIS_REST_URL   || process.env.STORAGE_UPSTASH_REDIS_REST_URL   || '',
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN || '',
+  };
+}
+async function _redis(...args) {
+  const { url, token } = _redisEnv();
+  if (!url || !token) return undefined;                // not configured
+  const r = await fetch(`${url}/${args.map(encodeURIComponent).join('/')}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) throw new Error('redis ' + r.status);
+  return (await r.json()).result;
+}
+// Serialize deploys so concurrent calls can't collide on the signer nonce.
+async function _acquireLock() {
+  const { url, token } = _redisEnv();
+  if (!url || !token) return { locked: true, held: false };          // no redis → best-effort proceed
+  try {
+    const r = await _redis('SET', 'b20deploy:lock', '1', 'NX', 'PX', '28000');
+    return { locked: r === 'OK', held: r === 'OK' };
+  } catch { return { locked: true, held: false }; }                  // redis error → proceed
+}
+async function _releaseLock(held) { if (held) { try { await _redis('DEL', 'b20deploy:lock'); } catch {} } }
+
+// Factory eth_call simulation — never sign+broadcast a tx that will revert (wastes gas).
+async function _simulateDeploy(net, signer, calldata, variant) {
+  const activationFallback = async () => {
+    try { return (await checkActivated(net, variant)) ? { ok: true } : { ok: false, reason: 'B20 not yet active on this network (Beryl activation pending)' }; }
+    catch { return { ok: false, reason: 'Could not verify B20 activation on-chain' }; }
+  };
+  try {
+    const sim = await ethCallSim(net, { from: signer, to: B20_FACTORY, data: calldata, value: '0x0' });
+    if (sim.reverted) {
+      const decoded = decodeFactoryRevert(sim.data);
+      return decoded === '__ECHO__' ? activationFallback() : { ok: false, reason: decoded };
+    }
+    const d = sim.data;
+    if (d && d.length === 66 && d !== '0x' + '0'.repeat(64)) return { ok: true };
+    if (!d || d === '0x' || d === '0x' + '0'.repeat(64) || d.startsWith(CREATE_B20_SEL)) return activationFallback();
+    return { ok: false, reason: decodeFactoryRevert(d) };
+  } catch { return activationFallback(); }
+}
+
 async function handleAgentDeploy(req, body, res) {
-  // GUARDRAIL first — before any signer/provider access
-  const agentKey = req.headers['x-orlix-key'] || body.agent_key || '';
+  // GUARDRAIL first — before any signer/provider access. Header-only key
+  // (bodies are far more likely to end up in request logs than headers).
+  const agentKey = req.headers['x-orlix-key'] || '';
   if (!agentAllowed(agentKey)) {
     res.statusCode = 403;
     return res.end(JSON.stringify({ ok: false, error: 'Forbidden: agent not on deploy allowlist' }));
@@ -836,43 +881,75 @@ async function handleAgentDeploy(req, body, res) {
   const salt     = body.salt ?? ethers.hexlify(ethers.randomBytes(32));
   const calldata = buildCreateCalldata(config, salt);
 
-  let gas, nonce, predicted = null;
+  // Serialize the whole reserve→sign→broadcast section (nonce safety + atomic spend cap)
+  const lock = await _acquireLock();
+  if (!lock.locked)
+    return res.end(JSON.stringify({ ok: false, error: 'Another deploy is in progress — retry shortly' }));
+
   try {
-    [gas, nonce] = await Promise.all([
-      fetchGas(net),
-      rpc(net, 'eth_getTransactionCount', [signer, 'pending']).then(n => parseInt(n ?? '0x0', 16)),
-    ]);
+    // Spend cap — rolling daily deploy limit (protects the signer wallet's gas)
+    const dailyLimit = parseInt(process.env.B20_AGENT_DAILY_LIMIT || '25', 10);
+    const dayKey     = `b20deploy:count:${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+    let usedToday;
+    try { usedToday = parseInt((await _redis('GET', dayKey)) || '0', 10); } catch { usedToday = 0; }
+    if (usedToday !== undefined && usedToday >= dailyLimit)
+      return res.end(JSON.stringify({ ok: false, error: `Daily deploy limit reached (${dailyLimit})` }));
+
+    // Never burn gas on a tx that will revert (not active yet, bad config, dup salt)
+    const sim = await _simulateDeploy(net, signer, calldata, config.variant);
+    if (!sim.ok) return res.end(JSON.stringify({ ok: false, error: `Deploy would revert: ${sim.reason}` }));
+
+    // Live gas + nonce for the server signer, plus predicted (CREATE2) address
+    let gas, nonce, predicted = null;
     try {
-      const data = FACTORY_IFACE.encodeFunctionData('getB20Address', [config.variant === 'stablecoin' ? 1 : 0, signer, salt]);
-      const r = await ethCall(net, B20_FACTORY, data);
-      if (r && r !== '0x') predicted = ABI_CODER.decode(['address'], r)[0];
+      [gas, nonce] = await Promise.all([
+        fetchGas(net),
+        rpc(net, 'eth_getTransactionCount', [signer, 'pending']).then(n => parseInt(n ?? '0x0', 16)),
+      ]);
+      try {
+        const data = FACTORY_IFACE.encodeFunctionData('getB20Address', [config.variant === 'stablecoin' ? 1 : 0, signer, salt]);
+        const r = await ethCall(net, B20_FACTORY, data);
+        if (r && r !== '0x') predicted = ABI_CODER.decode(['address'], r)[0];
+      } catch {}
+    } catch (e) {
+      return res.end(JSON.stringify({ ok: false, error: `Chain query failed: ${e.message}` }));
+    }
+
+    // Gas limit scales with initCalls (base 500k + 50k each). Floor 700k for
+    // headroom; unused gas is refunded, so a higher limit only needs more ETH.
+    const gasUnits = Math.max(700000, 500000 + buildInitCalls(config).length * 50000);
+
+    const unsigned = ethers.Transaction.from({
+      type: 2, chainId: CHAIN_ID[net], to: B20_FACTORY, value: 0, data: calldata,
+      gasLimit: gasUnits,
+      maxFeePerGas:         BigInt(gas.raw.maxFeePerGas),
+      maxPriorityFeePerGas: BigInt(gas.raw.maxPriorityFeePerGas),
+      nonce,
+    }).unsignedSerialized;
+
+    let txHash;
+    try {
+      const signedRaw = await turnkey.signTransaction(unsigned);
+      txHash = await rpc(net, 'eth_sendRawTransaction', [signedRaw]);
+    } catch (e) {
+      return res.end(JSON.stringify({ ok: false, error: `Sign/broadcast failed: ${e.message}` }));
+    }
+
+    // Count this deploy against the daily cap (only on successful broadcast)
+    try {
+      const n = await _redis('INCR', dayKey);
+      if (n === 1) await _redis('EXPIRE', dayKey, '90000'); // ~25h
     } catch {}
-  } catch (e) {
-    return res.end(JSON.stringify({ ok: false, error: `Chain query failed: ${e.message}` }));
+
+    return res.end(JSON.stringify({
+      ok: true, status: 'broadcast', txHash, predictedAddress: predicted,
+      explorerUrl: `${EXPLORER[net]}/tx/${txHash}`,
+      token: { name: config.name, symbol: config.symbol, variant: config.variant, decimals: config.decimals, admin: config.admin },
+      signer, network: net, chainId: CHAIN_ID[net], warnings,
+    }));
+  } finally {
+    await _releaseLock(lock.held);
   }
-
-  const unsigned = ethers.Transaction.from({
-    type: 2, chainId: CHAIN_ID[net], to: B20_FACTORY, value: 0, data: calldata,
-    gasLimit: 700000,
-    maxFeePerGas:         BigInt(gas.raw.maxFeePerGas),
-    maxPriorityFeePerGas: BigInt(gas.raw.maxPriorityFeePerGas),
-    nonce,
-  }).unsignedSerialized;
-
-  let txHash;
-  try {
-    const signedRaw = await turnkey.signTransaction(unsigned);
-    txHash = await rpc(net, 'eth_sendRawTransaction', [signedRaw]);
-  } catch (e) {
-    return res.end(JSON.stringify({ ok: false, error: `Sign/broadcast failed: ${e.message}` }));
-  }
-
-  return res.end(JSON.stringify({
-    ok: true, status: 'broadcast', txHash, predictedAddress: predicted,
-    explorerUrl: `${EXPLORER[net]}/tx/${txHash}`,
-    token: { name: config.name, symbol: config.symbol, variant: config.variant, decimals: config.decimals, admin: config.admin },
-    signer, network: net, chainId: CHAIN_ID[net], warnings,
-  }));
 }
 
 function handleManifest(res) {
@@ -897,8 +974,10 @@ function handleManifest(res) {
 // ── Router ────────────────────────────────────────────────────────────────────
 
 module.exports = async (req, res) => {
-  res.writeHead(200, CORS);
-  if (req.method === 'OPTIONS') return res.end();
+  // Set CORS via setHeader (not writeHead) so handlers can still choose a status
+  // code — writeHead commits the status line immediately (403 would be ignored).
+  for (const [k, v] of Object.entries(CORS)) res.setHeader(k, v);
+  if (req.method === 'OPTIONS') { res.statusCode = 204; return res.end(); }
 
   try {
     const body   = req.method === 'POST' ? (req.body ?? {}) : (req.query ?? {});
