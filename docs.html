@@ -167,31 +167,40 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
 .f-links a{color:var(--text-3);font-size:.78rem;transition:color var(--tr)}
 .f-links a:hover{color:var(--orange)}
 
-/* MOBILE DOCS TOC (off-canvas drawer, Base/GitBook style) */
-.docs-toc-btn{display:none;align-items:center;gap:9px;width:100%;margin:0 0 22px;padding:11px 14px;
-  background:var(--bg-2);border:1px solid var(--border);border-radius:6px;color:var(--text-1);
-  font-family:var(--mono);font-size:.8rem;cursor:pointer;transition:border-color var(--tr)}
-.docs-toc-btn:hover{border-color:var(--border-b)}
-.docs-toc-btn svg{width:15px;height:15px;flex-shrink:0;color:var(--orange)}
+/* MOBILE DOCS TOC (off-canvas drawer + sticky breadcrumb bar, Base/GitBook style) */
+.docs-toc-ham{display:none;flex-direction:column;justify-content:center;gap:4px;width:26px;height:26px;
+  padding:0;margin-right:4px;background:none;border:none;cursor:pointer;flex-shrink:0}
+.docs-toc-ham span{display:block;width:17px;height:2px;background:var(--text-1);border-radius:2px}
 .docs-scrim{display:none;position:fixed;inset:0;z-index:115;background:rgba(0,0,0,.55);opacity:0;transition:opacity .25s}
 .docs-scrim.open{opacity:1}
-.docs-sidebar-close{display:none}
+.docs-drawer-head{display:none}
 
 /* RESPONSIVE */
 @media(max-width:720px){
   .docs-layout{grid-template-columns:1fr}
   .docs-content{padding:24px 0 60px}
-  .docs-toc-btn{display:flex}
+  .docs-toc-ham{display:flex}
+  .crumb{position:sticky;top:60px;z-index:60;background:var(--bg);flex-wrap:nowrap;
+    margin:0 -24px 22px;padding:12px 24px;border-bottom:1px solid var(--border)}
   .docs-scrim.open{display:block}
   .docs-sidebar{
-    position:fixed;top:0;left:0;z-index:120;width:84%;max-width:300px;height:100dvh;
+    position:fixed;top:0;left:0;z-index:120;width:88%;max-width:340px;height:100dvh;
     background:var(--bg);border-right:1px solid var(--border);
     transform:translateX(-100%);transition:transform .28s ease;
-    padding:16px 0 32px;box-shadow:2px 0 44px rgba(0,0,0,.55);display:block
+    padding:14px 0 40px;box-shadow:2px 0 44px rgba(0,0,0,.55);display:block
   }
   .docs-sidebar.open{transform:translateX(0)}
-  .docs-sidebar-close{display:flex;justify-content:flex-end;padding:0 14px 6px}
-  .docs-sidebar-close button{background:none;border:none;color:var(--text-2);font-size:1.3rem;line-height:1;cursor:pointer;padding:4px 8px}
+  /* drawer header: logo + close, like Base */
+  .docs-drawer-head{display:flex;align-items:center;justify-content:space-between;
+    padding:6px 22px 16px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+  .docs-drawer-logo{font-family:var(--mono);font-weight:800;font-size:1rem;color:var(--text-1);letter-spacing:.01em}
+  .docs-drawer-logo span{color:var(--text-3);font-weight:500}
+  .docs-drawer-head button{background:none;border:none;color:var(--text-2);font-size:1.4rem;line-height:1;cursor:pointer;padding:2px 6px}
+  /* bigger tap targets in the drawer */
+  .sidebar-section{padding:0 20px;margin-bottom:24px}
+  .s-label{font-size:.72rem!important;margin-bottom:8px!important}
+  .sidebar-nav{gap:2px}
+  .sidebar-nav a{padding:11px 12px;font-size:.92rem}
 }
 @media(max-width:560px){.tbl-row{grid-template-columns:1fr;gap:6px}}
 @media(max-width:480px){body{font-size:14px}}
@@ -239,7 +248,10 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
 
     <!-- sidebar -->
     <nav class="docs-sidebar" id="docsSidebar">
-      <div class="docs-sidebar-close"><button id="docsTocClose" aria-label="Close contents">✕</button></div>
+      <div class="docs-drawer-head">
+        <span class="docs-drawer-logo">ORLIX <span>docs</span></span>
+        <button id="docsTocClose" aria-label="Close contents">✕</button>
+      </div>
       <div class="sidebar-section">
         <span class="s-label">getting started</span>
         <div class="sidebar-nav">
@@ -273,12 +285,8 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
     <!-- content -->
     <div class="docs-content">
 
-      <button class="docs-toc-btn" id="docsTocBtn" aria-label="Open contents">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        Contents
-      </button>
-
       <div class="crumb">
+        <button class="docs-toc-ham" id="docsTocBtn" aria-label="Open contents"><span></span><span></span><span></span></button>
         <span class="root">~</span><span class="sep">/</span><span class="here">orlix</span><span class="sep">/</span>docs<span class="sep">/</span>index.md
       </div>
 
@@ -598,6 +606,22 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   if(sc)sc.onclick=closeToc;
   if(tc)tc.onclick=closeToc;
   if(sb)sb.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeToc)});
+
+  // Scroll-spy: highlight the sidebar link for the section in view
+  var links={};
+  if(sb)sb.querySelectorAll('a[href^="#"]').forEach(function(a){links[a.getAttribute('href').slice(1)]=a});
+  var secs=document.querySelectorAll('.doc-section[id]');
+  if(secs.length&&'IntersectionObserver'in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          var a=links[e.target.id];
+          if(a){for(var k in links)links[k].classList.remove('active');a.classList.add('active');}
+        }
+      });
+    },{rootMargin:'-45% 0px -50% 0px'});
+    secs.forEach(function(s){io.observe(s)});
+  }
 })();
 </script>
 </body>
