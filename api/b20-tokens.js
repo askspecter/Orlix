@@ -290,6 +290,7 @@ module.exports = async (req, res) => {
         supply:   t.supply   || null,
         deployer: t.deployer || null,
         txHash:   t.txHash   || null,
+        image:    t.image    || null,
         timestamp: t.ts ? Math.floor(t.ts / 1000) : (t.timestamp || null),
         variant:  t.variant || ((t.decimals === 6) ? 'stablecoin' : 'asset'),
         source:   'orlix',

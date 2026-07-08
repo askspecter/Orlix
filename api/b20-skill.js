@@ -1274,6 +1274,11 @@ async function handleRegisterLaunch(body, res) {
   const token = (body.token || '').trim();
   if (!/^0x[0-9a-fA-F]{40}$/.test(token) || !token.toLowerCase().startsWith('0xb2'))
     return res.end(JSON.stringify({ ok: false, error: 'valid B20 token address required' }));
+  // Accept a small compressed data-URL logo (cap size to keep the feed lean).
+  let image = null;
+  if (typeof body.image === 'string' && /^data:image\//.test(body.image) && body.image.length <= 50000) {
+    image = body.image;
+  }
   const entry = JSON.stringify({
     address:  ethers.getAddress(token),
     name:     String(body.name || '').slice(0, 64),
@@ -1282,6 +1287,7 @@ async function handleRegisterLaunch(body, res) {
     variant:  body.variant === 'stablecoin' ? 'stablecoin' : 'asset',
     decimals: Number(body.decimals) || 18,
     txHash:   /^0x[0-9a-fA-F]{64}$/.test(body.txHash || '') ? body.txHash : null,
+    image,
     ts:       Date.now(),
   });
   try {

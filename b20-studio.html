@@ -989,7 +989,27 @@ function onDecChange() {}
 function onCapToggle() {}
 
 // ── logo upload ──────────────────────────────────────────────────────────────
-var _logoDataUrl = null;
+var _logoDataUrl = null;   // full preview
+var _logoStore = null;     // compressed (~128px) version stored with the launch
+// Downscale the chosen logo to a small data URL so it fits in the launch feed + localStorage.
+function _compressLogo(dataUrl, cb) {
+  try {
+    if (/^data:image\/svg/i.test(dataUrl)) { cb(dataUrl.length < 40000 ? dataUrl : null); return; }
+    var img = new Image();
+    img.onload = function() {
+      var max = 128, w = img.width, h = img.height;
+      if (w >= h && w > max) { h = Math.round(h * max / w); w = max; }
+      else if (h > w && h > max) { w = Math.round(w * max / h); h = max; }
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      var out; try { out = c.toDataURL('image/webp', 0.82); } catch (_) { out = null; }
+      if (!out || out.length > 45000) { try { out = c.toDataURL('image/jpeg', 0.7); } catch (_) {} }
+      cb(out && out.length < 45000 ? out : (dataUrl.length < 45000 ? dataUrl : null));
+    };
+    img.onerror = function() { cb(dataUrl.length < 45000 ? dataUrl : null); };
+    img.src = dataUrl;
+  } catch (_) { cb(null); }
+}
 function onLogoSelect(input) {
   var file = input.files && input.files[0];
   if (!file) return;
@@ -1002,12 +1022,14 @@ function onLogoSelect(input) {
     document.getElementById('logoPlaceholder').style.display = 'none';
     document.getElementById('logoUpload').classList.add('has-logo');
     document.getElementById('logoRemove').style.display = 'block';
+    _compressLogo(_logoDataUrl, function(small) { _logoStore = small; });
   };
   reader.readAsDataURL(file);
 }
 function removeLogo(e) {
   if (e) { e.stopPropagation(); e.preventDefault(); }
   _logoDataUrl = null;
+  _logoStore = null;
   document.getElementById('logoFile').value = '';
   document.getElementById('logoImg').src = '';
   document.getElementById('logoPreview').style.display = 'none';
@@ -1268,8 +1290,8 @@ async function onDeploy() {
             if (dhash) { document.getElementById('dcTxHash').textContent = dhash; document.getElementById('dcTxLink').href = explorer + '/tx/' + dhash; }
             document.getElementById('dcActions').style.display = 'flex';
             setPoolStatus('✅ Launched in one confirmation — token deployed, pool seeded, tradeable!', 'ok');
-            saveMyToken({ address: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null, deployedAt: Date.now(), network });
-            fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register_launch', token: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, deployer: walletAddress, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null }) }).catch(() => {});
+            saveMyToken({ address: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, variant: variant || 'asset', decimals: _deployDecimals, image: _logoStore || null, txHash: dhash || null, deployedAt: Date.now(), network });
+            fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register_launch', token: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, deployer: walletAddress, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null, image: _logoStore || undefined }) }).catch(() => {});
             setDeployBtn('success', '✓ Launched!', 'Token live & tradeable on Base');
             deploying = false;
             return;
@@ -1371,7 +1393,7 @@ async function pollReceipt(hash, net, predictedCA) {
         saveMyToken({
           address: ca || null, name: _deployedTokenName, symbol: _deployedTokenSym,
           variant: variant || 'asset',
-          decimals: _deployDecimals,
+          decimals: _deployDecimals, image: _logoStore || null,
           txHash: hash, deployedAt: Date.now(), network: net,
         });
         // Register to the shared "New Launched on Orlix" feed
@@ -1382,7 +1404,7 @@ async function pollReceipt(hash, net, predictedCA) {
               action: 'register_launch', token: ca,
               name: _deployedTokenName, symbol: _deployedTokenSym,
               deployer: walletAddress, variant: variant || 'asset',
-              decimals: _deployDecimals, txHash: hash,
+              decimals: _deployDecimals, txHash: hash, image: _logoStore || undefined,
             }),
           }).catch(() => {});
         }
@@ -1619,7 +1641,7 @@ function renderMyTokens() {
     const shortCA = t.address ? t.address.slice(0,6)+'…'+t.address.slice(-4) : '';
     return `<div class="lcard">
       <div class="lcard-top">
-        <div class="lcard-ico" style="background:${col}">${initials}</div>
+        ${t.image ? `<div class="lcard-ico" style="padding:0;overflow:hidden"><img src="${_esc(t.image)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>` : `<div class="lcard-ico" style="background:${col}">${initials}</div>`}
         <div class="lcard-info">
           <div class="lcard-name">${_esc(t.name||'Token')}</div>
           <div class="lcard-sym">${_esc(t.symbol||'???')}</div>
@@ -1636,8 +1658,8 @@ function renderMyTokens() {
         ${t.decimals !== undefined ? `<div class="lcard-meta-row"><span style="opacity:.5">·</span>${t.decimals} decimals</div>` : ''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
-        ${t.txHash ? `<a class="lcard-act" href="${explorer}/tx/${_esc(t.txHash)}" target="_blank" rel="noopener">BaseScan ↗</a>` : ''}
+        ${ca ? `<a class="lcard-act lcard-act-primary" href="https://dexscreener.com/base/${ca}" target="_blank" rel="noopener">Trade ↗</a>` : ''}
+        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1707,7 +1729,7 @@ function renderLaunchedGrid() {
     const ca       = t.address ? _esc(t.address) : '';
     return `<div class="lcard">
       <div class="lcard-top">
-        <div class="lcard-ico" style="background:${col}">${initials}</div>
+        ${t.image ? `<div class="lcard-ico" style="padding:0;overflow:hidden"><img src="${_esc(t.image)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>` : `<div class="lcard-ico" style="background:${col}">${initials}</div>`}
         <div class="lcard-info">
           <div class="lcard-name">${_esc(t.name||'Unknown')}</div>
           <div class="lcard-sym">${_esc(t.symbol||'???')}</div>
@@ -1725,8 +1747,8 @@ function renderLaunchedGrid() {
         ${t.supply?`<div class="lcard-meta-row"><span style="opacity:.5">◎</span>${Number(t.supply).toLocaleString()} supply</div>`:''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
-        ${t.txHash?`<a class="lcard-act" href="${explorer}/tx/${_esc(t.txHash)}" target="_blank" rel="noopener">BaseScan ↗</a>`:''}
+        ${ca ? `<a class="lcard-act lcard-act-primary" href="https://dexscreener.com/base/${ca}" target="_blank" rel="noopener">Trade ↗</a>` : ''}
+        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1765,7 +1787,7 @@ async function loadLaunched() {
       _launchedAll.push({
         address: m.address, name: m.name, symbol: m.symbol,
         decimals: m.decimals, variant: m.variant || 'asset',
-        deployer: null, txHash: m.txHash || null,
+        deployer: null, txHash: m.txHash || null, image: m.image || null,
         timestamp: m.deployedAt ? Math.floor(m.deployedAt / 1000) : null,
         source: 'local',
       });
