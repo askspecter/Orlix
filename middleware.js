@@ -3,7 +3,7 @@
 // filesystem, so `/` always resolved to index.html).
 //
 //   app.orlixai.xyz/*  → /app.html      (path-based views: /overview, /playground, …)
-//   docs.orlixai.xyz/  → /docs.html
+//   docs.orlixai.xyz/* → /docs.html     (path-based pages: /overview, /policies, …)
 //   b20.orlixai.xyz/   → /b20-studio.html
 //
 // The matcher excludes /api, /assets, and any path with a file extension so
@@ -12,19 +12,22 @@ import { rewrite, next } from '@vercel/edge';
 
 export const config = { matcher: '/((?!api|assets|.*\\.).*)' };
 
-const ROOT = {
+// Hosts whose every (non-asset) path serves one SPA that routes client-side.
+const SPA = {
+  'app.orlixai.xyz':  '/app.html',
   'docs.orlixai.xyz': '/docs.html',
-  'b20.orlixai.xyz':  '/b20-studio.html',
+};
+// Single-page hosts: only the root is rewritten.
+const ROOT = {
+  'b20.orlixai.xyz': '/b20-studio.html',
 };
 
 export default function middleware(request) {
   const host = (request.headers.get('host') || '').toLowerCase();
   const path = new URL(request.url).pathname;
 
-  // App: every (non-asset) path serves the SPA, which routes client-side.
-  if (host === 'app.orlixai.xyz') return rewrite(new URL('/app.html', request.url));
+  if (SPA[host]) return rewrite(new URL(SPA[host], request.url));
 
-  // Docs / B20: single page, only the root.
   const dest = ROOT[host];
   if (dest && path === '/') return rewrite(new URL(dest, request.url));
 
