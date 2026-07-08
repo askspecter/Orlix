@@ -7,14 +7,15 @@
 // on public data (Basescan + Blockscout + DexScreener), cached in Upstash so a
 // repeated trace comes back instantly.
 
-const BASE_RPC = 'https://mainnet.base.org';
-// Blockscout exposes an Etherscan-compatible API at /api with NO key required,
-// and it actually returns data for Base (the legacy api.basescan.org V1 endpoint
-// now returns empty, and Etherscan V2 gates Base behind a paid plan). So we use
-// Blockscout as the primary source — the response shape ({result:[...]}) matches
-// what the Etherscan-style callers below already expect.
-const BSCAN      = 'https://base.blockscout.com/api';
-const BLOCKSCOUT = 'https://base.blockscout.com/api/v2';
+// Per-chain endpoints. Both chains run Blockscout (etherscan-compatible /api +
+// REST /api/v2 with identical response shapes), so every caller is chain-agnostic
+// once it threads `chain`. Defaults to 'base' everywhere for backward compatibility.
+const CHAINS = {
+  base:      { rpc: 'https://mainnet.base.org',                bscan: 'https://base.blockscout.com/api',          v2: 'https://base.blockscout.com/api/v2' },
+  robinhood: { rpc: 'https://rpc.mainnet.chain.robinhood.com/', bscan: 'https://robinhoodchain.blockscout.com/api', v2: 'https://robinhoodchain.blockscout.com/api/v2' },
+};
+const C = (chain) => CHAINS[chain] || CHAINS.base;
+// WETH is only used to price ETH (chain-agnostic USD), so Base's address is fine.
 const WETH      = '0x4200000000000000000000000000000000000006';
 
 const short = a => a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '?';
@@ -23,12 +24,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 // ── Onchain data helper (Blockscout etherscan-compatible endpoint) ───────────
 // Self-throttled to be a good citizen. Returns { result: [...] } on success.
 let _lastCall = 0;
-async function bscan(params, { timeout = 9000 } = {}) {
+async function bscan(params, { timeout = 9000, chain = 'base' } = {}) {
   const wait = 160 - (Date.now() - _lastCall);
   if (wait > 0) await sleep(wait);
   _lastCall = Date.now();
   const qs = new URLSearchParams(params).toString();
-  const r = await fetch(`${BSCAN}?${qs}`, { signal: AbortSignal.timeout(timeout) }).catch(() => null);
+  const r = await fetch(`${C(chain).bscan}?${qs}`, { signal: AbortSignal.timeout(timeout) }).catch(() => null);
   if (!r || !r.ok) return { status: '0', result: [] };
   const j = await r.json().catch(() => ({ status: '0', result: [] }));
   // Blockscout returns message:"OK" (not status:"1"); normalise result to array
@@ -36,8 +37,8 @@ async function bscan(params, { timeout = 9000 } = {}) {
   return j;
 }
 
-async function rpc(method, params = []) {
-  const r = await fetch(BASE_RPC, {
+async function rpc(method, params = [], chain = 'base') {
+  const r = await fetch(C(chain).rpc, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
     signal: AbortSignal.timeout(8000),
@@ -152,11 +153,11 @@ function isInfra(addr) {
   return isSystem(a) || !!FACTORY[a] || INFRA.has(a);
 }
 
-async function firstFunder(wallet) {
+async function firstFunder(wallet, chain = 'base') {
   wallet = wallet.toLowerCase();
   // 1) earliest normal tx that actually sent ETH in (real funding)
   const j = await bscan({ module: 'account', action: 'txlist', address: wallet,
-    startblock: '0', endblock: '99999999', page: '1', offset: '80', sort: 'asc' });
+    startblock: '0', endblock: '99999999', page: '1', offset: '80', sort: 'asc' }, { chain });
   const txs = Array.isArray(j.result) ? j.result : [];
   for (const t of txs) {
     if (t.to?.toLowerCase() === wallet && BigInt(t.value || '0') > 0n && t.isError === '0' && !isSystem(t.from)) {
@@ -165,7 +166,7 @@ async function firstFunder(wallet) {
   }
   // 2) internal value transfer (funded by a contract / bridge / disperser)
   const ij = await bscan({ module: 'account', action: 'txlistinternal', address: wallet,
-    startblock: '0', endblock: '99999999', page: '1', offset: '80', sort: 'asc' });
+    startblock: '0', endblock: '99999999', page: '1', offset: '80', sort: 'asc' }, { chain });
   const itxs = Array.isArray(ij.result) ? ij.result : [];
   for (const t of itxs) {
     if (t.to?.toLowerCase() === wallet && BigInt(t.value || '0') > 0n && !isSystem(t.from)) {
@@ -182,9 +183,9 @@ async function firstFunder(wallet) {
   return null;
 }
 
-async function traceFunding(wallet, maxHops = 6) {
+async function traceFunding(wallet, maxHops = 6, chain = 'base') {
   wallet = wallet.toLowerCase();
-  const ck = `inv:trace:${wallet}:${maxHops}`;
+  const ck = `inv:trace:${chain}:${wallet}:${maxHops}`;
   const cached = await cacheGet(ck);
   if (cached) return cached;
 
@@ -192,7 +193,7 @@ async function traceFunding(wallet, maxHops = 6) {
   const seen = new Set([wallet]);
   let cur = wallet;
   for (let i = 0; i < maxHops; i++) {
-    const f = await firstFunder(cur);
+    const f = await firstFunder(cur, chain);
     if (!f) { hops.push({ end: true, reason: 'no-inbound', addr: cur }); break; }
     const lbl = label(f.from);
     hops.push({ from: f.from, value: f.value, ts: f.ts, hash: f.hash, label: lbl, internal: !!f.internal });
@@ -209,18 +210,18 @@ async function traceFunding(wallet, maxHops = 6) {
 // ── 2. WALLET CLUSTER — side wallets sharing a funder ────────────────────────
 // Given a wallet, find its funder, then list OTHER wallets that same funder
 // seeded around the same time. Classic sybil / side-wallet fingerprint.
-async function walletCluster(wallet) {
+async function walletCluster(wallet, chain = 'base') {
   wallet = wallet.toLowerCase();
-  const ck = `inv:cluster:${wallet}`;
+  const ck = `inv:cluster:${chain}:${wallet}`;
   const cached = await cacheGet(ck);
   if (cached) return cached;
 
-  const f = await firstFunder(wallet);
+  const f = await firstFunder(wallet, chain);
   if (!f) { const out = { wallet, funder: null, siblings: [] }; await cacheSet(ck, out, 900); return out; }
 
   // All outbound value txs from the funder → the wallets it seeded
   const j = await bscan({ module: 'account', action: 'txlist', address: f.from,
-    startblock: '0', endblock: '99999999', page: '1', offset: '200', sort: 'asc' });
+    startblock: '0', endblock: '99999999', page: '1', offset: '200', sort: 'asc' }, { chain });
   const txs = Array.isArray(j.result) ? j.result : [];
   const sib = new Map();
   for (const t of txs) {
@@ -238,19 +239,19 @@ async function walletCluster(wallet) {
 }
 
 // ── 3. DEPLOYER RAP SHEET — every token a creator has launched ───────────────
-async function contractCreator(token) {
+async function contractCreator(token, chain = 'base') {
   token = token.toLowerCase();
   let onchainCreator = null, creationHash = null;
 
   // Blockscout V2 address endpoint carries the on-chain creator + creation tx.
-  const r = await fetch(`${BLOCKSCOUT}/addresses/${token}`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
+  const r = await fetch(`${C(chain).v2}/addresses/${token}`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
   if (r && r.ok) {
     const d = await r.json().catch(() => ({}));
     const c = d.creator_address_hash?.toLowerCase();
     if (c && !isSystem(c)) { onchainCreator = c; creationHash = d.creation_transaction_hash || null; }
   }
   if (!onchainCreator) {
-    const j = await bscan({ module: 'contract', action: 'getcontractcreation', contractaddresses: token });
+    const j = await bscan({ module: 'contract', action: 'getcontractcreation', contractaddresses: token }, { chain });
     const row = Array.isArray(j.result) && j.result.length ? j.result[0] : null;
     if (row?.contractCreator && !isSystem(row.contractCreator)) { onchainCreator = row.contractCreator.toLowerCase(); creationHash = row.txHash; }
   }
@@ -265,8 +266,8 @@ async function contractCreator(token) {
   // first transfers, mark the mint→LP forwarding chain as infra, and take the
   // first sizeable transfer to a real EOA — that's the dev's allocation.
   const factory = onchainCreator && factoryName(onchainCreator) ? factoryName(onchainCreator) : 'factory';
-  const supply = await tokenSupply(token);
-  const tj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: '1', offset: '60', sort: 'asc' });
+  const supply = await tokenSupply(token, chain);
+  const tj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: '1', offset: '60', sort: 'asc' }, { chain });
   const txs = Array.isArray(tj.result) ? tj.result : [];
   const dec = txs[0]?.tokenDecimal ? Number(txs[0].tokenDecimal) : 18;
   // Distribution sources = the mint recipient + big pass-through holders (factory,
@@ -294,7 +295,7 @@ async function contractCreator(token) {
   // the locker over time. Scan RECENT transfers and find the EOA that keeps
   // receiving from the distribution cluster (not the pool). That's the dev.
   if (distSrc.size) {
-    const rj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: '1', offset: '1000', sort: 'desc' });
+    const rj = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: '1', offset: '1000', sort: 'desc' }, { chain });
     const rtxs = Array.isArray(rj.result) ? rj.result : [];
     const tally = new Map();  // addr → { amt, count }
     for (const t of rtxs) {
@@ -321,21 +322,21 @@ async function contractCreator(token) {
 }
 
 // total supply (human units) via RPC totalSupply()
-async function tokenSupply(token) {
-  const hex = await rpc('eth_call', [{ to: token, data: '0x18160ddd' }, 'latest']).catch(() => null);
+async function tokenSupply(token, chain = 'base') {
+  const hex = await rpc('eth_call', [{ to: token, data: '0x18160ddd' }, 'latest'], chain).catch(() => null);
   if (!hex || hex === '0x') return null;
-  const decHex = await rpc('eth_call', [{ to: token, data: '0x313ce567' }, 'latest']).catch(() => null);
+  const decHex = await rpc('eth_call', [{ to: token, data: '0x313ce567' }, 'latest'], chain).catch(() => null);
   const dec = decHex && decHex !== '0x' ? parseInt(decHex, 16) : 18;
   try { return Number(BigInt(hex)) / 10 ** dec; } catch { return null; }
 }
 
-async function deployerRapSheet(token) {
+async function deployerRapSheet(token, chain = 'base') {
   token = token.toLowerCase();
-  const ck = `inv:deployer:${token}`;
+  const ck = `inv:deployer:${chain}:${token}`;
   const cached = await cacheGet(ck);
   if (cached) return cached;
 
-  const cc = await contractCreator(token);
+  const cc = await contractCreator(token, chain);
   if (!cc?.creator) { const out = { token, creator: null, deploys: [] }; await cacheSet(ck, out, 900); return out; }
 
   const createdMap = new Map();   // tokenAddr → earliest ts
@@ -347,7 +348,7 @@ async function deployerRapSheet(token) {
 
   // Source 1 — traditional deploys: creator's txs with (to empty → contractAddress)
   const j = await bscan({ module: 'account', action: 'txlist', address: cc.creator,
-    startblock: '0', endblock: '99999999', page: '1', offset: '2000', sort: 'asc' });
+    startblock: '0', endblock: '99999999', page: '1', offset: '2000', sort: 'asc' }, { chain });
   for (const t of (Array.isArray(j.result) ? j.result : [])) {
     if ((!t.to || t.to === '') && t.contractAddress) add(t.contractAddress, Number(t.timeStamp));
   }
@@ -355,7 +356,7 @@ async function deployerRapSheet(token) {
   // Source 2 — factory / ERC-4337 deploys: tokens where THIS wallet received the
   // very first mint (from 0x0). Catches memecoins launched via handleOps/factories.
   const tj = await bscan({ module: 'account', action: 'tokentx', address: cc.creator,
-    page: '1', offset: '2000', sort: 'asc' });
+    page: '1', offset: '2000', sort: 'asc' }, { chain });
   for (const t of (Array.isArray(tj.result) ? tj.result : [])) {
     if (t.from?.toLowerCase() === '0x0000000000000000000000000000000000000000' && t.contractAddress) {
       add(t.contractAddress, Number(t.timeStamp));
@@ -390,9 +391,9 @@ async function deployerRapSheet(token) {
 }
 
 // ── 4. EARLY BUYERS — first wallets to receive the token, and who held ───────
-async function earlyBuyers(token, n = 12) {
+async function earlyBuyers(token, n = 12, chain = 'base') {
   token = token.toLowerCase();
-  const ck = `inv:early2:${token}`;
+  const ck = `inv:early2:${chain}:${token}`;
   const cached = await cacheGet(ck);
   if (cached) return cached;
 
@@ -405,15 +406,15 @@ async function earlyBuyers(token, n = 12) {
   // Scan the token's earliest transfers.
   const txs = [];
   for (let page = 1; page <= 3; page++) {
-    const j = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: String(page), offset: '1000', sort: 'asc' });
+    const j = await bscan({ module: 'account', action: 'tokentx', contractaddress: token, page: String(page), offset: '1000', sort: 'asc' }, { chain });
     const r = Array.isArray(j.result) ? j.result : [];
     txs.push(...r);
     if (r.length < 1000) break;
     if (pool && r.some(t => t.from?.toLowerCase() === pool)) break;  // reached pool trading
   }
   const dec = txs[0]?.tokenDecimal ? Number(txs[0].tokenDecimal) : 18;
-  const supply = await tokenSupply(token).catch(() => null);
-  const creator = (await contractCreator(token).catch(() => null))?.creator;
+  const supply = await tokenSupply(token, chain).catch(() => null);
+  const creator = (await contractCreator(token, chain).catch(() => null))?.creator;
 
   // Build the "distribution / infrastructure" exclusion set: the mint recipient,
   // any ≥40% holder (deployer/locker/treasury), the resolved creator, and any
@@ -453,7 +454,7 @@ async function earlyBuyers(token, n = 12) {
   // Current balance → still holding? + USD value of what's left
   await Promise.all(firstBuyers.map(async b => {
     const bal = await rpc('eth_call', [{ to: token,
-      data: '0x70a08231' + b.addr.slice(2).padStart(64, '0') }, 'latest']).catch(() => null);
+      data: '0x70a08231' + b.addr.slice(2).padStart(64, '0') }, 'latest'], chain).catch(() => null);
     const cur = bal && bal !== '0x' ? Number(BigInt(bal)) / 10 ** dec : 0;
     b.holding = cur;
     b.pctLeft = b.got > 0 ? Math.min(100, (cur / b.got) * 100) : 0;
@@ -472,16 +473,16 @@ async function earlyBuyers(token, n = 12) {
 }
 
 // ── 5. RUG DOSSIER — one-shot risk report on a token ─────────────────────────
-async function rugDossier(token) {
+async function rugDossier(token, chain = 'base') {
   token = token.toLowerCase();
-  const ck = `inv:dossier:${token}`;
+  const ck = `inv:dossier:${chain}:${token}`;
   const cached = await cacheGet(ck);
   if (cached) return cached;
 
   const [dx, cc, holdersRes] = await Promise.all([
     dexData(token).catch(() => null),
-    contractCreator(token).catch(() => null),
-    fetch(`${BLOCKSCOUT}/tokens/${token}/holders`, { signal: AbortSignal.timeout(8000) })
+    contractCreator(token, chain).catch(() => null),
+    fetch(`${C(chain).v2}/tokens/${token}/holders`, { signal: AbortSignal.timeout(8000) })
       .then(r => r.ok ? r.json() : null).catch(() => null),
   ]);
 
@@ -499,11 +500,11 @@ async function rugDossier(token) {
   // Dev wallet profile
   let dev = null;
   if (cc?.creator) {
-    const trace = await traceFunding(cc.creator, 3).catch(() => null);
-    const rap = await deployerRapSheet(token).catch(() => null);
+    const trace = await traceFunding(cc.creator, 3, chain).catch(() => null);
+    const rap = await deployerRapSheet(token, chain).catch(() => null);
     // dev's first activity = wallet age
     const fj = await bscan({ module: 'account', action: 'txlist', address: cc.creator,
-      startblock: '0', endblock: '99999999', page: '1', offset: '1', sort: 'asc' });
+      startblock: '0', endblock: '99999999', page: '1', offset: '1', sort: 'asc' }, { chain });
     const firstTs = Array.isArray(fj.result) && fj.result[0] ? Number(fj.result[0].timeStamp) : null;
     dev = {
       addr: cc.creator,
@@ -540,15 +541,15 @@ async function rugDossier(token) {
 
 // ── 6. NET WORTH — full portfolio valuation of a wallet ──────────────────────
 // ETH + every ERC-20 the wallet holds, each priced via DexScreener, summed.
-async function netWorth(wallet) {
+async function netWorth(wallet, chain = 'base') {
   wallet = wallet.toLowerCase();
-  const ck = `inv:networth:${wallet}`;
+  const ck = `inv:networth:${chain}:${wallet}`;
   const cached = await cacheGet(ck);
   if (cached) return cached;
 
   const [ethHex, tokRes, ethPx] = await Promise.all([
-    rpc('eth_getBalance', [wallet, 'latest']).catch(() => null),
-    fetch(`${BLOCKSCOUT}/addresses/${wallet}/token-balances`, { signal: AbortSignal.timeout(9000) })
+    rpc('eth_getBalance', [wallet, 'latest'], chain).catch(() => null),
+    fetch(`${C(chain).v2}/addresses/${wallet}/token-balances`, { signal: AbortSignal.timeout(9000) })
       .then(r => r.ok ? r.json() : null).catch(() => null),
     dexData(WETH).then(d => d?.priceUsd ? Number(d.priceUsd) : 0).catch(() => 0),
   ]);
@@ -587,10 +588,10 @@ async function netWorth(wallet) {
 // ── 7. LINK — how are two wallets connected? ─────────────────────────────────
 // Direct transfers between them + shared counterparties/funders. Answers
 // "are these the same person / working together?"
-async function linkWallets(a, b) {
+async function linkWallets(a, b, chain = 'base') {
   a = a.toLowerCase(); b = b.toLowerCase();
   const pull = w => bscan({ module: 'account', action: 'txlist', address: w,
-    startblock: '0', endblock: '99999999', page: '1', offset: '400', sort: 'desc' })
+    startblock: '0', endblock: '99999999', page: '1', offset: '400', sort: 'desc' }, { chain })
     .then(j => Array.isArray(j.result) ? j.result : []);
   const [ta, tb] = await Promise.all([pull(a), pull(b)]);
 
@@ -615,7 +616,7 @@ async function linkWallets(a, b) {
   const pa = peers(a)(ta), pb = peers(b)(tb);
   const shared = [...pa].filter(p => pb.has(p)).slice(0, 10);
   // Shared funders specifically
-  const [fa, fb] = await Promise.all([firstFunder(a).catch(() => null), firstFunder(b).catch(() => null)]);
+  const [fa, fb] = await Promise.all([firstFunder(a, chain).catch(() => null), firstFunder(b, chain).catch(() => null)]);
   const sameFunder = fa && fb && fa.from === fb.from ? fa.from : null;
 
   return {

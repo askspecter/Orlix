@@ -889,11 +889,17 @@ async function cmdCluster(chatId, wallet, lang = 'en') {
   await tg('sendMessage', { chat_id: chatId, text: term(`cluster ${INV.short(wallet)}`, body), parse_mode: 'Markdown', disable_web_page_preview: true, reply_markup: { inline_keyboard: kb } });
 }
 
+// Which chain does this token live on? (drives chain-aware on-chain lookups)
+async function chainOf(addr) {
+  const dx = await INV.dexData(addr).catch(() => null);
+  return dx?.chainId === 'robinhood' ? 'robinhood' : 'base';
+}
+
 // /deployer <token> — the creator's full launch history
 async function cmdDeployer(chatId, token, lang = 'en') {
   typing(chatId);
   await running(chatId, `deployer ${INV.short(token)} --rap-sheet`);
-  const res = await INV.deployerRapSheet(token);
+  const res = await INV.deployerRapSheet(token, await chainOf(token));
   REP.recordDeployer(res).catch(() => {});
   if (!res.creator) return send(chatId, '```\ncould not resolve deployer for ' + INV.short(token) + '\n```');
   let body = `deployer  ${INV.short(res.creator)}\n`;
@@ -924,7 +930,7 @@ async function cmdDeployer(chatId, token, lang = 'en') {
 async function cmdEarly(chatId, token, lang = 'en') {
   typing(chatId);
   await running(chatId, `early ${INV.short(token)} --first-buyers`);
-  const res = await INV.earlyBuyers(token, 12);
+  const res = await INV.earlyBuyers(token, 12, await chainOf(token));
   if (!res.buyers.length) return send(chatId, '```\nno early buyer data for ' + INV.short(token) + '\n```');
   const label = res.mode === 'pool-buys' ? 'first buyers (from pool)' : 'earliest holders';
   let body = `${res.symbol ? '$' + res.symbol : INV.short(token)}${res.ageStr ? ' · age ' + res.ageStr : ''}\n`;
@@ -947,7 +953,7 @@ async function cmdEarly(chatId, token, lang = 'en') {
 async function cmdDossier(chatId, token, lang = 'en') {
   typing(chatId);
   await running(chatId, `dossier ${INV.short(token)} --risk-scan`);
-  const d = await INV.rugDossier(token);
+  const d = await INV.rugDossier(token, await chainOf(token));
   REP.recordDossier(d).catch(() => {});
   const bar = n => { const f = Math.round(n / 10); return '['.padEnd(1) + '#'.repeat(f) + '.'.repeat(10 - f) + ']'; };
   let body = `${d.name} ($${d.symbol})\n${INV.short(d.token)}\n\n`;
@@ -1046,7 +1052,7 @@ async function guardianScan(chatId, text) {
   // is it even a contract/token?
   const dx = await INV.dexData(ca).catch(() => null);
   if (!dx) return;                                  // not a listed token → stay silent
-  const d = await INV.rugDossier(ca).catch(() => null);
+  const d = await INV.rugDossier(ca, dx.chainId === 'robinhood' ? 'robinhood' : 'base').catch(() => null);
   if (!d) return;
   REP.recordDossier(d).catch(() => {});
   if (d.verdict === 'LOW RISK') return;             // don't spam groups on safe tokens
