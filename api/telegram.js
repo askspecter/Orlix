@@ -799,7 +799,9 @@ async function cmdTop(chatId, lang) {
         if (p.chainId !== 'base' && p.chainId !== 'robinhood') continue;
         if (!p.baseToken?.address || STABLES.has((p.baseToken.symbol || '').toUpperCase())) continue;
         if ((p.liquidity?.usd || 0) < 5000) continue;
-        const key = p.baseToken.address.toLowerCase();
+        // Dedup by TICKER (not address): collapse copycats / duplicate pools of the
+        // same symbol into one entry — the highest-liquidity (i.e. the real) one.
+        const key = (p.baseToken.symbol || '').toUpperCase() || p.baseToken.address.toLowerCase();
         if (!seen[key] || (p.liquidity?.usd || 0) > (seen[key].liquidity?.usd || 0)) seen[key] = p;
       }
     }
