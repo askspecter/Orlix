@@ -1340,6 +1340,18 @@ async function pollReceipt(hash, net, predictedCA) {
           decimals: _deployDecimals,
           txHash: hash, deployedAt: Date.now(), network: net,
         });
+        // Register to the shared "New Launched on Orlix" feed
+        if (ca) {
+          fetch('/api/b20-skill', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'register_launch', token: ca,
+              name: _deployedTokenName, symbol: _deployedTokenSym,
+              deployer: walletAddress, variant: variant || 'asset',
+              decimals: _deployDecimals, txHash: hash,
+            }),
+          }).catch(() => {});
+        }
         document.getElementById('dcActions').style.display = 'flex';
         setDeployBtn('success', '✓ Deployed!', `Token live on ${NET[network]?.name || 'Base'}`);
         return;

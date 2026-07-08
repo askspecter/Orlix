@@ -16,6 +16,36 @@ const NETWORKS = {
 
 let _currentNet = 'mainnet';
 
+// Read the shared "recently launched on Orlix" feed (Redis list b20:launched).
+// This is the primary source — tokens deployed through Orlix register themselves,
+// which is far more reliable than scanning the B20 precompile factory for logs.
+async function fetchOrlixLaunched(limit) {
+  const url   = process.env.UPSTASH_REDIS_REST_URL   || process.env.STORAGE_UPSTASH_REDIS_REST_URL   || '';
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN || '';
+  if (!url || !token) return [];
+  try {
+    const r = await fetch(`${url}/LRANGE/b20:launched/0/${Math.max(limit * 2, 40) - 1}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return [];
+    const data = await r.json();
+    const arr = Array.isArray(data.result) ? data.result : [];
+    const seen = new Set();
+    const out = [];
+    for (const s of arr) {
+      let t; try { t = JSON.parse(s); } catch { continue; }
+      if (!t || !t.address) continue;
+      const norm = t.address.toLowerCase();
+      if (seen.has(norm)) continue;   // de-dupe re-registers
+      seen.add(norm);
+      out.push(t);
+      if (out.length >= limit) break;
+    }
+    return out;
+  } catch { return []; }
+}
+
 async function rpcCall(method, params) {
   const rpcUrl = NETWORKS[_currentNet]?.rpc ?? NETWORKS.mainnet.rpc;
   const r = await fetch(rpcUrl, {
@@ -234,6 +264,41 @@ module.exports = async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query?.limit || '20', 10), 50);
     _currentNet = 'mainnet';
+
+    // Primary: tokens launched through Orlix (self-registered feed).
+    const launched = await fetchOrlixLaunched(limit);
+    if (launched.length > 0) {
+      // Enrich the newest few with live supply/decimals from chain (best-effort).
+      const enriched = await Promise.all(
+        launched.map(async (t, i) => {
+          if (i >= 12) return t;
+          const meta = await getTokenMeta(t.address).catch(() => null);
+          return {
+            ...t,
+            name:     t.name   || meta?.name   || 'Unknown Token',
+            symbol:   t.symbol || meta?.symbol || '???',
+            decimals: t.decimals ?? meta?.decimals ?? 18,
+            supply:   meta?.supply ?? t.supply ?? null,
+          };
+        })
+      );
+      const tokens = enriched.map(t => ({
+        address: t.address,
+        name:     t.name     || 'Unknown Token',
+        symbol:   t.symbol   || '???',
+        decimals: t.decimals ?? 18,
+        supply:   t.supply   || null,
+        deployer: t.deployer || null,
+        txHash:   t.txHash   || null,
+        timestamp: t.ts ? Math.floor(t.ts / 1000) : (t.timestamp || null),
+        variant:  t.variant || ((t.decimals === 6) ? 'stablecoin' : 'asset'),
+        source:   'orlix',
+      }));
+      res.writeHead(200, CORS);
+      return res.end(JSON.stringify({ tokens, network: _currentNet, source: 'orlix' }));
+    }
+
+    // Fallback: on-chain discovery via the B20 factory.
     const raw = await fetchRecentTokens(limit);
 
     if (raw.length === 0) {

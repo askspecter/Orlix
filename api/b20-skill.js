@@ -955,6 +955,18 @@ async function handleAgentDeploy(req, body, res) {
       if (n === 1) await _redis('EXPIRE', dayKey, '90000'); // ~25h
     } catch {}
 
+    // Record to the shared "recently launched" feed (best-effort)
+    if (predicted) {
+      try {
+        await _redis('LPUSH', 'b20:launched', JSON.stringify({
+          address: predicted, name: config.name, symbol: config.symbol,
+          deployer: config.admin || signer, variant: config.variant,
+          decimals: config.decimals, txHash, ts: Date.now(),
+        }));
+        await _redis('LTRIM', 'b20:launched', '0', '199');
+      } catch {}
+    }
+
     return res.end(JSON.stringify({
       ok: true, status: 'broadcast', txHash, predictedAddress: predicted,
       explorerUrl: `${EXPLORER[net]}/tx/${txHash}`,
@@ -1230,6 +1242,29 @@ async function handlePoolStatus(body, res) {
   }
 }
 
+// Record an Orlix-deployed token to the shared "recently launched" feed (Redis),
+// so the New Launched tab shows tokens deployed through Orlix (not a chain scan).
+async function handleRegisterLaunch(body, res) {
+  const token = (body.token || '').trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token) || !token.toLowerCase().startsWith('0xb2'))
+    return res.end(JSON.stringify({ ok: false, error: 'valid B20 token address required' }));
+  const entry = JSON.stringify({
+    address:  ethers.getAddress(token),
+    name:     String(body.name || '').slice(0, 64),
+    symbol:   String(body.symbol || '').slice(0, 16),
+    deployer: /^0x[0-9a-fA-F]{40}$/.test(body.deployer || '') ? String(body.deployer).toLowerCase() : null,
+    variant:  body.variant === 'stablecoin' ? 'stablecoin' : 'asset',
+    decimals: Number(body.decimals) || 18,
+    txHash:   /^0x[0-9a-fA-F]{64}$/.test(body.txHash || '') ? body.txHash : null,
+    ts:       Date.now(),
+  });
+  try {
+    await _redis('LPUSH', 'b20:launched', entry);
+    await _redis('LTRIM', 'b20:launched', '0', '199');
+  } catch {}
+  return res.end(JSON.stringify({ ok: true }));
+}
+
 // ── Router ────────────────────────────────────────────────────────────────────
 
 module.exports = async (req, res) => {
@@ -1254,6 +1289,7 @@ module.exports = async (req, res) => {
     if (action === 'receipt')                          return handleReceipt(body, res);
     if (action === 'prepare_pool')                     return handlePreparePool(body, res);
     if (action === 'pool_status')                      return handlePoolStatus(body, res);
+    if (action === 'register_launch')                  return handleRegisterLaunch(body, res);
 
     return res.end(JSON.stringify({
       ok: false, error: `Unknown action: "${action}"`,
