@@ -196,27 +196,30 @@ function encodeCreateParams(config) {
 function buildInitCalls(config) {
   const calls = [];
 
-  // Supply cap
+  // Decimals used for scaling human amounts → raw on-chain units
+  const decimals = config.variant === 'stablecoin' ? 6 : (Number(config.decimals) || 18);
+
+  // Supply cap — MUST be scaled by decimals to match the minted (scaled) amount.
+  // Passing the raw human value (e.g. 1e9) sets a cap of 1e9 wei ≈ 1e-9 tokens,
+  // which the initial mint of 1e9 * 10^decimals instantly exceeds → InitCallFailed → tx reverts.
   if (config.supply_cap && config.supply_cap !== '0') {
-    calls.push(B20_IFACE.encodeFunctionData('updateSupplyCap', [BigInt(config.supply_cap)]));
+    const capRaw = BigInt(config.supply_cap) * (10n ** BigInt(decimals));
+    calls.push(B20_IFACE.encodeFunctionData('updateSupplyCap', [capRaw]));
   }
 
-  // Grant MINT_ROLE to factory so it can mint initial supply in the same tx,
-  // then grant MINT_ROLE to admin for future mints.
-  // initCalls msg.sender = factory which holds DEFAULT_ADMIN_ROLE temporarily.
+  // Mint the initial supply to the admin during the bootstrap window.
+  // Per the B20 spec, factory-originated initCalls BYPASS the token's role gates,
+  // so `mint` succeeds without first granting MINT_ROLE. Only MINT_RECEIVER_POLICY
+  // is enforced during initCalls, and it defaults to ALWAYS_ALLOW.
   if (config.admin && !config.adminless) {
     const adminAddr = ethers.getAddress(config.admin);
-    // 1. Grant MINT_ROLE to factory itself (so it can call mint in initCalls)
-    calls.push(B20_IFACE.encodeFunctionData('grantRole', [ROLES.MINT_ROLE, B20_FACTORY]));
-    // 2. Mint initial supply to admin (if specified)
+    // 1. Mint initial supply to admin (scaled by decimals, so mint == cap, never exceeding it)
     if (config.initial_supply && config.initial_supply !== '0') {
-      const decimals = config.variant === 'stablecoin' ? 6 : (Number(config.decimals) || 18);
       const raw = BigInt(config.initial_supply) * (10n ** BigInt(decimals));
       calls.push(B20_IFACE.encodeFunctionData('mint', [adminAddr, raw]));
     }
-    // 3. Revoke MINT_ROLE from factory (cleanup)
-    calls.push(B20_IFACE.encodeFunctionData('revokeRole', [ROLES.MINT_ROLE, B20_FACTORY]));
-    // 4. Grant MINT_ROLE to admin for future minting
+    // 2. Grant MINT_ROLE to admin so they can mint more later (admin holds
+    //    DEFAULT_ADMIN_ROLE from initialAdmin, but not MINT_ROLE by default).
     calls.push(B20_IFACE.encodeFunctionData('grantRole', [ROLES.MINT_ROLE, adminAddr]));
   }
 
