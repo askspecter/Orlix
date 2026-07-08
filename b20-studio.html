@@ -254,17 +254,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
 }
 .det-btn:hover{color:var(--t1);border-color:var(--b2)}
 
-/* ── NAV NETWORK PILLS ── */
+/* ── NAV ── */
 .nav-mid{display:flex;align-items:center;gap:8px}
-.net-pills{display:flex;align-items:center;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:3px;gap:2px}
-.net-pill{
-  padding:5px 14px;border-radius:6px;border:none;background:none;
-  font-size:.72rem;font-weight:700;color:var(--t3);cursor:pointer;
-  transition:all .15s;font-family:var(--font);letter-spacing:.04em;
-  text-transform:uppercase;white-space:nowrap;
-}
-.net-pill:hover:not(.active){color:var(--t2);background:var(--s3)}
-.net-pill.active.mainnet{background:var(--s4);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.25)}
 /* mainnet warning banner */
 .mainnet-bar{
   display:flex;align-items:center;gap:8px;
@@ -476,9 +467,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .nav-mid{flex:0 0 auto}
   /* Hide home link text on mobile — icon only */
   .nav-home-btn span,.nav-home-text{display:none}
-  /* Smaller network pills */
-  .net-pills{padding:2px;gap:2px}
-  .net-pill{font-size:.65rem;padding:4px 10px}
   /* Wallet button: tighter */
   #wallet-fallback,
   #orlix-wallet .ow-btn,
@@ -501,7 +489,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
 }
 @media(max-width:380px){
   .nav-badge-label{font-size:.75rem}
-  .net-pill{font-size:.6rem;padding:4px 8px}
 }
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
 :root.light .crt-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);opacity:.3}
@@ -522,11 +509,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <span class="live-tag">LIVE</span>
     </div>
   </div>
-  <div class="nav-mid">
-    <div class="net-pills">
-      <button class="net-pill active mainnet" id="navNetMainnet" onclick="setNetwork('mainnet')">Base Mainnet</button>
-    </div>
-  </div>
+  <div class="nav-mid"></div>
   <div class="nav-right">
     <div id="orlix-wallet" style="display:flex;align-items:center;position:relative">
       <button id="wallet-fallback" onclick="toggleWalletDrop(event)" style="visibility:hidden">
@@ -964,8 +947,6 @@ const NET = {
 
 function setNetwork(n) {
   network = 'mainnet';
-  const mainBtn = document.getElementById('navNetMainnet');
-  if (mainBtn) mainBtn.className = 'net-pill active mainnet';
   const mainBar = document.getElementById('mainnetBar');
   if (mainBar) mainBar.style.display = '';
   const btn = document.querySelector('.deploy-btn');
