@@ -201,12 +201,22 @@ function buildInitCalls(config) {
     calls.push(B20_IFACE.encodeFunctionData('updateSupplyCap', [BigInt(config.supply_cap)]));
   }
 
-  // Grant MINT_ROLE to admin during token creation.
-  // initCalls msg.sender = factory which holds DEFAULT_ADMIN_ROLE temporarily,
-  // so this grantRole succeeds. Minting happens in a separate tx from the frontend
-  // where the user's wallet (= admin, now has MINT_ROLE) is msg.sender.
+  // Grant MINT_ROLE to factory so it can mint initial supply in the same tx,
+  // then grant MINT_ROLE to admin for future mints.
+  // initCalls msg.sender = factory which holds DEFAULT_ADMIN_ROLE temporarily.
   if (config.admin && !config.adminless) {
     const adminAddr = ethers.getAddress(config.admin);
+    // 1. Grant MINT_ROLE to factory itself (so it can call mint in initCalls)
+    calls.push(B20_IFACE.encodeFunctionData('grantRole', [ROLES.MINT_ROLE, B20_FACTORY]));
+    // 2. Mint initial supply to admin (if specified)
+    if (config.initial_supply && config.initial_supply !== '0') {
+      const decimals = config.variant === 'stablecoin' ? 6 : (Number(config.decimals) || 18);
+      const raw = BigInt(config.initial_supply) * (10n ** BigInt(decimals));
+      calls.push(B20_IFACE.encodeFunctionData('mint', [adminAddr, raw]));
+    }
+    // 3. Revoke MINT_ROLE from factory (cleanup)
+    calls.push(B20_IFACE.encodeFunctionData('revokeRole', [ROLES.MINT_ROLE, B20_FACTORY]));
+    // 4. Grant MINT_ROLE to admin for future minting
     calls.push(B20_IFACE.encodeFunctionData('grantRole', [ROLES.MINT_ROLE, adminAddr]));
   }
 

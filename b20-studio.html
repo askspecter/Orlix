@@ -657,13 +657,17 @@ select.inp option{background:var(--s2);color:var(--t1)}
           </select>
         </div>
         <div class="field">
-          <label class="field-label">Total Supply</label>
+          <label class="field-label">Supply Cap</label>
           <input class="inp" type="text" value="1,000,000,000" disabled style="opacity:.6;cursor:not-allowed">
+        </div>
+        <div class="field" style="flex:1">
+          <label class="field-label">Initial Mint</label>
+          <input class="inp" id="fInitSupply" type="text" value="1000000000" placeholder="0 = no initial mint" oninput="onFormChange()" style="font-size:.72rem">
+          <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Tokens minted to your wallet on deploy</div>
         </div>
       </div>
       <input type="hidden" id="fCap" value="1000000000">
       <input type="hidden" id="fUncapped">
-      <input type="hidden" id="fInitSupply" value="1000000000">
 
       <!-- Initial Admin -->
       <div class="field">
@@ -1143,7 +1147,7 @@ async function onDeploy() {
       variant,
       decimals:    parseInt(document.getElementById('fDec').value),
       supply_cap:     '1000000000',
-      initial_supply: '1000000000',
+      initial_supply: (document.getElementById('fInitSupply').value || '0').replace(/[^0-9]/g, '') || '0',
       admin:       adminless ? undefined : walletAddress,
       adminless,
       policies: {
