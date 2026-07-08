@@ -11,6 +11,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Don't persist the default GITHUB_TOKEN as a github.com credential header —
+          # it overrides the PAT in the push URL below and makes the push run as
+          # github-actions[bot] (403: no access to tylerbroqs/orlixai).
+          persist-credentials: false
 
       - name: Push to tylerbroqs/orlixai
         run: |
