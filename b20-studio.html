@@ -1218,6 +1218,70 @@ async function onDeploy() {
       return;
     }
 
+    // ── Step 2.5: One-confirmation launch (deploy + pool + dev buy batched, EIP-5792) ──
+    // Smart wallets (e.g. Coinbase Wallet) can execute all calls in a single atomic
+    // transaction with one confirmation. Falls back to the sequential flow otherwise.
+    const wantPool = document.getElementById('fCreatePool')?.checked;
+    const predicted = data.predictedAddress;
+    if (wantPool && predicted && /^0x[0-9a-fA-F]{40}$/.test(predicted)) {
+      try {
+        setDeployBtn('loading', '⏳ Building launch…', 'Preparing a one-tap launch…');
+        const price  = (document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '');
+        const lp     = (document.getElementById('fPoolLp').value || '').replace(/[^0-9]/g, '');
+        const feeSel = document.getElementById('fPoolFee').value;
+        const devBuy = (document.getElementById('fPoolDevBuy')?.value || '').replace(/[^0-9.]/g, '');
+        const pr = await fetch('/api/b20-skill', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'prepare_pool', predeploy: true, token: predicted, creator: walletAddress,
+            price, lp_tokens: lp || '1000000000', decimals: _deployDecimals, fee: feeSel,
+            dev_buy_eth: devBuy && parseFloat(devBuy) > 0 ? devBuy : undefined,
+          }),
+        });
+        const pd = await pr.json();
+        if (pd.ok && Array.isArray(pd.txs) && pd.txs.length) {
+          const dVal = (tx.value && tx.value !== '0' && tx.value !== '')
+            ? (tx.value.startsWith('0x') ? tx.value : '0x' + BigInt(tx.value).toString(16)) : '0x0';
+          const calls = [{ to: tx.to, data: tx.data, value: dVal },
+            ...pd.txs.map(t => ({ to: t.to, data: t.data, value: t.value || '0x0' }))];
+          setDeployBtn('signing', '✍ Confirm once…', 'Approve the whole launch in one confirmation');
+          const bundleId = await sendCallsBatch(calls); // throws if wallet can't batch → fallback
+          setDeployBtn('success', '✓ Submitted!', 'Launching in one transaction…');
+          showDeployedCard('—', network, predicted);
+          document.getElementById('dcTitle').textContent = 'Launching — deploy + pool in one confirmation…';
+          const panel = document.getElementById('dcPoolPanel'); if (panel) panel.style.display = 'block';
+          setPoolStatus('Waiting for the launch transaction to confirm…');
+          const outcome = await waitCallsBatch(bundleId);
+          if (!outcome.reverted) {
+            _deployedTokenName = document.getElementById('fName')?.value?.trim() || 'Token';
+            _deployedTokenSym  = document.getElementById('fSym')?.value?.trim() || '';
+            const rcpts = outcome.receipts || [];
+            const dhash = (rcpts[0] && rcpts[0].transactionHash) || (rcpts.slice(-1)[0]?.transactionHash) || '';
+            const explorer = NET[network]?.explorer || 'https://basescan.org';
+            document.getElementById('dcCheck').textContent = '✓';
+            document.getElementById('dcCheck').className = 'dc-check';
+            document.getElementById('dcSub').textContent = _deployedTokenName + (_deployedTokenSym ? ` (${_deployedTokenSym})` : '');
+            document.getElementById('dcCA').textContent = predicted;
+            document.getElementById('dcCAField').style.display = 'flex';
+            document.getElementById('dcScanLink').href = explorer + '/address/' + predicted;
+            document.getElementById('dcBaseScanBtn').href = explorer + '/address/' + predicted;
+            if (dhash) { document.getElementById('dcTxHash').textContent = dhash; document.getElementById('dcTxLink').href = explorer + '/tx/' + dhash; }
+            document.getElementById('dcActions').style.display = 'flex';
+            setPoolStatus('✅ Launched in one confirmation — token deployed, pool seeded, tradeable!', 'ok');
+            saveMyToken({ address: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null, deployedAt: Date.now(), network });
+            fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register_launch', token: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, deployer: walletAddress, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null }) }).catch(() => {});
+            setDeployBtn('success', '✓ Launched!', 'Token live & tradeable on Base');
+            deploying = false;
+            return;
+          }
+          setPoolStatus('The batched launch reverted — retrying as separate steps…', 'err');
+        }
+      } catch (batchErr) {
+        if (batchErr.code === 4001 || batchErr.code === 4100) { setDeployBtn('error', '', 'Rejected — try again'); deploying = false; return; }
+        console.warn('[B20] one-confirmation launch unavailable, falling back:', batchErr?.message);
+      }
+    }
+
     // ── Step 3: Sign + broadcast transaction ──────────────────────────────────
     setDeployBtn('signing', '✍ Sign in wallet…', 'Confirm the transaction in your wallet');
 
@@ -1388,6 +1452,44 @@ function setPoolStatus(msg, kind) {
   if (!el) return;
   el.textContent = msg;
   el.style.color = kind === 'err' ? '#ef4444' : kind === 'ok' ? '#22c55e' : 'var(--t2)';
+}
+
+// ── EIP-5792 batched calls (one wallet confirmation for many txs) ────────────
+// Coinbase Wallet (and other smart wallets) support wallet_sendCalls. Returns a
+// bundle id, or throws if the wallet doesn't support batching (→ caller falls back).
+async function sendCallsBatch(calls) {
+  const chainId = NET[network]?.chainId || '0x2105';
+  const res = await window.ethereum.request({
+    method: 'wallet_sendCalls',
+    params: [{
+      version: '2.0.0',
+      chainId,
+      from: walletAddress,
+      atomicRequired: true,
+      calls: calls.map(t => ({ to: t.to, data: t.data, value: t.value || '0x0' })),
+    }],
+  });
+  return (res && typeof res === 'object') ? (res.id || res.bundleId || res) : res;
+}
+// Poll wallet_getCallsStatus until the batch confirms; throw if any call reverted.
+async function waitCallsBatch(id) {
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    let st;
+    try { st = await window.ethereum.request({ method: 'wallet_getCallsStatus', params: [id] }); }
+    catch { continue; }
+    if (!st) continue;
+    const receipts = st.receipts || [];
+    if (receipts.length) {
+      const reverted = receipts.find(r => r.status === '0x0' || r.status === 0);
+      if (reverted) return { reverted: true, receipts };
+    }
+    // status: v2 numeric (100 pending, 200 confirmed); v1 string ('CONFIRMED')
+    const s = st.status;
+    const done = s === 200 || s === '200' || s === 'CONFIRMED' || (typeof s === 'number' && s >= 200 && receipts.length);
+    if (done) return { reverted: false, receipts };
+  }
+  throw new Error('Batch confirmation timed out — check your wallet activity');
 }
 
 // Wait for a tx receipt via the injected wallet provider.

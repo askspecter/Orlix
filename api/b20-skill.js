@@ -1113,19 +1113,27 @@ async function handlePreparePool(body, res) {
   const creatorAddr = ethers.getAddress(creator);
 
   let decimals = 18, lpRaw;
-  try {
-    const [decHex, balHex] = await Promise.all([
-      ethCall('mainnet', tokenAddr, POOL_ERC20_IFACE.encodeFunctionData('decimals', [])),
-      ethCall('mainnet', tokenAddr, POOL_ERC20_IFACE.encodeFunctionData('balanceOf', [creatorAddr])),
-    ]);
-    decimals = decHex && decHex !== '0x' ? Number(ABI_CODER.decode(['uint8'], decHex)[0]) : 18;
-    const bal = balHex && balHex !== '0x' ? BigInt(balHex) : 0n;
-    if (body.lp_tokens && String(body.lp_tokens) !== '0') {
-      lpRaw = BigInt(String(body.lp_tokens).replace(/[^0-9]/g, '')) * (10n ** BigInt(decimals));
-      if (lpRaw > bal) lpRaw = bal;
-    } else { lpRaw = bal; }
-  } catch (e) {
-    return res.end(JSON.stringify({ ok: false, error: `Token read failed: ${e.message}` }));
+  if (body.predeploy) {
+    // One-tx launch: the token doesn't exist yet (its deploy is batched in the same
+    // wallet_sendCalls). Use the known supply/decimals instead of reading the chain.
+    decimals = Number(body.decimals) || 18;
+    const lpTokens = BigInt(String(body.lp_tokens || '1000000000').replace(/[^0-9]/g, '') || '1000000000');
+    lpRaw = lpTokens * (10n ** BigInt(decimals));
+  } else {
+    try {
+      const [decHex, balHex] = await Promise.all([
+        ethCall('mainnet', tokenAddr, POOL_ERC20_IFACE.encodeFunctionData('decimals', [])),
+        ethCall('mainnet', tokenAddr, POOL_ERC20_IFACE.encodeFunctionData('balanceOf', [creatorAddr])),
+      ]);
+      decimals = decHex && decHex !== '0x' ? Number(ABI_CODER.decode(['uint8'], decHex)[0]) : 18;
+      const bal = balHex && balHex !== '0x' ? BigInt(balHex) : 0n;
+      if (body.lp_tokens && String(body.lp_tokens) !== '0') {
+        lpRaw = BigInt(String(body.lp_tokens).replace(/[^0-9]/g, '')) * (10n ** BigInt(decimals));
+        if (lpRaw > bal) lpRaw = bal;
+      } else { lpRaw = bal; }
+    } catch (e) {
+      return res.end(JSON.stringify({ ok: false, error: `Token read failed: ${e.message}` }));
+    }
   }
   if (lpRaw <= 0n)
     return res.end(JSON.stringify({ ok: false, error: 'Creator holds 0 tokens — deploy/mint supply before seeding a pool' }));
@@ -1167,13 +1175,15 @@ async function handlePreparePool(body, res) {
   // If the pool is already initialized (e.g. a previous attempt), don't re-init —
   // initializePool would revert. Just add liquidity in that case.
   let poolInitialized = false;
-  try {
-    const r = await ethCall('mainnet', STATE_VIEW, STATEVIEW_IFACE.encodeFunctionData('getSlot0', [poolIdOf(poolKey)]));
-    if (r && r !== '0x') {
-      const [sp] = STATEVIEW_IFACE.decodeFunctionResult('getSlot0', r);
-      poolInitialized = BigInt(sp) > 0n;
-    }
-  } catch {}
+  if (!body.predeploy) {
+    try {
+      const r = await ethCall('mainnet', STATE_VIEW, STATEVIEW_IFACE.encodeFunctionData('getSlot0', [poolIdOf(poolKey)]));
+      if (r && r !== '0x') {
+        const [sp] = STATEVIEW_IFACE.decodeFunctionResult('getSlot0', r);
+        poolInitialized = BigInt(sp) > 0n;
+      }
+    } catch {}
+  }
 
   const initData   = POSM_IFACE.encodeFunctionData('initializePool', [poolKey, sqrtPriceX96]);
   const modifyData = POSM_IFACE.encodeFunctionData('modifyLiquidities', [unlockData, deadline]);
