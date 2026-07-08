@@ -643,12 +643,9 @@ select.inp option{background:var(--s2);color:var(--t1)}
           <label class="field-label">Supply Cap</label>
           <input class="inp" type="text" value="1,000,000,000" disabled style="opacity:.6;cursor:not-allowed">
         </div>
-        <div class="field" style="flex:1">
-          <label class="field-label">Initial Mint</label>
-          <input class="inp" id="fInitSupply" type="text" value="1000000000" placeholder="0 = no initial mint" oninput="onFormChange()" style="font-size:.72rem">
-          <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Tokens minted to your wallet on deploy</div>
-        </div>
       </div>
+      <!-- Fixed 1B supply, auto-minted to your wallet on deploy (like RWAGMI). Roles are set later in Manage. -->
+      <input type="hidden" id="fInitSupply" value="1000000000">
       <input type="hidden" id="fCap" value="1000000000">
       <input type="hidden" id="fUncapped">
 
@@ -725,46 +722,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </label>
       </div>
 
-      <!-- Roles -->
-      <div class="sec-label" style="margin-top:22px">Roles</div>
-      <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Optional. Leave blank to grant the role to the initial admin only.</p>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Minter</label>
-          <input class="inp" id="fRoleMinter" type="text" placeholder="0x… (defaults to admin)" style="font-size:.68rem" autocomplete="off">
-        </div>
-        <div class="field">
-          <label class="field-label">Burner</label>
-          <input class="inp" id="fRoleBurner" type="text" placeholder="0x… (defaults to admin)" style="font-size:.68rem" autocomplete="off">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Burn-blocked</label>
-          <input class="inp" id="fRoleBurnBlocked" type="text" placeholder="0x… (defaults to admin)" style="font-size:.68rem" autocomplete="off">
-        </div>
-        <div class="field">
-          <label class="field-label">Pauser</label>
-          <input class="inp" id="fRolePauser" type="text" placeholder="0x… (defaults to admin)" style="font-size:.68rem" autocomplete="off">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Unpauser</label>
-          <input class="inp" id="fRoleUnpauser" type="text" placeholder="0x… (defaults to admin)" style="font-size:.68rem" autocomplete="off">
-        </div>
-        <div class="field">
-          <label class="field-label">Metadata Admin</label>
-          <input class="inp" id="fRoleMeta" type="text" placeholder="0x… (defaults to admin)" style="font-size:.68rem" autocomplete="off">
-        </div>
-      </div>
-      <div class="field-row" id="operatorRow">
-        <div class="field">
-          <label class="field-label">Operator <span class="sub">· Asset only</span></label>
-          <input class="inp" id="fRoleOperator" type="text" placeholder="0x… (defaults to admin)" style="font-size:.68rem" autocomplete="off">
-        </div>
-        <div class="field"></div>
-      </div>
+      <!-- Roles are managed after deploy in the Manage tab (kept simple, like RWAGMI). -->
 
       <!-- Admin-less -->
       <div class="adminless-row" style="margin-top:8px">
@@ -1000,7 +958,6 @@ function setVariant(v) {
   const dec = document.getElementById('fDec');
   if (v === 'stablecoin') { dec.value = '6'; dec.disabled = true; }
   else { dec.disabled = false; }
-  document.getElementById('operatorRow').style.display = v === 'asset' ? '' : 'none';
   onFormChange();
 }
 
@@ -1166,15 +1123,7 @@ async function onDeploy() {
         blocklist: document.getElementById('fBlock').checked,
         freeze:    document.getElementById('fFreeze').checked,
       },
-      roles: {
-        minter:       document.getElementById('fRoleMinter').value.trim()      || undefined,
-        burner:       document.getElementById('fRoleBurner').value.trim()      || undefined,
-        burn_blocked: document.getElementById('fRoleBurnBlocked').value.trim() || undefined,
-        pauser:       document.getElementById('fRolePauser').value.trim()      || undefined,
-        unpauser:     document.getElementById('fRoleUnpauser').value.trim()    || undefined,
-        meta_admin:   document.getElementById('fRoleMeta').value.trim()        || undefined,
-        operator:     document.getElementById('fRoleOperator').value.trim()   || undefined,
-      },
+      roles: {}, // roles managed after deploy in the Manage tab
       network,
     };
     const uri     = document.getElementById('fUri').value.trim();
@@ -1934,7 +1883,6 @@ async function onMint() {
 (function init() {
   checkB20Activation();
   onFormChange();
-  document.getElementById('operatorRow').style.display = variant === 'asset' ? '' : 'none';
 })();
 </script>
 
