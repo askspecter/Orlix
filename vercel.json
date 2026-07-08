@@ -56,9 +56,6 @@
     { "source": "/cotty.html",        "destination": "/cotty",         "permanent": true }
   ],
   "rewrites": [
-    { "source": "/", "has": [{ "type": "host", "value": "docs.orlixai.xyz" }], "destination": "/docs.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "b20.orlixai.xyz" }],  "destination": "/b20-studio.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "app.orlixai.xyz" }],  "destination": "/app.html" },
     { "source": "/app",          "destination": "/app.html" },
     { "source": "/docs",         "destination": "/docs.html" },
     { "source": "/docs/api",     "destination": "/api-docs.html" },
