@@ -6,8 +6,7 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
-// Mainnet activation delayed by Base — no fixed date yet
-const BERYL_MAINNET_TS = null;
+const BERYL_MAINNET_TS = 1752015600000; // 2026-07-09 22:00 UTC
 
 const KNOWN_B20 = [];
 
@@ -17,7 +16,7 @@ module.exports = async (req, res) => {
 
   const action = req.query.action || 'info';
   const now = Date.now();
-  const mainnetLive = false; // Delayed by Base — Activation Registry not yet enabled on mainnet
+  const mainnetLive = BERYL_MAINNET_TS !== null && now >= BERYL_MAINNET_TS;
 
   res.writeHead(200, CORS);
 
@@ -26,9 +25,9 @@ module.exports = async (req, res) => {
       standard: 'B20',
       network: 'Base',
       upgrade: 'Beryl',
-      mainnetDate: null,
+      mainnetDate: '2026-07-09T22:00:00Z',
       mainnetLive,
-      mainnetNote: 'B20 activates on Base mainnet at the scheduled Activation Registry time.',
+      mainnetNote: mainnetLive ? 'B20 is live on Base mainnet.' : 'B20 activates on Base mainnet at 22:00 UTC.',
       variants: [
         {
           name: 'Asset',
@@ -64,8 +63,8 @@ module.exports = async (req, res) => {
     return res.end(JSON.stringify({
       tokens: KNOWN_B20,
       total: KNOWN_B20.length,
-      mainnetLive: false,
-      message: 'B20 activates on Base mainnet at the scheduled Activation Registry time.',
+      mainnetLive,
+      message: mainnetLive ? 'B20 is live on Base mainnet.' : 'B20 activates on Base mainnet at 22:00 UTC.',
       ts: now,
     }));
   }

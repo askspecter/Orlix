@@ -137,7 +137,7 @@
       <span class="w1">Base</span>
       <span class="w2">B20</span>
     </div>
-    <div class="sub">Now on Orlix AI · Deploy when Base activates</div>
+    <div class="sub">Now on Orlix AI · Live on Base Mainnet</div>
   </div>
 
   <!-- S2: what is B20 -->
@@ -214,7 +214,7 @@
         <div class="app-url">orlixai.xyz/app</div>
       </div>
       <div class="app-body">
-        <div class="skill-label">⬡ B20 Token Standard <span class="skill-badge">Base Beryl · Coming Soon</span></div>
+        <div class="skill-label">⬡ B20 Token Standard <span class="skill-badge">Base Beryl · Live</span></div>
         <div class="skills-grid">
           <div class="sk-card highlight" id="sk0"><div class="sk-name">Deploy B20 Token</div><div class="sk-desc">Step-by-step guide to deploy on Base</div><div class="sk-tag">b20 + web_search</div></div>
           <div class="sk-card" id="sk1"><div class="sk-name">B20 vs ERC-20</div><div class="sk-desc">Compare — when to use which</div><div class="sk-tag">web_search + fetch</div></div>
@@ -242,7 +242,7 @@
           <span class="api-path">orlixai.xyz/api/b20?action=info</span>
         </div>
         <div class="api-body">
-<span class="k">"standard"</span>: <span class="s">"B20"</span>,  <span class="k">"mainnetLive"</span>: <span class="v">false</span>,
+<span class="k">"standard"</span>: <span class="s">"B20"</span>,  <span class="k">"mainnetLive"</span>: <span class="v">true</span>,
 <span class="k">"variants"</span>: [<span class="s">"Asset"</span>, <span class="s">"Stablecoin"</span>],
 <span class="k">"features"</span>: [<span class="s">"Role-based access"</span>, <span class="s">"Freeze & seize"</span>, <span class="s">"ERC-20 compat"</span>...]</div>
       </div>
@@ -252,9 +252,8 @@
           <span class="api-path">orlixai.xyz/api/b20?action=tokens</span>
         </div>
         <div class="api-body">
-<span class="k">"tokens"</span>: [],  <span class="k">"mainnetLive"</span>: <span class="v">false</span>,
-<span class="k">"message"</span>: <span class="s">"B20 tokens go live when Base activates the standard"</span>,
-<span class="k">"testnetExplorer"</span>: <span class="s">"https://sepolia.basescan.org"</span></div>
+<span class="k">"tokens"</span>: [],  <span class="k">"mainnetLive"</span>: <span class="v">true</span>,
+<span class="k">"message"</span>: <span class="s">"B20 is live on Base mainnet."</span></div>
       </div>
     </div>
   </div>
@@ -284,7 +283,7 @@
 
 <script>
 const TOTAL = 56000;
-const AI_TEXT = 'To deploy BNKRR as a B20 Asset token: 1. Connect to Base Sepolia (testnet) or wait for Beryl mainnet to activate. 2. Call the B20 factory precompile with your token config — name, symbol, decimals, supply cap. 3. Assign MINTER and PAUSER roles to your admin wallet. 4. Enable freeze policy for compliance. Your token is ERC-20 compatible immediately.';
+const AI_TEXT = 'To deploy BNKRR as a B20 Asset token: 1. Connect to Base mainnet. 2. Call the B20 factory precompile with your token config — name, symbol, decimals, supply cap. 3. Assign MINTER and PAUSER roles to your admin wallet. 4. Enable freeze policy for compliance. Your token is ERC-20 compatible immediately.';
 
 let startTime=null, raf=null, aiTimer=null, activeScene=null, timerInterval=null;
 

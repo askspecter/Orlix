@@ -450,8 +450,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   transition:background .12s;font-size:.82rem;font-weight:600;color:var(--t2);
 }
 .wnd-item:hover{background:var(--s3);color:var(--t1)}
-.wnd-item-soon{cursor:default;opacity:.5}
-.wnd-item-soon:hover{background:none;color:var(--t2)}
+.wnd-item-soon{cursor:pointer;opacity:1}
 .wnd-badge{font-size:.58rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
 .wnd-badge.live{background:rgba(74,222,128,.1);color:#4ADE80;border:1px solid rgba(74,222,128,.25)}
 .wnd-badge.soon{background:var(--s3);color:var(--t3);border:1px solid var(--b1)}
@@ -539,7 +538,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <div class="wnd-title">Connect to network</div>
         <div class="wnd-item" onclick="walletFallback('mainnet')">
           <span>Base Mainnet</span>
-          <span class="wnd-badge soon">SOON</span>
+          <span class="wnd-badge live">LIVE</span>
         </div>
       </div>
     </div>
@@ -582,9 +581,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
     <p class="pg-sub">Deploy a native Base token. Role-gated, ERC-20 compatible, precompile-backed.</p>
 
     <!-- NETWORK STATUS BANNER -->
-    <div id="mainnetBar" class="mainnet-bar">
-      <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v4"/><circle cx="10" cy="13.5" r=".8" fill="currentColor" stroke="none"/></svg>
-      B20 activates on Base mainnet at the scheduled Activation Registry time. Deploy unlocks the moment it goes live.
+    <div id="mainnetBar" class="mainnet-bar" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25);color:#4ade80">
+      <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite"></span> B20 is live on Base mainnet. Deploy your token now.</span>
     </div>
 
     <!-- AI AUTO-FILL -->
@@ -949,7 +947,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
 
 
 <script>
-let b20Activated = false;
+let b20Activated = true;
 let variant = 'asset';
 let network = 'mainnet'; // B20 is Base mainnet only
 let walletAddress = null;
@@ -966,14 +964,12 @@ function setNetwork(n) {
   if (mainBtn) mainBtn.className = 'net-pill active mainnet';
   const mainBar = document.getElementById('mainnetBar');
   if (mainBar) mainBar.style.display = '';
-  // Deploy stays locked until B20 activates on Base mainnet
   const btn = document.querySelector('.deploy-btn');
   if (btn) {
-    btn.disabled = true;
-    btn.classList.add('dep-loading');
-    btn.onclick = null;
-    const sub = document.getElementById('deploySubtitle');
-    if (sub) sub.textContent = 'Deploy unlocks when B20 activates on Base mainnet';
+    btn.disabled = false;
+    btn.classList.remove('dep-loading');
+    btn.onclick = onDeploy;
+    updateSubtitle();
   }
   // Load tokens for current network in New Launched tab if visible
   if (document.getElementById('tabNew')?.style.display !== 'none') loadNewTokens();
