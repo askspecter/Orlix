@@ -986,6 +986,250 @@ function handleManifest(res) {
   }));
 }
 
+// ── Uniswap V4 pool seeding (make a deployed B20 tradeable) ─────────────────────
+// Merged into this function to stay within the Vercel Hobby 12-function limit.
+// Seeds a TOKEN/WETH V4 pool with single-sided token liquidity (concentrated) so
+// buyers bring the ETH — the same shape RWAGMI uses. Creator signs each tx.
+const WETH             = '0x4200000000000000000000000000000000000006'; // currency0 (sorts below B20 token)
+const ZERO_ADDR        = '0x0000000000000000000000000000000000000000';
+const PERMIT2          = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
+const POSITION_MANAGER = '0x7C5f5A4bBd8fD63184577525326123B519429bDc';
+const STATE_VIEW       = '0xA3c0c9b65baD0b08107Aa264b0f3dB444b867A71';
+const UNIVERSAL_ROUTER = '0x6fF5693b99212Da76ad316178A184AB56D299b43';
+
+const CMD_WRAP_ETH = 0x0b, CMD_V4_SWAP = 0x10, CMD_SWEEP = 0x04;
+const UR_MSG_SENDER = '0x0000000000000000000000000000000000000001';
+const UR_ADDRESS_THIS = '0x0000000000000000000000000000000000000002';
+const ACT_SWAP_EXACT_IN_SINGLE = 0x06, ACT_SETTLE_ALL = 0x0c, ACT_TAKE_ALL = 0x0f;
+const ACT_MINT_POSITION = 0x02, ACT_SETTLE_PAIR = 0x0d;
+
+const FEE_SPACING = { 500: 10, 3000: 60, 10000: 200 };
+const MAX_TICK_V4 = 887272;
+const Q96 = 2n ** 96n;
+const MAX_UINT256 = (2n ** 256n) - 1n;
+
+const POOL_ERC20_IFACE = new ethers.Interface([
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function decimals() view returns (uint8)',
+  'function balanceOf(address account) view returns (uint256)',
+]);
+const PERMIT2_IFACE = new ethers.Interface([
+  'function approve(address token, address spender, uint160 amount, uint48 expiration)',
+]);
+const POSM_IFACE = new ethers.Interface([
+  'function initializePool((address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) key, uint160 sqrtPriceX96) payable returns (int24)',
+  'function modifyLiquidities(bytes unlockData, uint256 deadline) payable',
+  'function multicall(bytes[] data) payable returns (bytes[] results)',
+]);
+const STATEVIEW_IFACE = new ethers.Interface([
+  'function getSlot0(bytes32 poolId) view returns (uint160 sqrtPriceX96, int24 tick, uint24 protocolFee, uint24 lpFee)',
+]);
+const UR_IFACE = new ethers.Interface([
+  'function execute(bytes commands, bytes[] inputs, uint256 deadline) payable',
+]);
+
+function bigintSqrt(value) {
+  if (value < 0n) throw new Error('sqrt of negative');
+  if (value < 2n) return value;
+  let x = value, y = (x + 1n) / 2n;
+  while (y < x) { x = y; y = (x + value / x) / 2n; }
+  return x;
+}
+function sqrtPriceX96From(num, den) { return bigintSqrt((num << 192n) / den); }
+function tickFromPrice(Pfloat) { return Math.floor(Math.log(Pfloat) / Math.log(1.0001)); }
+function poolAlignDown(t, s) { return Math.floor(t / s) * s; }
+function poolMaxUsableTick(s) { return poolAlignDown(MAX_TICK_V4, s); }
+
+// Uniswap TickMath.getSqrtRatioAtTick — exact Q64.96 sqrt price for a tick.
+function getSqrtRatioAtTick(tick) {
+  const absTick = BigInt(tick < 0 ? -tick : tick);
+  if (absTick > BigInt(MAX_TICK_V4)) throw new Error('tick out of range');
+  let ratio = (absTick & 0x1n) !== 0n
+    ? 0xfffcb933bd6fad37aa2d162d1a594001n
+    : 0x100000000000000000000000000000000n;
+  const M = [
+    [0x2n, 0xfff97272373d413259a46990580e213an], [0x4n, 0xfff2e50f5f656932ef12357cf3c7fdccn],
+    [0x8n, 0xffe5caca7e10e4e61c3624eaa0941cd0n], [0x10n, 0xffcb9843d60f6159c9db58835c926644n],
+    [0x20n, 0xff973b41fa98c081472e6896dfb254c0n], [0x40n, 0xff2ea16466c96a3843ec78b326b52861n],
+    [0x80n, 0xfe5dee046a99a2a811c461f1969c3053n], [0x100n, 0xfcbe86c7900a88aedcffc83b479aa3a4n],
+    [0x200n, 0xf987a7253ac413176f2b074cf7815e54n], [0x400n, 0xf3392b0822b70005940c7a398e4b70f3n],
+    [0x800n, 0xe7159475a2c29b7443b29c7fa6e889d9n], [0x1000n, 0xd097f3bdfd2022b8845ad8f792aa5825n],
+    [0x2000n, 0xa9f746462d870fdf8a65dc1f90e061e5n], [0x4000n, 0x70d869a156d2a1b890bb3df62baf32f7n],
+    [0x8000n, 0x31be135f97d08fd981231505542fcfa6n], [0x10000n, 0x9aa508b5b7a84e1c677de54f3e99bc9n],
+    [0x20000n, 0x5d6af8dedb81196699c329225ee604n], [0x40000n, 0x2216e584f5fa1ea926041bedfe98n],
+    [0x80000n, 0x48a170391f7dc42444e8fa2n],
+  ];
+  for (const [bit, mul] of M) if ((absTick & bit) !== 0n) ratio = (ratio * mul) >> 128n;
+  if (tick > 0) ratio = MAX_UINT256 / ratio;
+  return (ratio >> 32n) + ((ratio % (1n << 32n)) === 0n ? 0n : 1n);
+}
+// Single-sided currency1 (token) amount below current price: amount1 = L*(sqrtB-sqrtA)/Q96
+function liquidityForAmount1(sqrtA, sqrtB, amount1) {
+  if (sqrtA > sqrtB) [sqrtA, sqrtB] = [sqrtB, sqrtA];
+  return (amount1 * Q96) / (sqrtB - sqrtA);
+}
+function toWei18(str) {
+  const s = String(str).trim();
+  if (!/^\d*\.?\d+$/.test(s)) throw new Error('invalid number');
+  const [i, f = ''] = s.split('.');
+  const frac = (f + '0'.repeat(18)).slice(0, 18);
+  return BigInt(i || '0') * (10n ** 18n) + BigInt(frac || '0');
+}
+function poolIdOf(key) {
+  return ethers.keccak256(ABI_CODER.encode(
+    ['tuple(address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks)'], [key],
+  ));
+}
+
+async function handlePreparePool(body, res) {
+  const token   = (body.token || '').trim();
+  const creator = (body.creator || body.admin || '').trim();
+  const fee     = parseInt(body.fee || '10000', 10);
+  const priceStr = String(body.price ?? body.initial_price ?? '');
+
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token))
+    return res.end(JSON.stringify({ ok: false, error: 'token must be a valid 0x address' }));
+  if (!/^0x[0-9a-fA-F]{40}$/.test(creator))
+    return res.end(JSON.stringify({ ok: false, error: 'creator must be a valid 0x address' }));
+  if (!FEE_SPACING[fee])
+    return res.end(JSON.stringify({ ok: false, error: 'fee must be 500, 3000, or 10000' }));
+  if (!priceStr)
+    return res.end(JSON.stringify({ ok: false, error: 'price (ETH per token) is required' }));
+
+  const spacing   = FEE_SPACING[fee];
+  const tokenAddr = ethers.getAddress(token);
+  const creatorAddr = ethers.getAddress(creator);
+
+  let decimals = 18, lpRaw;
+  try {
+    const [decHex, balHex] = await Promise.all([
+      ethCall('mainnet', tokenAddr, POOL_ERC20_IFACE.encodeFunctionData('decimals', [])),
+      ethCall('mainnet', tokenAddr, POOL_ERC20_IFACE.encodeFunctionData('balanceOf', [creatorAddr])),
+    ]);
+    decimals = decHex && decHex !== '0x' ? Number(ABI_CODER.decode(['uint8'], decHex)[0]) : 18;
+    const bal = balHex && balHex !== '0x' ? BigInt(balHex) : 0n;
+    if (body.lp_tokens && String(body.lp_tokens) !== '0') {
+      lpRaw = BigInt(String(body.lp_tokens).replace(/[^0-9]/g, '')) * (10n ** BigInt(decimals));
+      if (lpRaw > bal) lpRaw = bal;
+    } else { lpRaw = bal; }
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: `Token read failed: ${e.message}` }));
+  }
+  if (lpRaw <= 0n)
+    return res.end(JSON.stringify({ ok: false, error: 'Creator holds 0 tokens — deploy/mint supply before seeding a pool' }));
+
+  const weiPerToken = toWei18(priceStr);
+  if (weiPerToken <= 0n) return res.end(JSON.stringify({ ok: false, error: 'price must be > 0' }));
+  const tokenUnit = 10n ** BigInt(decimals);
+
+  const sqrtPriceX96 = sqrtPriceX96From(tokenUnit, weiPerToken);
+  if (sqrtPriceX96 <= 0n) return res.end(JSON.stringify({ ok: false, error: 'price out of range — adjust initial price' }));
+  const currentTick = tickFromPrice(Number(tokenUnit) / Number(weiPerToken));
+
+  const maxTick = poolMaxUsableTick(spacing);
+  let tickUpper = poolAlignDown(currentTick, spacing);
+  if (tickUpper >= currentTick) tickUpper -= spacing;
+  const tickLower = -maxTick;
+  if (tickLower >= tickUpper)
+    return res.end(JSON.stringify({ ok: false, error: 'Invalid tick range — raise the initial price or lower the fee tier' }));
+
+  const sqrtA = getSqrtRatioAtTick(tickLower);
+  const sqrtB = getSqrtRatioAtTick(tickUpper);
+  const liquidity = liquidityForAmount1(sqrtA, sqrtB, lpRaw);
+  if (liquidity <= 0n)
+    return res.end(JSON.stringify({ ok: false, error: 'Computed liquidity is zero — increase LP token amount or adjust price' }));
+
+  const poolKey = { currency0: WETH, currency1: tokenAddr, fee, tickSpacing: spacing, hooks: ZERO_ADDR };
+  const deadline   = Math.floor(Date.now() / 1000) + 1200;
+  const expiration = Math.floor(Date.now() / 1000) + 30 * 86400;
+
+  const actions = '0x' + [ACT_MINT_POSITION, ACT_SETTLE_PAIR].map(a => a.toString(16).padStart(2, '0')).join('');
+  const mintParam = ABI_CODER.encode(
+    ['tuple(address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks)',
+     'int24', 'int24', 'uint256', 'uint128', 'uint128', 'address', 'bytes'],
+    [poolKey, tickLower, tickUpper, liquidity, 0n, lpRaw, creatorAddr, '0x'],
+  );
+  const settleParam = ABI_CODER.encode(['address', 'address'], [WETH, tokenAddr]);
+  const unlockData = ABI_CODER.encode(['bytes', 'bytes[]'], [actions, [mintParam, settleParam]]);
+
+  const initData   = POSM_IFACE.encodeFunctionData('initializePool', [poolKey, sqrtPriceX96]);
+  const modifyData = POSM_IFACE.encodeFunctionData('modifyLiquidities', [unlockData, deadline]);
+  const multicallData = POSM_IFACE.encodeFunctionData('multicall', [[initData, modifyData]]);
+
+  const txs = [
+    { label: 'approve_permit2', title: 'Approve token (Permit2)', to: tokenAddr,
+      data: POOL_ERC20_IFACE.encodeFunctionData('approve', [PERMIT2, MAX_UINT256]), value: '0x0', gas: '0xea60' },
+    { label: 'permit2_approve', title: 'Authorize position manager', to: PERMIT2,
+      data: PERMIT2_IFACE.encodeFunctionData('approve', [tokenAddr, POSITION_MANAGER, lpRaw, expiration]), value: '0x0', gas: '0x186a0' },
+    { label: 'create_pool', title: 'Create V4 pool + seed liquidity', to: POSITION_MANAGER,
+      data: multicallData, value: '0x0', gas: '0x7a120' },
+  ];
+
+  // Optional dev buy — isolated final tx (a revert here leaves the pool live)
+  let devBuy = null;
+  const devEthStr = String(body.dev_buy_eth ?? body.devBuy ?? '0').trim();
+  if (devEthStr && devEthStr !== '0') {
+    let devWei = 0n;
+    try { devWei = toWei18(devEthStr); } catch { devWei = 0n; }
+    if (devWei > 0n) {
+      const urDeadline = Math.floor(Date.now() / 1000) + 1200;
+      const swapParam = ABI_CODER.encode(
+        ['tuple(tuple(address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) poolKey,bool zeroForOne,uint128 amountIn,uint128 amountOutMinimum,bytes hookData)'],
+        [{ poolKey, zeroForOne: true, amountIn: devWei, amountOutMinimum: 0n, hookData: '0x' }],
+      );
+      const settleAll = ABI_CODER.encode(['address', 'uint256'], [WETH, devWei]);
+      const takeAll   = ABI_CODER.encode(['address', 'uint256'], [tokenAddr, 0n]);
+      const v4Actions = '0x' + [ACT_SWAP_EXACT_IN_SINGLE, ACT_SETTLE_ALL, ACT_TAKE_ALL].map(a => a.toString(16).padStart(2, '0')).join('');
+      const v4Input = ABI_CODER.encode(['bytes', 'bytes[]'], [v4Actions, [swapParam, settleAll, takeAll]]);
+      const wrapInput  = ABI_CODER.encode(['address', 'uint256'], [UR_ADDRESS_THIS, devWei]);
+      const sweepInput = ABI_CODER.encode(['address', 'address', 'uint256'], [tokenAddr, UR_MSG_SENDER, 0n]);
+      const commands = '0x' + [CMD_WRAP_ETH, CMD_V4_SWAP, CMD_SWEEP].map(c => c.toString(16).padStart(2, '0')).join('');
+      const execData = UR_IFACE.encodeFunctionData('execute', [commands, [wrapInput, v4Input, sweepInput], urDeadline]);
+      txs.push({ label: 'dev_buy', title: 'Dev buy (ETH → token)', to: UNIVERSAL_ROUTER,
+        data: execData, value: '0x' + devWei.toString(16), gas: '0x4c4b40', note: 'Optional — test with a small amount first' });
+      devBuy = { eth: devEthStr, wei: devWei.toString() };
+    }
+  }
+
+  return res.end(JSON.stringify({
+    ok: true, chainId: CHAIN_ID.mainnet, dex: 'uniswap-v4', devBuy,
+    pool: {
+      poolId: poolIdOf(poolKey), currency0: WETH, currency1: tokenAddr,
+      fee, tickSpacing: spacing, hooks: ZERO_ADDR,
+      sqrtPriceX96: sqrtPriceX96.toString(), tickLower, tickUpper,
+      liquidity: liquidity.toString(), lpTokensRaw: lpRaw.toString(),
+      priceEthPerToken: priceStr, decimals, positionManager: POSITION_MANAGER,
+    },
+    txs,
+    note: 'Sign txs in order. Single-sided token liquidity; ETH buyers move price into range.',
+  }));
+}
+
+async function handlePoolStatus(body, res) {
+  const token = (body.token || '').trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token))
+    return res.end(JSON.stringify({ ok: false, error: 'token must be a valid 0x address' }));
+  const tokenAddr = ethers.getAddress(token);
+  try {
+    const pools = {};
+    await Promise.all(Object.keys(FEE_SPACING).map(async feeStr => {
+      const fee = parseInt(feeStr, 10);
+      const key = { currency0: WETH, currency1: tokenAddr, fee, tickSpacing: FEE_SPACING[fee], hooks: ZERO_ADDR };
+      const id  = poolIdOf(key);
+      try {
+        const r = await ethCall('mainnet', STATE_VIEW, STATEVIEW_IFACE.encodeFunctionData('getSlot0', [id]));
+        if (r && r !== '0x') {
+          const [sqrtPriceX96] = STATEVIEW_IFACE.decodeFunctionResult('getSlot0', r);
+          if (BigInt(sqrtPriceX96) > 0n) pools[fee] = { poolId: id, sqrtPriceX96: sqrtPriceX96.toString() };
+        }
+      } catch {}
+    }));
+    return res.end(JSON.stringify({ ok: true, token: tokenAddr, pools, hasPool: Object.keys(pools).length > 0 }));
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: e.message }));
+  }
+}
+
 // ── Router ────────────────────────────────────────────────────────────────────
 
 module.exports = async (req, res) => {
@@ -1008,6 +1252,8 @@ module.exports = async (req, res) => {
     if (action === 'prepare' || action === 'deploy')   return handlePrepare(body, res);
     if (action === 'agent_deploy')                     return handleAgentDeploy(req, body, res);
     if (action === 'receipt')                          return handleReceipt(body, res);
+    if (action === 'prepare_pool')                     return handlePreparePool(body, res);
+    if (action === 'pool_status')                      return handlePoolStatus(body, res);
 
     return res.end(JSON.stringify({
       ok: false, error: `Unknown action: "${action}"`,

@@ -811,9 +811,39 @@ select.inp option{background:var(--s2);color:var(--t1)}
           </div>
         </div>
         <div class="dc-actions" id="dcActions" style="display:none">
-          <button class="dc-action-btn dc-action-primary" onclick="mintFromCard(document.getElementById('dcCA').textContent)">Mint supply</button>
+          <button class="dc-action-btn dc-action-primary" onclick="openPoolPanel()">💧 Add Liquidity — make tradeable</button>
+          <button class="dc-action-btn dc-action-outline" onclick="mintFromCard(document.getElementById('dcCA').textContent)">Mint supply</button>
           <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan ↗</a>
           <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Deploy another</button>
+        </div>
+
+        <!-- LIQUIDITY POOL PANEL (Uniswap V4) -->
+        <div id="dcPoolPanel" style="display:none;margin-top:14px;padding:16px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
+          <div style="font-size:.82rem;font-weight:700;color:var(--t1);margin-bottom:4px">Create Uniswap V4 Pool</div>
+          <div style="font-size:.7rem;color:var(--t2);margin-bottom:14px;line-height:1.5">Seeds a <b>TOKEN / WETH</b> pool with single-sided token liquidity (concentrated) so buyers bring the ETH. This is what makes your token tradeable and visible on DexScreener. You'll sign 3 transactions: approve → authorize → create pool.</div>
+
+          <label class="field-label">Initial price (ETH per token)</label>
+          <input class="inp" id="fPoolPrice" type="text" value="0.000000000025" style="font-size:.72rem" oninput="updatePoolPreview()">
+          <div id="poolMcapHint" style="font-size:.65rem;color:var(--t3);margin:4px 0 12px"></div>
+
+          <label class="field-label">Liquidity tokens (from your balance)</label>
+          <input class="inp" id="fPoolLp" type="text" value="1000000000" placeholder="blank = all your tokens" style="font-size:.72rem">
+          <div style="height:12px"></div>
+
+          <label class="field-label">LP fee</label>
+          <select class="inp" id="fPoolFee" style="font-size:.72rem">
+            <option value="10000" selected>1.00% (default)</option>
+            <option value="3000">0.30%</option>
+            <option value="500">0.05%</option>
+          </select>
+          <div style="height:12px"></div>
+
+          <label class="field-label">Dev buy (ETH) — optional</label>
+          <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = no dev buy" style="font-size:.72rem">
+          <div style="font-size:.65rem;color:var(--t3);margin:4px 0 12px;line-height:1.5">Buy your own token at launch with ETH, in the same session. The more ETH you spend, the more tokens you receive (and the more the starting price moves up).</div>
+
+          <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%">Create pool &amp; seed liquidity</button>
+          <div id="poolStatus" style="font-size:.7rem;color:var(--t2);margin-top:10px;line-height:1.5"></div>
         </div>
       </div>
 
@@ -1341,8 +1371,103 @@ function copyField(elId, btn) {
 
 function deployAnother() {
   document.getElementById('deployedCard').style.display = 'none';
+  const pp = document.getElementById('dcPoolPanel');
+  if (pp) pp.style.display = 'none';
   deployedTxHash = null;
   setDeployBtn('default');
+}
+
+// ── Uniswap V4 liquidity pool (make token tradeable) ─────────────────────────
+function openPoolPanel() {
+  const p = document.getElementById('dcPoolPanel');
+  if (!p) return;
+  p.style.display = (p.style.display === 'none' || !p.style.display) ? 'block' : 'none';
+  updatePoolPreview();
+}
+
+function updatePoolPreview() {
+  const el = document.getElementById('poolMcapHint');
+  if (!el) return;
+  const p = parseFloat((document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '')) || 0;
+  const supply = 1e9;      // 1B fixed supply
+  const ethUsd = 4000;     // rough display estimate
+  const mcap = p * supply * ethUsd;
+  el.textContent = p > 0
+    ? `≈ $${mcap.toLocaleString(undefined, { maximumFractionDigits: 0 })} starting market cap (@ ~$${ethUsd}/ETH)`
+    : '';
+}
+
+function setPoolStatus(msg, kind) {
+  const el = document.getElementById('poolStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = kind === 'err' ? '#ef4444' : kind === 'ok' ? '#22c55e' : 'var(--t2)';
+}
+
+// Wait for a tx receipt via the injected wallet provider.
+async function waitTx(hash) {
+  for (let i = 0; i < 40; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    try {
+      const rc = await window.ethereum.request({ method: 'eth_getTransactionReceipt', params: [hash] });
+      if (rc) {
+        if (rc.status === '0x0') throw new Error('reverted');
+        return rc;
+      }
+    } catch (e) { if ((e.message || '').includes('reverted')) throw new Error('Transaction reverted on-chain'); }
+  }
+  throw new Error('Confirmation timed out — check BaseScan');
+}
+
+async function createPool() {
+  const token = (document.getElementById('dcCA')?.textContent || '').trim();
+  if (!token || token === '—') { setPoolStatus('No token address yet — wait for the deploy to confirm.', 'err'); return; }
+  if (!walletAddress || !window.ethereum) { setPoolStatus('Connect your wallet first (top right).', 'err'); return; }
+
+  const price = (document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '');
+  const lp    = (document.getElementById('fPoolLp').value || '').replace(/[^0-9]/g, '');
+  const fee   = document.getElementById('fPoolFee').value;
+  const devBuy = (document.getElementById('fPoolDevBuy')?.value || '').replace(/[^0-9.]/g, '');
+  if (!price || parseFloat(price) <= 0) { setPoolStatus('Enter a valid initial price (ETH per token).', 'err'); return; }
+
+  const btn = document.getElementById('poolBtn');
+  btn.disabled = true;
+  try {
+    setPoolStatus('Preparing pool transactions…');
+    const r = await fetch('/api/b20-skill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'prepare_pool', token, creator: walletAddress,
+        price, lp_tokens: lp || undefined, fee,
+        dev_buy_eth: devBuy && parseFloat(devBuy) > 0 ? devBuy : undefined,
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) { setPoolStatus('Error: ' + (d.error || 'prepare failed'), 'err'); btn.disabled = false; return; }
+
+    // Ensure we're on Base
+    const net = NET[network];
+    try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: net.chainId }] }); } catch (e) {}
+
+    const txs = d.txs || [];
+    for (let i = 0; i < txs.length; i++) {
+      const t = txs[i];
+      setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — confirm in your wallet…`);
+      const hash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{ from: walletAddress, to: t.to, data: t.data, value: t.value || '0x0', gas: t.gas }],
+      });
+      setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — submitted, waiting for confirmation…`);
+      await waitTx(hash);
+    }
+    setPoolStatus('✅ Pool created and liquidity seeded — your token is now tradeable! It may take a minute to appear on DexScreener.', 'ok');
+    btn.textContent = '✓ Pool created';
+  } catch (e) {
+    const msg = (e.code === 4001 || e.code === 4100) ? 'Rejected in wallet' : (e.message || 'failed').slice(0, 140);
+    setPoolStatus('Error: ' + msg, 'err');
+    btn.disabled = false;
+  }
 }
 
 function mintFromCard(tokenAddr) {
