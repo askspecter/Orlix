@@ -1187,7 +1187,7 @@ async function handlePreparePool(body, res) {
     { label: 'permit2_approve', title: 'Authorize position manager', to: PERMIT2,
       data: PERMIT2_IFACE.encodeFunctionData('approve', [tokenAddr, POSITION_MANAGER, lpRaw, expiration]), value: '0x0', gas: '0x186a0' },
     { label: 'create_pool', title: 'Create V4 pool + seed liquidity', to: POSITION_MANAGER,
-      data: multicallData, value: '0x0', gas: '0x7a120' },
+      data: multicallData, value: '0x0', gas: '0x1e8480' }, // 2,000,000 — init + mint headroom
   ];
 
   // Optional dev buy — isolated final tx (a revert here leaves the pool live)
