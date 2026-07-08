@@ -1012,7 +1012,7 @@ const UNIVERSAL_ROUTER = '0x6fF5693b99212Da76ad316178A184AB56D299b43';
 const CMD_WRAP_ETH = 0x0b, CMD_V4_SWAP = 0x10, CMD_SWEEP = 0x04;
 const UR_MSG_SENDER = '0x0000000000000000000000000000000000000001';
 const UR_ADDRESS_THIS = '0x0000000000000000000000000000000000000002';
-const ACT_SWAP_EXACT_IN_SINGLE = 0x06, ACT_SETTLE_ALL = 0x0c, ACT_TAKE_ALL = 0x0f;
+const ACT_SWAP_EXACT_IN_SINGLE = 0x06, ACT_SETTLE = 0x0b, ACT_SETTLE_ALL = 0x0c, ACT_TAKE_ALL = 0x0f;
 const ACT_MINT_POSITION = 0x02, ACT_SETTLE_PAIR = 0x0d;
 
 const FEE_SPACING = { 500: 10, 3000: 60, 10000: 200 };
@@ -1202,10 +1202,13 @@ async function handlePreparePool(body, res) {
         ['tuple(tuple(address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) poolKey,bool zeroForOne,uint128 amountIn,uint128 amountOutMinimum,bytes hookData)'],
         [{ poolKey, zeroForOne: true, amountIn: devWei, amountOutMinimum: 0n, hookData: '0x' }],
       );
-      const settleAll = ABI_CODER.encode(['address', 'uint256'], [WETH, devWei]);
-      const takeAll   = ABI_CODER.encode(['address', 'uint256'], [tokenAddr, 0n]);
-      const v4Actions = '0x' + [ACT_SWAP_EXACT_IN_SINGLE, ACT_SETTLE_ALL, ACT_TAKE_ALL].map(a => a.toString(16).padStart(2, '0')).join('');
-      const v4Input = ABI_CODER.encode(['bytes', 'bytes[]'], [v4Actions, [swapParam, settleAll, takeAll]]);
+      // SETTLE (not SETTLE_ALL) with payerIsUser=false: pay the WETH we just wrapped
+      // FROM THE ROUTER's balance. SETTLE_ALL settles from the user via Permit2, which
+      // reverts here because the user holds no WETH (it's wrapped into the router).
+      const settle  = ABI_CODER.encode(['address', 'uint256', 'bool'], [WETH, devWei, false]);
+      const takeAll = ABI_CODER.encode(['address', 'uint256'], [tokenAddr, 0n]);
+      const v4Actions = '0x' + [ACT_SWAP_EXACT_IN_SINGLE, ACT_SETTLE, ACT_TAKE_ALL].map(a => a.toString(16).padStart(2, '0')).join('');
+      const v4Input = ABI_CODER.encode(['bytes', 'bytes[]'], [v4Actions, [swapParam, settle, takeAll]]);
       const wrapInput  = ABI_CODER.encode(['address', 'uint256'], [UR_ADDRESS_THIS, devWei]);
       const sweepInput = ABI_CODER.encode(['address', 'address', 'uint256'], [tokenAddr, UR_MSG_SENDER, 0n]);
       const commands = '0x' + [CMD_WRAP_ETH, CMD_V4_SWAP, CMD_SWEEP].map(c => c.toString(16).padStart(2, '0')).join('');
