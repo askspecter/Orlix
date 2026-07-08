@@ -8,8 +8,8 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
-// B20 Beryl precompile
-const B20_PRECOMPILE = '0x4200000000000000000000000000000000000B20';
+// B20 Factory — tokens are created via createB20() on this address
+const B20_FACTORY = '0xB20f000000000000000000000000000000000000';
 const NETWORKS = {
   mainnet: { rpc: 'https://mainnet.base.org', basescan: 'https://api.basescan.org/api' },
 };
@@ -96,79 +96,110 @@ function decodeString(hex) {
   return s;
 }
 
-// Get recent B20 token deployments using event logs
-// B20 emits TokenDeployed(address indexed token, address indexed deployer, ...) or similar
-// We fall back to BaseScan internal txs to the precompile
+// Get recent B20 token deployments from the B20 Factory.
+// Primary: eth_getLogs on the Factory (catches all creation events).
+// Fallback: BaseScan txlist to the Factory address.
 async function fetchRecentTokens(limit = 20) {
-  const key = process.env.BASESCAN_API_KEY || '';
-  const basescanUrl = NETWORKS[_currentNet]?.basescan;
-
-  if (key && basescanUrl) {
-    // Use BaseScan to get internal transactions to the B20 precompile
-    const url = `${basescanUrl}?module=account&action=txlistinternal&address=${B20_PRECOMPILE}&sort=desc&page=1&offset=${limit}&apikey=${key}`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (r.ok) {
-      const data = await r.json();
-      if (data.status === '1' && Array.isArray(data.result)) {
-        // Each result is an internal tx where "to" = precompile and "contractAddress" = new token
-        const tokens = [];
-        const seen = new Set();
-        for (const tx of data.result) {
-          const addr = tx.contractAddress || tx.to;
-          if (!addr || addr.toLowerCase() === B20_PRECOMPILE.toLowerCase()) continue;
-          const norm = addr.toLowerCase();
-          if (seen.has(norm)) continue;
-          seen.add(norm);
-          tokens.push({
-            address: addr,
-            deployer: tx.from,
-            txHash: tx.hash || tx.transactionHash,
-            blockNumber: parseInt(tx.blockNumber, 10),
-            timestamp: parseInt(tx.timeStamp, 10),
-          });
-        }
-        return tokens;
-      }
-    }
-  }
-
-  // Fallback: scan recent blocks for B20 precompile logs
-  // Event: TokenCreated(address token, address owner, string name, string symbol, uint8 decimals, uint256 totalSupply)
-  // topic0 TBD — use eth_getLogs on the precompile with no topics filter
+  // Primary: scan Factory logs (last ~50k blocks ≈ 1 day)
   try {
     const latestHex = await rpcCall('eth_blockNumber', []);
     const latest = hexToNum(latestHex);
-    const fromBlock = '0x' + (latest - 50000).toString(16); // ~1 day of blocks
+    const fromBlock = '0x' + Math.max(latest - 50000, 0).toString(16);
 
     const logs = await rpcCall('eth_getLogs', [{
-      address: B20_PRECOMPILE,
+      address: B20_FACTORY,
       fromBlock,
       toBlock: 'latest',
     }]);
 
-    if (!Array.isArray(logs) || logs.length === 0) return [];
-
-    const tokens = [];
-    const seen = new Set();
-    for (const log of logs.slice(-limit).reverse()) {
-      // topics[1] is typically the token address (indexed)
-      const tokenAddr = log.topics?.[1] ? decodeAddress(log.topics[1]) : null;
-      if (!tokenAddr) continue;
-      const norm = tokenAddr.toLowerCase();
-      if (seen.has(norm)) continue;
-      seen.add(norm);
-      tokens.push({
-        address: tokenAddr,
-        deployer: log.topics?.[2] ? decodeAddress(log.topics[2]) : null,
-        txHash: log.transactionHash,
-        blockNumber: hexToNum(log.blockNumber),
-        timestamp: null,
-      });
+    if (Array.isArray(logs) && logs.length > 0) {
+      const tokens = [];
+      const seen = new Set();
+      for (const log of logs.slice(-limit * 3).reverse()) {
+        // Factory events typically have token address in topics[1] and deployer in topics[2]
+        const tokenAddr = log.topics?.[1] ? decodeAddress(log.topics[1]) : null;
+        if (!tokenAddr || tokenAddr === '0x0000000000000000000000000000000000000000') continue;
+        const norm = tokenAddr.toLowerCase();
+        if (seen.has(norm)) continue;
+        seen.add(norm);
+        tokens.push({
+          address: tokenAddr,
+          deployer: log.topics?.[2] ? decodeAddress(log.topics[2]) : null,
+          txHash: log.transactionHash,
+          blockNumber: hexToNum(log.blockNumber),
+          timestamp: null,
+        });
+        if (tokens.length >= limit) break;
+      }
+      if (tokens.length > 0) return tokens;
     }
-    return tokens;
-  } catch {
-    return [];
+  } catch {}
+
+  // Fallback: BaseScan — get transactions TO the Factory (createB20 calls)
+  const key = process.env.BASESCAN_API_KEY || '';
+  const basescanUrl = NETWORKS[_currentNet]?.basescan;
+  if (key && basescanUrl) {
+    try {
+      const url = `${basescanUrl}?module=account&action=txlist&address=${B20_FACTORY}&sort=desc&page=1&offset=${limit * 2}&apikey=${key}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (r.ok) {
+        const data = await r.json();
+        if (data.status === '1' && Array.isArray(data.result)) {
+          const tokens = [];
+          const seen = new Set();
+          for (const tx of data.result) {
+            if (tx.isError === '1') continue;
+            // contractAddress from receipt, or extract from logs
+            const addr = tx.contractAddress;
+            if (!addr || addr === '' || addr.toLowerCase() === B20_FACTORY.toLowerCase()) continue;
+            const norm = addr.toLowerCase();
+            if (seen.has(norm)) continue;
+            seen.add(norm);
+            tokens.push({
+              address: addr,
+              deployer: tx.from,
+              txHash: tx.hash,
+              blockNumber: parseInt(tx.blockNumber, 10),
+              timestamp: parseInt(tx.timeStamp, 10),
+            });
+            if (tokens.length >= limit) break;
+          }
+          if (tokens.length > 0) return tokens;
+        }
+      }
+    } catch {}
+
+    // Fallback 2: internal transactions from Factory (token creation traces)
+    try {
+      const url = `${basescanUrl}?module=account&action=txlistinternal&address=${B20_FACTORY}&sort=desc&page=1&offset=${limit * 2}&apikey=${key}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (r.ok) {
+        const data = await r.json();
+        if (data.status === '1' && Array.isArray(data.result)) {
+          const tokens = [];
+          const seen = new Set();
+          for (const tx of data.result) {
+            const addr = tx.contractAddress || tx.to;
+            if (!addr || addr.toLowerCase() === B20_FACTORY.toLowerCase()) continue;
+            const norm = addr.toLowerCase();
+            if (seen.has(norm)) continue;
+            seen.add(norm);
+            tokens.push({
+              address: addr,
+              deployer: tx.from,
+              txHash: tx.hash || tx.transactionHash,
+              blockNumber: parseInt(tx.blockNumber, 10),
+              timestamp: parseInt(tx.timeStamp, 10),
+            });
+            if (tokens.length >= limit) break;
+          }
+          return tokens;
+        }
+      }
+    } catch {}
   }
+
+  return [];
 }
 
 // Fetch block timestamp for tokens where we don't have it
