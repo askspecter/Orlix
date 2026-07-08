@@ -264,8 +264,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
   text-transform:uppercase;white-space:nowrap;
 }
 .net-pill:hover:not(.active){color:var(--t2);background:var(--s3)}
-.net-pill.active.sepolia{background:var(--orange);color:#fff;box-shadow:0 1px 6px rgba(240,120,48,.4)}
-.net-pill.active.vibenet{background:#7c3aed;color:#fff;box-shadow:0 1px 6px rgba(124,58,237,.4)}
 .net-pill.active.mainnet{background:var(--s4);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.25)}
 /* mainnet warning banner */
 .mainnet-bar{
@@ -277,13 +275,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
 :root.light .mainnet-bar{background:rgba(234,179,8,.08);color:#92400e}
 .mainnet-bar button{background:none;border:none;color:inherit;font-weight:700;cursor:pointer;text-decoration:underline;font-size:inherit;font-family:inherit;padding:0}
 .mainnet-bar button:hover{opacity:.8}
-/* sepolia live badge */
-.sepolia-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
-.sepolia-live{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:6px;padding:4px 10px;letter-spacing:.06em;text-transform:uppercase}
-.sepolia-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.faucet-link{font-size:.7rem;font-weight:600;color:var(--t3);border:1px solid var(--b1);border-radius:6px;padding:4px 10px;text-decoration:none;transition:.15s}
-.faucet-link:hover{color:var(--t1);border-color:var(--b2)}
 /* status dot */
 .nav-status{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;color:var(--t3);white-space:nowrap}
 .nav-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -533,9 +525,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   </div>
   <div class="nav-mid">
     <div class="net-pills">
-      <button class="net-pill active sepolia" id="navNetSepolia" onclick="setNetwork('sepolia')">Sepolia</button>
-      <button class="net-pill vibenet" id="navNetVibenet" onclick="setNetwork('vibenet')">Vibenet</button>
-      <button class="net-pill mainnet" id="navNetMainnet" onclick="setNetwork('mainnet')">Mainnet</button>
+      <button class="net-pill active mainnet" id="navNetMainnet" onclick="setNetwork('mainnet')">Base Mainnet</button>
     </div>
   </div>
   <div class="nav-right">
@@ -547,17 +537,9 @@ select.inp option{background:var(--s2);color:var(--t1)}
       </button>
       <div id="wallet-net-drop" style="display:none">
         <div class="wnd-title">Connect to network</div>
-        <div class="wnd-item" onclick="walletFallback('sepolia')">
-          <span>Base Sepolia</span>
-          <span class="wnd-badge live">LIVE</span>
-        </div>
-        <div class="wnd-item" onclick="walletFallback('vibenet')">
-          <span>Base Vibenet</span>
-          <span class="wnd-badge live">LIVE</span>
-        </div>
-        <div class="wnd-item wnd-item-soon" onclick="setNetwork('mainnet')">
+        <div class="wnd-item" onclick="walletFallback('mainnet')">
           <span>Base Mainnet</span>
-          <span class="wnd-badge soon">DELAYED</span>
+          <span class="wnd-badge soon">SOON</span>
         </div>
       </div>
     </div>
@@ -599,19 +581,10 @@ select.inp option{background:var(--s2);color:var(--t1)}
     <h1 class="pg-title">Create a B20 Token</h1>
     <p class="pg-sub">Deploy a native Base token. Role-gated, ERC-20 compatible, precompile-backed.</p>
 
-    <!-- NETWORK STATUS BANNERS -->
-    <div id="mainnetBar" class="mainnet-bar" style="display:none">
+    <!-- NETWORK STATUS BANNER -->
+    <div id="mainnetBar" class="mainnet-bar">
       <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v4"/><circle cx="10" cy="13.5" r=".8" fill="currentColor" stroke="none"/></svg>
-      B20 mainnet activation delayed by Base due to stability incident. Deploy disabled.
-      Switch to <button onclick="setNetwork('sepolia')">Sepolia</button> or <button onclick="setNetwork('vibenet')">Vibenet</button>.
-    </div>
-    <div id="sepoliaBar" class="sepolia-bar">
-      <span class="sepolia-live"><span class="sepolia-dot"></span>B20 Live on Base Sepolia</span>
-      <a class="faucet-link" href="https://portal.cdp.coinbase.com/products/faucet" target="_blank" rel="noopener">Faucet ↗</a>
-    </div>
-    <div id="vibenetBar" class="sepolia-bar" style="display:none">
-      <span class="sepolia-live"><span class="sepolia-dot"></span>B20 Live on Vibenet</span>
-      <a class="faucet-link" href="https://faucet.vibes.base.org" target="_blank" rel="noopener">Faucet ↗</a>
+      B20 activates on Base mainnet at the scheduled Activation Registry time. Deploy unlocks the moment it goes live.
     </div>
 
     <!-- AI AUTO-FILL -->
@@ -832,7 +805,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <div class="dc-header">
           <div class="dc-check pending" id="dcCheck">⏳</div>
           <div class="dc-header-text">
-            <div class="dc-title" id="dcTitle">Token deployed on Base Sepolia</div>
+            <div class="dc-title" id="dcTitle">Token deployed on Base</div>
             <div class="dc-sub" id="dcSub">Confirming…</div>
           </div>
         </div>
@@ -867,7 +840,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   <div id="tabTokens" style="display:none">
     <div class="pg-label">My Tokens</div>
     <h1 class="pg-title">My B20 Tokens</h1>
-    <p class="pg-sub">Tokens you deploy on Base testnets. Click Mint to add supply.</p>
+    <p class="pg-sub">Tokens you deploy on Base. Click Mint to add supply.</p>
     <div id="myTokensGrid" class="launched-grid" style="margin-top:18px"></div>
   </div>
 
@@ -978,47 +951,29 @@ select.inp option{background:var(--s2);color:var(--t1)}
 <script>
 let b20Activated = false;
 let variant = 'asset';
-let network = 'sepolia'; // mainnet locked until B20 activates
+let network = 'mainnet'; // B20 is Base mainnet only
 let walletAddress = null;
 let deploying = false;
 let deployedTxHash = null;
 
 const NET = {
-  mainnet: { chainId: '0x2105',    name: 'Base',         rpc: 'https://mainnet.base.org',       explorer: 'https://basescan.org',               faucet: null },
-  sepolia: { chainId: '0x14a34',   name: 'Base Sepolia', rpc: 'https://sepolia.base.org',       explorer: 'https://sepolia.basescan.org',        faucet: 'https://portal.cdp.coinbase.com/products/faucet' },
-  vibenet: { chainId: '0x509F455', name: 'Base Vibenet', rpc: 'https://rpc.vibes.base.org',     explorer: 'https://explorer.vibes.base.org',     faucet: 'https://faucet.vibes.base.org' },
+  mainnet: { chainId: '0x2105', name: 'Base', rpc: 'https://mainnet.base.org', explorer: 'https://basescan.org', faucet: null },
 };
 
 function setNetwork(n) {
-  network = n;
-  // Update pill buttons
-  const sepBtn  = document.getElementById('navNetSepolia');
+  network = 'mainnet';
   const mainBtn = document.getElementById('navNetMainnet');
-  const vibBtn  = document.getElementById('navNetVibenet');
-  if (sepBtn)  sepBtn.className  = 'net-pill' + (n === 'sepolia'  ? ' active sepolia'  : ' sepolia');
-  if (mainBtn) mainBtn.className = 'net-pill' + (n === 'mainnet'  ? ' active mainnet'  : ' mainnet');
-  if (vibBtn)  vibBtn.className  = 'net-pill' + (n === 'vibenet'  ? ' active vibenet'  : ' vibenet');
-  // Show/hide network banners
+  if (mainBtn) mainBtn.className = 'net-pill active mainnet';
   const mainBar = document.getElementById('mainnetBar');
-  const sepBar  = document.getElementById('sepoliaBar');
-  const vibBar  = document.getElementById('vibenetBar');
-  if (mainBar) mainBar.style.display = n === 'mainnet' ? '' : 'none';
-  if (sepBar)  sepBar.style.display  = n === 'sepolia'  ? '' : 'none';
-  if (vibBar)  vibBar.style.display  = n === 'vibenet'  ? '' : 'none';
-  // Disable deploy button on mainnet only
+  if (mainBar) mainBar.style.display = '';
+  // Deploy stays locked until B20 activates on Base mainnet
   const btn = document.querySelector('.deploy-btn');
   if (btn) {
-    btn.disabled = n === 'mainnet';
-    if (n === 'mainnet') {
-      btn.classList.add('dep-loading');
-      btn.onclick = null;
-      const sub = document.getElementById('deploySubtitle');
-      if (sub) sub.textContent = 'Switch to Sepolia or Vibenet to deploy';
-    } else {
-      btn.classList.remove('dep-loading');
-      btn.onclick = onDeploy;
-      updateSubtitle();
-    }
+    btn.disabled = true;
+    btn.classList.add('dep-loading');
+    btn.onclick = null;
+    const sub = document.getElementById('deploySubtitle');
+    if (sub) sub.textContent = 'Deploy unlocks when B20 activates on Base mainnet';
   }
   // Load tokens for current network in New Launched tab if visible
   if (document.getElementById('tabNew')?.style.display !== 'none') loadNewTokens();
@@ -1136,7 +1091,7 @@ function setDeployBtn(state, label, sub) {
 function updateSubtitle() {
   const el = document.getElementById('deploySubtitle');
   if (!el) return;
-  const netName = NET[network]?.name || 'Base Sepolia';
+  const netName = NET[network]?.name || 'Base';
   if (!b20Activated) {
     el.textContent = walletAddress ? `Checking B20 activation on ${netName}…` : `Connect wallet to deploy on ${netName}`;
     return;
@@ -1324,7 +1279,7 @@ async function onDeploy() {
 let _deployedTokenName = '', _deployedTokenSym = '', _deployDecimals = 18;
 
 function showDeployedCard(hash, net, predictedCA) {
-  const explorer = NET[net]?.explorer ?? 'https://sepolia.basescan.org';
+  const explorer = NET[net]?.explorer ?? 'https://basescan.org';
   _deployedTokenName = document.getElementById('fName')?.value?.trim() || 'Token';
   _deployedTokenSym  = document.getElementById('fSym')?.value?.trim() || '';
   document.getElementById('dcCheck').textContent = '⏳';
@@ -1341,7 +1296,7 @@ function showDeployedCard(hash, net, predictedCA) {
 }
 
 async function pollReceipt(hash, net, predictedCA) {
-  const explorer = NET[net]?.explorer ?? 'https://sepolia.basescan.org';
+  const explorer = NET[net]?.explorer ?? 'https://basescan.org';
   const maxAttempts = 20;
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(r => setTimeout(r, 3000));
@@ -1449,8 +1404,8 @@ function renderMyTokens() {
     </div>`;
     return;
   }
-  const net = network || 'sepolia';
-  const explorer = NET[net]?.explorer ?? 'https://sepolia.basescan.org';
+  const net = network || 'mainnet';
+  const explorer = NET[net]?.explorer ?? 'https://basescan.org';
   grid.innerHTML = tokens.map(t => {
     const col = tokenColor(t.symbol);
     const initials = (t.symbol||'?').slice(0,3);
@@ -1622,12 +1577,12 @@ function toggleWalletDrop(e) {
 
 async function walletFallback(net) {
   document.getElementById('wallet-net-drop').style.display = 'none';
-  if (!net) net = 'sepolia'; // default to sepolia
+  if (!net) net = 'mainnet';
   if (net === 'mainnet') { setNetwork('mainnet'); return; }
   if (!window.ethereum) { alert('No wallet detected. Install MetaMask or open in a wallet browser.'); return; }
   try {
     // Switch to selected network first
-    const netCfg = NET[net] || NET.sepolia;
+    const netCfg = NET[net] || NET.mainnet;
     const chainId = netCfg.chainId;
     const chainName = netCfg.name;
     const rpc = netCfg.rpc;
@@ -1674,9 +1629,9 @@ window.addEventListener('orlix:wallet:connected', async (e) => {
   const el = document.getElementById('fAdmin');
   if (el && !el.value) { el.value = addr; onFormChange(); }
   updateSubtitle();
-  // Auto-switch to the active network in B20 Studio (Sepolia by default)
+  // Auto-switch to the active network in B20 Studio (Base mainnet)
   if (window.ethereum) {
-    const net = NET[network] || NET.sepolia;
+    const net = NET[network] || NET.mainnet;
     try {
       const current = await window.ethereum.request({ method: 'eth_chainId' });
       if (current !== net.chainId) {

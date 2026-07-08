@@ -28,11 +28,7 @@ module.exports = async (req, res) => {
       upgrade: 'Beryl',
       mainnetDate: null,
       mainnetLive,
-      mainnetNote: 'B20 mainnet activation delayed by Base due to stability incident. Sepolia and Vibenet are live.',
-      testnets: [
-        { name: 'Base Sepolia', chainId: 84532, rpc: 'https://sepolia.base.org', explorer: 'https://sepolia.basescan.org', faucet: 'https://portal.cdp.coinbase.com/products/faucet' },
-        { name: 'Vibenet',      chainId: 84538453, rpc: 'https://rpc.vibes.base.org', explorer: 'https://explorer.vibes.base.org', faucet: 'https://faucet.vibes.base.org' },
-      ],
+      mainnetNote: 'B20 activates on Base mainnet at the scheduled Activation Registry time.',
       variants: [
         {
           name: 'Asset',
@@ -69,11 +65,7 @@ module.exports = async (req, res) => {
       tokens: KNOWN_B20,
       total: KNOWN_B20.length,
       mainnetLive: false,
-      message: 'B20 mainnet activation pending. Deploy on Sepolia or Vibenet.',
-      testnets: [
-        { name: 'Base Sepolia', explorer: 'https://sepolia.basescan.org' },
-        { name: 'Vibenet',      explorer: 'https://explorer.vibes.base.org' },
-      ],
+      message: 'B20 activates on Base mainnet at the scheduled Activation Registry time.',
       ts: now,
     }));
   }

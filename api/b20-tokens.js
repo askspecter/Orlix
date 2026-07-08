@@ -8,12 +8,10 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
-// B20 Beryl precompile (same address on all networks)
+// B20 Beryl precompile
 const B20_PRECOMPILE = '0x4200000000000000000000000000000000000B20';
 const NETWORKS = {
-  mainnet: { rpc: 'https://mainnet.base.org',   basescan: 'https://api.basescan.org/api' },
-  sepolia: { rpc: 'https://sepolia.base.org',   basescan: 'https://api-sepolia.basescan.org/api' },
-  vibenet: { rpc: 'https://rpc.vibes.base.org', basescan: null },
+  mainnet: { rpc: 'https://mainnet.base.org', basescan: 'https://api.basescan.org/api' },
 };
 
 let _currentNet = 'mainnet';
@@ -204,8 +202,7 @@ module.exports = async (req, res) => {
 
   try {
     const limit = Math.min(parseInt(req.query?.limit || '20', 10), 50);
-    const reqNet = req.query?.network || 'mainnet';
-    _currentNet = ['mainnet', 'sepolia', 'vibenet'].includes(reqNet) ? reqNet : 'mainnet';
+    _currentNet = 'mainnet';
     const raw = await fetchRecentTokens(limit);
 
     if (raw.length === 0) {

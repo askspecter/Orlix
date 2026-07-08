@@ -53,9 +53,8 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 
 ### B20 Token Standard
 - Precompile address: `0x4200000000000000000000000000000000000B20`
-- Networks: Base Mainnet (8453, pending), Sepolia (84532), Vibenet (84538453)
-- Chain ID hex: mainnet `0x2105`, sepolia `0x14a34`, vibenet `0x509F455`
-- RPC: mainnet `https://mainnet.base.org`, sepolia `https://sepolia.base.org`, vibenet `https://rpc.vibes.base.org`
+- Network: Base Mainnet only (chain ID 8453, hex `0x2105`) — activates at the scheduled Activation Registry time. Testnets (Sepolia/Vibenet) removed.
+- RPC: mainnet `https://mainnet.base.org`
 
 ### Base City (`/neural-map.html`)
 - Three.js r128 (non-module, CDN)
