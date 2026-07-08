@@ -737,9 +737,53 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </div>
       </div>
 
-      <!-- Deploy -->
+      <!-- Pool & Launch (Uniswap V4) -->
+      <div class="sec-label" style="margin-top:22px">Pool &amp; Launch</div>
+      <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Right after deploy, your token is paired with <strong style="color:var(--t2)">WETH on Uniswap V4</strong> and the supply is seeded as single-sided liquidity — so buyers bring the ETH and your token is tradeable instantly.</p>
+      <div class="adminless-row" style="margin-top:0;margin-bottom:14px">
+        <label class="toggle" style="margin-top:2px">
+          <input type="checkbox" id="fCreatePool" checked onchange="togglePoolEconomics()">
+          <div class="tg-track"></div>
+          <div class="tg-thumb"></div>
+        </label>
+        <div>
+          <div class="al-name">Create liquidity pool on launch</div>
+          <div class="al-desc">Makes the token tradeable in the same flow (recommended).</div>
+        </div>
+      </div>
+      <div id="poolEconomics">
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Initial price (ETH per token)</label>
+            <input class="inp" id="fPoolPrice" type="text" value="0.000000000025" style="font-size:.72rem" oninput="updatePoolPreview()">
+            <div id="poolMcapHint" style="font-size:.6rem;color:var(--t3);margin-top:3px"></div>
+          </div>
+          <div class="field">
+            <label class="field-label">LP fee</label>
+            <select class="inp" id="fPoolFee" style="font-size:.72rem">
+              <option value="10000" selected>1.00% (default)</option>
+              <option value="3000">0.30%</option>
+              <option value="500">0.05%</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Liquidity tokens (into pool)</label>
+            <input class="inp" id="fPoolLp" type="text" value="1000000000" placeholder="blank = all" style="font-size:.72rem">
+            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Moved from your wallet into the pool</div>
+          </div>
+          <div class="field">
+            <label class="field-label">Dev buy (ETH) — optional</label>
+            <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = none" style="font-size:.72rem">
+            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Buy your own token at launch</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deploy / Launch -->
       <button class="deploy-btn" onclick="onDeploy()">
-        <span>→ Deploy B20 Token</span>
+        <span>🚀 Launch Token</span>
         <span class="deploy-sub" id="deploySubtitle">Loading…</span>
       </button>
 
@@ -768,40 +812,17 @@ select.inp option{background:var(--s2);color:var(--t1)}
             <a id="dcTxLink" href="#" target="_blank" class="dc-ext-link">Explorer ↗</a>
           </div>
         </div>
-        <div class="dc-actions" id="dcActions" style="display:none">
-          <button class="dc-action-btn dc-action-primary" onclick="openPoolPanel()">💧 Add Liquidity — make tradeable</button>
-          <button class="dc-action-btn dc-action-outline" onclick="mintFromCard(document.getElementById('dcCA').textContent)">Mint supply</button>
-          <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan ↗</a>
-          <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Deploy another</button>
+        <!-- Pool creation progress (Uniswap V4) — runs automatically after deploy -->
+        <div id="dcPoolPanel" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
+          <div style="font-size:.8rem;font-weight:700;color:var(--t1);margin-bottom:8px">Liquidity Pool — Uniswap V4</div>
+          <div id="poolStatus" style="font-size:.72rem;color:var(--t2);line-height:1.5"></div>
+          <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%;margin-top:10px;display:none">Retry pool creation</button>
         </div>
 
-        <!-- LIQUIDITY POOL PANEL (Uniswap V4) -->
-        <div id="dcPoolPanel" style="display:none;margin-top:14px;padding:16px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
-          <div style="font-size:.82rem;font-weight:700;color:var(--t1);margin-bottom:4px">Create Uniswap V4 Pool</div>
-          <div style="font-size:.7rem;color:var(--t2);margin-bottom:14px;line-height:1.5">Seeds a <b>TOKEN / WETH</b> pool with single-sided token liquidity (concentrated) so buyers bring the ETH. This is what makes your token tradeable and visible on DexScreener. You'll sign 3 transactions: approve → authorize → create pool.</div>
-
-          <label class="field-label">Initial price (ETH per token)</label>
-          <input class="inp" id="fPoolPrice" type="text" value="0.000000000025" style="font-size:.72rem" oninput="updatePoolPreview()">
-          <div id="poolMcapHint" style="font-size:.65rem;color:var(--t3);margin:4px 0 12px"></div>
-
-          <label class="field-label">Liquidity tokens (from your balance)</label>
-          <input class="inp" id="fPoolLp" type="text" value="1000000000" placeholder="blank = all your tokens" style="font-size:.72rem">
-          <div style="height:12px"></div>
-
-          <label class="field-label">LP fee</label>
-          <select class="inp" id="fPoolFee" style="font-size:.72rem">
-            <option value="10000" selected>1.00% (default)</option>
-            <option value="3000">0.30%</option>
-            <option value="500">0.05%</option>
-          </select>
-          <div style="height:12px"></div>
-
-          <label class="field-label">Dev buy (ETH) — optional</label>
-          <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = no dev buy" style="font-size:.72rem">
-          <div style="font-size:.65rem;color:var(--t3);margin:4px 0 12px;line-height:1.5">Buy your own token at launch with ETH, in the same session. The more ETH you spend, the more tokens you receive (and the more the starting price moves up).</div>
-
-          <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%">Create pool &amp; seed liquidity</button>
-          <div id="poolStatus" style="font-size:.7rem;color:var(--t2);margin-top:10px;line-height:1.5"></div>
+        <div class="dc-actions" id="dcActions" style="display:none">
+          <button class="dc-action-btn dc-action-outline" onclick="mintFromCard(document.getElementById('dcCA').textContent)">Mint supply</button>
+          <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan ↗</a>
+          <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
         </div>
       </div>
 
@@ -1051,7 +1072,7 @@ function setDeployBtn(state, label, sub) {
     btn.classList.add('dep-error');
     span.textContent = '→ Try Again'; subEl.textContent = sub || label;
   } else {
-    span.textContent = '→ Deploy B20 Token'; updateSubtitle();
+    span.textContent = '🚀 Launch Token'; updateSubtitle();
   }
 }
 
@@ -1303,6 +1324,11 @@ async function pollReceipt(hash, net, predictedCA) {
         }
         document.getElementById('dcActions').style.display = 'flex';
         setDeployBtn('success', '✓ Deployed!', `Token live on ${NET[network]?.name || 'Base'}`);
+        // Wizard: if "create pool on launch" is on, continue straight into seeding the V4 pool
+        if (ca && document.getElementById('fCreatePool')?.checked) {
+          document.getElementById('dcTitle').textContent = 'Token deployed — creating liquidity pool…';
+          createPool();
+        }
         return;
       } else if (d.status === 'failed') {
         document.getElementById('dcCheck').textContent = '✗';
@@ -1339,11 +1365,10 @@ function deployAnother() {
 }
 
 // ── Uniswap V4 liquidity pool (make token tradeable) ─────────────────────────
-function openPoolPanel() {
-  const p = document.getElementById('dcPoolPanel');
-  if (!p) return;
-  p.style.display = (p.style.display === 'none' || !p.style.display) ? 'block' : 'none';
-  updatePoolPreview();
+function togglePoolEconomics() {
+  const on = document.getElementById('fCreatePool')?.checked;
+  const el = document.getElementById('poolEconomics');
+  if (el) el.style.display = on ? '' : 'none';
 }
 
 function updatePoolPreview() {
@@ -1389,10 +1414,12 @@ async function createPool() {
   const lp    = (document.getElementById('fPoolLp').value || '').replace(/[^0-9]/g, '');
   const fee   = document.getElementById('fPoolFee').value;
   const devBuy = (document.getElementById('fPoolDevBuy')?.value || '').replace(/[^0-9.]/g, '');
-  if (!price || parseFloat(price) <= 0) { setPoolStatus('Enter a valid initial price (ETH per token).', 'err'); return; }
-
+  const panel = document.getElementById('dcPoolPanel');
+  if (panel) panel.style.display = 'block';
   const btn = document.getElementById('poolBtn');
-  btn.disabled = true;
+  if (!price || parseFloat(price) <= 0) { setPoolStatus('Enter a valid initial price (ETH per token).', 'err'); if (btn) { btn.style.display=''; btn.disabled=false; } return; }
+  if (btn) { btn.disabled = true; btn.style.display = 'none'; }
+  let lastHash = null, lastStep = '';
   try {
     setPoolStatus('Preparing pool transactions…');
     const r = await fetch('/api/b20-skill', {
@@ -1414,20 +1441,29 @@ async function createPool() {
     const txs = d.txs || [];
     for (let i = 0; i < txs.length; i++) {
       const t = txs[i];
+      lastStep = t.title;
       setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — confirm in your wallet…`);
       const hash = await window.ethereum.request({
         method: 'eth_sendTransaction',
         params: [{ from: walletAddress, to: t.to, data: t.data, value: t.value || '0x0', gas: t.gas }],
       });
+      lastHash = hash;
       setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — submitted, waiting for confirmation…`);
       await waitTx(hash);
     }
     setPoolStatus('✅ Pool created and liquidity seeded — your token is now tradeable! It may take a minute to appear on DexScreener.', 'ok');
-    btn.textContent = '✓ Pool created';
+    if (btn) btn.style.display = 'none';
   } catch (e) {
     const msg = (e.code === 4001 || e.code === 4100) ? 'Rejected in wallet' : (e.message || 'failed').slice(0, 140);
-    setPoolStatus('Error: ' + msg, 'err');
-    btn.disabled = false;
+    const el = document.getElementById('poolStatus');
+    const explorer = NET[network]?.explorer || 'https://basescan.org';
+    if (el && typeof lastHash !== 'undefined' && lastHash) {
+      el.innerHTML = `<span style="color:#ef4444">Failed on "${lastStep}": ${msg}.</span> ` +
+        `<a href="${explorer}/tx/${lastHash}" target="_blank" style="color:var(--accent);text-decoration:underline">View failed tx ↗</a> — copy this link so it can be diagnosed.`;
+    } else {
+      setPoolStatus('Error: ' + msg + ' — you can retry below.', 'err');
+    }
+    if (btn) { btn.style.display = ''; btn.disabled = false; btn.textContent = 'Retry pool creation'; }
   }
 }
 
@@ -1883,6 +1919,8 @@ async function onMint() {
 (function init() {
   checkB20Activation();
   onFormChange();
+  togglePoolEconomics();
+  updatePoolPreview();
 })();
 </script>
 

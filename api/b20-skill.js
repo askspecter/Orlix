@@ -1164,9 +1164,22 @@ async function handlePreparePool(body, res) {
   const settleParam = ABI_CODER.encode(['address', 'address'], [WETH, tokenAddr]);
   const unlockData = ABI_CODER.encode(['bytes', 'bytes[]'], [actions, [mintParam, settleParam]]);
 
+  // If the pool is already initialized (e.g. a previous attempt), don't re-init —
+  // initializePool would revert. Just add liquidity in that case.
+  let poolInitialized = false;
+  try {
+    const r = await ethCall('mainnet', STATE_VIEW, STATEVIEW_IFACE.encodeFunctionData('getSlot0', [poolIdOf(poolKey)]));
+    if (r && r !== '0x') {
+      const [sp] = STATEVIEW_IFACE.decodeFunctionResult('getSlot0', r);
+      poolInitialized = BigInt(sp) > 0n;
+    }
+  } catch {}
+
   const initData   = POSM_IFACE.encodeFunctionData('initializePool', [poolKey, sqrtPriceX96]);
   const modifyData = POSM_IFACE.encodeFunctionData('modifyLiquidities', [unlockData, deadline]);
-  const multicallData = POSM_IFACE.encodeFunctionData('multicall', [[initData, modifyData]]);
+  const multicallData = poolInitialized
+    ? POSM_IFACE.encodeFunctionData('multicall', [[modifyData]])
+    : POSM_IFACE.encodeFunctionData('multicall', [[initData, modifyData]]);
 
   const txs = [
     { label: 'approve_permit2', title: 'Approve token (Permit2)', to: tokenAddr,
