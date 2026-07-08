@@ -44,7 +44,7 @@
 :root.light .nav-logo img{filter:invert(1)}.wm{display:block}.wm-light{display:none}:root.light .wm-dark{display:none}:root.light .wm-light{display:block}:root.light .wm{filter:none!important}
 :root.light .tb-brand img{filter:invert(1)}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{scroll-behavior:smooth}
+html{scroll-behavior:auto;scroll-padding-top:118px}
 body{background:var(--bg);color:var(--text-2);font-family:var(--font);font-size:13px;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 ::selection{background:var(--orange);color:#fff}
 a{color:var(--purple);text-decoration:none;transition:color var(--tr)}
@@ -197,6 +197,20 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
 .docs-scrim.open{opacity:1}
 .docs-drawer-head{display:none}
 
+/* ── Multi-page docs: one section per "page" ── */
+.doc-section{display:none;padding:8px 0 0;border-bottom:none;animation:docfade .28s ease}
+.doc-section.active-page{display:block}
+.doc-section:last-of-type{padding-bottom:0}
+@keyframes docfade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.page-nav{display:flex;gap:14px;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+.page-nav a{flex:1;display:flex;flex-direction:column;gap:5px;padding:16px 18px;border:1px solid var(--border);border-radius:10px;transition:border-color var(--tr),background var(--tr)}
+.page-nav a:hover{border-color:var(--orange);background:var(--orange-dim)}
+.page-nav a.pn-next{text-align:right;align-items:flex-end}
+.page-nav .pn-label{color:var(--text-3);font-size:.7rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
+.page-nav .pn-title{color:var(--text-1);font-size:.95rem;font-weight:600}
+.crumb-page{color:var(--orange)}
+@media(max-width:560px){.page-nav{flex-direction:column}}
+
 /* RESPONSIVE */
 @media(max-width:720px){
   .docs-layout{grid-template-columns:1fr}
@@ -342,7 +356,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
 
       <div class="crumb">
         <button class="docs-toc-ham" id="docsTocBtn" aria-label="Open contents"><span></span><span></span><span></span></button>
-        <span class="root">~</span><span class="sep">/</span><span class="here">orlix</span><span class="sep">/</span>docs
+        <span class="root">~</span><span class="sep">/</span><span class="here">orlix</span><span class="sep">/</span>docs<span class="sep">/</span><span class="crumb-page" id="crumbPage"></span>
       </div>
 
       <div class="page-header">
@@ -623,6 +637,8 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
         <p class="muted" style="margin-top:16px">// full request/response schema, parameters, and status codes live in the <a href="api-docs.html#b20-agent">API reference</a>. The signer wallet pays gas, so it must hold ETH on Base.</p>
       </div>
 
+      <div class="page-nav" id="pageNav"></div>
+
     </div>
   </div>
 </div>
@@ -691,21 +707,35 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   if(ds)ds.addEventListener('click',function(e){if(e.target===ds)closeSearch();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSearch();});
 
-  // Scroll-spy: highlight the sidebar link for the section in view
-  var links={};
-  if(sb)sb.querySelectorAll('a[href^="#"]').forEach(function(a){links[a.getAttribute('href').slice(1)]=a});
-  var secs=document.querySelectorAll('.doc-section[id]');
-  if(secs.length&&'IntersectionObserver'in window){
-    var io=new IntersectionObserver(function(es){
-      es.forEach(function(e){
-        if(e.isIntersecting){
-          var a=links[e.target.id];
-          if(a){for(var k in links)links[k].classList.remove('active');a.classList.add('active');}
-        }
-      });
-    },{rootMargin:'-45% 0px -50% 0px'});
-    secs.forEach(function(s){io.observe(s)});
+  // ── Multi-page docs: show one section at a time (deep-linkable via #hash) ──
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.doc-section[id]'));
+  var ids   = pages.map(function(p){ return p.id; });
+  var links = {};
+  if(sb) sb.querySelectorAll('a[href^="#"]').forEach(function(a){ links[a.getAttribute('href').slice(1)] = a; });
+  function titleOf(id){ var a=links[id]; return a ? a.textContent.trim() : id; }
+  var pageHeader = document.querySelector('.page-header');
+  var crumbPage  = document.getElementById('crumbPage');
+  var pageNav    = document.getElementById('pageNav');
+
+  function renderNav(id){
+    if(!pageNav) return;
+    var i = ids.indexOf(id), html = '';
+    if(i>0){ var p=ids[i-1]; html += '<a class="pn-prev" href="#'+p+'"><span class="pn-label">← Previous</span><span class="pn-title">'+titleOf(p)+'</span></a>'; }
+    else html += '<span style="flex:1"></span>';
+    if(i<ids.length-1){ var n=ids[i+1]; html += '<a class="pn-next" href="#'+n+'"><span class="pn-label">Next →</span><span class="pn-title">'+titleOf(n)+'</span></a>'; }
+    pageNav.innerHTML = html;
   }
+  function showPage(id){
+    if(ids.indexOf(id) < 0) id = ids[0];
+    pages.forEach(function(p){ p.classList.toggle('active-page', p.id===id); });
+    for(var k in links) links[k].classList.toggle('active', k===id);
+    if(pageHeader) pageHeader.style.display = (id===ids[0]) ? '' : 'none';
+    if(crumbPage)  crumbPage.textContent = titleOf(id);
+    renderNav(id);
+    window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange', function(){ showPage((location.hash||'').slice(1) || ids[0]); });
+  showPage((location.hash||'').slice(1) || ids[0]);
 })();
 </script>
 </body>
