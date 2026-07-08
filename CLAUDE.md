@@ -53,8 +53,12 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 
 ### B20 Token Standard
 - Precompile address: `0x4200000000000000000000000000000000000B20`
-- Network: Base Mainnet only (chain ID 8453, hex `0x2105`) — activates at the scheduled Activation Registry time. Testnets (Sepolia/Vibenet) removed.
+- Factory address: `0xB20f000000000000000000000000000000000000`
+- Activation Registry: `0x8453000000000000000000000000000000000001`
+- Network: Base Mainnet only (chain ID 8453, hex `0x2105`) — LIVE since Beryl hardfork (2026-07-09 22:00 UTC)
 - RPC: mainnet `https://mainnet.base.org`
+- Deploy via: `createB20(variant, salt, params, initCalls)` — requires Base Foundry (`base-forge`, `base-cast`, `base-anvil`)
+- Docs: https://docs.base.org/apps/guides/launch-a-b20-token
 
 ### Base City (`/neural-map.html`)
 - Three.js r128 (non-module, CDN)

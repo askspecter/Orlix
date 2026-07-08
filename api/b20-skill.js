@@ -389,7 +389,7 @@ async function handleInfo(net, res) {
         asset:      assetActive,
         stablecoin: stableActive,
         registryAddress: ACTIVATION_REGISTRY,
-        note: assetActive ? 'B20 is live — ready to deploy' : 'Activation Registry not yet enabled — wait ~1 hour after Beryl hardfork',
+        note: assetActive ? 'B20 is live on Base mainnet — ready to deploy' : 'Activation Registry check failed — verify your RPC connection',
       },
       chain: {
         blockNumber: gas.blockNumber,
@@ -720,7 +720,7 @@ async function handlePrepare(body, res) {
       ? 'Config valid — sign and broadcast to deploy'
       : simRevertReason
         ? `Factory reverted: ${simRevertReason}`
-        : 'B20 not yet active on this network — Beryl hardfork activation pending.',
+        : 'B20 activation check failed — verify RPC connection and try again.',
 
     config,
     salt: saltHex,
@@ -843,7 +843,7 @@ async function _releaseLock(held) { if (held) { try { await _redis('DEL', 'b20de
 // Factory eth_call simulation — never sign+broadcast a tx that will revert (wastes gas).
 async function _simulateDeploy(net, signer, calldata, variant) {
   const activationFallback = async () => {
-    try { return (await checkActivated(net, variant)) ? { ok: true } : { ok: false, reason: 'B20 not yet active on this network (Beryl activation pending)' }; }
+    try { return (await checkActivated(net, variant)) ? { ok: true } : { ok: false, reason: 'B20 activation check failed — verify RPC connection' }; }
     catch { return { ok: false, reason: 'Could not verify B20 activation on-chain' }; }
   };
   try {
@@ -959,15 +959,16 @@ function handleManifest(res) {
     id:          'orlix.b20',
     name:        'Orlix B20 Token Skill',
     version:     '3.0.0',
-    description: 'Full B20 token lifecycle on Base (Beryl): activation check, live chain data, balance checks, config validation, deployment bundles via createB20 precompile, ERC-20 reads, tx receipts.',
+    description: 'Full B20 token lifecycle on Base mainnet (Beryl, live): activation check, live chain data, balance checks, config validation, deployment bundles via createB20 precompile, ERC-20 reads, tx receipts.',
     endpoint:    'https://orlixai.xyz/api/b20-skill',
     factory:     B20_FACTORY,
     activation:  ACTIVATION_REGISTRY,
     networks:    { mainnet: { chainId: 8453, rpc: 'https://mainnet.base.org' } },
     actions:     { GET: ['manifest','info','gas'], POST: ['validate','prepare','balance','token_info','receipt'] },
     links: {
-      studio:   'https://orlixai.xyz/b20-studio.html',
-      baseDocs: 'https://docs.base.org/base-chain/specs/upgrades/beryl/b20',
+      studio:     'https://orlixai.xyz/b20-studio.html',
+      baseDocs:   'https://docs.base.org/base-chain/specs/upgrades/beryl/b20',
+      launchGuide:'https://docs.base.org/apps/guides/launch-a-b20-token',
     },
   }));
 }
