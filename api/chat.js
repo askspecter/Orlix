@@ -7,6 +7,28 @@
 
 const { checkLimits, allowedOrigin } = require('./_guard');
 
+// ── Allowed models whitelist — reject anything not listed ────────────────────
+const ALLOWED_MODELS = new Set([
+  // Anthropic (via Bankr)
+  'claude-sonnet-5', 'claude-haiku-4-5-20251001', 'claude-opus-4-8',
+  // Mimo
+  'mimo-v2.5-pro-ultraspeed',
+  // Venice
+  'venice/venice-uncensored-1-2', 'venice/e2ee-venice-uncensored-24b-p',
+  // OpenAI (via Bankr)
+  'gpt-5.4', 'gpt-5-nano', 'gpt-5.2-codex',
+  // Google (via Bankr)
+  'gemini-3.1-pro', 'gemini-3-flash',
+  // xAI (via Bankr)
+  'grok-4.20', 'grok-4.1-fast',
+  // DeepSeek (via Bankr)
+  'deepseek-v3.2',
+  // Moonshot (via Bankr)
+  'kimi-k2.7-code', 'kimi-k2.6',
+  // Alibaba (via Bankr)
+  'qwen3-coder', 'qwen3.7-plus', 'qwen3.6-flash',
+]);
+
 // ── Tool definitions (Base MCP tools for Claude) ──────────────────────────────
 const ALL_TOOLS = [
   {
@@ -839,6 +861,11 @@ module.exports = async function handler(req, res) {
   const isMimo   = model.startsWith('mimo');
   const isVenice = model.startsWith('venice');
   const isClaude = model.startsWith('claude');
+
+  // ── Model whitelist enforcement ─────────────────────────────────────────
+  if (!ALLOWED_MODELS.has(bodyObj.model || '')) {
+    return res.status(403).json({ error: { message: 'Model not available.' } });
+  }
 
   // ── Mimo ─────────────────────────────────────────────────────────────────
   if (isMimo) {
