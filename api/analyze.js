@@ -8,10 +8,13 @@ const CHAINS = {
 
 async function rpc(method, params = [], chain = 'base') {
   const rpcUrl = CHAINS[chain]?.rpc || CHAINS.base.rpc;
+  // Timeout so a slow/rate-limited RPC (e.g. Robinhood's public endpoint) can't
+  // hang the whole request until the Vercel function timeout.
   const r = await fetch(rpcUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    signal: AbortSignal.timeout(8000),
   });
   const d = await r.json();
   if (d.error) throw new Error(d.error.message);
@@ -57,6 +60,7 @@ async function getTokenInfo(address, chain = 'base') {
 async function getDex(address, chain = 'base') {
   const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, {
     headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(8000),
   });
   if (!r.ok) return null;
   const data = await r.json();
@@ -133,24 +137,32 @@ async function aiVerdict(address, token, dex, chain = 'base') {
   const isAnthropicKey = key.startsWith('sk-ant-');
   const apiUrl = isAnthropicKey ? 'https://api.anthropic.com/v1/messages' : 'https://llm.bankr.bot/v1/messages';
   const authHeader = isAnthropicKey ? { 'x-api-key': key, 'anthropic-version': '2023-06-01' } : { 'X-API-Key': key, 'anthropic-version': '2023-06-01' };
-  const r = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeader },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1200,
-      system: `You are an expert crypto security analyst specializing in ${chainName} tokens and DeFi.
+  // Never let a slow/failing LLM turn the whole analysis into a 502 — degrade to
+  // a data-only result instead so the token + market data still render.
+  try {
+    const r = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      signal: AbortSignal.timeout(45000),
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1200,
+        system: `You are an expert crypto security analyst specializing in ${chainName} tokens and DeFi.
 You have deep knowledge of: rug pulls, honeypots, pump & dumps, wash trading, liquidity traps, whale manipulation, and token contract exploits.
 Use **bold** for section headers. Do NOT use ## or ### markdown. Be direct, specific, and data-driven.
 When data suggests risk, be explicit. When data looks healthy, say so with reasoning.`,
-      messages: [{
-        role: 'user',
-        content: `Analyze this ${chainName} token thoroughly. Use exactly this format:\n\n**📊 Overview**\n[What this token is, key facts, age context — 2-3 sentences]\n\n**💧 Liquidity Analysis**\n[Depth adequacy, Liq/MCap ratio interpretation, concentration risk]\n\n**📈 Price & Volume Analysis**\n[Trend across 1h/6h/24h, volume consistency, wash trading signals]\n\n**🔄 Buy/Sell Pressure**\n[What the buy/sell ratio means, momentum interpretation]\n\n**🚩 Red Flags**\n• [Each flag on its own line — be specific with data. If none: "None detected"]\n\n**✅ Green Flags**\n• [Each positive signal with data. If none: "None detected"]\n\n**⚖️ Verdict: SAFE / CAUTION / HIGH RISK / SCAM LIKELY**\n[One clear sentence with the main reason]\n\nData:\n${ctx}`,
-      }],
-    }),
-  });
-  const d = await r.json();
-  return d.content?.[0]?.text || 'Analysis unavailable.';
+        messages: [{
+          role: 'user',
+          content: `Analyze this ${chainName} token thoroughly. Use exactly this format:\n\n**📊 Overview**\n[What this token is, key facts, age context — 2-3 sentences]\n\n**💧 Liquidity Analysis**\n[Depth adequacy, Liq/MCap ratio interpretation, concentration risk]\n\n**📈 Price & Volume Analysis**\n[Trend across 1h/6h/24h, volume consistency, wash trading signals]\n\n**🔄 Buy/Sell Pressure**\n[What the buy/sell ratio means, momentum interpretation]\n\n**🚩 Red Flags**\n• [Each flag on its own line — be specific with data. If none: "None detected"]\n\n**✅ Green Flags**\n• [Each positive signal with data. If none: "None detected"]\n\n**⚖️ Verdict: SAFE / CAUTION / HIGH RISK / SCAM LIKELY**\n[One clear sentence with the main reason]\n\nData:\n${ctx}`,
+        }],
+      }),
+    });
+    if (!r.ok) return `**AI analysis unavailable** (engine returned ${r.status}). Token and market data below are still accurate.`;
+    const d = await r.json();
+    return d.content?.[0]?.text || 'Analysis unavailable.';
+  } catch (e) {
+    return `**AI analysis unavailable** (${e.name === 'TimeoutError' ? 'timed out' : 'engine error'}). Token and market data below are still accurate.`;
+  }
 }
 
 module.exports = async function handler(req, res) {

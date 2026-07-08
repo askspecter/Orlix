@@ -15,6 +15,7 @@
 const ALLOWED_ORIGINS = [
   'https://orlix.xyz',    'https://www.orlix.xyz',
   'https://orlixai.xyz',  'https://www.orlixai.xyz',
+  'https://app.orlixai.xyz', 'https://docs.orlixai.xyz', 'https://b20.orlixai.xyz',
 ];
 
 function getRedis() {
