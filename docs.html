@@ -333,30 +333,30 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
       <div class="sidebar-section">
         <span class="s-label">getting started</span>
         <div class="sidebar-nav">
-          <a href="#overview">Overview</a>
-          <a href="#install">Installation</a>
-          <a href="#quickstart">Quick start</a>
+          <a href="/overview">Overview</a>
+          <a href="/install">Installation</a>
+          <a href="/quickstart">Quick start</a>
         </div>
       </div>
       <div class="sidebar-section">
         <span class="s-label">core concepts</span>
         <div class="sidebar-nav">
-          <a href="#governance-loop">Governance loop</a>
-          <a href="#authority-tiers">Authority tiers</a>
-          <a href="#memory">Memory system</a>
-          <a href="#receipts">Action receipts</a>
-          <a href="#policies">Policies</a>
+          <a href="/governance-loop">Governance loop</a>
+          <a href="/authority-tiers">Authority tiers</a>
+          <a href="/memory">Memory system</a>
+          <a href="/receipts">Action receipts</a>
+          <a href="/policies">Policies</a>
         </div>
       </div>
       <div class="sidebar-section">
         <span class="s-label">reference</span>
         <div class="sidebar-nav">
-          <a href="#cli">CLI reference</a>
-          <a href="#config">Configuration</a>
-          <a href="#integrations">Integrations</a>
-          <a href="#security">Security &amp; privacy</a>
-          <a href="#b20-deploy">B20 token deployment</a>
-          <a href="#faq">FAQ</a>
+          <a href="/cli">CLI reference</a>
+          <a href="/config">Configuration</a>
+          <a href="/integrations">Integrations</a>
+          <a href="/security">Security &amp; privacy</a>
+          <a href="/b20-deploy">B20 token deployment</a>
+          <a href="/faq">FAQ</a>
         </div>
       </div>
     </nav>
@@ -793,7 +793,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   var groupOf={};
   document.querySelectorAll('.docs-sidebar .sidebar-section').forEach(function(sec){
     var lbl=((sec.querySelector('.s-label')||{}).textContent||'').trim();
-    sec.querySelectorAll('a[href^="#"]').forEach(function(a){groupOf[a.getAttribute('href').slice(1)]=lbl;});
+    sec.querySelectorAll('a[href^="/"]').forEach(function(a){groupOf[a.getAttribute('href').slice(1)]=lbl;});
   });
   var items=[];
   document.querySelectorAll('.doc-section[id]').forEach(function(sec){
@@ -817,7 +817,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
     });
     if(!m.length){dsRes.innerHTML='<div class="docs-search-empty">No results for &ldquo;'+esc(q)+'&rdquo;.</div>';return;}
     dsRes.innerHTML=m.map(function(r){
-      return '<a href="#'+r.i.id+'"><span class="sr-title">'+esc(r.i.title)+'</span><span class="sr-sec">'+esc(r.i.group)+'</span>'+(r.s?'<span class="sr-snip">'+r.s+'</span>':'')+'</a>';
+      return '<a href="/'+r.i.id+'"><span class="sr-title">'+esc(r.i.title)+'</span><span class="sr-sec">'+esc(r.i.group)+'</span>'+(r.s?'<span class="sr-snip">'+r.s+'</span>':'')+'</a>';
     }).join('');
     dsRes.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeSearch);});
   }
@@ -832,7 +832,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   var pages = Array.prototype.slice.call(document.querySelectorAll('.doc-section[id]'));
   var ids   = pages.map(function(p){ return p.id; });
   var links = {};
-  if(sb) sb.querySelectorAll('a[href^="#"]').forEach(function(a){ links[a.getAttribute('href').slice(1)] = a; });
+  if(sb) sb.querySelectorAll('a[href^="/"]').forEach(function(a){ links[a.getAttribute('href').slice(1)] = a; });
   function titleOf(id){ var a=links[id]; return a ? a.textContent.trim() : id; }
   var pageHeader = document.querySelector('.page-header');
   var crumbPage  = document.getElementById('crumbPage');
@@ -841,22 +841,44 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
   function renderNav(id){
     if(!pageNav) return;
     var i = ids.indexOf(id), html = '';
-    if(i>0){ var p=ids[i-1]; html += '<a class="pn-prev" href="#'+p+'"><span class="pn-label">← Previous</span><span class="pn-title">'+titleOf(p)+'</span></a>'; }
+    if(i>0){ var p=ids[i-1]; html += '<a class="pn-prev" href="/'+p+'"><span class="pn-label">← Previous</span><span class="pn-title">'+titleOf(p)+'</span></a>'; }
     else html += '<span style="flex:1"></span>';
-    if(i<ids.length-1){ var n=ids[i+1]; html += '<a class="pn-next" href="#'+n+'"><span class="pn-label">Next →</span><span class="pn-title">'+titleOf(n)+'</span></a>'; }
+    if(i<ids.length-1){ var n=ids[i+1]; html += '<a class="pn-next" href="/'+n+'"><span class="pn-label">Next →</span><span class="pn-title">'+titleOf(n)+'</span></a>'; }
     pageNav.innerHTML = html;
   }
-  function showPage(id){
+  function showPage(id, method){
     if(ids.indexOf(id) < 0) id = ids[0];
     pages.forEach(function(p){ p.classList.toggle('active-page', p.id===id); });
     for(var k in links) links[k].classList.toggle('active', k===id);
     if(pageHeader) pageHeader.style.display = (id===ids[0]) ? '' : 'none';
     if(crumbPage)  crumbPage.textContent = titleOf(id);
     renderNav(id);
+    // Path-based URL (e.g. /overview, /policies) — no hash.
+    if(method!=='none'){
+      var path='/'+id;
+      if(location.pathname!==path){
+        if(method==='replace') history.replaceState({page:id},'',path);
+        else history.pushState({page:id},'',path);
+      }
+    }
     window.scrollTo(0,0);
   }
-  window.addEventListener('hashchange', function(){ showPage((location.hash||'').slice(1) || ids[0]); });
-  showPage((location.hash||'').slice(1) || ids[0]);
+  function pageFromPath(){
+    var seg=(location.pathname.replace(/^\/+/,'').split('/')[0]||'');
+    return ids.indexOf(seg)>-1 ? seg : ids[0];
+  }
+  // Intercept internal page links (sidebar, search, prev/next) → client-side nav, no reload
+  document.addEventListener('click', function(e){
+    var a=e.target.closest && e.target.closest('a[href^="/"]');
+    if(!a) return;
+    var seg=a.getAttribute('href').replace(/^\/+/,'').split(/[/#?]/)[0];
+    if(ids.indexOf(seg)<0) return;         // not a doc page → navigate normally
+    e.preventDefault();
+    showPage(seg);
+    closeToc(); closeSearch();
+  });
+  window.addEventListener('popstate', function(){ showPage(pageFromPath(),'none'); });
+  showPage(pageFromPath(),'replace');
 })();
 </script>
 </body>
