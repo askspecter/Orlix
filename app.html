@@ -948,7 +948,7 @@ select.inp{cursor:pointer}
       <span class="tb-title">dashboard</span>
     </div>
     <div class="tb-right">
-      <a href="#gallery" class="hide-mobile" onclick="showView('gallery');return false">gallery</a>
+      <a href="/gallery" class="hide-mobile" onclick="showView('gallery');return false">gallery</a>
       <a href="/" class="hide-mobile">← home</a>
     </div>
   </div>
@@ -1060,7 +1060,7 @@ select.inp{cursor:pointer}
         <span class="sb-status"></span>
         <span style="color:var(--orange);font-size:.8rem;font-weight:600">SYSTEM ONLINE</span>
         <span style="color:var(--text-3);font-size:.73rem;margin-left:auto;font-family:var(--mono)">mimo_engine · base_mcp · 16 skills</span>
-        <a href="#gallery" onclick="showView('gallery');return false" style="color:var(--violet);font-size:.73rem;text-decoration:none;padding:3px 9px;border:1px solid rgba(185,164,255,.25);border-radius:4px;background:rgba(185,164,255,.07)">gallery →</a>
+        <a href="/gallery" onclick="showView('gallery');return false" style="color:var(--violet);font-size:.73rem;text-decoration:none;padding:3px 9px;border:1px solid rgba(185,164,255,.25);border-radius:4px;background:rgba(185,164,255,.07)">gallery →</a>
       </div>
       <div class="panel">
         <div class="panel-hd">
@@ -1752,13 +1752,20 @@ const agents = [
 const typeCol = {action:'#ff9a52',policy:'#b9a4ff',memory:'#7ee0a8',goal:'#50c8ff',alert:'#ff6b6b'};
 
 // ───────── NAV ─────────
-function showView(name){
+function showView(name, method){
   if(!name) return;
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.toggle('active',i.dataset.view===name));
   document.getElementById('sidebar').classList.remove('open');
   document.querySelector('.main').classList.toggle('pg-mode', name==='playground');
-  history.replaceState(null,'','#'+name);
+  // Path-based URL (e.g. /overview, /playground) — no hash. 'none' skips the URL update.
+  if(method!=='none'){
+    const path='/'+name;
+    if(location.pathname!==path){
+      if(method==='replace') history.replaceState({view:name},'',path);
+      else history.pushState({view:name},'',path);
+    }
+  }
   if(name==='overview') refreshDashboard();
   if(name==='aeon-memory') refreshMemoryView();
   if(name==='gallery') loadGalleryBuilds();
@@ -2846,7 +2853,15 @@ pgModelSel.addEventListener('change', updateBanner);
 refreshDashboard();
 renderHistoryList();
 // Restore view from URL hash — must run AFTER all vars/functions are initialized
-(function(){const h=location.hash.slice(1)||'playground';if(document.getElementById('view-'+h))showView(h);})();
+(function(){
+  // Path-based view routing. First open lands on overview (not playground).
+  function viewFromPath(){
+    const seg=(location.pathname.replace(/^\/+/,'').split('/')[0]||'');
+    return document.getElementById('view-'+seg) ? seg : 'overview';
+  }
+  showView(viewFromPath(),'replace');
+  window.addEventListener('popstate',function(){ showView(viewFromPath(),'none'); });
+})();
 
 // ───────── CODE RENDERING + PREVIEW ─────────
 // Raw code stored by ID so copy/preview get the original, not HTML-escaped
