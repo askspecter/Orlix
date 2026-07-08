@@ -1652,6 +1652,24 @@ async function loadLaunched() {
       _launchedNet = network;
     }
   } catch(_) {}
+  // Always include tokens deployed from this browser (localStorage), so what you
+  // launch shows up here immediately even if the shared feed hasn't caught up.
+  try {
+    const mine = loadMyTokens();
+    const seen = new Set(_launchedAll.map(t => (t.address||'').toLowerCase()));
+    for (const m of mine) {
+      if (!m.address || seen.has(m.address.toLowerCase())) continue;
+      seen.add(m.address.toLowerCase());
+      _launchedAll.push({
+        address: m.address, name: m.name, symbol: m.symbol,
+        decimals: m.decimals, variant: m.variant || 'asset',
+        deployer: null, txHash: m.txHash || null,
+        timestamp: m.deployedAt ? Math.floor(m.deployedAt / 1000) : null,
+        source: 'local',
+      });
+    }
+    _launchedAll.sort((a, b) => ((b.timestamp || 0) - (a.timestamp || 0)));
+  } catch(_) {}
   renderLaunchedGrid();
 }
 
