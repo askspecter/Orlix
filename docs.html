@@ -89,6 +89,9 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none}
 .docs-search-results{max-height:60vh;overflow-y:auto;padding:6px}
 .docs-search-results a{display:block;padding:11px 14px;border-radius:6px;color:var(--text-2);font-size:.88rem;cursor:pointer}
 .docs-search-results a .sr-sec{color:var(--text-3);font-size:.72rem;margin-left:8px}
+.docs-search-results a .sr-title{color:var(--text-1);font-weight:600}
+.docs-search-results a .sr-snip{display:block;color:var(--text-3);font-size:.78rem;margin-top:5px;line-height:1.55}
+.docs-search-results a .sr-snip mark{background:transparent;color:var(--orange);font-weight:600}
 .docs-search-results a:hover{background:var(--orange-dim);color:var(--orange)}
 .docs-search-empty{padding:16px 18px;color:var(--text-3);font-size:.85rem}
 .nav-cta:hover{background:#E06820;color:#fff;transform:translateY(-1px)}
@@ -180,6 +183,12 @@ main{padding-top:88px}
 .amber-hl{color:var(--orange)}
 .dim{color:var(--text-3)}
 .muted{color:var(--text-3);font-size:.82rem}
+.note{padding:14px 16px;margin:18px 0;border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:8px;background:var(--orange-dim);font-size:.86rem;line-height:1.75;color:var(--text-2)}
+.note b{color:var(--orange);font-weight:700}
+.note.warn{border-left-color:#f0b429;background:rgba(240,180,41,.07)}
+.note.warn b{color:#f0b429}
+.faq-q{color:var(--text-1);font-weight:700;font-size:.95rem;margin:22px 0 8px}
+.faq-q:first-of-type{margin-top:4px}
 
 /* FOOTER */
 footer{border-top:1px solid var(--border);padding:40px 0 56px}
@@ -291,7 +300,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
 </nav>
 <div class="docs-search" id="docsSearch">
   <div class="docs-search-box">
-    <input id="docsSearchInput" placeholder="Search docs sections…" autocomplete="off" spellcheck="false">
+    <input id="docsSearchInput" placeholder="Search the docs…" autocomplete="off" spellcheck="false">
     <div class="docs-search-results" id="docsSearchResults"></div>
   </div>
 </div>
@@ -345,7 +354,9 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
           <a href="#cli">CLI reference</a>
           <a href="#config">Configuration</a>
           <a href="#integrations">Integrations</a>
+          <a href="#security">Security &amp; privacy</a>
           <a href="#b20-deploy">B20 token deployment</a>
+          <a href="#faq">FAQ</a>
         </div>
       </div>
     </nav>
@@ -381,6 +392,16 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
             <div><span class="cmt">└─────────────────────────────────────────┘</span></div>
           </div>
         </div>
+
+        <h3>Core principles</h3>
+        <div class="tbl">
+          <div class="tbl-row"><div class="key">Local-first</div><div class="desc">Your world model, policies, and receipts live on your machine. No cloud lock-in, no silent sync. You can export everything at any time.</div></div>
+          <div class="tbl-row"><div class="key">Bounded autonomy</div><div class="desc">Orlix never decides <em>how much</em> power it has — you do. Authority is declared up front and enforced by the runtime, not by the model's judgement.</div></div>
+          <div class="tbl-row"><div class="key">Auditable by default</div><div class="desc">Every action writes a receipt <em>before</em> it runs, linking intent → policy → outcome. Nothing happens off the record.</div></div>
+          <div class="tbl-row"><div class="key">Model-agnostic</div><div class="desc">Claude, GPT, Gemini, or any OpenAI-compatible endpoint. Swap the brain without losing memory or policies.</div></div>
+        </div>
+
+        <div class="note"><b>Who it's for</b> — builders and operators who want an AI that <em>does things</em> reliably: manages goals, watches for drift, and acts within limits you can prove — not just a chat window.</div>
       </div>
 
       <div class="doc-section" id="install">
@@ -449,6 +470,20 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
             <div><span class="ok">[ok] audit log ............. recording</span></div>
           </div>
         </div>
+
+        <h3>Run your first governed task</h3>
+        <p>Ask Orlix to do something. It observes, decides, acts, and verifies — writing a receipt at each step. Under the default <span class="hl">supervised</span> tier it acts and notifies you, with rollback available.</p>
+        <div class="code-block">
+          <div class="cb-bar"><span>shell</span></div>
+          <div class="cb-body">
+            <div><span class="cmd">orlix run <span class="val">"review my open goals and flag anything stalled"</span></span></div>
+            <div><span class="ok">[observe]</span> scanned 7 goals · 2 blockers detected</div>
+            <div><span class="ok">[decide]</span>  goal 'Ship MVP' idle 17d &gt; drift threshold (3d)</div>
+            <div><span class="ok">[act]</span>     priority alert queued · receipt r-0912 written</div>
+            <div><span class="ok">[verify]</span>  alert delivered · goal re-surfaced ✓</div>
+          </div>
+        </div>
+        <div class="note"><b>Next</b> — raise or lower Orlix's autonomy any time with <span class="hl">Authority tiers</span>, and review exactly what it did under <span class="hl">Action receipts</span>.</div>
       </div>
 
       <div class="doc-section" id="governance-loop">
@@ -484,6 +519,7 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
             <div><span class="cmd">orlix policy <span class="flag">--set-tier</span> <span class="val">confirm</span> <span class="flag">--domain</span> <span class="val">email</span>  <span class="cmt"># domain override</span></span></div>
           </div>
         </div>
+        <div class="note"><b>Start supervised.</b> Run at <span class="hl">supervised</span> for a week and read your receipts. When a class of action has been consistently right, promote just that domain to <span class="hl">autonomous</span> — everything else stays governed. Trust is earned per-domain, not all at once.</div>
       </div>
 
       <div class="doc-section" id="memory">
@@ -554,6 +590,21 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
             <div><span class="cmd">orlix policy <span class="flag">--rollback</span> <span class="val">v12</span>         <span class="cmt"># restore previous version</span></span></div>
           </div>
         </div>
+
+        <h3>Anatomy of a policy</h3>
+        <p>A policy is a <span class="hl">when → then</span> rule scoped to a domain and bound to an authority tier. It is data, not code — versioned and inspectable.</p>
+        <div class="code-block">
+          <div class="cb-bar"><span>policy · p-0014</span></div>
+          <div class="cb-body">
+            <div><span class="flag">id</span>      = <span class="val">"p-0014"</span></div>
+            <div><span class="flag">when</span>    = <span class="val">"goal.blocked_for &gt; 48h"</span></div>
+            <div><span class="flag">then</span>    = <span class="val">"notify(priority: high)"</span></div>
+            <div><span class="flag">domain</span>  = <span class="val">"goals"</span></div>
+            <div><span class="flag">tier</span>    = <span class="val">"supervised"</span>   <span class="cmt"># act + notify, rollback available</span></div>
+            <div><span class="flag">version</span> = <span class="val">14</span></div>
+          </div>
+        </div>
+        <div class="note warn"><b>Conflicts are explicit.</b> If two policies would fire opposite actions, Orlix does not guess — it holds the action and surfaces the conflict for you to resolve. Safety beats silent resolution.</div>
       </div>
 
       <div class="doc-section" id="cli">
@@ -590,8 +641,19 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
             <div></div>
             <div><span class="cmt"># opt-in telemetry (default: false)</span></div>
             <div><span class="flag">telemetry</span> = <span class="val">false</span></div>
+            <div></div>
+            <div><span class="cmt"># how long an action stays reversible</span></div>
+            <div><span class="flag">rollback_window</span> = <span class="val">"30d"</span></div>
+            <div></div>
+            <div><span class="cmt"># strip PII before anything reaches a model</span></div>
+            <div><span class="flag">redact_pii</span> = <span class="val">true</span></div>
+            <div></div>
+            <div>[<span class="flag">models</span>]  <span class="cmt"># override the model per phase (optional)</span></div>
+            <div><span class="flag">decide</span> = <span class="val">"claude-opus-4-8"</span></div>
+            <div><span class="flag">observe</span> = <span class="val">"claude-haiku-4-5"</span>   <span class="cmt"># cheaper for high-volume scanning</span></div>
           </div>
         </div>
+        <p class="muted" style="margin-top:14px">// changes are hot-reloaded — no restart needed. Run <span class="hl">orlix config --check</span> to validate before saving.</p>
       </div>
 
       <div class="doc-section" id="integrations">
@@ -609,8 +671,24 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
         <p class="muted" style="margin-top:16px">// all adapter credentials are stored encrypted in ~/.orlix/credentials — never transmitted to Orlix servers.</p>
       </div>
 
+      <div class="doc-section" id="security">
+        <h2><span class="num">12</span> Security &amp; privacy</h2>
+        <p>Orlix is built so that trusting it doesn't mean giving up control of your data. The defaults are private; the guarantees are structural, not promises.</p>
+
+        <div class="tbl">
+          <div class="tbl-row"><div class="key">Local-first</div><div class="desc">The world model, policies, and receipts live in <span class="hl">~/.orlix</span> on your machine. Nothing is uploaded unless an adapter you enabled requires it.</div></div>
+          <div class="tbl-row"><div class="key">Encrypted secrets</div><div class="desc">Adapter credentials and API keys are encrypted at rest in <span class="hl">~/.orlix/credentials</span> and never written to logs or receipts.</div></div>
+          <div class="tbl-row"><div class="key">PII redaction</div><div class="desc">With <span class="hl">redact_pii = true</span>, emails, tokens, and identifiers are stripped before any text reaches a model provider.</div></div>
+          <div class="tbl-row"><div class="key">No raw content</div><div class="desc">Orlix stores extracted facts, not source material. It keeps "Alex owns the review," not the email it came from.</div></div>
+          <div class="tbl-row"><div class="key">Reversible by default</div><div class="desc">Actions stay rollback-eligible for the configured window. If something's wrong, undo it from the receipt — no cleanup required.</div></div>
+          <div class="tbl-row"><div class="key">Telemetry off</div><div class="desc">Usage telemetry is opt-in and disabled by default. You can run fully offline for everything except model calls.</div></div>
+        </div>
+
+        <div class="note"><b>Threat model in one line</b> — a compromised or prompt-injected model still can't exceed your authority tier or reach your secrets, because those limits are enforced by the runtime <em>outside</em> the model's reach.</div>
+      </div>
+
       <div class="doc-section" id="b20-deploy">
-        <h2><span class="num">12</span> B20 token deployment</h2>
+        <h2><span class="num">13</span> B20 token deployment</h2>
         <p>An Orlix agent can deploy a <a href="https://docs.base.org/base-chain/specs/upgrades/beryl/b20" target="_blank" rel="noopener">B20 token</a> on Base by submitting a <strong>deploy intent</strong> — a name and a symbol. The agent never touches a private key: it describes what it wants, and Orlix constructs, signs, and broadcasts the transaction on its behalf.</p>
 
         <p>This follows the same guardrail model as the rest of Orlix — authority is enforced <em>before</em> an action can run, not left to the agent's own judgement.</p>
@@ -635,6 +713,28 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
         </div>
 
         <p class="muted" style="margin-top:16px">// full request/response schema, parameters, and status codes live in the <a href="api-docs.html#b20-agent">API reference</a>. The signer wallet pays gas, so it must hold ETH on Base.</p>
+      </div>
+
+      <div class="doc-section" id="faq">
+        <h2><span class="num">14</span> FAQ</h2>
+
+        <div class="faq-q">Is Orlix just another AI chat wrapper?</div>
+        <p>No. A chat wrapper generates text. Orlix governs <em>outcomes</em> — it holds goals and policies, acts within limits you set, verifies results, and logs every step. The model is one component, not the product.</p>
+
+        <div class="faq-q">Does my data leave my machine?</div>
+        <p>Only what a model call needs, and only after PII redaction if enabled. Your world model, policies, and receipts stay local in <span class="hl">~/.orlix</span>. See <span class="hl">Security &amp; privacy</span>.</p>
+
+        <div class="faq-q">Which model should I use?</div>
+        <p>Any. Orlix is model-agnostic — Claude, GPT, Gemini, or any OpenAI-compatible endpoint. You can even use a cheaper model for high-volume <span class="hl">observe</span> and a stronger one for <span class="hl">decide</span> (see Configuration).</p>
+
+        <div class="faq-q">What happens if Orlix does something wrong?</div>
+        <p>Every action is reversible for the configured window. Open the receipt and roll it back — <span class="hl">orlix receipts --rollback &lt;id&gt;</span>. Because receipts are written before execution, there's always a record to undo from.</p>
+
+        <div class="faq-q">Can a prompt injection make it go rogue?</div>
+        <p>It can't exceed your authority tier or reach your secrets. Those limits are enforced by the runtime, outside the model — the same design behind <span class="hl">B20 token deployment</span>'s deploy allowlist.</p>
+
+        <div class="faq-q">How do I get access?</div>
+        <p>Orlix is in beta. Launch the app at <a href="https://app.orlixai.xyz">app.orlixai.xyz</a> or deploy a B20 token at <a href="https://b20.orlixai.xyz">b20.orlixai.xyz</a>.</p>
       </div>
 
       <div class="page-nav" id="pageNav"></div>
@@ -687,17 +787,38 @@ footer{border-top:1px solid var(--border);padding:40px 0 56px}
 
   // Docs search — filter/jump to sections
   var dsBtn=document.getElementById('docsSearchBtn'),ds=document.getElementById('docsSearch'),
-      dsIn=document.getElementById('docsSearchInput'),dsRes=document.getElementById('docsSearchResults'),items=[];
+      dsIn=document.getElementById('docsSearchInput'),dsRes=document.getElementById('docsSearchResults');
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // Full-text index: title + the entire text content of each section
+  var groupOf={};
   document.querySelectorAll('.docs-sidebar .sidebar-section').forEach(function(sec){
-    var lbl=(sec.querySelector('.s-label')||{}).textContent||'';
-    sec.querySelectorAll('a[href^="#"]').forEach(function(a){items.push({t:a.textContent.trim(),h:a.getAttribute('href'),s:lbl});});
+    var lbl=((sec.querySelector('.s-label')||{}).textContent||'').trim();
+    sec.querySelectorAll('a[href^="#"]').forEach(function(a){groupOf[a.getAttribute('href').slice(1)]=lbl;});
   });
-  function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  var items=[];
+  document.querySelectorAll('.doc-section[id]').forEach(function(sec){
+    var h=sec.querySelector('h2');
+    var title=h?h.textContent.replace(/^\s*\d+\s*/,'').trim():sec.id;
+    var text=(sec.textContent||'').replace(/\s+/g,' ').trim();
+    items.push({id:sec.id,title:title,group:groupOf[sec.id]||'',text:text,low:text.toLowerCase(),tlow:title.toLowerCase()});
+  });
+  function snippet(i,q){
+    var p=i.low.indexOf(q); if(p<0) return '';
+    var a=Math.max(0,p-32),b=Math.min(i.text.length,p+q.length+56);
+    return (a>0?'… ':'')+esc(i.text.slice(a,p))+'<mark>'+esc(i.text.slice(p,p+q.length))+'</mark>'+esc(i.text.slice(p+q.length,b))+(b<i.text.length?' …':'');
+  }
   function renderSearch(q){
-    q=(q||'').toLowerCase();
-    var m=items.filter(function(i){return i.t.toLowerCase().indexOf(q)>-1||i.s.toLowerCase().indexOf(q)>-1;});
-    if(!m.length){dsRes.innerHTML='<div class="docs-search-empty">No sections found.</div>';return;}
-    dsRes.innerHTML=m.map(function(i){return '<a href="'+i.h+'">'+esc(i.t)+'<span class="sr-sec">'+esc(i.s)+'</span></a>';}).join('');
+    q=(q||'').trim().toLowerCase();
+    var m=[];
+    items.forEach(function(i){
+      if(!q) m.push({i:i,s:''});
+      else if(i.tlow.indexOf(q)>-1) m.push({i:i,s:''});
+      else if(i.low.indexOf(q)>-1) m.push({i:i,s:snippet(i,q)});
+    });
+    if(!m.length){dsRes.innerHTML='<div class="docs-search-empty">No results for &ldquo;'+esc(q)+'&rdquo;.</div>';return;}
+    dsRes.innerHTML=m.map(function(r){
+      return '<a href="#'+r.i.id+'"><span class="sr-title">'+esc(r.i.title)+'</span><span class="sr-sec">'+esc(r.i.group)+'</span>'+(r.s?'<span class="sr-snip">'+r.s+'</span>':'')+'</a>';
+    }).join('');
     dsRes.querySelectorAll('a').forEach(function(a){a.addEventListener('click',closeSearch);});
   }
   function openSearch(){if(!ds)return;ds.classList.add('open');renderSearch('');if(dsIn){dsIn.value='';setTimeout(function(){dsIn.focus();},60);}}
