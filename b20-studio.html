@@ -641,12 +641,13 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </div>
         <div class="field">
           <label class="field-label">Supply Cap</label>
-          <input class="inp" type="text" value="1,000,000,000" disabled style="opacity:.6;cursor:not-allowed">
+          <input class="inp" id="fSupplyCap" type="text" value="100000000000" oninput="onSupplyCapChange()" style="font-size:.72rem" placeholder="e.g. 100000000000">
+          <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Total supply, minted then seeded into the pool</div>
         </div>
       </div>
-      <!-- Fixed 1B supply, auto-minted to your wallet on deploy (like RWAGMI). Roles are set later in Manage. -->
-      <input type="hidden" id="fInitSupply" value="1000000000">
-      <input type="hidden" id="fCap" value="1000000000">
+      <!-- The full supply is minted then seeded into the pool (like RWAGMI). Roles are set later in Manage. -->
+      <input type="hidden" id="fInitSupply" value="100000000000">
+      <input type="hidden" id="fCap" value="100000000000">
       <input type="hidden" id="fUncapped">
 
       <!-- Initial Admin -->
@@ -770,7 +771,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <div class="field-row">
           <div class="field">
             <label class="field-label">Liquidity tokens (into pool)</label>
-            <input class="inp" id="fPoolLp" type="text" value="1000000000" placeholder="blank = all" style="font-size:.72rem">
+            <input class="inp" id="fPoolLp" type="text" value="100000000000" placeholder="blank = all" style="font-size:.72rem">
             <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Moved from your wallet into the pool</div>
           </div>
           <div class="field">
@@ -1195,7 +1196,7 @@ async function onDeploy() {
       symbol:      sym,
       variant,
       decimals:    parseInt(document.getElementById('fDec').value),
-      supply_cap:     '1000000000',
+      supply_cap:     (document.getElementById('fSupplyCap')?.value || '100000000000').replace(/[^0-9]/g,'') || '100000000000',
       initial_supply: (document.getElementById('fInitSupply').value || '0').replace(/[^0-9]/g, '') || '0',
       admin:       adminless ? undefined : walletAddress,
       adminless,
@@ -1294,7 +1295,7 @@ async function onDeploy() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'prepare_pool', predeploy: true, token: predicted, creator: walletAddress,
-            price, lp_tokens: lp || '1000000000', decimals: _deployDecimals, fee: feeSel,
+            price, lp_tokens: lp || (document.getElementById('fSupplyCap')?.value||'100000000000').replace(/[^0-9]/g,''), decimals: _deployDecimals, fee: feeSel,
             dev_buy_eth: devBuy && parseFloat(devBuy) > 0 ? devBuy : undefined,
           }),
         });
@@ -1495,11 +1496,20 @@ function togglePoolEconomics() {
   if (el) el.style.display = on ? '' : 'none';
 }
 
+// Keep supply cap, initial mint and pool LP amount in sync (full supply → pool).
+function onSupplyCapChange() {
+  const v = (document.getElementById('fSupplyCap').value || '').replace(/[^0-9]/g, '') || '100000000000';
+  const init = document.getElementById('fInitSupply'); if (init) init.value = v;
+  const cap = document.getElementById('fCap'); if (cap) cap.value = v;
+  const lp = document.getElementById('fPoolLp'); if (lp) lp.value = v;
+  updatePoolPreview();
+}
+
 function updatePoolPreview() {
   const el = document.getElementById('poolMcapHint');
   if (!el) return;
   const p = parseFloat((document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '')) || 0;
-  const supply = 1e9;      // 1B fixed supply
+  const supply = parseFloat((document.getElementById('fSupplyCap')?.value || '100000000000').replace(/[^0-9]/g, '')) || 1e11;
   const ethUsd = 4000;     // rough display estimate
   const mcap = p * supply * ethUsd;
   el.textContent = p > 0

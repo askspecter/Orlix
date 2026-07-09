@@ -329,9 +329,16 @@ function parseConfig(input) {
   }
   if (adminless) warnings.push('Admin-less deploy is irreversible — no minting, pausing, or policy changes ever');
 
-  // Supply fixed at 1 billion — not configurable
-  const supplyCap = '1000000000';
-  const initialSupply = '1000000000';
+  // Supply cap — configurable (default 100B). Full supply is minted then seeded
+  // into the pool. Clamp so cap * 10^decimals stays well under type(uint128).max.
+  let supplyCap = String(input.supply_cap ?? '').replace(/[^0-9]/g, '');
+  try {
+    let n = supplyCap ? BigInt(supplyCap) : 100000000000n;
+    if (n <= 0n) n = 100000000000n;
+    if (n > 1000000000000000000000n) { n = 1000000000000000000000n; warnings.push('Supply cap clamped to 1e21 max'); }
+    supplyCap = n.toString();
+  } catch { supplyCap = '100000000000'; }
+  const initialSupply = supplyCap;
 
   const pol      = input.policies ?? {};
   const policies = { allowlist: !!pol.allowlist, blocklist: !!pol.blocklist, freeze: !!pol.freeze };

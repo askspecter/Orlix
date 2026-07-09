@@ -265,6 +265,11 @@ module.exports = async (req, res) => {
     const limit = Math.min(parseInt(req.query?.limit || '20', 10), 50);
     _currentNet = 'mainnet';
 
+    // Diagnostic: is the shared feed store (Upstash Redis) configured? If false,
+    // the cross-device "New Launched" feed can't work and only localStorage shows.
+    const feedConfigured = !!((process.env.UPSTASH_REDIS_REST_URL || process.env.STORAGE_UPSTASH_REDIS_REST_URL) &&
+                              (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN));
+
     // Primary: tokens launched through Orlix (self-registered feed).
     const launched = await fetchOrlixLaunched(limit);
     if (launched.length > 0) {
@@ -296,7 +301,7 @@ module.exports = async (req, res) => {
         source:   'orlix',
       }));
       res.writeHead(200, CORS);
-      return res.end(JSON.stringify({ tokens, network: _currentNet, source: 'orlix' }));
+      return res.end(JSON.stringify({ tokens, network: _currentNet, source: 'orlix', feedConfigured }));
     }
 
     // Fallback: on-chain discovery via the B20 factory.
@@ -304,7 +309,7 @@ module.exports = async (req, res) => {
 
     if (raw.length === 0) {
       res.writeHead(200, CORS);
-      return res.end(JSON.stringify({ tokens: [] }));
+      return res.end(JSON.stringify({ tokens: [], feedConfigured }));
     }
 
     // Enrich with block timestamps
@@ -331,7 +336,7 @@ module.exports = async (req, res) => {
     }));
 
     res.writeHead(200, CORS);
-    res.end(JSON.stringify({ tokens, network: _currentNet }));
+    res.end(JSON.stringify({ tokens, network: _currentNet, feedConfigured }));
   } catch (e) {
     res.writeHead(502, CORS);
     res.end(JSON.stringify({ error: e.message || 'Failed to fetch tokens' }));
