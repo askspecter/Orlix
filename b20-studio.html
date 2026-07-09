@@ -941,6 +941,44 @@ select.inp option{background:var(--s2);color:var(--t1)}
   </button>
 </nav>
 
+<!-- TOKEN DASHBOARD MODAL (chart + on-site buy) -->
+<div id="dashModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeDashboard()">
+  <div style="background:var(--s1,#12141a);border:1px solid var(--b1,#262a33);border-radius:14px;width:100%;max-width:940px;max-height:92vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)">
+    <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--b1,#262a33);position:sticky;top:0;background:var(--s1,#12141a);z-index:2">
+      <div id="dmIco" style="width:40px;height:40px;border-radius:50%;background:#333;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff"></div>
+      <div style="flex:1;min-width:0">
+        <div id="dmName" style="font-size:.95rem;font-weight:800;color:var(--t1,#fff)">Token</div>
+        <div id="dmCA" style="font-size:.66rem;color:var(--t3,#8a8a96);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+      </div>
+      <button onclick="closeDashboard()" style="background:none;border:none;color:var(--t2,#aaa);font-size:1.4rem;cursor:pointer;line-height:1;padding:4px 8px">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr;gap:0">
+      <div style="padding:0">
+        <iframe id="dmChart" src="" title="chart" style="width:100%;height:420px;border:0;background:#0b0d12"></iframe>
+      </div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <!-- Buy widget -->
+        <div style="border:1px solid var(--b1,#262a33);border-radius:10px;padding:14px;background:var(--s2,#181b22)">
+          <div style="font-size:.82rem;font-weight:700;color:var(--t1,#fff);margin-bottom:10px">Buy <span id="dmBuySym">token</span> with ETH</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="dm-amt" onclick="setBuyAmt('0.001')" style="flex:1;min-width:70px;padding:7px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--s3,#1e222b);color:var(--t2,#ccc);cursor:pointer;font-size:.72rem">0.001</button>
+            <button class="dm-amt" onclick="setBuyAmt('0.01')" style="flex:1;min-width:70px;padding:7px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--s3,#1e222b);color:var(--t2,#ccc);cursor:pointer;font-size:.72rem">0.01</button>
+            <button class="dm-amt" onclick="setBuyAmt('0.05')" style="flex:1;min-width:70px;padding:7px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--s3,#1e222b);color:var(--t2,#ccc);cursor:pointer;font-size:.72rem">0.05</button>
+          </div>
+          <input id="dmBuyAmt" type="text" value="0.01" inputmode="decimal" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--bg,#0b0d12);color:var(--t1,#fff);font-size:.85rem;margin-bottom:10px" placeholder="ETH amount">
+          <button id="dmBuyBtn" onclick="buyToken()" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--green,#22c55e);color:#fff;font-weight:800;cursor:pointer;font-size:.85rem">Buy</button>
+          <div id="dmBuyStatus" style="font-size:.7rem;color:var(--t2,#aaa);margin-top:8px;line-height:1.5"></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a id="dmSell" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">Sell on Uniswap ↗</a>
+          <a id="dmDex" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">DexScreener ↗</a>
+          <a id="dmScan" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">BaseScan ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
 let b20Activated = true;
@@ -1658,7 +1696,7 @@ function renderMyTokens() {
         ${t.decimals !== undefined ? `<div class="lcard-meta-row"><span style="opacity:.5">·</span>${t.decimals} decimals</div>` : ''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<a class="lcard-act lcard-act-primary" href="https://dexscreener.com/base/${ca}" target="_blank" rel="noopener">Trade ↗</a>` : ''}
+        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade / Chart</button>` : ''}
         ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
       </div>
     </div>`;
@@ -1747,11 +1785,77 @@ function renderLaunchedGrid() {
         ${t.supply?`<div class="lcard-meta-row"><span style="opacity:.5">◎</span>${Number(t.supply).toLocaleString()} supply</div>`:''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<a class="lcard-act lcard-act-primary" href="https://dexscreener.com/base/${ca}" target="_blank" rel="noopener">Trade ↗</a>` : ''}
+        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade / Chart</button>` : ''}
         ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Token Dashboard (chart + on-site buy) ─────────────────────────────────────
+let _dashCA = null, _dashSym = '';
+function openDashboard(ca) {
+  if (!ca) return;
+  let item = null;
+  try { item = (_launchedAll || []).concat(loadMyTokens()).find(t => (t.address || '').toLowerCase() === ca.toLowerCase()); } catch (_) {}
+  const sym = (item && item.symbol) || 'token';
+  const name = (item && item.name) || sym;
+  const image = (item && item.image) || null;
+  _dashCA = ca; _dashSym = sym;
+  document.getElementById('dmName').textContent = name;
+  document.getElementById('dmCA').textContent = ca;
+  document.getElementById('dmBuySym').textContent = sym;
+  const ico = document.getElementById('dmIco');
+  if (image) { ico.innerHTML = `<img src="${_esc(image)}" style="width:100%;height:100%;object-fit:cover" alt="">`; }
+  else { ico.textContent = (sym || '?').slice(0, 3); ico.style.background = tokenColor(sym || '?'); }
+  document.getElementById('dmChart').src = `https://dexscreener.com/base/${ca}?embed=1&theme=dark&trades=0&info=0`;
+  document.getElementById('dmSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=${ca}&outputCurrency=ETH`;
+  document.getElementById('dmDex').href = `https://dexscreener.com/base/${ca}`;
+  document.getElementById('dmScan').href = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca;
+  document.getElementById('dmBuyStatus').textContent = '';
+  document.getElementById('dashModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeDashboard() {
+  document.getElementById('dashModal').style.display = 'none';
+  document.getElementById('dmChart').src = '';
+  document.body.style.overflow = '';
+}
+function setBuyAmt(v) { document.getElementById('dmBuyAmt').value = v; }
+async function buyToken() {
+  const amt = (document.getElementById('dmBuyAmt').value || '').replace(/[^0-9.]/g, '');
+  const st = document.getElementById('dmBuyStatus');
+  const btn = document.getElementById('dmBuyBtn');
+  if (!_dashCA) return;
+  if (!amt || parseFloat(amt) <= 0) { st.textContent = 'Enter an ETH amount.'; st.style.color = '#ef4444'; return; }
+  if (!walletAddress || !window.ethereum) { st.textContent = 'Connect your wallet first (top right).'; st.style.color = '#ef4444'; return; }
+  btn.disabled = true;
+  try {
+    st.style.color = 'var(--t2,#aaa)'; st.textContent = 'Finding pool…';
+    let fee = 10000;
+    try {
+      const pr = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'pool_status', token: _dashCA }) });
+      const pd = await pr.json();
+      if (pd.ok && pd.pools) { const keys = Object.keys(pd.pools); if (keys.length) fee = parseInt(keys[0], 10); }
+    } catch (_) {}
+    st.textContent = 'Preparing buy…';
+    const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'prepare_swap', side: 'buy', token: _dashCA, amount: amt, fee }) });
+    const d = await r.json();
+    if (!d.ok || !d.tx) { st.textContent = 'Error: ' + (d.error || 'prepare failed'); st.style.color = '#ef4444'; btn.disabled = false; return; }
+    const net = NET[network];
+    try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: net.chainId }] }); } catch (_) {}
+    st.textContent = 'Confirm the swap in your wallet…';
+    const hash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: d.tx.to, data: d.tx.data, value: d.tx.value || '0x0', gas: d.tx.gas }] });
+    st.textContent = 'Buy submitted — waiting for confirmation…';
+    await waitTx(hash);
+    const ex = NET[network]?.explorer || 'https://basescan.org';
+    st.style.color = '#22c55e';
+    st.innerHTML = `✅ Bought ${_esc(_dashSym)}! <a href="${ex}/tx/${hash}" target="_blank" style="color:var(--accent);text-decoration:underline">view tx ↗</a>`;
+    btn.disabled = false;
+  } catch (e) {
+    const msg = (e.code === 4001 || e.code === 4100) ? 'Rejected in wallet' : (e.message || 'failed').slice(0, 120);
+    st.textContent = 'Error: ' + msg; st.style.color = '#ef4444'; btn.disabled = false;
+  }
 }
 
 function filterLaunched(type, el) {

@@ -1268,6 +1268,45 @@ async function handlePoolStatus(body, res) {
   }
 }
 
+// Build a BUY swap (ETH → token) through the Uniswap V4 Universal Router — the
+// same proven encoding as the launch dev buy. Used by the on-site Trade widget.
+async function handlePrepareSwap(body, res) {
+  const token = (body.token || '').trim();
+  const side  = (body.side || 'buy').toLowerCase();
+  const fee   = parseInt(body.fee || '10000', 10);
+  const amountStr = String(body.amount || '0');
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token))
+    return res.end(JSON.stringify({ ok: false, error: 'valid token address required' }));
+  if (!FEE_SPACING[fee])
+    return res.end(JSON.stringify({ ok: false, error: 'fee must be 500, 3000, or 10000' }));
+  if (side !== 'buy')
+    return res.end(JSON.stringify({ ok: false, error: 'only buy (ETH → token) is supported on-site; use the Uniswap link to sell' }));
+
+  const tokenAddr = ethers.getAddress(token);
+  const poolKey = { currency0: WETH, currency1: tokenAddr, fee, tickSpacing: FEE_SPACING[fee], hooks: ZERO_ADDR };
+  let wei = 0n; try { wei = toWei18(amountStr); } catch {}
+  if (wei <= 0n) return res.end(JSON.stringify({ ok: false, error: 'amount must be > 0' }));
+
+  const deadline = Math.floor(Date.now() / 1000) + 1200;
+  const swapParam = ABI_CODER.encode(
+    ['tuple(tuple(address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) poolKey,bool zeroForOne,uint128 amountIn,uint128 amountOutMinimum,bytes hookData)'],
+    [{ poolKey, zeroForOne: true, amountIn: wei, amountOutMinimum: 0n, hookData: '0x' }],
+  );
+  const settle  = ABI_CODER.encode(['address', 'uint256', 'bool'], [WETH, wei, false]);
+  const takeAll = ABI_CODER.encode(['address', 'uint256'], [tokenAddr, 0n]);
+  const v4Actions = '0x' + [ACT_SWAP_EXACT_IN_SINGLE, ACT_SETTLE, ACT_TAKE_ALL].map(a => a.toString(16).padStart(2, '0')).join('');
+  const v4Input = ABI_CODER.encode(['bytes', 'bytes[]'], [v4Actions, [swapParam, settle, takeAll]]);
+  const wrapInput  = ABI_CODER.encode(['address', 'uint256'], [UR_ADDRESS_THIS, wei]);
+  const sweepInput = ABI_CODER.encode(['address', 'address', 'uint256'], [tokenAddr, UR_MSG_SENDER, 0n]);
+  const commands = '0x' + [CMD_WRAP_ETH, CMD_V4_SWAP, CMD_SWEEP].map(c => c.toString(16).padStart(2, '0')).join('');
+  const execData = UR_IFACE.encodeFunctionData('execute', [commands, [wrapInput, v4Input, sweepInput], deadline]);
+
+  return res.end(JSON.stringify({
+    ok: true, side: 'buy', chainId: CHAIN_ID.mainnet,
+    tx: { to: UNIVERSAL_ROUTER, data: execData, value: '0x' + wei.toString(16), gas: '0x4c4b40' },
+  }));
+}
+
 // Record an Orlix-deployed token to the shared "recently launched" feed (Redis),
 // so the New Launched tab shows tokens deployed through Orlix (not a chain scan).
 async function handleRegisterLaunch(body, res) {
@@ -1321,6 +1360,7 @@ module.exports = async (req, res) => {
     if (action === 'receipt')                          return handleReceipt(body, res);
     if (action === 'prepare_pool')                     return handlePreparePool(body, res);
     if (action === 'pool_status')                      return handlePoolStatus(body, res);
+    if (action === 'prepare_swap')                     return handlePrepareSwap(body, res);
     if (action === 'register_launch')                  return handleRegisterLaunch(body, res);
 
     return res.end(JSON.stringify({
