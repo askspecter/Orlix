@@ -1341,6 +1341,11 @@ async function handleRegisterLaunch(body, res) {
   if (typeof body.image === 'string' && /^data:image\//.test(body.image) && body.image.length <= 50000) {
     image = body.image;
   }
+  // Sanitize an optional http(s) social/website URL.
+  const cleanUrl = v => {
+    const s = String(v || '').trim().slice(0, 200);
+    return /^https?:\/\/[^\s]+$/i.test(s) ? s : undefined;
+  };
   const entry = JSON.stringify({
     address:  ethers.getAddress(token),
     name:     String(body.name || '').slice(0, 64),
@@ -1350,6 +1355,11 @@ async function handleRegisterLaunch(body, res) {
     decimals: Number(body.decimals) || 18,
     txHash:   /^0x[0-9a-fA-F]{64}$/.test(body.txHash || '') ? body.txHash : null,
     image,
+    description: body.description ? String(body.description).slice(0, 500) : undefined,
+    website:  cleanUrl(body.website),
+    twitter:  cleanUrl(body.twitter),
+    telegram: cleanUrl(body.telegram),
+    farcaster: cleanUrl(body.farcaster),
     ts:       Date.now(),
   });
   try {

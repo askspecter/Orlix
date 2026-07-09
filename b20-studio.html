@@ -1055,6 +1055,12 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <div class="dm-info"><div class="dm-info-l">Supply</div><div class="dm-info-v" id="dmSupply">—</div></div>
     </div>
 
+    <!-- Description + socials (shown if provided at launch) -->
+    <div id="dmMetaStrip" style="display:none;padding:14px 20px;border-bottom:1px solid var(--b1)">
+      <div id="dmDesc" style="font-size:.78rem;color:var(--t2);line-height:1.6;margin-bottom:10px;display:none"></div>
+      <div id="dmSocials" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
+
     <!-- Body: chart + live trades | swap + holders -->
     <div class="dash-grid" style="display:grid;grid-template-columns:1fr 340px;gap:0">
       <!-- MAIN -->
@@ -1163,10 +1169,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <div style="font-size:.74rem;color:var(--t2);margin-bottom:10px;line-height:1.55">Sell <span id="dmSellSym" style="font-weight:700;color:var(--t1)">token</span> back to ETH on the Uniswap&nbsp;V4 pool. Opens the Uniswap swap pre-filled — approve once, then confirm.</div>
         <a id="dmSell" href="#" target="_blank" rel="noopener" style="display:block;text-align:center;padding:12px;border-radius:9px;border:none;background:var(--orange);color:#fff;text-decoration:none;font-size:.86rem;font-weight:800">Sell on Uniswap V4 &#x2197;</a>
       </div>
-      <div style="border-top:1px solid var(--b1);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <a id="dmDex" href="#" target="_blank" rel="noopener" class="dm-link">DexScreener &#x2197;</a>
-        <a id="dmScan" href="#" target="_blank" rel="noopener" class="dm-link">BaseScan &#x2197;</a>
-      </div>
+      <div style="font-size:.62rem;color:var(--t3);text-align:center">Trades route through the Uniswap V4 pool</div>
     </div>
   </div>
 </div>
@@ -1581,8 +1584,8 @@ async function onDeploy() {
             if (dhash) { document.getElementById('dcTxHash').textContent = dhash; document.getElementById('dcTxLink').href = explorer + '/tx/' + dhash; }
             document.getElementById('dcActions').style.display = 'flex';
             setPoolStatus('✅ Launched in one confirmation — token deployed, pool seeded, tradeable!', 'ok');
-            saveMyToken({ address: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, variant: variant || 'asset', decimals: _deployDecimals, image: _logoStore || null, txHash: dhash || null, deployedAt: Date.now(), network });
-            fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register_launch', token: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, deployer: walletAddress, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null, image: _logoStore || undefined }) }).catch(() => {});
+            saveMyToken({ address: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, variant: variant || 'asset', decimals: _deployDecimals, image: _logoStore || null, txHash: dhash || null, deployedAt: Date.now(), network, ..._launchMeta() });
+            fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register_launch', token: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, deployer: walletAddress, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null, image: _logoStore || undefined, ..._launchMeta() }) }).catch(() => {});
             setDeployBtn('success', 'Launched!', 'Token live & tradeable on Base');
             deploying = false;
             return;
@@ -1630,6 +1633,18 @@ async function onDeploy() {
   } finally {
     deploying = false;
   }
+}
+
+// ── Launch metadata (description + socials) from the form ─────────────────────
+function _launchMeta() {
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const m = {};
+  const desc = g('fDesc');      if (desc) m.description = desc.slice(0, 500);
+  const web  = g('fWebsite');   if (web)  m.website     = web.slice(0, 200);
+  const tw   = g('fTwitter');   if (tw)   m.twitter     = tw.slice(0, 200);
+  const tg   = g('fTelegram');  if (tg)   m.telegram    = tg.slice(0, 200);
+  const fc   = g('fFarcaster'); if (fc)   m.farcaster   = fc.slice(0, 200);
+  return m;
 }
 
 // ── Deployed CA card ─────────────────────────────────────────────────────────
@@ -1682,7 +1697,7 @@ async function pollReceipt(hash, net, predictedCA) {
           address: ca || null, name: _deployedTokenName, symbol: _deployedTokenSym,
           variant: variant || 'asset',
           decimals: _deployDecimals, image: _logoStore || null,
-          txHash: hash, deployedAt: Date.now(), network: net,
+          txHash: hash, deployedAt: Date.now(), network: net, ..._launchMeta(),
         });
         if (ca) {
           fetch('/api/b20-skill', {
@@ -1691,7 +1706,7 @@ async function pollReceipt(hash, net, predictedCA) {
               action: 'register_launch', token: ca,
               name: _deployedTokenName, symbol: _deployedTokenSym,
               deployer: walletAddress, variant: variant || 'asset',
-              decimals: _deployDecimals, txHash: hash, image: _logoStore || undefined,
+              decimals: _deployDecimals, txHash: hash, image: _logoStore || undefined, ..._launchMeta(),
             }),
           }).catch(() => {});
         }
@@ -2128,6 +2143,7 @@ function openDashboard(ca, focus) {
   _dmSet('dmTrades', 'Loading trades…');
   dsSetSide('buy');
 
+  renderMeta(item);
   renderSupports({ hasPool: null });
   document.getElementById('dashModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -2136,6 +2152,24 @@ function openDashboard(ca, focus) {
   loadDashLive(ca, sym);
   loadMarket(ca);
   loadHolders(ca);
+}
+
+function renderMeta(item) {
+  const strip = document.getElementById('dmMetaStrip');
+  const descEl = document.getElementById('dmDesc');
+  const socEl = document.getElementById('dmSocials');
+  if (!strip) return;
+  const desc = item && item.description;
+  const socials = [
+    ['Website', item && item.website, '🌐'],
+    ['X', item && item.twitter, '𝕏'],
+    ['Telegram', item && item.telegram, '✈'],
+    ['Farcaster', item && item.farcaster, '⬡'],
+  ].filter(s => s[1]);
+  if (descEl) { descEl.textContent = desc || ''; descEl.style.display = desc ? '' : 'none'; }
+  if (socEl) socEl.innerHTML = socials.map(([label, url, ico]) =>
+    `<a href="${_esc(url)}" target="_blank" rel="noopener" class="dm-hbtn"><span>${ico}</span>${label} &#x2197;</a>`).join('');
+  strip.style.display = (desc || socials.length) ? '' : 'none';
 }
 
 // ── Compact Trade modal (Buy / Sell swap) ─────────────────────────────────────
@@ -2149,8 +2183,6 @@ function openTrade(ca) {
   _dmSet('dmSellSym', sym);
   _dmSet('dmBuyStatus', '');
   document.getElementById('dmSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=${ca}&outputCurrency=ETH`;
-  document.getElementById('dmDex').href = `https://dexscreener.com/base/${ca}`;
-  document.getElementById('dmScan').href = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca;
   setTradeSide('buy');
   document.getElementById('tradeModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -2317,8 +2349,21 @@ function _fmtUsd(n) {
   if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
   if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
-  if (n > 0 && n < 0.01) return '$' + n.toPrecision(2);
+  if (n > 0 && n < 0.01) return _fmtPrice(n);
   return '$' + n.toFixed(2);
+}
+// Human price with DEX-style subscript zeros for tiny values (no "4.5e-8").
+function _fmtPrice(n) {
+  n = Number(n) || 0;
+  if (n <= 0) return '—';
+  if (n >= 1) return '$' + n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  if (n >= 0.01) return '$' + n.toFixed(4);
+  const dec = n.toFixed(20).split('.')[1] || '';
+  let zeros = 0; while (dec[zeros] === '0') zeros++;
+  const sig = (dec.slice(zeros, zeros + 3).replace(/0+$/, '')) || '0';
+  const subs = '₀₁₂₃₄₅₆₇₈₉';
+  const sub = String(zeros).split('').map(d => subs[+d]).join('');
+  return `$0.0${sub}${sig}`;
 }
 async function loadMarket(ca) {
   try {
@@ -2330,7 +2375,7 @@ async function loadMarket(ca) {
     const p = pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
     _dmSet('dmMcap', p.marketCap || p.fdv ? _fmtUsd(p.marketCap || p.fdv) : '—');
     _dmSet('dmVol', p.volume?.h24 != null ? _fmtUsd(p.volume.h24) : '—');
-    _dmSet('dmPrice', p.priceUsd ? _fmtUsd(p.priceUsd) : '—');
+    _dmSet('dmPrice', p.priceUsd ? _fmtPrice(p.priceUsd) : '—');
     loadTrades(p.pairAddress);
   } catch (_) { _dmSet('dmMcap', '—'); loadTrades(null); }
 }
@@ -2357,12 +2402,32 @@ async function loadTrades(pool) {
     }).join('');
   } catch (_) { el.innerHTML = `<div style="color:var(--t3)">Live trades unavailable right now.</div>`; }
 }
-function loadHolders(ca) {
+async function loadHolders(ca) {
   const el = document.getElementById('dmHolders');
   if (!el) return;
+  el.innerHTML = `<div style="color:var(--t3)">Loading holders…</div>`;
   const ex = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca + '#balances';
-  el.innerHTML = `<div style="color:var(--t3);line-height:1.6;margin-bottom:8px">Full holder distribution is indexed on BaseScan.</div>
+  const fallback = `<div style="color:var(--t3);line-height:1.6;margin-bottom:8px">Holder list isn't indexed yet.</div>
     <a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block">View holders on BaseScan &#x2197;</a>`;
+  try {
+    const base = 'https://base.blockscout.com/api/v2/tokens/' + ca;
+    const [tRes, hRes] = await Promise.all([fetch(base), fetch(base + '/holders')]);
+    const t = await tRes.json().catch(() => ({}));
+    const h = await hRes.json().catch(() => ({}));
+    if (_dashCA !== ca) return;
+    const supply = t && t.total_supply ? BigInt(t.total_supply) : 0n;
+    const items = (h && h.items) || [];
+    if (!items.length) { el.innerHTML = fallback; return; }
+    el.innerHTML = items.slice(0, 10).map((it, i) => {
+      const addr = (it.address && it.address.hash) || it.address || '';
+      let val = 0n; try { val = BigInt(it.value || '0'); } catch (_) {}
+      const pct = supply > 0n ? (Number(val * 10000n / supply) / 100).toFixed(2) + '%' : '';
+      const short = addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : '—';
+      return `<div class="dm-hold-row"><span style="color:var(--t2);font-family:var(--mono)">#${i + 1}&nbsp; ${short}</span><span style="font-weight:700;color:var(--t1)">${pct}</span></div>`;
+    }).join('') + `<a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block;margin-top:10px">All holders &#x2197;</a>`;
+  } catch (_) {
+    if (_dashCA === ca) el.innerHTML = fallback;
+  }
 }
 
 function filterLaunched(type, el) {
