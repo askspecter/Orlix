@@ -48,6 +48,48 @@ async function fetchOrlixLaunched(limit) {
   } catch { return []; }
 }
 
+// Upstash REST command (POST/body form — handles large values).
+async function redisCmd(args) {
+  const url   = process.env.UPSTASH_REDIS_REST_URL   || process.env.STORAGE_UPSTASH_REDIS_REST_URL   || '';
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN || '';
+  if (!url || !token) return undefined;
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args.map(String)),
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!r.ok) throw new Error('redis ' + r.status);
+  return (await r.json()).result;
+}
+
+// One-time feed cleanup: wipe old test entries and seed only the kept token.
+// Bump FEED_GEN to re-run. Runs once per warm instance (gen check makes it idempotent).
+const FEED_GEN  = '3';
+const FEED_SEED = '0xb2000000000000000000009595686a416550060c';
+let _feedChecked = false;
+async function ensureFeedCleanup() {
+  if (_feedChecked) return;
+  _feedChecked = true;
+  try {
+    const gen = await redisCmd(['GET', 'b20:feedgen']);
+    if (String(gen) === FEED_GEN) return;
+    await redisCmd(['DEL', 'b20:launched']);
+    try {
+      const [n, s, d] = await Promise.all([
+        call(FEED_SEED, '0x06fdde03'), call(FEED_SEED, '0x95d89b41'), call(FEED_SEED, '0x313ce567'),
+      ]);
+      const decimals = hexToNum(strip0x(d).slice(56)) || 18;
+      const entry = JSON.stringify({
+        address: FEED_SEED, name: decodeString(n), symbol: decodeString(s),
+        decimals, variant: decimals === 6 ? 'stablecoin' : 'asset', ts: Date.now(),
+      });
+      await redisCmd(['LPUSH', 'b20:launched', entry]);
+    } catch {}
+    await redisCmd(['SET', 'b20:feedgen', FEED_GEN]);
+  } catch { _feedChecked = false; }  // retry on next request if it errored
+}
+
 async function rpcCall(method, params) {
   const rpcUrl = NETWORKS[_currentNet]?.rpc ?? NETWORKS.mainnet.rpc;
   const r = await fetch(rpcUrl, {
@@ -266,6 +308,9 @@ module.exports = async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query?.limit || '20', 10), 50);
     _currentNet = 'mainnet';
+
+    // One-time server-side feed cleanup (wipe old test tokens, keep the seed token).
+    await ensureFeedCleanup();
 
     // Diagnostic: is the shared feed store (Upstash Redis) configured? If false,
     // the cross-device "New Launched" feed can't work and only localStorage shows.
