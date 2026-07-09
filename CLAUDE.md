@@ -20,7 +20,6 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 │   ├── music.js / song.js  # AI music generation
 │   ├── ping.js             # Health check
 │   ├── auth.js             # Authentication
-│   ├── telegram.js         # Telegram integration
 │   ├── x402.js             # x402 payment protocol
 │   ├── x402-analyze.js     # Premium token analysis
 │   ├── x402-chat.js        # Premium AI chat
