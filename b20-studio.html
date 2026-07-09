@@ -590,6 +590,15 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .dm-support{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:9px 12px;font-size:.74rem;font-weight:600;color:var(--t2)}
 .dm-support .yes{color:#22c55e;font-weight:700;font-size:.66rem}
 .dm-support .no{color:var(--t3);font-weight:700;font-size:.62rem;letter-spacing:.04em}
+.dm-hbtn{display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:700;color:var(--t2);background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:7px 12px;text-decoration:none;white-space:nowrap;transition:.12s;font-family:var(--font);cursor:pointer}
+.dm-hbtn:hover{border-color:var(--b2);color:var(--t1)}
+.dm-hbtn-claim{background:rgba(240,120,48,.1);color:var(--orange);border-color:rgba(240,120,48,.3)}
+.dm-hbtn-claim:hover{background:rgba(240,120,48,.16);color:var(--orange)}
+.dm-trade-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--b1);font-size:.7rem}
+.dm-trade-row:first-child{border-top:none}
+.dm-hold-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--b1);font-size:.72rem}
+.dm-hold-row:first-child{border-top:none}
+@media(max-width:820px){.dash-grid{grid-template-columns:1fr!important}.dash-grid>div:first-child{border-right:none!important;border-bottom:1px solid var(--b1)}.dash-head-actions .dm-hbtn{padding:6px 9px;font-size:.64rem}}
 @media(max-width:720px){
   .hero-title{font-size:1.7rem}.disc-search{min-width:140px}
   .dash-body{grid-template-columns:1fr!important}
@@ -1014,81 +1023,110 @@ select.inp option{background:var(--s2);color:var(--t1)}
 
 <!-- TOKEN DASHBOARD MODAL (rwagmi-style: chart + live info + on-site Uniswap trade) -->
 <div id="dashModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:16px;overflow:auto" onclick="if(event.target===this)closeDashboard()">
-  <div class="dash-card" style="background:var(--s1);border:1px solid var(--b1);border-radius:16px;width:100%;max-width:1000px;margin:24px auto;box-shadow:0 24px 80px rgba(0,0,0,.5);overflow:hidden">
+  <div class="dash-card" style="background:var(--s1);border:1px solid var(--b1);border-radius:16px;width:100%;max-width:1200px;margin:24px auto;box-shadow:0 24px 80px rgba(0,0,0,.5);overflow:hidden">
 
     <!-- Header -->
-    <div style="display:flex;align-items:center;gap:14px;padding:18px 20px;border-bottom:1px solid var(--b1);position:sticky;top:0;background:var(--s1);z-index:3">
-      <div id="dmIco" style="width:48px;height:48px;border-radius:14px;background:#333;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1rem"></div>
-      <div style="flex:1;min-width:0">
+    <div style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--b1);position:sticky;top:0;background:var(--s1);z-index:3;flex-wrap:wrap">
+      <div id="dmIco" style="width:46px;height:46px;border-radius:14px;background:#333;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1rem"></div>
+      <div style="flex:1;min-width:120px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span id="dmName" style="font-size:1.05rem;font-weight:800;color:var(--t1)">Token</span>
           <span id="dmVariantBadge" class="lcard-badge lbadge-asset">asset</span>
-          <span id="dmLpBadge" class="lcard-badge" style="background:rgba(59,130,246,.1);color:#3B82F6;border:1px solid rgba(59,130,246,.2);display:none">LP —</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <span id="dmCA" style="font-size:.68rem;color:var(--t3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-          <button id="dmCopyCA" onclick="dashCopyCA(this)" style="flex-shrink:0;font-size:.58rem;font-weight:600;padding:2px 7px;border-radius:5px;border:1px solid var(--b1);background:transparent;color:var(--t3);cursor:pointer;font-family:var(--font)">Copy</button>
+          <span id="dmCA" style="font-size:.66rem;color:var(--t3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px"></span>
+          <button id="dmCopyCA" onclick="dashCopyCA(this)" style="flex-shrink:0;font-size:.56rem;font-weight:600;padding:2px 7px;border-radius:5px;border:1px solid var(--b1);background:transparent;color:var(--t3);cursor:pointer;font-family:var(--font)">Copy</button>
         </div>
       </div>
-      <a id="dmTradeTop" href="#dmTradePanel" onclick="document.getElementById('dmTradePanel').scrollIntoView({behavior:'smooth'});return false" style="display:none">Trade</a>
+      <div class="dash-head-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a id="dmExplorerBtn" href="#" target="_blank" rel="noopener" class="dm-hbtn">Explorer &#x2197;</a>
+        <a id="dmUniBtn" href="#" target="_blank" rel="noopener" class="dm-hbtn">Uniswap &#x2197;</a>
+        <a id="dmClaimBtn" href="javascript:void(0)" class="dm-hbtn dm-hbtn-claim">Claim Fees</a>
+      </div>
       <button onclick="closeDashboard()" style="background:none;border:none;color:var(--t2);font-size:1.5rem;cursor:pointer;line-height:1;padding:4px 8px">&#xD7;</button>
     </div>
 
-    <!-- Info grid -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)">
-      <div class="dm-info"><div class="dm-info-l">Network</div><div class="dm-info-v">Base</div></div>
-      <div class="dm-info"><div class="dm-info-l">Type</div><div class="dm-info-v" id="dmType">—</div></div>
+    <!-- Market stats -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)">
+      <div class="dm-info"><div class="dm-info-l">Market Cap</div><div class="dm-info-v" id="dmMcap">—</div></div>
+      <div class="dm-info"><div class="dm-info-l">24h Volume</div><div class="dm-info-v" id="dmVol">—</div></div>
+      <div class="dm-info"><div class="dm-info-l">Price</div><div class="dm-info-v" id="dmPrice">—</div></div>
       <div class="dm-info"><div class="dm-info-l">LP Fee</div><div class="dm-info-v" id="dmLpFee">—</div></div>
       <div class="dm-info"><div class="dm-info-l">Supply</div><div class="dm-info-v" id="dmSupply">—</div></div>
-      <div class="dm-info"><div class="dm-info-l">Cap</div><div class="dm-info-v" id="dmCap">—</div></div>
-      <div class="dm-info"><div class="dm-info-l">Status</div><div class="dm-info-v" id="dmStatus" style="color:#22c55e">Ready</div></div>
     </div>
 
-    <!-- Chart (full width) -->
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--b1)">
+    <!-- Body: chart + live trades | swap + holders -->
+    <div class="dash-grid" style="display:grid;grid-template-columns:1fr 340px;gap:0">
+      <!-- MAIN -->
+      <div style="border-right:1px solid var(--b1);min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--b1)">
+          <div style="font-size:.78rem;font-weight:800;color:var(--t1);letter-spacing:.02em">CHART</div>
+          <a id="dmGecko" href="#" target="_blank" rel="noopener" style="font-size:.64rem;font-weight:700;color:var(--accent);border:1px solid rgba(240,120,48,.3);border-radius:7px;padding:5px 9px;text-decoration:none;white-space:nowrap">GeckoTerminal &#x2197;</a>
+        </div>
+        <iframe id="dmChart" src="" title="chart" style="width:100%;height:360px;border:0;background:#0b0d12;display:block"></iframe>
+        <div style="padding:14px 16px;border-top:1px solid var(--b1)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:.78rem;font-weight:800;color:var(--t1)">Live Trades</span>
+            <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);animation:pulse 2s infinite"></span>
+          </div>
+          <div id="dmTrades" style="font-size:.72rem;color:var(--t3)">Loading trades…</div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR: swap + holders -->
+      <div class="dash-side" style="padding:14px 16px;display:flex;flex-direction:column;gap:16px">
+        <!-- Swap -->
         <div>
-          <div style="font-size:.8rem;font-weight:800;color:var(--t1);letter-spacing:.02em">PRICE CHART</div>
-          <div style="font-size:.66rem;color:var(--t3);margin-top:2px">Live market data · Uniswap V4 on Base</div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <a id="dmGecko" href="#" target="_blank" rel="noopener" style="font-size:.66rem;font-weight:700;color:var(--accent);border:1px solid rgba(240,120,48,.3);border-radius:7px;padding:6px 10px;text-decoration:none;white-space:nowrap">GeckoTerminal &#x2197;</a>
-          <button onclick="openTrade(_dashCA)" style="font-size:.72rem;font-weight:800;color:#fff;background:var(--green);border:none;border-radius:8px;padding:7px 16px;cursor:pointer;font-family:var(--font);white-space:nowrap">Trade</button>
-        </div>
-      </div>
-      <iframe id="dmChart" src="" title="chart" style="width:100%;height:420px;border:0;background:#0b0d12;display:block"></iframe>
-    </div>
-
-    <!-- Creator rewards / Claim fees (creator only) -->
-    <div style="padding:16px 20px;border-top:1px solid var(--b1)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <div style="font-size:.8rem;font-weight:800;color:var(--t1)">Creator fees</div>
-        <span class="lcard-badge" style="background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.22)">LP REWARDS</span>
-      </div>
-      <div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-          <div>
-            <div style="font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:4px">Reward recipient</div>
-            <div style="display:flex;align-items:center;gap:7px">
-              <div id="dmRewardIco" style="width:22px;height:22px;border-radius:50%;background:#444;flex-shrink:0"></div>
-              <span id="dmRewardRecipient" style="font-size:.8rem;font-weight:700;color:var(--t1);font-family:var(--mono)">—</span>
+          <div style="font-size:.78rem;font-weight:800;color:var(--t1);margin-bottom:10px">Swap</div>
+          <div style="display:flex;background:var(--s3);border:1px solid var(--b1);border-radius:10px;padding:4px;gap:4px;margin-bottom:12px">
+            <button id="dsTabBuy" onclick="dsSetSide('buy')" style="flex:1;padding:8px;border-radius:7px;border:none;cursor:pointer;font-family:var(--font);font-weight:700;font-size:.78rem;background:var(--green);color:#fff">Buy</button>
+            <button id="dsTabSell" onclick="dsSetSide('sell')" style="flex:1;padding:8px;border-radius:7px;border:none;cursor:pointer;font-family:var(--font);font-weight:700;font-size:.78rem;background:transparent;color:var(--t2)">Sell</button>
+          </div>
+          <div id="dsBuyPanel">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              <button class="dm-amt" onclick="dsSetAmt('0.005')">0.005</button>
+              <button class="dm-amt" onclick="dsSetAmt('0.01')">0.01</button>
+              <button class="dm-amt" onclick="dsSetAmt('0.05')">0.05</button>
+              <button class="dm-amt" onclick="dsSetAmt('0.1')">0.1</button>
             </div>
+            <div style="position:relative;margin-bottom:10px">
+              <input id="dsBuyAmt" type="text" value="0.01" inputmode="decimal" style="width:100%;box-sizing:border-box;padding:11px 46px 11px 12px;border-radius:9px;border:1px solid var(--b1);background:var(--bg);color:var(--t1);font-size:.9rem;font-family:var(--mono)" placeholder="ETH amount">
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;font-weight:700;color:var(--t3)">ETH</span>
+            </div>
+            <button id="dsBuyBtn" onclick="dsBuy()" style="width:100%;padding:12px;border-radius:9px;border:none;background:var(--green);color:#fff;font-weight:800;cursor:pointer;font-size:.84rem;font-family:var(--font)">Buy <span id="dsBuySym">token</span></button>
+            <div id="dsBuyStatus" style="font-size:.68rem;color:var(--t3);margin-top:8px;line-height:1.5"></div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:4px">Fee tier</div>
-            <div id="dmRewardFee" style="font-size:.9rem;font-weight:800;color:#22c55e">—</div>
+          <div id="dsSellPanel" style="display:none">
+            <div style="font-size:.72rem;color:var(--t3);margin-bottom:10px;line-height:1.55">Sell <span id="dsSellSym" style="font-weight:700;color:var(--t1)">token</span> back to ETH on the Uniswap&nbsp;V4 pool.</div>
+            <a id="dsSell" href="#" target="_blank" rel="noopener" style="display:block;text-align:center;padding:12px;border-radius:9px;background:var(--orange);color:#fff;text-decoration:none;font-size:.84rem;font-weight:800">Sell on Uniswap V4 &#x2197;</a>
           </div>
+          <div style="font-size:.6rem;color:var(--t3);text-align:center;margin-top:8px">Trades route through the Uniswap V4 pool</div>
         </div>
-        <div style="font-size:.7rem;color:var(--t3);line-height:1.55;margin-bottom:12px">Every trade pays the LP fee to the creator's Uniswap&nbsp;V4 position (earned in ETH/WETH + token). Only the creator wallet can claim.</div>
-        <a id="dmClaimBtn" href="#" style="display:block;text-align:center;padding:12px;border-radius:10px;border:none;font-size:.84rem;font-weight:800;font-family:var(--font);cursor:not-allowed;background:var(--s3);color:var(--t3);text-decoration:none">Connect the creator wallet to claim</a>
-        <div id="dmClaimNote" style="font-size:.66rem;color:var(--t3);margin-top:8px;text-align:center"></div>
+
+        <!-- Top holders -->
+        <div style="border-top:1px solid var(--b1);padding-top:14px">
+          <div style="font-size:.78rem;font-weight:800;color:var(--t1);margin-bottom:10px">Top Holders</div>
+          <div id="dmHolders" style="font-size:.72rem;color:var(--t3)">Loading…</div>
+        </div>
       </div>
     </div>
 
-    <!-- What this token supports -->
-    <div style="padding:16px 20px;border-top:1px solid var(--b1)">
-      <div style="font-size:.8rem;font-weight:800;color:var(--t1);margin-bottom:12px">What this token supports</div>
-      <div id="dmSupports" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px"></div>
+    <!-- Creator fees + supports -->
+    <div class="dash-grid" style="display:grid;grid-template-columns:1fr 340px;gap:0;border-top:1px solid var(--b1)">
+      <div style="padding:16px 20px;border-right:1px solid var(--b1)">
+        <div style="font-size:.78rem;font-weight:800;color:var(--t1);margin-bottom:12px">What this token supports</div>
+        <div id="dmSupports" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px"></div>
+      </div>
+      <div style="padding:16px">
+        <div style="font-size:.78rem;font-weight:800;color:var(--t1);margin-bottom:10px">Creator fees</div>
+        <div style="font-size:.68rem;color:var(--t3);line-height:1.55;margin-bottom:6px">Reward recipient</div>
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">
+          <div id="dmRewardIco" style="width:20px;height:20px;border-radius:50%;background:#444;flex-shrink:0"></div>
+          <span id="dmRewardRecipient" style="font-size:.74rem;font-weight:700;color:var(--t1);font-family:var(--mono)">—</span>
+        </div>
+        <div style="font-size:.66rem;color:var(--t3);line-height:1.5">LP fee tier <b id="dmRewardFee" style="color:#22c55e">—</b>. Every trade pays this to the creator's Uniswap V4 position. Only the creator can claim (button top-right).</div>
+        <div id="dmClaimNote" style="font-size:.64rem;color:var(--t3);margin-top:8px"></div>
+      </div>
     </div>
 
   </div>
@@ -2077,19 +2115,27 @@ function openDashboard(ca, focus) {
 
   // Supply / cap (best-effort from feed until live read resolves)
   _dmSet('dmSupply', item && item.supply ? Number(item.supply).toLocaleString() + ' ' + sym : '—');
-  _dmSet('dmCap', item && item.supply ? Number(item.supply).toLocaleString() + ' ' + sym : '—');
   _dmSet('dmLpFee', '—');
+  _dmSet('dmMcap', 'loading…'); _dmSet('dmVol', '—'); _dmSet('dmPrice', '—');
+  _dmSet('dsBuySym', sym); _dmSet('dsSellSym', sym); _dmSet('dsBuyStatus', '');
 
   const isDark = !document.documentElement.classList.contains('light');
   document.getElementById('dmChart').src = `https://dexscreener.com/base/${ca}?embed=1&theme=${isDark ? 'dark' : 'light'}&trades=0&info=0`;
   document.getElementById('dmGecko').href = `https://www.geckoterminal.com/base/tokens/${ca}`;
+  document.getElementById('dmExplorerBtn').href = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca;
+  document.getElementById('dmUniBtn').href = `https://app.uniswap.org/swap?chain=base&outputCurrency=${ca}&inputCurrency=ETH`;
+  document.getElementById('dsSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=${ca}&outputCurrency=ETH`;
+  _dmSet('dmTrades', 'Loading trades…');
+  dsSetSide('buy');
 
   renderSupports({ hasPool: null });
   document.getElementById('dashModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  // Live enrich: token_info (supply/decimals/name) + pool_status (fee tier)
+  // Live enrich: on-chain token_info + pool + off-chain market/trades/holders
   loadDashLive(ca, sym);
+  loadMarket(ca);
+  loadHolders(ca);
 }
 
 // ── Compact Trade modal (Buy / Sell swap) ─────────────────────────────────────
@@ -2215,17 +2261,31 @@ function closeDashboard() {
   document.body.style.overflow = '';
 }
 function setBuyAmt(v) { document.getElementById('dmBuyAmt').value = v; }
-async function buyToken() {
-  const amt = (document.getElementById('dmBuyAmt').value || '').replace(/[^0-9.]/g, '');
-  const st = document.getElementById('dmBuyStatus');
-  const btn = document.getElementById('dmBuyBtn');
+function buyToken() { return _swapBuy('dmBuyAmt', 'dmBuyBtn', 'dmBuyStatus'); }
+
+// Dashboard inline swap (separate IDs, shared buy core)
+function dsSetAmt(v) { const el = document.getElementById('dsBuyAmt'); if (el) el.value = v; }
+function dsBuy() { return _swapBuy('dsBuyAmt', 'dsBuyBtn', 'dsBuyStatus'); }
+function dsSetSide(side) {
+  const buy = side !== 'sell';
+  document.getElementById('dsBuyPanel').style.display = buy ? '' : 'none';
+  document.getElementById('dsSellPanel').style.display = buy ? 'none' : '';
+  const tb = document.getElementById('dsTabBuy'), ts = document.getElementById('dsTabSell');
+  if (tb) { tb.style.background = buy ? 'var(--green)' : 'transparent'; tb.style.color = buy ? '#fff' : 'var(--t2)'; }
+  if (ts) { ts.style.background = !buy ? 'var(--orange)' : 'transparent'; ts.style.color = !buy ? '#fff' : 'var(--t2)'; }
+}
+
+async function _swapBuy(amtId, btnId, statusId) {
+  const amt = (document.getElementById(amtId).value || '').replace(/[^0-9.]/g, '');
+  const st = document.getElementById(statusId);
+  const btn = document.getElementById(btnId);
   if (!_dashCA) return;
   if (!amt || parseFloat(amt) <= 0) { st.textContent = 'Enter an ETH amount.'; st.style.color = '#ef4444'; return; }
   if (!walletAddress || !window.ethereum) { st.textContent = 'Connect your wallet first.'; st.style.color = '#ef4444'; return; }
   btn.disabled = true;
   try {
     st.style.color = 'var(--t2,#aaa)'; st.textContent = 'Finding pool...';
-    let fee = 10000;
+    let fee = _dashFee || 10000;
     try {
       const pr = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'pool_status', token: _dashCA }) });
       const pd = await pr.json();
@@ -2249,6 +2309,60 @@ async function buyToken() {
     const msg = (e.code === 4001 || e.code === 4100) ? 'Rejected in wallet' : (e.message || 'failed').slice(0, 120);
     st.textContent = 'Error: ' + msg; st.style.color = '#ef4444'; btn.disabled = false;
   }
+}
+
+// ── Market data (DexScreener) + Live trades (GeckoTerminal) + Top holders ──────
+function _fmtUsd(n) {
+  n = Number(n) || 0;
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
+  if (n > 0 && n < 0.01) return '$' + n.toPrecision(2);
+  return '$' + n.toFixed(2);
+}
+async function loadMarket(ca) {
+  try {
+    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + ca);
+    const d = await r.json();
+    if (_dashCA !== ca) return;
+    const pairs = (d && d.pairs) || [];
+    if (!pairs.length) { _dmSet('dmMcap', 'no data'); _dmSet('dmVol', '—'); _dmSet('dmPrice', '—'); loadTrades(null); return; }
+    const p = pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
+    _dmSet('dmMcap', p.marketCap || p.fdv ? _fmtUsd(p.marketCap || p.fdv) : '—');
+    _dmSet('dmVol', p.volume?.h24 != null ? _fmtUsd(p.volume.h24) : '—');
+    _dmSet('dmPrice', p.priceUsd ? _fmtUsd(p.priceUsd) : '—');
+    loadTrades(p.pairAddress);
+  } catch (_) { _dmSet('dmMcap', '—'); loadTrades(null); }
+}
+async function loadTrades(pool) {
+  const el = document.getElementById('dmTrades');
+  if (!el) return;
+  if (!pool) { el.innerHTML = `<div style="color:var(--t3)">No pool yet — trades appear once the token is live.</div>`; return; }
+  try {
+    const r = await fetch(`https://api.geckoterminal.com/api/v2/networks/base/pools/${pool}/trades`);
+    const d = await r.json();
+    const list = (d && d.data) || [];
+    if (!list.length) { el.innerHTML = `<div style="color:var(--t3)">No trades yet.</div>`; return; }
+    el.innerHTML = list.slice(0, 12).map(t => {
+      const a = t.attributes || {};
+      const buy = (a.kind || '').toLowerCase() === 'buy';
+      const usd = Number(a.volume_in_usd || 0);
+      const who = (a.tx_from_address || '').slice(0, 6) + '…' + (a.tx_from_address || '').slice(-4);
+      const ago = a.block_timestamp ? _timeAgo(new Date(a.block_timestamp).getTime()) : '';
+      return `<div class="dm-trade-row">
+        <span style="font-weight:800;color:${buy ? '#22c55e' : '#ef4444'}">${buy ? 'BUY' : 'SELL'}</span>
+        <span style="color:var(--t3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${who} · ${ago}</span>
+        <span style="font-weight:700;color:var(--t1)">${_fmtUsd(usd)}</span>
+      </div>`;
+    }).join('');
+  } catch (_) { el.innerHTML = `<div style="color:var(--t3)">Live trades unavailable right now.</div>`; }
+}
+function loadHolders(ca) {
+  const el = document.getElementById('dmHolders');
+  if (!el) return;
+  const ex = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca + '#balances';
+  el.innerHTML = `<div style="color:var(--t3);line-height:1.6;margin-bottom:8px">Full holder distribution is indexed on BaseScan.</div>
+    <a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block">View holders on BaseScan &#x2197;</a>`;
 }
 
 function filterLaunched(type, el) {
