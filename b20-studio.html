@@ -1797,14 +1797,23 @@ async function onDeploy() {
       try {
         setDeployBtn('loading', 'Building launch...', 'Preparing a one-tap launch...');
         const price  = (document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '');
-        const lp     = (document.getElementById('fPoolLp').value || '').replace(/[^0-9]/g, '');
         const feeSel = document.getElementById('fPoolFee').value;
         const devBuy = (document.getElementById('fPoolDevBuy')?.value || '').replace(/[^0-9.]/g, '');
+        // The pool can only be seeded with what the CREATOR actually receives —
+        // the full supply minus any insider/vested carve-outs (those are minted
+        // to the recipients / vesting vault in the same deploy tx). Seeding the
+        // full supply here would exceed the creator's balance and revert the
+        // whole batch. Mirror the server's per-allocation rounding exactly.
+        const _supplyCap = BigInt((document.getElementById('fSupplyCap')?.value || '100000000000').replace(/[^0-9]/g, '') || '100000000000');
+        const _toAmt = pct => _supplyCap * BigInt(Math.round((parseFloat(pct) || 0) * 100)) / 10000n;
+        let _carved = 0n;
+        [..._insiderAllocations, ..._vestedAllocations].forEach(a => { if (a.address && a.percent) _carved += _toAmt(a.percent); });
+        const _lpTokens = (_supplyCap > _carved ? _supplyCap - _carved : 0n).toString();
         const pr = await fetch('/api/b20-skill', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'prepare_pool', predeploy: true, token: predicted, creator: walletAddress,
-            price, lp_tokens: lp || (document.getElementById('fSupplyCap')?.value||'100000000000').replace(/[^0-9]/g,''), decimals: _deployDecimals, fee: feeSel,
+            price, lp_tokens: _lpTokens, decimals: _deployDecimals, fee: feeSel,
             dev_buy_eth: devBuy && parseFloat(devBuy) > 0 ? devBuy : undefined,
           }),
         });
