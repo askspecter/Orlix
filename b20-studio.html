@@ -490,6 +490,14 @@ select.inp option{background:var(--s2);color:var(--t1)}
 @media(max-width:380px){
   .nav-badge-label{font-size:.75rem}
 }
+/* ── responsive polish for newer sections ── */
+#dashModal{padding:14px}
+@media(max-width:560px){
+  #dashModal{padding:0}
+  #dashModal > div{max-height:100vh;border-radius:0}
+  #dmChart{height:260px!important}
+  #powImmutable,#powAdmin{padding:11px}
+}
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
 :root.light .crt-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);opacity:.3}
 </style>
