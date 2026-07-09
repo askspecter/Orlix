@@ -472,6 +472,47 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
 :root.light .crt-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);opacity:.3}
 
+/* ── WIZARD STEPPER ── */
+.wiz-bar{display:flex;align-items:center;gap:0;margin-bottom:28px;padding:0 4px}
+.wiz-step{display:flex;align-items:center;gap:7px;cursor:pointer;transition:opacity .15s}
+.wiz-step:hover{opacity:.8}
+.wiz-num{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:800;color:var(--t3);background:var(--s2);border:1.5px solid var(--b2);
+  transition:all .2s;flex-shrink:0;
+}
+.wiz-step.active .wiz-num{background:var(--orange);border-color:var(--orange);color:#fff}
+.wiz-step.done .wiz-num{background:var(--green);border-color:var(--green);color:#fff}
+.wiz-label{font-size:.72rem;font-weight:600;color:var(--t3);transition:color .2s;white-space:nowrap}
+.wiz-step.active .wiz-label{color:var(--t1)}
+.wiz-step.done .wiz-label{color:var(--t2)}
+.wiz-line{flex:1;height:1.5px;background:var(--b1);margin:0 6px;min-width:12px}
+.wiz-title{font-size:1.15rem;font-weight:800;color:var(--t1);margin-bottom:4px;letter-spacing:-.02em}
+.wiz-desc{font-size:.78rem;color:var(--t3);margin-bottom:20px;line-height:1.6}
+.wiz-nav{display:flex;align-items:center;justify-content:space-between;margin-top:16px;gap:12px}
+.wiz-back{
+  padding:10px 22px;border-radius:9px;border:1px solid var(--b2);background:none;
+  color:var(--t2);font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--font);
+}
+.wiz-back:hover{border-color:var(--b3);color:var(--t1)}
+.wiz-next{
+  padding:10px 28px;border-radius:9px;border:none;background:var(--orange);
+  color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .15s;
+  box-shadow:0 2px 12px rgba(240,120,48,.3);font-family:var(--font);
+}
+.wiz-next:hover{opacity:.88}
+.wiz-review-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;
+}
+.wiz-review-label{font-size:.72rem;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.wiz-review-val{font-size:.82rem;font-weight:700;color:var(--t1);font-family:var(--mono)}
+@media(max-width:720px){
+  .wiz-label{display:none}
+  .wiz-bar{gap:0;justify-content:center}
+  .wiz-line{min-width:16px;margin:0 4px}
+}
+
 /* mainnet bar (compact pill) */
 .mainnet-bar{
   display:inline-flex;align-items:center;gap:7px;
@@ -566,231 +607,271 @@ select.inp option{background:var(--s2);color:var(--t1)}
 
   </div>
 
-  <!-- ════════════ CREATE VIEW (shown when user clicks a launch mode) ════════════ -->
+  <!-- ════════════ CREATE VIEW (shown when user clicks Launch) ════════════ -->
   <div id="viewCreate" class="create-wrap">
     <button class="create-back" onclick="closeCreate()">
       <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5"/><path d="M10 15l-5-5 5-5"/></svg>
-      Back
+      Back to Discover
     </button>
 
-    <!-- hidden tab containers kept for JS compatibility -->
     <div id="tabCreate">
-      <div class="pg-label">Create</div>
-      <h1 class="pg-title">Create a B20 Token</h1>
-      <p class="pg-sub">Launch a token on Base in one click.</p>
-
       <div id="mainnetBar" class="mainnet-bar" style="color:#4ade80">
         <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite"></span> Base Mainnet &middot; Live</span>
       </div>
 
-      <div class="card">
+      <!-- ── Wizard step bar ── -->
+      <div class="wiz-bar" id="wizBar">
+        <div class="wiz-step active" data-step="1"><span class="wiz-num">1</span><span class="wiz-label">Identity</span></div>
+        <div class="wiz-line"></div>
+        <div class="wiz-step" data-step="2"><span class="wiz-num">2</span><span class="wiz-label">Supply</span></div>
+        <div class="wiz-line"></div>
+        <div class="wiz-step" data-step="3"><span class="wiz-num">3</span><span class="wiz-label">Powers</span></div>
+        <div class="wiz-line"></div>
+        <div class="wiz-step" data-step="4"><span class="wiz-num">4</span><span class="wiz-label">Pool</span></div>
+        <div class="wiz-line"></div>
+        <div class="wiz-step" data-step="5"><span class="wiz-num">5</span><span class="wiz-label">Launch</span></div>
+      </div>
 
-        <!-- AI Auto-Fill -->
-        <div class="ai-pill-wrap" id="aiSection">
-          <div class="ai-pill-label">
-            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg>
-            AI Auto-Fill
-          </div>
-          <div class="ai-pill">
-            <input class="ai-pill-inp" id="aiDesc" type="text"
-              placeholder="Describe your token — e.g. gaming reward token 500M supply burn mechanic"
-              onkeydown="if(event.key==='Enter'){aiAutoFill()}">
-            <button class="ai-pill-btn" id="aiFillBtn" onclick="aiAutoFill()" aria-label="Generate">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 17V3"/><path d="M4 9l6-6 6 6"/>
-              </svg>
-            </button>
-          </div>
-          <div class="ai-status" id="aiStatus"></div>
-        </div>
+      <!-- Hidden inputs -->
+      <input type="hidden" id="fInitSupply" value="100000000000">
+      <input type="hidden" id="fCap" value="100000000000">
+      <input type="hidden" id="fUncapped">
+      <input type="hidden" id="fAdmin" value="">
+      <input type="hidden" id="fRebase">
+      <input type="hidden" id="fUri">
+      <input type="checkbox" id="fAdminless" checked style="display:none">
+      <input type="checkbox" id="fAllow" style="display:none">
+      <input type="checkbox" id="fBlock" style="display:none">
+      <input type="checkbox" id="fFreeze" style="display:none">
+      <input type="checkbox" id="fCreatePool" checked style="display:none">
 
-        <!-- Variant -->
-        <div class="sec-label">Token Variant</div>
-        <div class="variant-grid">
-          <div class="variant-card sel" id="varAsset" onclick="setVariant('asset')">
-            <div class="vc-chk">&#x2713;</div>
-            <div class="vc-name">Asset</div>
-            <div class="vc-desc">General purpose token. Configurable decimals.</div>
-          </div>
-          <div class="variant-card" id="varStable" onclick="setVariant('stablecoin')">
-            <div class="vc-chk">&#x2713;</div>
-            <div class="vc-name">Stablecoin</div>
-            <div class="vc-desc">Fiat-pegged. Fixed 6 decimals, currency code.</div>
-          </div>
-        </div>
+      <!-- ═══ STEP 1: Identity ═══ -->
+      <div class="wiz-panel" id="wizStep1">
+        <div class="card">
+          <h2 class="wiz-title">Token identity</h2>
+          <p class="wiz-desc">Choose the type, name, and profile for your token.</p>
 
-        <!-- Logo + Name/Symbol -->
-        <div class="logo-name-row">
-          <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
-            <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
-            <div class="logo-placeholder" id="logoPlaceholder">
-              <div class="logo-placeholder-ico">&#x1F4CE;</div>
-              <div class="logo-placeholder-txt">Upload logo<br>PNG / JPG</div>
+          <!-- AI Auto-Fill -->
+          <div class="ai-pill-wrap" id="aiSection">
+            <div class="ai-pill-label">
+              <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg>
+              AI Auto-Fill
             </div>
-            <button class="logo-remove-btn" id="logoRemove" style="display:none" onclick="removeLogo(event)">&#x2715;</button>
-            <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
+            <div class="ai-pill">
+              <input class="ai-pill-inp" id="aiDesc" type="text"
+                placeholder="Describe your token — e.g. gaming reward token 500M supply burn mechanic"
+                onkeydown="if(event.key==='Enter'){aiAutoFill()}">
+              <button class="ai-pill-btn" id="aiFillBtn" onclick="aiAutoFill()" aria-label="Generate">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 17V3"/><path d="M4 9l6-6 6 6"/>
+                </svg>
+              </button>
+            </div>
+            <div class="ai-status" id="aiStatus"></div>
           </div>
-          <div class="logo-name-fields">
-            <div>
-              <label class="field-label">Token Name</label>
-              <input class="inp" id="fName" type="text" placeholder="e.g. GameFi Token" oninput="onFormChange()" autocomplete="off">
-            </div>
-            <div>
-              <label class="field-label">Symbol</label>
-              <input class="inp" id="fSym" type="text" placeholder="e.g. GAME" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
-            </div>
-          </div>
-        </div>
 
-        <!-- Decimals + Supply -->
-        <div class="field-row">
-          <div class="field">
-            <label class="field-label">Decimals</label>
-            <select class="inp" id="fDec" onchange="onDecChange()">
-              <option value="6">6</option>
-              <option value="8">8</option>
-              <option value="10">10</option>
-              <option value="12">12</option>
-              <option value="18" selected>18</option>
-            </select>
+          <div class="sec-label">Token Variant</div>
+          <div class="variant-grid">
+            <div class="variant-card sel" id="varAsset" onclick="setVariant('asset')">
+              <div class="vc-chk">&#x2713;</div>
+              <div class="vc-name">Asset</div>
+              <div class="vc-desc">General purpose token. Configurable decimals.</div>
+            </div>
+            <div class="variant-card" id="varStable" onclick="setVariant('stablecoin')">
+              <div class="vc-chk">&#x2713;</div>
+              <div class="vc-name">Stablecoin</div>
+              <div class="vc-desc">Fiat-pegged. Fixed 6 decimals, currency code.</div>
+            </div>
           </div>
-          <div class="field">
-            <label class="field-label">Supply Cap</label>
-            <input class="inp" id="fSupplyCap" type="text" value="100000000000" oninput="onSupplyCapChange()" style="font-size:.72rem" placeholder="e.g. 100000000000">
-            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Minted and seeded into the Uniswap pool.</div>
-          </div>
-        </div>
-        <input type="hidden" id="fInitSupply" value="100000000000">
-        <input type="hidden" id="fCap" value="100000000000">
-        <input type="hidden" id="fUncapped">
 
-        <!-- Initial Admin (auto-set from wallet) -->
-        <input type="hidden" id="fAdmin" value="">
-
-        <!-- Description & Social -->
-        <div class="acc" id="accSocial">
-          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
-            <div class="acc-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg></div>
-            <div class="acc-title">
-              <div class="acc-title-main">Description & Social</div>
-              <div class="acc-title-sub">Telegram, website, X, and Farcaster</div>
+          <div class="logo-name-row">
+            <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
+              <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
+              <div class="logo-placeholder" id="logoPlaceholder">
+                <div class="logo-placeholder-ico">&#x1F4CE;</div>
+                <div class="logo-placeholder-txt">Upload logo<br>PNG / JPG</div>
+              </div>
+              <button class="logo-remove-btn" id="logoRemove" style="display:none" onclick="removeLogo(event)">&#x2715;</button>
+              <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
             </div>
-            <div class="acc-arrow">&#x25BC;</div>
+            <div class="logo-name-fields">
+              <div>
+                <label class="field-label">Token Name</label>
+                <input class="inp" id="fName" type="text" placeholder="e.g. GameFi Token" oninput="onFormChange()" autocomplete="off">
+              </div>
+              <div>
+                <label class="field-label">Symbol</label>
+                <input class="inp" id="fSym" type="text" placeholder="e.g. GAME" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
+              </div>
+            </div>
           </div>
-          <div class="acc-body">
-            <div class="field">
-              <textarea class="inp" id="fDesc" rows="3" placeholder="What's this token about?" style="resize:vertical;min-height:60px"></textarea>
+
+          <div class="acc" id="accSocial">
+            <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+              <div class="acc-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg></div>
+              <div class="acc-title">
+                <div class="acc-title-main">Description & Social</div>
+                <div class="acc-title-sub">Telegram, website, X, and Farcaster</div>
+              </div>
+              <div class="acc-arrow">&#x25BC;</div>
             </div>
-            <div class="field">
-              <input class="inp" id="fTelegram" type="url" placeholder="Telegram — https://t.me/..." autocomplete="off">
-            </div>
-            <div class="field">
-              <input class="inp" id="fWebsite" type="url" placeholder="Website — https://..." autocomplete="off">
-            </div>
-            <div class="field">
-              <input class="inp" id="fTwitter" type="url" placeholder="X (Twitter) — https://x.com/..." autocomplete="off">
-            </div>
-            <div class="field" style="margin-bottom:0">
-              <input class="inp" id="fFarcaster" type="url" placeholder="Farcaster — https://warpcast.com/..." autocomplete="off">
+            <div class="acc-body">
+              <div class="field"><textarea class="inp" id="fDesc" rows="3" placeholder="What's this token about?" style="resize:vertical;min-height:60px"></textarea></div>
+              <div class="field"><input class="inp" id="fTelegram" type="url" placeholder="Telegram — https://t.me/..." autocomplete="off"></div>
+              <div class="field"><input class="inp" id="fWebsite" type="url" placeholder="Website — https://..." autocomplete="off"></div>
+              <div class="field"><input class="inp" id="fTwitter" type="url" placeholder="X (Twitter) — https://x.com/..." autocomplete="off"></div>
+              <div class="field" style="margin-bottom:0"><input class="inp" id="fFarcaster" type="url" placeholder="Farcaster — https://warpcast.com/..." autocomplete="off"></div>
             </div>
           </div>
         </div>
+        <div class="wiz-nav"><div></div><button class="wiz-next" onclick="wizGo(2)">Continue</button></div>
+      </div>
 
-        <input type="hidden" id="fRebase">
-        <input type="hidden" id="fUri">
+      <!-- ═══ STEP 2: Supply ═══ -->
+      <div class="wiz-panel" id="wizStep2" style="display:none">
+        <div class="card">
+          <h2 class="wiz-title">Supply</h2>
+          <p class="wiz-desc">Set decimals and total supply. Full supply is minted and seeded into the Uniswap pool.</p>
 
-        <!-- Token powers -->
-        <div class="sec-label" style="margin-top:8px">Token powers</div>
-        <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Choose whether the token stays immutable or keeps an admin.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
-          <div id="powImmutable" onclick="setPowers('immutable')" style="border:1px solid var(--orange);border-radius:10px;padding:14px;cursor:pointer;background:rgba(240,120,48,.06);transition:.15s">
-            <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Immutable</div>
-            <div style="font-size:.68rem;color:var(--t2);line-height:1.5">No admin after launch. Supply fixed — no one can mint or change policy.</div>
-          </div>
-          <div id="powAdmin" onclick="setPowers('admin')" style="border:1px solid var(--b1);border-radius:10px;padding:14px;cursor:pointer;background:var(--s2);transition:.15s">
-            <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Admin powers</div>
-            <div style="font-size:.68rem;color:var(--t2);line-height:1.5">You keep admin — grant roles, mint more, pause, set policies later.</div>
-          </div>
-        </div>
-        <input type="checkbox" id="fAdminless" checked style="display:none">
-        <input type="checkbox" id="fAllow" style="display:none">
-        <input type="checkbox" id="fBlock" style="display:none">
-        <input type="checkbox" id="fFreeze" style="display:none">
-
-        <!-- Pool & Launch -->
-        <div class="sec-label" style="margin-top:22px">Pool &amp; Launch</div>
-        <p style="font-size:.72rem;color:var(--t3);margin-bottom:14px;line-height:1.55">Full supply seeded as WETH liquidity on Uniswap V4.</p>
-        <input type="checkbox" id="fCreatePool" checked style="display:none">
-        <div id="poolEconomics">
           <div class="field-row">
             <div class="field">
-              <label class="field-label">Initial price (ETH per token)</label>
-              <input class="inp" id="fPoolPrice" type="text" value="0.000000000025" style="font-size:.72rem" oninput="updatePoolPreview()">
-              <div id="poolMcapHint" style="font-size:.6rem;color:var(--t3);margin-top:3px"></div>
-            </div>
-            <div class="field">
-              <label class="field-label">LP fee</label>
-              <select class="inp" id="fPoolFee" style="font-size:.72rem">
-                <option value="10000" selected>1.00% (default)</option>
-                <option value="3000">0.30%</option>
-                <option value="500">0.05%</option>
+              <label class="field-label">Decimals</label>
+              <select class="inp" id="fDec" onchange="onDecChange()">
+                <option value="6">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+                <option value="18" selected>18</option>
               </select>
             </div>
-          </div>
-          <div class="field-row">
             <div class="field">
-              <label class="field-label">Dev buy (ETH) — optional</label>
-              <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = none" style="font-size:.72rem">
-              <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Buy your own token at launch, at the launch price</div>
+              <label class="field-label">Supply Cap</label>
+              <input class="inp" id="fSupplyCap" type="text" value="100000000000" oninput="onSupplyCapChange()" style="font-size:.72rem" placeholder="e.g. 100000000000">
+              <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Minted and seeded into the Uniswap pool.</div>
             </div>
-            <div class="field"></div>
-          </div>
-          <input type="hidden" id="fPoolLp" value="100000000000">
-        </div>
-
-        <!-- Deploy -->
-        <button class="deploy-btn" onclick="onDeploy()">
-          <span>Launch Token</span>
-          <span class="deploy-sub" id="deploySubtitle">Loading...</span>
-        </button>
-
-        <!-- Deployed CA card -->
-        <div id="deployedCard" style="display:none" class="deployed-card">
-          <div class="dc-header">
-            <div class="dc-check pending" id="dcCheck">&#x23F3;</div>
-            <div class="dc-header-text">
-              <div class="dc-title" id="dcTitle">Token deployed on Base</div>
-              <div class="dc-sub" id="dcSub">Confirming...</div>
-            </div>
-          </div>
-          <div class="dc-field" id="dcCAField" style="display:none">
-            <div class="dc-field-label">Contract Address</div>
-            <div class="dc-field-row">
-              <span id="dcCA" class="dc-field-val">—</span>
-              <button class="dc-copy-btn" onclick="copyField('dcCA',this)">Copy</button>
-              <a id="dcScanLink" href="#" target="_blank" class="dc-ext-link">Explorer &#x2197;</a>
-            </div>
-          </div>
-          <div class="dc-field">
-            <div class="dc-field-label">Transaction Hash</div>
-            <div class="dc-field-row">
-              <span id="dcTxHash" class="dc-field-val">—</span>
-              <button class="dc-copy-btn" onclick="copyField('dcTxHash',this)">Copy</button>
-              <a id="dcTxLink" href="#" target="_blank" class="dc-ext-link">Explorer &#x2197;</a>
-            </div>
-          </div>
-          <div id="dcPoolPanel" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
-            <div style="font-size:.8rem;font-weight:700;color:var(--t1);margin-bottom:8px">Liquidity Pool — Uniswap V4</div>
-            <div id="poolStatus" style="font-size:.72rem;color:var(--t2);line-height:1.5"></div>
-            <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%;margin-top:10px;display:none">Retry pool creation</button>
-          </div>
-          <div class="dc-actions" id="dcActions" style="display:none">
-            <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan &#x2197;</a>
-            <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
           </div>
         </div>
-
+        <div class="wiz-nav"><button class="wiz-back" onclick="wizGo(1)">Back</button><button class="wiz-next" onclick="wizGo(3)">Continue</button></div>
       </div>
+
+      <!-- ═══ STEP 3: Powers ═══ -->
+      <div class="wiz-panel" id="wizStep3" style="display:none">
+        <div class="card">
+          <h2 class="wiz-title">Token powers</h2>
+          <p class="wiz-desc">Choose whether the token stays immutable or keeps an admin.</p>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div id="powImmutable" onclick="setPowers('immutable')" style="border:1px solid var(--orange);border-radius:10px;padding:14px;cursor:pointer;background:rgba(240,120,48,.06);transition:.15s">
+              <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Immutable</div>
+              <div style="font-size:.68rem;color:var(--t2);line-height:1.5">No admin after launch. Supply fixed — no one can mint or change policy.</div>
+            </div>
+            <div id="powAdmin" onclick="setPowers('admin')" style="border:1px solid var(--b1);border-radius:10px;padding:14px;cursor:pointer;background:var(--s2);transition:.15s">
+              <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Admin powers</div>
+              <div style="font-size:.68rem;color:var(--t2);line-height:1.5">You keep admin — grant roles, mint more, pause, set policies later.</div>
+            </div>
+          </div>
+        </div>
+        <div class="wiz-nav"><button class="wiz-back" onclick="wizGo(2)">Back</button><button class="wiz-next" onclick="wizGo(4)">Continue</button></div>
+      </div>
+
+      <!-- ═══ STEP 4: Pool ═══ -->
+      <div class="wiz-panel" id="wizStep4" style="display:none">
+        <div class="card">
+          <h2 class="wiz-title">Pool &amp; Liquidity</h2>
+          <p class="wiz-desc">Full supply seeded as WETH liquidity on Uniswap V4.</p>
+
+          <div id="poolEconomics">
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Initial price (ETH per token)</label>
+                <input class="inp" id="fPoolPrice" type="text" value="0.000000000025" style="font-size:.72rem" oninput="updatePoolPreview()">
+                <div id="poolMcapHint" style="font-size:.6rem;color:var(--t3);margin-top:3px"></div>
+              </div>
+              <div class="field">
+                <label class="field-label">LP fee</label>
+                <select class="inp" id="fPoolFee" style="font-size:.72rem">
+                  <option value="10000" selected>1.00% (default)</option>
+                  <option value="3000">0.30%</option>
+                  <option value="500">0.05%</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Dev buy (ETH) — optional</label>
+                <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = none" style="font-size:.72rem">
+                <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Buy your own token at launch, at the launch price</div>
+              </div>
+              <div class="field"></div>
+            </div>
+            <input type="hidden" id="fPoolLp" value="100000000000">
+          </div>
+        </div>
+        <div class="wiz-nav"><button class="wiz-back" onclick="wizGo(3)">Back</button><button class="wiz-next" onclick="wizGo(5)">Continue</button></div>
+      </div>
+
+      <!-- ═══ STEP 5: Review & Launch ═══ -->
+      <div class="wiz-panel" id="wizStep5" style="display:none">
+        <div class="card">
+          <h2 class="wiz-title">Review &amp; Launch</h2>
+          <p class="wiz-desc">Double check everything before deploying.</p>
+
+          <div id="wizReview" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+            <div class="wiz-review-row"><span class="wiz-review-label">Name</span><span class="wiz-review-val" id="rvName">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Symbol</span><span class="wiz-review-val" id="rvSym">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Variant</span><span class="wiz-review-val" id="rvVariant">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Decimals</span><span class="wiz-review-val" id="rvDec">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Supply</span><span class="wiz-review-val" id="rvSupply">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Powers</span><span class="wiz-review-val" id="rvPowers">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Initial Price</span><span class="wiz-review-val" id="rvPrice">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">LP Fee</span><span class="wiz-review-val" id="rvFee">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Dev Buy</span><span class="wiz-review-val" id="rvDevBuy">—</span></div>
+          </div>
+
+          <button class="deploy-btn" onclick="onDeploy()">
+            <span>Launch Token</span>
+            <span class="deploy-sub" id="deploySubtitle">Loading...</span>
+          </button>
+
+          <!-- Deployed CA card -->
+          <div id="deployedCard" style="display:none" class="deployed-card">
+            <div class="dc-header">
+              <div class="dc-check pending" id="dcCheck">&#x23F3;</div>
+              <div class="dc-header-text">
+                <div class="dc-title" id="dcTitle">Token deployed on Base</div>
+                <div class="dc-sub" id="dcSub">Confirming...</div>
+              </div>
+            </div>
+            <div class="dc-field" id="dcCAField" style="display:none">
+              <div class="dc-field-label">Contract Address</div>
+              <div class="dc-field-row">
+                <span id="dcCA" class="dc-field-val">—</span>
+                <button class="dc-copy-btn" onclick="copyField('dcCA',this)">Copy</button>
+                <a id="dcScanLink" href="#" target="_blank" class="dc-ext-link">Explorer &#x2197;</a>
+              </div>
+            </div>
+            <div class="dc-field">
+              <div class="dc-field-label">Transaction Hash</div>
+              <div class="dc-field-row">
+                <span id="dcTxHash" class="dc-field-val">—</span>
+                <button class="dc-copy-btn" onclick="copyField('dcTxHash',this)">Copy</button>
+                <a id="dcTxLink" href="#" target="_blank" class="dc-ext-link">Explorer &#x2197;</a>
+              </div>
+            </div>
+            <div id="dcPoolPanel" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
+              <div style="font-size:.8rem;font-weight:700;color:var(--t1);margin-bottom:8px">Liquidity Pool — Uniswap V4</div>
+              <div id="poolStatus" style="font-size:.72rem;color:var(--t2);line-height:1.5"></div>
+              <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%;margin-top:10px;display:none">Retry pool creation</button>
+            </div>
+            <div class="dc-actions" id="dcActions" style="display:none">
+              <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan &#x2197;</a>
+              <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
+            </div>
+          </div>
+        </div>
+        <div class="wiz-nav"><button class="wiz-back" onclick="wizGo(4)">Back</button><div></div></div>
+      </div>
+
     </div>
 
     <!-- hidden tab containers for JS compatibility -->
@@ -920,17 +1001,60 @@ function switchView(name) {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+let _wizMode = 'guided';
+let _wizStep = 1;
+
 function openCreate(mode) {
+  _wizMode = mode || 'guided';
   document.getElementById('viewDiscover').style.display = 'none';
   document.getElementById('viewCreate').style.display = '';
   document.getElementById('tabCreate').style.display = '';
   const ai = document.getElementById('aiSection');
-  if (ai) ai.style.display = mode === 'guided' ? '' : 'none';
+  if (ai) ai.style.display = _wizMode === 'guided' ? '' : 'none';
+  const wizBar = document.getElementById('wizBar');
+  if (wizBar) wizBar.style.display = _wizMode === 'guided' ? '' : 'none';
+  if (_wizMode === 'guided') {
+    wizGo(1);
+  } else {
+    for (let i = 1; i <= 5; i++) { const p = document.getElementById('wizStep'+i); if (p) p.style.display = ''; }
+    document.querySelectorAll('.wiz-nav').forEach(n => n.style.display = 'none');
+  }
   ['tbDiscover','tbMyTokens'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('active'); });
   ['bnDiscover','bnMyTokens'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('active'); });
   const tbL = document.getElementById('tbLaunch'); if (tbL) tbL.classList.add('active');
   const bnL = document.getElementById('bnLaunch'); if (bnL) bnL.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function wizGo(step) {
+  _wizStep = step;
+  for (let i = 1; i <= 5; i++) {
+    const panel = document.getElementById('wizStep'+i);
+    if (panel) panel.style.display = i === step ? '' : 'none';
+  }
+  document.querySelectorAll('.wiz-step').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.toggle('active', s === step);
+    el.classList.toggle('done', s < step);
+  });
+  if (step === 5) updateReview();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateReview() {
+  const g = id => (document.getElementById(id)||{}).value || '—';
+  document.getElementById('rvName').textContent = g('fName') || '—';
+  document.getElementById('rvSym').textContent = g('fSym') || '—';
+  document.getElementById('rvVariant').textContent = variant === 'stablecoin' ? 'Stablecoin' : 'Asset';
+  document.getElementById('rvDec').textContent = g('fDec');
+  const supply = g('fSupplyCap');
+  document.getElementById('rvSupply').textContent = supply ? Number(supply).toLocaleString() : '—';
+  document.getElementById('rvPowers').textContent = document.getElementById('fAdminless').checked ? 'Immutable' : 'Admin';
+  document.getElementById('rvPrice').textContent = g('fPoolPrice') + ' ETH';
+  const feeMap = {'10000':'1.00%','3000':'0.30%','500':'0.05%'};
+  document.getElementById('rvFee').textContent = feeMap[g('fPoolFee')] || g('fPoolFee');
+  const devBuy = g('fPoolDevBuy');
+  document.getElementById('rvDevBuy').textContent = (!devBuy || devBuy === '0') ? 'None' : devBuy + ' ETH';
 }
 
 function closeCreate() {
