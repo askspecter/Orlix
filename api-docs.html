@@ -49,6 +49,10 @@ code,pre{font-family:'JetBrains Mono',monospace}
 
 /* NAV */
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:88px}
+/* .wrap was referenced by the nav markup but never defined here (docs.html has
+   it) — without it the logo/CTA sat flush against the viewport edges. Width
+   matches this page's .layout container so nav and content align. */
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
 .nav-in{display:flex;align-items:center;height:88px;justify-content:space-between;gap:24px}
 .nav-logo{display:flex;align-items:center;flex-shrink:0}
 .nav-logo:hover{opacity:.85}
