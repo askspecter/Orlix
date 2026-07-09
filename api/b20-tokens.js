@@ -373,6 +373,9 @@ module.exports = async (req, res) => {
         farcaster: t.farcaster || null,
         timestamp: t.ts ? Math.floor(t.ts / 1000) : (t.timestamp || null),
         variant:  t.variant || ((t.decimals === 6) ? 'stablecoin' : 'asset'),
+        adminless: typeof t.adminless === 'boolean' ? t.adminless : undefined,
+        hasInsiderAllocations: !!t.hasInsiderAllocations,
+        hasVestedAllocations:  !!t.hasVestedAllocations,
         source:   'orlix',
       }));
       const volume24h = await aggregate24hVolume(tokens.map(t => t.address));

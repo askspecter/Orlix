@@ -28,6 +28,19 @@ const B20_FACTORY         = '0xB20f000000000000000000000000000000000000';
 const ACTIVATION_REGISTRY = '0x8453000000000000000000000000000000000001';
 const POLICY_REGISTRY     = '0x8453000000000000000000000000000000000002';
 
+// Vested-allocation vault — unset until OrlixVestingVault.sol is deployed
+// (see contracts/README-vesting.md). "Vested allocations" is refused server-side
+// while this is empty, so no token is ever minted to an unconfigured address.
+const VESTING_VAULT = (process.env.B20_VESTING_VAULT || '').trim();
+const VAULT_IFACE = new ethers.Interface([
+  'function createSchedule(address token, address beneficiary, uint128 totalAmount, uint64 start, uint64 cliffSeconds, uint64 durationSeconds, bool revocable) returns (bytes32 id)',
+  'function beneficiaryScheduleIds(address beneficiary) view returns (bytes32[])',
+  'function creatorScheduleIds(address creator) view returns (bytes32[])',
+  'function schedules(bytes32 id) view returns (address token, address beneficiary, uint128 totalAmount, uint128 released, uint64 start, uint64 cliff, uint64 duration, bool revocable, bool revoked)',
+  'function releasable(bytes32 id) view returns (uint256)',
+  'function release(bytes32 id)',
+]);
+
 // ── Network ───────────────────────────────────────────────────────────────────
 // B20 is Base mainnet only.
 const RPC_URL  = { mainnet: 'https://mainnet.base.org' };
@@ -207,16 +220,44 @@ function buildInitCalls(config) {
     calls.push(B20_IFACE.encodeFunctionData('updateSupplyCap', [capRaw]));
   }
 
-  // Mint the full supply to the creator wallet during the bootstrap window.
-  // Per the B20 spec, factory-originated initCalls BYPASS the token's role gates,
-  // so `mint` succeeds without first granting MINT_ROLE — this works even for
-  // immutable (admin-less) launches. Only MINT_RECEIVER_POLICY is enforced during
+  // Mint the supply during the bootstrap window. Per the B20 spec,
+  // factory-originated initCalls BYPASS the token's role gates, so `mint`
+  // succeeds without first granting MINT_ROLE — this works even for immutable
+  // (admin-less) launches. Only MINT_RECEIVER_POLICY is enforced during
   // initCalls, and it defaults to ALWAYS_ALLOW.
+  //
+  // Insider allocations mint straight to each beneficiary (immediate, liquid).
+  // Vested allocations mint their combined total to the vesting vault in this
+  // same atomic tx; the creator registers per-beneficiary release schedules in
+  // a follow-up tx once the vault is confirmed to hold the tokens (see
+  // handlePrepareVesting). Whatever's left over mints to the creator, same as
+  // a launch with no carve-outs.
   const mintTo = config.mint_to || (config.adminless ? null : config.admin);
-  if (mintTo && config.initial_supply && config.initial_supply !== '0') {
-    const recipient = ethers.getAddress(mintTo);
-    const raw = BigInt(config.initial_supply) * (10n ** BigInt(decimals));
-    calls.push(B20_IFACE.encodeFunctionData('mint', [recipient, raw]));
+  if (config.initial_supply && config.initial_supply !== '0') {
+    const totalRaw = BigInt(config.initial_supply) * (10n ** BigInt(decimals));
+    let carvedRaw = 0n;
+
+    for (const a of (config.insider_allocations || [])) {
+      const raw = BigInt(a.amount) * (10n ** BigInt(decimals));
+      if (raw <= 0n) continue;
+      calls.push(B20_IFACE.encodeFunctionData('mint', [ethers.getAddress(a.address), raw]));
+      carvedRaw += raw;
+    }
+
+    const vestedList = config.vested_allocations || [];
+    if (vestedList.length && VESTING_VAULT) {
+      let vestedRaw = 0n;
+      for (const v of vestedList) vestedRaw += BigInt(v.amount) * (10n ** BigInt(decimals));
+      if (vestedRaw > 0n) {
+        calls.push(B20_IFACE.encodeFunctionData('mint', [ethers.getAddress(VESTING_VAULT), vestedRaw]));
+        carvedRaw += vestedRaw;
+      }
+    }
+
+    const remainderRaw = totalRaw > carvedRaw ? totalRaw - carvedRaw : 0n;
+    if (mintTo && remainderRaw > 0n) {
+      calls.push(B20_IFACE.encodeFunctionData('mint', [ethers.getAddress(mintTo), remainderRaw]));
+    }
     // Keep MINT_ROLE only when the token retains an admin (Admin powers mode);
     // an immutable token grants no roles so no one can mint again.
     if (config.admin && !config.adminless) {
@@ -348,7 +389,7 @@ function parseConfig(input) {
   if (adminless && Object.values(policies).some(Boolean)) warnings.push('Compliance policies have no effect when adminless is true');
 
   // Roles
-  const roles = {};
+  let roles = {};
   for (const key of ['minter','burner','burn_blocked','pauser','unpauser','meta_admin','operator']) {
     const addr = (input.roles ?? {})[key];
     if (addr && addr.trim()) {
@@ -358,6 +399,59 @@ function parseConfig(input) {
         roles[key] = addr.trim().toLowerCase();
     }
   }
+  if (adminless && Object.keys(roles).length) {
+    warnings.push('Role grants (including metadata-editable) have no effect when adminless is true — dropped');
+    roles = {};
+  }
+
+  // Insider / vested allocations — carved out of the supply cap, expressed as a
+  // percent of it. Insider allocations mint immediately to each address; vested
+  // allocations mint their total to the vesting vault for a beneficiary to claim
+  // on a cliff + linear schedule (see buildInitCalls / handlePrepareVesting).
+  function parseAllocationList(list, label, { withVesting } = {}) {
+    const out = [];
+    if (!Array.isArray(list)) return out;
+    if (list.length > 20) errors.push(`${label} allows at most 20 entries`);
+    for (const raw of list.slice(0, 20)) {
+      const address = String(raw?.address ?? '').trim().toLowerCase();
+      const percent = Number(raw?.percent);
+      if (!/^0x[0-9a-f]{40}$/.test(address)) { errors.push(`${label}: "${raw?.address ?? ''}" is not a valid address`); continue; }
+      if (!(percent > 0) || percent > 100) { errors.push(`${label}: percent for ${address.slice(0,8)}… must be > 0 and ≤ 100`); continue; }
+      const entry = { address, percent };
+      if (withVesting) {
+        const cliffDays    = Math.max(0, Number(raw?.cliff_days) || 0);
+        const durationDays = Math.max(1, Number(raw?.duration_days) || 30);
+        if (cliffDays > durationDays) errors.push(`${label}: cliff can't be longer than the vesting duration for ${address.slice(0,8)}…`);
+        entry.cliff_seconds    = Math.round(cliffDays * 86400);
+        entry.duration_seconds = Math.round(durationDays * 86400);
+      }
+      out.push(entry);
+    }
+    return out;
+  }
+
+  const insiderAllocationsIn = parseAllocationList(input.insider_allocations, 'Insider allocations');
+  const vestedAllocationsIn  = parseAllocationList(input.vested_allocations, 'Vested allocations', { withVesting: true });
+
+  if (vestedAllocationsIn.length && !VESTING_VAULT) {
+    errors.push('Vested allocations are not available yet — the vesting vault contract has not been deployed (see contracts/README-vesting.md)');
+  }
+
+  const insiderPct = insiderAllocationsIn.reduce((s, a) => s + a.percent, 0);
+  const vestedPct  = vestedAllocationsIn.reduce((s, a) => s + a.percent, 0);
+  if (insiderPct + vestedPct > 95) {
+    errors.push(`Insider + vested allocations total ${(insiderPct + vestedPct).toFixed(2)}% — must leave at least 5% of supply for the creator/pool`);
+  }
+
+  // Convert each allocation's percent into a human-unit token amount (scaled by
+  // decimals later, in buildInitCalls, same as the rest of the supply).
+  const supplyForAlloc = supplyCap ? BigInt(supplyCap) : 100000000000n;
+  const toAmount = (percent) => (supplyForAlloc * BigInt(Math.round(percent * 100))) / 10000n;
+  const insiderAllocations = insiderAllocationsIn.map(a => ({ address: a.address, percent: a.percent, amount: toAmount(a.percent).toString() }));
+  const vestedAllocations  = vestedAllocationsIn.map(a => ({
+    address: a.address, percent: a.percent, amount: toAmount(a.percent).toString(),
+    cliff_seconds: a.cliff_seconds, duration_seconds: a.duration_seconds,
+  }));
 
   // Mint recipient: the creator wallet receives the full supply (to seed the pool),
   // even for immutable (admin-less) launches. Falls back to admin.
@@ -376,6 +470,8 @@ function parseConfig(input) {
       adminless,
       policies,
       roles,
+      insider_allocations: insiderAllocations,
+      vested_allocations:  vestedAllocations,
       currency:       (input.currency ?? 'USD').trim().toUpperCase().slice(0, 3),
       contract_uri:   input.contract_uri ?? input.contractUri ?? null,
     },
@@ -431,6 +527,13 @@ async function handleInfo(net, res) {
       policyRegistry: {
         address: POLICY_REGISTRY,
         note:    'Create allowlist/blocklist policies, then link to token via updatePolicy(scope, policyId)',
+      },
+      vestingVault: {
+        address:    VESTING_VAULT || null,
+        configured: !!VESTING_VAULT,
+        note: VESTING_VAULT
+          ? 'OrlixVestingVault is live — Vested allocations are enabled'
+          : 'OrlixVestingVault not deployed yet — Vested allocations are disabled (see contracts/README-vesting.md)',
       },
       variants: [
         { name: 'asset',      description: 'General-purpose. Configurable decimals (6–18), rebasing, issuer metadata.' },
@@ -1291,6 +1394,103 @@ async function handlePoolStatus(body, res) {
   }
 }
 
+// Build one createSchedule() tx per beneficiary against OrlixVestingVault, for
+// a token whose vested total was already minted to the vault in the same
+// createB20 tx (see buildInitCalls). The creator signs these sequentially right
+// after the launch confirms — same two-step UX as prepare_pool / createPool().
+async function handlePrepareVesting(body, res) {
+  if (!VESTING_VAULT)
+    return res.end(JSON.stringify({ ok: false, error: 'Vesting vault not deployed yet — see contracts/README-vesting.md' }));
+
+  const token   = (body.token || '').trim();
+  const decimals = Number(body.decimals) || 18;
+  const schedules = Array.isArray(body.schedules) ? body.schedules : [];
+
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token))
+    return res.end(JSON.stringify({ ok: false, error: 'token must be a valid 0x address' }));
+  if (!schedules.length)
+    return res.end(JSON.stringify({ ok: false, error: 'schedules must be a non-empty array' }));
+  if (schedules.length > 20)
+    return res.end(JSON.stringify({ ok: false, error: 'at most 20 vesting schedules per launch' }));
+
+  try {
+    const tokenAddr = ethers.getAddress(token);
+    const start = Math.floor(Date.now() / 1000);
+    const txs = [];
+    for (const s of schedules) {
+      const beneficiary = ethers.getAddress(String(s.address || s.beneficiary || ''));
+      const amount = BigInt(String(s.amount || '0').replace(/[^0-9]/g, '') || '0') * (10n ** BigInt(decimals));
+      if (amount <= 0n) continue;
+      const cliffSeconds    = Math.max(0, Math.round(Number(s.cliff_seconds) || 0));
+      const durationSeconds = Math.max(1, Math.round(Number(s.duration_seconds) || 2592000));
+      const data = VAULT_IFACE.encodeFunctionData('createSchedule', [
+        tokenAddr, beneficiary, amount, start, cliffSeconds, durationSeconds, !!s.revocable,
+      ]);
+      txs.push({
+        label: 'vesting_schedule', title: `Vest ${beneficiary.slice(0, 6)}…${beneficiary.slice(-4)}`,
+        to: VESTING_VAULT, data, value: '0x0', gas: '0x30d40', // 200,000
+      });
+    }
+    if (!txs.length)
+      return res.end(JSON.stringify({ ok: false, error: 'No valid vesting schedules to register' }));
+
+    return res.end(JSON.stringify({
+      ok: true, vault: VESTING_VAULT, token: tokenAddr, txs,
+      note: 'Sign each tx in order — the vault must already hold the vested total for this token.',
+    }));
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: e.message }));
+  }
+}
+
+// Read-only: vesting schedules for a wallet, both as beneficiary (tokens they'll
+// receive) and as launch creator (tokens they carved out for others). Powers the
+// Profile → Vesting tab. Returns an empty list (not an error) until the vault is
+// deployed — the tab shows a "not live yet" state in that case.
+async function handleVestingStatus(body, res) {
+  if (!VESTING_VAULT)
+    return res.end(JSON.stringify({ ok: true, configured: false, beneficiary: [], creator: [] }));
+
+  const wallet = (body.wallet || '').trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(wallet))
+    return res.end(JSON.stringify({ ok: false, error: 'wallet must be a valid 0x address' }));
+
+  try {
+    const walletAddr = ethers.getAddress(wallet);
+    const [benRaw, creRaw] = await Promise.all([
+      ethCall('mainnet', VESTING_VAULT, VAULT_IFACE.encodeFunctionData('beneficiaryScheduleIds', [walletAddr])),
+      ethCall('mainnet', VESTING_VAULT, VAULT_IFACE.encodeFunctionData('creatorScheduleIds', [walletAddr])),
+    ]);
+    const benIds = benRaw && benRaw !== '0x' ? VAULT_IFACE.decodeFunctionResult('beneficiaryScheduleIds', benRaw)[0] : [];
+    const creIds = creRaw && creRaw !== '0x' ? VAULT_IFACE.decodeFunctionResult('creatorScheduleIds', creRaw)[0] : [];
+
+    const loadSchedule = async (id) => {
+      const [schedRaw, relRaw] = await Promise.all([
+        ethCall('mainnet', VESTING_VAULT, VAULT_IFACE.encodeFunctionData('schedules', [id])),
+        ethCall('mainnet', VESTING_VAULT, VAULT_IFACE.encodeFunctionData('releasable', [id])),
+      ]);
+      const s = VAULT_IFACE.decodeFunctionResult('schedules', schedRaw);
+      const releasable = relRaw && relRaw !== '0x' ? VAULT_IFACE.decodeFunctionResult('releasable', relRaw)[0] : 0n;
+      return {
+        id, token: s.token, beneficiary: s.beneficiary,
+        totalAmount: s.totalAmount.toString(), released: s.released.toString(),
+        start: Number(s.start), cliff: Number(s.cliff), duration: Number(s.duration),
+        revocable: s.revocable, revoked: s.revoked, releasable: releasable.toString(),
+        releaseTx: releasable > 0n ? { to: VESTING_VAULT, data: VAULT_IFACE.encodeFunctionData('release', [id]), value: '0x0', gas: '0x30d40' } : null,
+      };
+    };
+
+    const [beneficiary, creator] = await Promise.all([
+      Promise.all(benIds.slice(0, 50).map(loadSchedule)),
+      Promise.all(creIds.slice(0, 50).map(loadSchedule)),
+    ]);
+
+    return res.end(JSON.stringify({ ok: true, configured: true, vault: VESTING_VAULT, beneficiary, creator }));
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: e.message }));
+  }
+}
+
 // Build a BUY swap (ETH → token) through the Uniswap V4 Universal Router — the
 // same proven encoding as the launch dev buy. Used by the on-site Trade widget.
 async function handlePrepareSwap(body, res) {
@@ -1360,6 +1560,9 @@ async function handleRegisterLaunch(body, res) {
     twitter:  cleanUrl(body.twitter),
     telegram: cleanUrl(body.telegram),
     farcaster: cleanUrl(body.farcaster),
+    adminless: !!body.adminless,
+    hasInsiderAllocations: Number(body.insiderCount) > 0,
+    hasVestedAllocations:  Number(body.vestedCount) > 0,
     ts:       Date.now(),
   });
   try {
@@ -1431,6 +1634,8 @@ module.exports = async (req, res) => {
     if (action === 'receipt')                          return handleReceipt(body, res);
     if (action === 'prepare_pool')                     return handlePreparePool(body, res);
     if (action === 'pool_status')                      return handlePoolStatus(body, res);
+    if (action === 'prepare_vesting')                  return handlePrepareVesting(body, res);
+    if (action === 'vesting_status')                   return handleVestingStatus(body, res);
     if (action === 'prepare_swap')                     return handlePrepareSwap(body, res);
     if (action === 'register_launch')                  return handleRegisterLaunch(body, res);
     if (action === 'reset_feed')                       return handleResetFeed(req, body, res);

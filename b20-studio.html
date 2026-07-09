@@ -98,6 +98,12 @@ a{text-decoration:none}
 .tab-btn:hover{color:var(--t2)}
 .tab-btn.active{color:var(--orange);border-bottom-color:var(--orange)}
 
+/* ── SORT TABS (Trending / New / Market Cap / Volume 24h) ── */
+.dtab-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.dtab{padding:8px 16px;border-radius:9px;border:1px solid var(--b1);background:var(--s1);color:var(--t3);font-size:.76rem;font-weight:700;cursor:pointer;transition:.15s;font-family:var(--font)}
+.dtab:hover{color:var(--t2);border-color:var(--b2)}
+.dtab.active{background:rgba(240,120,48,.12);color:var(--orange);border-color:rgba(240,120,48,.3)}
+
 /* ── FILTER CHIPS ── */
 .filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
 .lchip{padding:6px 14px;border-radius:99px;border:1px solid var(--b1);background:none;color:var(--t3);font-size:.72rem;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--font)}
@@ -314,6 +320,26 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .p-desc{font-size:.72rem;color:var(--t3);line-height:1.5}
 .p-warn{font-size:.7rem;color:var(--red);margin-top:5px;display:none;line-height:1.4}
 .p-warn.show{display:block}
+
+/* ── LAUNCH OPTIONS: metadata toggle + insider/vested allocation builders ── */
+.tgrow{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:14px 16px;margin-top:14px}
+.tgrow.disabled{opacity:.45;pointer-events:none}
+.alloc-sec{margin-top:22px}
+.alloc-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.alloc-title{font-size:.8rem;font-weight:700;color:var(--t1)}
+.alloc-sub{font-size:.66rem;color:var(--t3);margin-top:2px;line-height:1.5}
+.alloc-add{font-size:.68rem;font-weight:700;color:var(--orange);background:rgba(240,120,48,.08);border:1px solid rgba(240,120,48,.25);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:var(--font);transition:.15s;white-space:nowrap}
+.alloc-add:hover{background:rgba(240,120,48,.15)}
+.alloc-add:disabled{opacity:.4;cursor:not-allowed}
+.alloc-row{display:grid;grid-template-columns:1fr 84px auto;gap:8px;margin-bottom:8px;align-items:center}
+.alloc-row.vested{grid-template-columns:1fr 70px 64px 64px auto}
+.alloc-row .inp{padding:9px 10px;font-size:.72rem}
+.alloc-rm{width:32px;height:32px;border-radius:7px;border:1px solid var(--b1);background:var(--s2);color:var(--t3);cursor:pointer;flex-shrink:0;font-size:.85rem;font-family:var(--font)}
+.alloc-rm:hover{color:var(--red);border-color:rgba(239,68,68,.3)}
+.alloc-total{font-size:.68rem;color:var(--t3);margin-top:4px}
+.alloc-total.warn{color:var(--red);font-weight:700}
+.alloc-disabled-note{font-size:.68rem;color:var(--t3);background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px 12px;line-height:1.55;margin-bottom:10px}
+@media(max-width:640px){.alloc-row,.alloc-row.vested{grid-template-columns:1fr;gap:6px}.alloc-rm{width:100%}}
 
 /* ── CAP INLINE ── */
 .cap-label-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
@@ -576,6 +602,18 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .lbadge-new{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
 .disc-count{font-size:.7rem;color:var(--t3);font-weight:600;white-space:nowrap;margin-left:2px}
 
+/* Card: powers + allocation pills, market stat row (replaces Trade/Dashboard buttons) */
+.lcard-pills{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+.lpill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:5px;font-size:.6rem;font-weight:700;letter-spacing:.03em}
+.lpill-immutable{background:rgba(74,222,128,.1);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+.lpill-admin{background:rgba(234,179,8,.1);color:var(--yellow);border:1px solid rgba(234,179,8,.25)}
+.lpill-alloc{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+.lpill-vest{background:rgba(240,120,48,.1);color:var(--orange);border:1px solid rgba(240,120,48,.25)}
+.lcard-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;border-top:1px solid var(--b1);padding-top:11px}
+.lstat-l{font-size:.56rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:2px}
+.lstat-v{font-size:.78rem;font-weight:700;color:var(--t1);font-family:var(--mono)}
+.lstat-v.up{color:#4ade80}
+
 /* Portfolio */
 .pf-header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--b1);border-radius:14px;padding:20px 22px;margin-bottom:22px}
 .pf-id{display:flex;align-items:center;gap:14px}
@@ -633,7 +671,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
     <div class="nav-tabs">
       <button class="nav-tab active" id="ntDiscover" onclick="switchView('discover')">Discover</button>
       <button class="nav-tab" id="ntLaunch" onclick="openCreate('guided')">Launch</button>
-      <button class="nav-tab" id="ntPortfolio" onclick="switchView('mytokens')">Portfolio</button>
+      <button class="nav-tab" id="ntPortfolio" onclick="switchView('mytokens')">Profile</button>
     </div>
   </div>
   <div class="nav-right">
@@ -666,27 +704,19 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <p class="hero-sub">Native precompile tokens on Base — deploy, seed a Uniswap pool, and go tradeable in one confirmation. Explore what the community has launched.</p>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-row" id="statsRow">
-      <div class="stat-box"><div class="stat-val" id="statTokens">—</div><div class="stat-label">Tokens</div></div>
-      <div class="stat-box"><div class="stat-val" id="statDeployers">—</div><div class="stat-label">Deployers</div></div>
-      <div class="stat-box"><div class="stat-val" id="statVariant">—</div><div class="stat-label">Asset / Stable</div></div>
-      <div class="stat-box"><div class="stat-val" id="statVolume">—</div><div class="stat-label">24h Volume</div></div>
-    </div>
-
-
-    <!-- Discover: search + filter + token grid -->
+    <!-- Discover: sort tabs + search + filter + token grid -->
     <div id="panelDiscover">
+      <div class="dtab-bar" id="discTabs">
+        <button class="dtab active" data-sort="trending" onclick="setDiscSort('trending',this)">Trending</button>
+        <button class="dtab" data-sort="new" onclick="setDiscSort('new',this)">New</button>
+        <button class="dtab" data-sort="mcap" onclick="setDiscSort('mcap',this)">Market Cap</button>
+        <button class="dtab" data-sort="vol" onclick="setDiscSort('vol',this)">Volume 24h</button>
+      </div>
       <div class="disc-tools">
         <div class="disc-search">
           <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="6"/><path d="M17 17l-3.5-3.5"/></svg>
           <input id="discSearch" type="text" placeholder="Search by name, symbol or address…" oninput="onDiscSearch()" autocomplete="off">
         </div>
-        <select class="disc-sort" id="discSort" onchange="renderLaunchedGrid()">
-          <option value="new">Newest first</option>
-          <option value="old">Oldest first</option>
-          <option value="name">Name A–Z</option>
-        </select>
         <button onclick="loadLaunched()" style="background:var(--s1);border:1px solid var(--b1);border-radius:10px;color:var(--t3);padding:8px 14px;font-size:.76rem;cursor:pointer;font-family:var(--font);transition:.15s" onmouseover="this.style.color='var(--t1)';this.style.borderColor='var(--b2)'" onmouseout="this.style.color='var(--t3)';this.style.borderColor='var(--b1)'">↻ Refresh</button>
       </div>
       <div class="filter-bar">
@@ -702,7 +732,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
       </div>
     </div>
 
-    <!-- Portfolio panel -->
+    <!-- Profile panel -->
     <div id="panelMyTokens" style="display:none">
       <div class="pf-header" id="pfHeader">
         <div class="pf-id">
@@ -718,10 +748,33 @@ select.inp option{background:var(--s2);color:var(--t1)}
           <div class="pf-stat"><div class="pf-stat-l">Network</div><div class="pf-stat-v" style="color:#4ade80">Base</div></div>
         </div>
       </div>
-      <div class="pf-section-title">Created Tokens</div>
-      <div id="myTokensGrid" class="launched-grid"></div>
-      <div class="pf-section-title" style="margin-top:28px">Token Holdings</div>
-      <div id="pfHoldingsGrid" class="launched-grid"></div>
+
+      <div class="tab-bar" id="pfTabBar" style="margin-bottom:20px">
+        <button class="tab-btn active" data-pf="launches" onclick="setPfTab('launches',this)">Launches</button>
+        <button class="tab-btn" data-pf="holdings" onclick="setPfTab('holdings',this)">Holdings</button>
+        <button class="tab-btn" data-pf="fees" onclick="setPfTab('fees',this)">Fees</button>
+        <button class="tab-btn" data-pf="vesting" onclick="setPfTab('vesting',this)">Vesting</button>
+        <button class="tab-btn" data-pf="referrals" onclick="setPfTab('referrals',this)">Referrals</button>
+      </div>
+
+      <div id="pfPanelLaunches">
+        <div id="myTokensGrid" class="launched-grid"></div>
+      </div>
+      <div id="pfPanelHoldings" style="display:none">
+        <div id="pfHoldingsGrid" class="launched-grid"></div>
+      </div>
+      <div id="pfPanelFees" style="display:none">
+        <div id="pfFeesList"></div>
+      </div>
+      <div id="pfPanelVesting" style="display:none">
+        <div id="pfVestingList"></div>
+      </div>
+      <div id="pfPanelReferrals" style="display:none">
+        <div class="empty" id="pfReferralBox">
+          <div class="empty-t">Connect your wallet</div>
+          <div style="font-size:.78rem;line-height:1.6">Your referral link will appear here once connected.</div>
+        </div>
+      </div>
     </div>
 
     <!-- hidden panels for JS compat -->
@@ -893,6 +946,41 @@ select.inp option{background:var(--s2);color:var(--t1)}
               <div style="font-size:.68rem;color:var(--t2);line-height:1.5">You keep admin — grant roles, mint more, pause, set policies later.</div>
             </div>
           </div>
+
+          <div class="sec-label" style="margin-top:22px">Launch Options</div>
+
+          <div class="tgrow" id="metaEditableRow">
+            <div>
+              <div class="p-name">Metadata editable after launch</div>
+              <div class="p-desc">Keeps the METADATA_ROLE with you so name/logo/links can be updated later. Requires Admin powers — disabled for Immutable tokens.</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="fMetaEditable" onchange="onFormChange()"><span class="tg-track"></span><span class="tg-thumb"></span></label>
+          </div>
+
+          <div class="alloc-sec">
+            <div class="alloc-head">
+              <div>
+                <div class="alloc-title">Insider allocations</div>
+                <div class="alloc-sub">Immediate, liquid at genesis — minted straight to each address.</div>
+              </div>
+              <button type="button" class="alloc-add" onclick="addInsiderRow()">+ Add allocation</button>
+            </div>
+            <div id="insiderRows"></div>
+            <div class="alloc-total" id="insiderTotal"></div>
+          </div>
+
+          <div class="alloc-sec">
+            <div class="alloc-head">
+              <div>
+                <div class="alloc-title">Vested allocations</div>
+                <div class="alloc-sub" id="vestedSub">Vault-held until claimed by each beneficiary on a cliff + linear schedule.</div>
+              </div>
+              <button type="button" class="alloc-add" id="vestedAddBtn" onclick="addVestedRow()">+ Add vesting entry</button>
+            </div>
+            <div id="vestedNotConfigured" class="alloc-disabled-note" style="display:none">The vesting vault contract hasn't been deployed on Base yet, so vested allocations are disabled for now (the code is ready — see contracts/README-vesting.md). Use Insider allocations for now, or check back once it's live.</div>
+            <div id="vestedRows"></div>
+            <div class="alloc-total" id="vestedTotal"></div>
+          </div>
         </div>
         <div class="wiz-nav"><button class="wiz-back" onclick="wizGo(2)">Back</button><button class="wiz-next" onclick="wizGo(4)">Continue</button></div>
       </div>
@@ -949,6 +1037,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
             <div class="wiz-review-row"><span class="wiz-review-label">Initial Price</span><span class="wiz-review-val" id="rvPrice">—</span></div>
             <div class="wiz-review-row"><span class="wiz-review-label">LP Fee</span><span class="wiz-review-val" id="rvFee">—</span></div>
             <div class="wiz-review-row"><span class="wiz-review-label">Dev Buy</span><span class="wiz-review-val" id="rvDevBuy">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Metadata Editable</span><span class="wiz-review-val" id="rvMetaEditable">—</span></div>
+            <div class="wiz-review-row"><span class="wiz-review-label">Allocations</span><span class="wiz-review-val" id="rvAllocations">—</span></div>
           </div>
 
           <button class="deploy-btn" onclick="onDeploy()">
@@ -986,6 +1076,11 @@ select.inp option{background:var(--s2);color:var(--t1)}
               <div id="poolStatus" style="font-size:.72rem;color:var(--t2);line-height:1.5"></div>
               <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%;margin-top:10px;display:none">Retry pool creation</button>
             </div>
+            <div id="dcVestingPanel" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
+              <div style="font-size:.8rem;font-weight:700;color:var(--t1);margin-bottom:8px">Vested Allocations — OrlixVestingVault</div>
+              <div id="vestingStatus" style="font-size:.72rem;color:var(--t2);line-height:1.5"></div>
+              <button class="dc-action-btn dc-action-primary" id="vestingBtn" onclick="createVesting()" style="width:100%;margin-top:10px;display:none">Retry vesting setup</button>
+            </div>
             <div class="dc-actions" id="dcActions" style="display:none">
               <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan &#x2197;</a>
               <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
@@ -1019,7 +1114,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   </button>
   <button class="bn-item" id="bnMyTokens" onclick="switchView('mytokens');this.focus()">
     <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><ellipse cx="10" cy="6.5" rx="5.5" ry="2"/><path d="M4.5 6.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/><path d="M4.5 9.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/></svg></span>
-    <span class="bn-lbl">Portfolio</span>
+    <span class="bn-lbl">Profile</span>
   </button>
 </nav>
 
@@ -1249,6 +1344,8 @@ function openCreate(mode) {
   document.getElementById('viewDiscover').style.display = 'none';
   document.getElementById('viewCreate').style.display = 'block';
   document.getElementById('tabCreate').style.display = '';
+  _insiderAllocations = []; _vestedAllocations = [];
+  renderInsiderRows(); renderVestedRows(); renderVestedGate();
   const ai = document.getElementById('aiSection');
   if (ai) ai.style.display = _wizMode === 'guided' ? '' : 'none';
   const wizBar = document.getElementById('wizBar');
@@ -1304,6 +1401,13 @@ function updateReview() {
   document.getElementById('rvFee').textContent = feeMap[g('fPoolFee')] || g('fPoolFee');
   const devBuy = g('fPoolDevBuy');
   document.getElementById('rvDevBuy').textContent = (!devBuy || devBuy === '0') ? 'None' : devBuy + ' ETH';
+  document.getElementById('rvMetaEditable').textContent = document.getElementById('fMetaEditable')?.checked ? 'Yes' : 'No';
+  const insiderPct = _insiderAllocations.reduce((s, a) => s + (parseFloat(a.percent) || 0), 0);
+  const vestedPct  = _vestedAllocations.reduce((s, a) => s + (parseFloat(a.percent) || 0), 0);
+  const bits = [];
+  if (_insiderAllocations.length) bits.push(`${_insiderAllocations.length} insider (${insiderPct.toFixed(1)}%)`);
+  if (_vestedAllocations.length)  bits.push(`${_vestedAllocations.length} vested (${vestedPct.toFixed(1)}%)`);
+  document.getElementById('rvAllocations').textContent = bits.length ? bits.join(', ') : 'None';
 }
 
 function closeCreate() {
@@ -1394,6 +1498,80 @@ function setPowers(mode) {
   const imm = document.getElementById('powImmutable'), adm = document.getElementById('powAdmin');
   if (imm) { imm.style.borderColor = immutable ? 'var(--orange)' : 'var(--b1)'; imm.style.background = immutable ? 'rgba(240,120,48,.06)' : 'var(--s2)'; }
   if (adm) { adm.style.borderColor = !immutable ? 'var(--orange)' : 'var(--b1)'; adm.style.background = !immutable ? 'rgba(240,120,48,.06)' : 'var(--s2)'; }
+  // Metadata editable requires an admin to hold METADATA_ROLE — meaningless (and
+  // server-rejected) on an Immutable launch, so lock it off there.
+  const metaRow = document.getElementById('metaEditableRow');
+  const metaChk = document.getElementById('fMetaEditable');
+  if (metaRow) metaRow.classList.toggle('disabled', immutable);
+  if (metaChk && immutable) metaChk.checked = false;
+}
+
+// ── Insider / Vested allocation builders ────────────────────────────────────
+let _insiderAllocations = [];
+let _vestedAllocations  = [];
+let _vaultConfigured = false;
+
+function renderVestedGate() {
+  const note = document.getElementById('vestedNotConfigured');
+  const btn  = document.getElementById('vestedAddBtn');
+  if (note) note.style.display = _vaultConfigured ? 'none' : '';
+  if (btn) btn.disabled = !_vaultConfigured;
+}
+
+function addInsiderRow() {
+  if (_insiderAllocations.length >= 20) return;
+  _insiderAllocations.push({ address: '', percent: '' });
+  renderInsiderRows();
+}
+function rmInsiderRow(i) { _insiderAllocations.splice(i, 1); renderInsiderRows(); }
+function updInsiderRow(i, field, val) { _insiderAllocations[i][field] = val; renderInsiderTotal(); }
+
+function renderInsiderRows() {
+  const el = document.getElementById('insiderRows');
+  if (!el) return;
+  el.innerHTML = _insiderAllocations.map((a, i) => `
+    <div class="alloc-row">
+      <input class="inp" placeholder="0x… beneficiary address" value="${_esc(a.address)}" oninput="updInsiderRow(${i},'address',this.value)">
+      <input class="inp" placeholder="%" inputmode="decimal" value="${_esc(a.percent)}" oninput="updInsiderRow(${i},'percent',this.value)">
+      <button type="button" class="alloc-rm" onclick="rmInsiderRow(${i})" aria-label="Remove">✕</button>
+    </div>`).join('') || `<div class="alloc-empty">No insider allocations — 100% of supply flows to the pool/creator.</div>`;
+  renderInsiderTotal();
+}
+function renderInsiderTotal() {
+  const el = document.getElementById('insiderTotal');
+  if (!el) return;
+  const total = _insiderAllocations.reduce((s, a) => s + (parseFloat(a.percent) || 0), 0) + _vestedAllocations.reduce((s, a) => s + (parseFloat(a.percent) || 0), 0);
+  el.textContent = _insiderAllocations.length ? `Insider total: ${total.toFixed(2)}% of supply (combined with vested, must stay ≤ 95%)` : '';
+  el.classList.toggle('warn', total > 95);
+}
+
+function addVestedRow() {
+  if (!_vaultConfigured || _vestedAllocations.length >= 20) return;
+  _vestedAllocations.push({ address: '', percent: '', cliff_days: '0', duration_days: '365' });
+  renderVestedRows();
+}
+function rmVestedRow(i) { _vestedAllocations.splice(i, 1); renderVestedRows(); }
+function updVestedRow(i, field, val) { _vestedAllocations[i][field] = val; renderVestedTotal(); }
+
+function renderVestedRows() {
+  const el = document.getElementById('vestedRows');
+  if (!el) return;
+  el.innerHTML = _vestedAllocations.map((a, i) => `
+    <div class="alloc-row vested">
+      <input class="inp" placeholder="0x… beneficiary address" value="${_esc(a.address)}" oninput="updVestedRow(${i},'address',this.value)">
+      <input class="inp" placeholder="%" inputmode="decimal" value="${_esc(a.percent)}" oninput="updVestedRow(${i},'percent',this.value)">
+      <input class="inp" placeholder="cliff d" inputmode="numeric" value="${_esc(a.cliff_days)}" oninput="updVestedRow(${i},'cliff_days',this.value)">
+      <input class="inp" placeholder="dur d" inputmode="numeric" value="${_esc(a.duration_days)}" oninput="updVestedRow(${i},'duration_days',this.value)">
+      <button type="button" class="alloc-rm" onclick="rmVestedRow(${i})" aria-label="Remove">✕</button>
+    </div>`).join('') || (_vaultConfigured ? `<div class="alloc-empty">No vested allocations.</div>` : '');
+  renderVestedTotal();
+}
+function renderVestedTotal() {
+  const el = document.getElementById('vestedTotal');
+  if (!el) return;
+  const total = _vestedAllocations.reduce((s, a) => s + (parseFloat(a.percent) || 0), 0);
+  el.textContent = _vestedAllocations.length ? `Vested total: ${total.toFixed(2)}% of supply` : '';
+  renderInsiderTotal();
 }
 
 // ── deploy button state ───────────────────────────────────────────────────────
@@ -1433,7 +1611,12 @@ function updateSubtitle() {
 async function checkB20Activation() {
   try {
     const r = await fetch(`/api/b20-skill?action=info&network=${network}`);
-    if (r.ok) { const d = await r.json(); b20Activated = d.activation?.asset === true; }
+    if (r.ok) {
+      const d = await r.json();
+      b20Activated = d.activation?.asset === true;
+      _vaultConfigured = !!d.vestingVault?.configured;
+      renderVestedGate();
+    }
   } catch {}
   updateSubtitle();
   if (!b20Activated) setTimeout(checkB20Activation, 60000);
@@ -1478,7 +1661,12 @@ async function onDeploy() {
       creator:     walletAddress,
       adminless,
       policies: {},
-      roles: {},
+      roles: (!adminless && document.getElementById('fMetaEditable')?.checked) ? { meta_admin: walletAddress } : {},
+      insider_allocations: _insiderAllocations.filter(a => a.address && a.percent).map(a => ({ address: a.address.trim(), percent: parseFloat(a.percent) })),
+      vested_allocations: _vestedAllocations.filter(a => a.address && a.percent).map(a => ({
+        address: a.address.trim(), percent: parseFloat(a.percent),
+        cliff_days: parseFloat(a.cliff_days) || 0, duration_days: parseFloat(a.duration_days) || 30,
+      })),
       network,
     };
     const uri     = document.getElementById('fUri').value.trim();
@@ -1501,6 +1689,11 @@ async function onDeploy() {
       deploying = false;
       return;
     }
+    // Capture the server-computed vested-allocation amounts (percent→raw math
+    // happens once, server-side, in parseConfig) so the follow-up prepare_vesting
+    // call registers the exact same amounts that were minted to the vault.
+    _pendingVestedAllocations = data.config?.vested_allocations || [];
+    _pendingVestedDecimals = data.config?.decimals ?? _deployDecimals;
     const DEFINITIVE_ERRORS = [
       'UnsupportedVersion','MissingRequiredField','InvalidCurrency',
       'InvalidDecimals','InvalidVariant','NonPayable',
@@ -1599,6 +1792,7 @@ async function onDeploy() {
             saveMyToken({ address: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, variant: variant || 'asset', decimals: _deployDecimals, image: _logoStore || null, txHash: dhash || null, deployedAt: Date.now(), network, ..._launchMeta() });
             fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register_launch', token: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, deployer: walletAddress, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null, image: _logoStore || undefined, ..._launchMeta() }) }).catch(() => {});
             setDeployBtn('success', 'Launched!', 'Token live & tradeable on Base');
+            if (_pendingVestedAllocations.length) createVesting();
             deploying = false;
             return;
           }
@@ -1656,11 +1850,17 @@ function _launchMeta() {
   const tw   = g('fTwitter');   if (tw)   m.twitter     = tw.slice(0, 200);
   const tg   = g('fTelegram');  if (tg)   m.telegram    = tg.slice(0, 200);
   const fc   = g('fFarcaster'); if (fc)   m.farcaster   = fc.slice(0, 200);
+  m.adminless = !!document.getElementById('fAdminless')?.checked;
+  m.insiderCount = (_insiderAllocations || []).length;
+  m.vestedCount  = (_vestedAllocations  || []).length;
+  m.hasInsiderAllocations = m.insiderCount > 0;
+  m.hasVestedAllocations  = m.vestedCount > 0;
   return m;
 }
 
 // ── Deployed CA card ─────────────────────────────────────────────────────────
 let _deployedTokenName = '', _deployedTokenSym = '', _deployDecimals = 18;
+let _pendingVestedAllocations = [], _pendingVestedDecimals = 18;
 
 function showDeployedCard(hash, net, predictedCA) {
   const explorer = NET[net]?.explorer ?? 'https://basescan.org';
@@ -1728,6 +1928,7 @@ async function pollReceipt(hash, net, predictedCA) {
           document.getElementById('dcTitle').textContent = 'Token deployed — creating liquidity pool...';
           createPool();
         }
+        if (ca && _pendingVestedAllocations.length) createVesting();
         return;
       } else if (d.status === 'failed') {
         document.getElementById('dcCheck').textContent = '✗';
@@ -1759,7 +1960,10 @@ function deployAnother() {
   document.getElementById('deployedCard').style.display = 'none';
   const pp = document.getElementById('dcPoolPanel');
   if (pp) pp.style.display = 'none';
+  const vp = document.getElementById('dcVestingPanel');
+  if (vp) vp.style.display = 'none';
   deployedTxHash = null;
+  _pendingVestedAllocations = [];
   setDeployBtn('default');
 }
 
@@ -1906,6 +2110,69 @@ async function createPool() {
   }
 }
 
+function setVestingStatus(msg, kind) {
+  const el = document.getElementById('vestingStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = kind === 'err' ? '#ef4444' : kind === 'ok' ? '#22c55e' : 'var(--t2)';
+}
+
+// Registers each beneficiary's cliff+linear schedule against OrlixVestingVault,
+// for tokens already minted there in the same atomic createB20 tx (buildInitCalls
+// on the server). Mirrors createPool()'s sequential-sign pattern.
+async function createVesting() {
+  if (!_pendingVestedAllocations.length) return;
+  const token = (document.getElementById('dcCA')?.textContent || '').trim();
+  if (!token || token === '—') { setVestingStatus('No token address yet.', 'err'); return; }
+  if (!walletAddress || !window.ethereum) { setVestingStatus('Connect your wallet first.', 'err'); return; }
+
+  const panel = document.getElementById('dcVestingPanel');
+  if (panel) panel.style.display = 'block';
+  const btn = document.getElementById('vestingBtn');
+  if (btn) { btn.disabled = true; btn.style.display = 'none'; }
+  let lastHash = null, lastStep = '';
+  try {
+    setVestingStatus('Preparing vesting schedules...');
+    const r = await fetch('/api/b20-skill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'prepare_vesting', token, decimals: _pendingVestedDecimals,
+        schedules: _pendingVestedAllocations,
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) { setVestingStatus('Error: ' + (d.error || 'prepare failed'), 'err'); if (btn) { btn.style.display=''; btn.disabled=false; } return; }
+
+    const txs = d.txs || [];
+    for (let i = 0; i < txs.length; i++) {
+      const t = txs[i];
+      lastStep = t.title;
+      setVestingStatus(`Step ${i + 1}/${txs.length}: ${t.title} — confirm in your wallet...`);
+      const hash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{ from: walletAddress, to: t.to, data: t.data, value: t.value || '0x0', gas: t.gas }],
+      });
+      lastHash = hash;
+      setVestingStatus(`Step ${i + 1}/${txs.length}: ${t.title} — submitted, waiting...`);
+      await waitTx(hash);
+    }
+    setVestingStatus('✅ Vesting schedules registered — beneficiaries can claim as tokens unlock.', 'ok');
+    if (btn) btn.style.display = 'none';
+  } catch (e) {
+    const msg = (e.code === 4001 || e.code === 4100) ? 'Rejected in wallet' : (e.message || 'failed').slice(0, 140);
+    const el = document.getElementById('vestingStatus');
+    const explorer = NET[network]?.explorer || 'https://basescan.org';
+    if (el && lastHash) {
+      el.innerHTML = `<span style="color:#ef4444">Failed on "${lastStep}": ${msg}.</span> ` +
+        `<a href="${explorer}/tx/${lastHash}" target="_blank" style="color:var(--accent);text-decoration:underline">View failed tx ↗</a>`;
+    } else {
+      setVestingStatus('Error: ' + msg + ' — you can retry below.', 'err');
+    }
+    if (btn) { btn.style.display = ''; btn.disabled = false; btn.textContent = 'Retry vesting setup'; }
+  }
+}
+
 function mintFromCard(tokenAddr) {
   if (!tokenAddr || tokenAddr === '—') return;
   switchView('mint');
@@ -1953,38 +2220,8 @@ function renderMyTokens() {
     </div>`;
     return;
   }
-  const net = network || 'mainnet';
-  const explorer = NET[net]?.explorer ?? 'https://basescan.org';
-  grid.innerHTML = tokens.map(t => {
-    const col = tokenColor(t.symbol);
-    const initials = (t.symbol||'?').slice(0,3);
-    const ago = _timeAgo(t.deployedAt);
-    const ca = t.address ? _esc(t.address) : '';
-    const shortCA = t.address ? t.address.slice(0,6)+'…'+t.address.slice(-4) : '';
-    return `<div class="lcard">
-      <div class="lcard-top">
-        ${t.image ? `<div class="lcard-ico" style="padding:0;overflow:hidden"><img src="${_esc(t.image)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>` : `<div class="lcard-ico" style="background:${col}">${initials}</div>`}
-        <div class="lcard-info">
-          <div class="lcard-name">${_esc(t.name||'Token')}</div>
-          <div class="lcard-sym">${_esc(t.symbol||'???')}</div>
-        </div>
-        <span class="lcard-badge ${t.variant==='stablecoin'?'lbadge-stable':'lbadge-asset'}">${_esc(t.variant||'asset')}</span>
-      </div>
-      ${ca ? `<div class="lcard-ca">
-        <span class="lcard-ca-val" title="${ca}">${shortCA}</span>
-        <button class="lcard-ca-copy" onclick="navigator.clipboard.writeText('${ca}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1400)">Copy</button>
-        <a class="lcard-ca-link" href="${explorer}/address/${ca}" target="_blank" rel="noopener">↗</a>
-      </div>` : ''}
-      <div class="lcard-meta">
-        <div class="lcard-meta-row"><span style="opacity:.5">⏱</span>${ago}</div>
-        ${t.decimals !== undefined ? `<div class="lcard-meta-row"><span style="opacity:.5">·</span>${t.decimals} decimals</div>` : ''}
-      </div>
-      <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openTrade('${ca}')">Trade</button>
-        <button class="lcard-act" onclick="openDashboard('${ca}')">Dashboard</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+  grid.innerHTML = tokens.map(_lcardTemplate).join('');
+  fetchMarketBatch(tokens.slice(0, 30));
 }
 
 // ── Portfolio: tokens the connected wallet holds (server-side balances) ───────
@@ -2006,31 +2243,108 @@ async function loadHoldings() {
       grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1"><div class="le-ico">◈</div><div class="le-title">No token holdings</div><div class="le-sub">B20 tokens you buy or receive will appear here.</div></div>`;
       return;
     }
-    const explorer = NET[network]?.explorer ?? 'https://basescan.org';
     grid.innerHTML = tokens.map(t => {
-      const col = tokenColor(t.symbol);
-      const initials = (t.symbol || '?').slice(0, 3);
-      const ca = _esc(t.address);
+      const known = _findToken(t.address) || {};
       const bal = (t.balance != null) ? Number(t.balance).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '—';
-      return `<div class="lcard">
-        <div class="lcard-top">
-          <div class="lcard-ico" style="background:${col}">${initials}</div>
-          <div class="lcard-info">
-            <div class="lcard-name">${_esc(t.name || 'Token')}</div>
-            <div class="lcard-sym">${_esc(t.symbol || '???')}</div>
-          </div>
-        </div>
-        <div class="lcard-meta"><div class="lcard-meta-row"><span style="opacity:.5">◎</span>Balance: ${bal} ${_esc(t.symbol || '')}</div></div>
-        <div class="lcard-actions">
-          <button class="lcard-act lcard-act-primary" onclick="openTrade('${ca}')">Trade</button>
-          <button class="lcard-act" onclick="openDashboard('${ca}')">Dashboard</button>
-        </div>
-      </div>`;
+      return _lcardTemplate({ ...known, ...t, balanceLabel: `${bal} ${t.symbol || ''}`.trim() });
     }).join('');
+    fetchMarketBatch(tokens.slice(0, 30));
   } catch (_) {
     _dmSet('pfHeld', '0');
     grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1"><div class="le-sub">Couldn't load holdings right now.</div></div>`;
   }
+}
+
+// ── Profile sub-tabs: Launches / Holdings / Fees / Vesting / Referrals ────────
+const PF_TABS = ['launches', 'holdings', 'fees', 'vesting', 'referrals'];
+function setPfTab(name, el) {
+  PF_TABS.forEach(t => {
+    const panel = document.getElementById('pfPanel' + t[0].toUpperCase() + t.slice(1));
+    if (panel) panel.style.display = t === name ? '' : 'none';
+  });
+  document.querySelectorAll('#pfTabBar .tab-btn').forEach(b => b.classList.toggle('active', b === el));
+  if (name === 'fees') renderFeesTab();
+  if (name === 'vesting') renderVestingTab();
+  if (name === 'referrals') renderReferralsTab();
+}
+
+// Fees: creator's claimable LP fee position for each token they launched.
+// Fee claiming itself happens on Uniswap (Orlix doesn't hold or route fees) —
+// this tab just surfaces which of your launches have a fee tier to claim.
+function renderFeesTab() {
+  const el = document.getElementById('pfFeesList');
+  if (!el) return;
+  if (!walletAddress) { el.innerHTML = `<div class="empty"><div class="empty-t">Connect your wallet</div><div style="font-size:.78rem">Your launches' claimable fees will show here.</div></div>`; return; }
+  const tokens = loadMyTokens();
+  if (!tokens.length) { el.innerHTML = `<div class="empty"><div class="empty-t">No launches yet</div><div style="font-size:.78rem">Deploy a token to start earning LP fees.</div></div>`; return; }
+  el.innerHTML = tokens.map(t => `
+    <div class="policy-row">
+      <div>
+        <div class="p-name">${_esc(t.name || 'Token')} <span style="color:var(--t3);font-weight:400">${_esc(t.symbol || '')}</span></div>
+        <div class="p-desc">Swap fees accrue to your Uniswap V4 position as trades happen — claim any time, no expiry.</div>
+      </div>
+      <a class="dm-hbtn dm-hbtn-claim" href="https://app.uniswap.org/positions?chain=base" target="_blank" rel="noopener">Claim on Uniswap ↗</a>
+    </div>`).join('');
+}
+
+function _vestFmt(amountStr, decimals) {
+  try { return (Number(BigInt(amountStr)) / Math.pow(10, decimals || 18)).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+  catch { return amountStr; }
+}
+
+async function renderVestingTab() {
+  const el = document.getElementById('pfVestingList');
+  if (!el) return;
+  if (!walletAddress) { el.innerHTML = `<div class="empty"><div class="empty-t">Connect your wallet</div><div style="font-size:.78rem">Vesting schedules where you're a beneficiary or creator will show here.</div></div>`; return; }
+  el.innerHTML = `<div class="launched-spin">Loading vesting schedules…</div>`;
+  try {
+    const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'vesting_status', wallet: walletAddress }) });
+    const d = await r.json();
+    if (!d.ok) { el.innerHTML = `<div class="empty"><div class="empty-t">Couldn't load vesting</div></div>`; return; }
+    if (!d.configured) {
+      el.innerHTML = `<div class="alloc-disabled-note">The vesting vault contract hasn't been deployed on Base yet — Vested allocations aren't live. See contracts/README-vesting.md.</div>`;
+      return;
+    }
+    const rows = [...(d.beneficiary || []).map(s => ({ ...s, role: 'Receiving' })), ...(d.creator || []).map(s => ({ ...s, role: 'You created' }))];
+    if (!rows.length) { el.innerHTML = `<div class="empty"><div class="empty-t">No vesting schedules</div><div style="font-size:.78rem">Schedules you create or receive will show here.</div></div>`; return; }
+    el.innerHTML = rows.map(s => {
+      const pct = s.totalAmount > 0 ? Math.min(100, Math.round(((Number(s.released) + Number(s.releasable)) / Number(s.totalAmount)) * 100)) : 0;
+      return `<div class="policy-row">
+        <div>
+          <div class="p-name">${s.role} · ${s.token.slice(0,6)}…${s.token.slice(-4)}</div>
+          <div class="p-desc">${_vestFmt(s.totalAmount)} total · ${_vestFmt(s.releasable)} claimable now · ${pct}% vested${s.revoked ? ' · revoked' : ''}</div>
+        </div>
+        ${(s.role === 'Receiving' && s.releaseTx && Number(s.releasable) > 0) ? `<button class="dm-hbtn dm-hbtn-claim" onclick='_claimVesting(${JSON.stringify(s.releaseTx)})'>Claim</button>` : ''}
+      </div>`;
+    }).join('');
+  } catch (_) {
+    el.innerHTML = `<div class="empty"><div class="empty-t">Couldn't load vesting</div></div>`;
+  }
+}
+
+async function _claimVesting(tx) {
+  if (!walletAddress || !window.ethereum) return;
+  try {
+    await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: tx.to, data: tx.data, value: tx.value || '0x0', gas: tx.gas }] });
+    setTimeout(renderVestingTab, 3000);
+  } catch (_) {}
+}
+
+// Referrals: a shareable link back to Discover. Orlix doesn't currently route or
+// track referral revenue on-chain — this is a plain shareable link, not a paid
+// referral program.
+function renderReferralsTab() {
+  const box = document.getElementById('pfReferralBox');
+  if (!box) return;
+  if (!walletAddress) { box.innerHTML = `<div class="empty-t">Connect your wallet</div><div style="font-size:.78rem;line-height:1.6">Your referral link will appear here once connected.</div>`; return; }
+  const link = `${location.origin}/b20-studio.html?ref=${walletAddress}`;
+  box.innerHTML = `
+    <div class="empty-t" style="margin-bottom:8px">Your referral link</div>
+    <div style="font-size:.7rem;color:var(--t3);line-height:1.6;margin-bottom:14px">Share this link — anyone who opens it lands on B20 Studio's Discover page. Orlix doesn't currently track or pay referral revenue on-chain; this is a plain shareable link.</div>
+    <div class="dc-field-row" style="max-width:480px;margin:0 auto">
+      <span class="dc-field-val">${_esc(link)}</span>
+      <button class="dc-copy-btn" onclick="navigator.clipboard.writeText('${link}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1400)">Copy</button>
+    </div>`;
 }
 
 // ── AI auto-fill ──────────────────────────────────────────────────────────────
@@ -2070,15 +2384,95 @@ async function aiAutoFill() {
 
 // ── new launched ──────────────────────────────────────────────────────────────
 let _launchedAll = [], _launchedFilter = 'all', _launchedLoaded = false, _launchedSearch = '', _launchedVolume = null;
+let _launchedSort = 'trending';
+let _marketByAddr = {}; // addr(lowercase) -> {price, marketCap, volume24h, lastTrade}
 
 const TOKEN_COLORS = ['#F07830','#A78BFA','#22C55E','#3B82F6','#F59E0B','#EF4444','#06B6D4','#EC4899'];
 function tokenColor(sym) { let h=0; for(const c of (sym||'?')) h=(h*31+c.charCodeAt(0))&0xffff; return TOKEN_COLORS[h % TOKEN_COLORS.length]; }
 
 function _tokenTs(t) { return (t.deployedAt || (t.timestamp ? t.timestamp * 1000 : 0)) || 0; }
+function _mkt(addr) { return _marketByAddr[(addr || '').toLowerCase()] || null; }
 
 function onDiscSearch() {
   _launchedSearch = (document.getElementById('discSearch')?.value || '').trim().toLowerCase();
   renderLaunchedGrid();
+}
+
+function setDiscSort(sort, el) {
+  _launchedSort = sort;
+  document.querySelectorAll('#discTabs .dtab').forEach(b => b.classList.toggle('active', b === el));
+  renderLaunchedGrid();
+}
+
+// Fetch price/market cap/24h volume for the visible cards in one batched call.
+async function fetchMarketBatch(tokens) {
+  const addrs = tokens.map(t => t.address).filter(Boolean);
+  if (!addrs.length) return;
+  try {
+    const r = await fetch('/api/b20-market?tokens=' + addrs.join(','));
+    const d = await r.json();
+    if (d && d.ok && d.markets) {
+      Object.entries(d.markets).forEach(([addr, m]) => { _marketByAddr[addr.toLowerCase()] = m; });
+      renderLaunchedGrid();
+    }
+  } catch (_) {}
+}
+
+// Powers pill: Immutable (no admin) vs Admin powers. Allocation pills: whether
+// the launch carved out insider and/or vested allocations from supply.
+function _powPill(t) {
+  if (t.adminless === true) return `<span class="lpill lpill-immutable">Immutable</span>`;
+  if (t.adminless === false) return `<span class="lpill lpill-admin">Admin powers</span>`;
+  return '';
+}
+function _allocPills(t) {
+  let out = '';
+  if (t.hasInsiderAllocations) out += `<span class="lpill lpill-alloc">Allocation</span>`;
+  if (t.hasVestedAllocations)  out += `<span class="lpill lpill-vest">Vesting</span>`;
+  return out;
+}
+function _lastTradeLabel(m) {
+  if (!m || !m.lastTrade) return '—';
+  return { m5: '< 5m ago', h1: '< 1h ago', h6: '< 6h ago', h24: '< 24h ago' }[m.lastTrade] || '—';
+}
+
+function _lcardTemplate(t) {
+  const col      = tokenColor(t.symbol);
+  const initials = (t.symbol||'?').slice(0,3);
+  const net      = network || 'mainnet';
+  const explorer = NET[net]?.explorer ?? 'https://basescan.org';
+  const shortCA  = t.address ? t.address.slice(0,6)+'…'+t.address.slice(-4) : '';
+  const ca       = t.address ? _esc(t.address) : '';
+  const m        = _mkt(t.address);
+  return `<div class="lcard" ${ca ? `onclick="openDashboard('${ca}')"` : ''}>
+    <div class="lcard-top">
+      ${t.image ? `<div class="lcard-ico" style="padding:0;overflow:hidden"><img src="${_esc(t.image)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>` : `<div class="lcard-ico" style="background:${col}">${initials}</div>`}
+      <div class="lcard-info">
+        <div class="lcard-name">${_esc(t.name||'Unknown')}</div>
+        <div class="lcard-sym">${_esc(t.symbol||'???')}</div>
+      </div>
+      <div class="lcard-badges">
+        ${(_tokenTs(t) && (Date.now()-_tokenTs(t) < 3600000)) ? `<span class="lbadge-new">New</span>` : ''}
+        <span class="lcard-badge ${t.variant==='stablecoin'?'lbadge-stable':'lbadge-asset'}">${_esc(t.variant||'asset')}</span>
+      </div>
+    </div>
+    ${ca ? `<div class="lcard-ca">
+      <span class="lcard-ca-val" title="${ca}">${shortCA}</span>
+      <button class="lcard-ca-copy" onclick="event.stopPropagation();navigator.clipboard.writeText('${ca}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1400)" title="Copy CA">Copy</button>
+      <a class="lcard-ca-link" href="${explorer}/address/${ca}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>
+    </div>` : ''}
+    ${t.balanceLabel ? `<div style="font-size:.7rem;color:var(--t2);margin-bottom:8px">Balance: <b style="color:var(--t1)">${_esc(t.balanceLabel)}</b></div>` : ''}
+    <div class="lcard-pills">
+      ${_powPill(t)}
+      ${_allocPills(t)}
+    </div>
+    <div class="lcard-stats">
+      <div><div class="lstat-l">Market Cap</div><div class="lstat-v">${m && m.marketCap != null ? _fmtUsd(m.marketCap) : '—'}</div></div>
+      <div><div class="lstat-l">Volume 24h</div><div class="lstat-v">${m && m.volume24h != null ? _fmtUsd(m.volume24h) : '—'}</div></div>
+      <div><div class="lstat-l">Price</div><div class="lstat-v">${m && m.price != null ? '$' + Number(m.price).toLocaleString(undefined,{maximumSignificantDigits:4}) : '—'}</div></div>
+      <div><div class="lstat-l">Last Trade</div><div class="lstat-v">${_lastTradeLabel(m)}</div></div>
+    </div>
+  </div>`;
 }
 
 function renderLaunchedGrid() {
@@ -2090,10 +2484,11 @@ function renderLaunchedGrid() {
       (t.symbol || '').toLowerCase().includes(_launchedSearch) ||
       (t.address || '').toLowerCase().includes(_launchedSearch));
   }
-  const sort = document.getElementById('discSort')?.value || 'new';
-  if (sort === 'new') items.sort((a, b) => _tokenTs(b) - _tokenTs(a));
-  else if (sort === 'old') items.sort((a, b) => _tokenTs(a) - _tokenTs(b));
-  else if (sort === 'name') items.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const vol = t => _mkt(t.address)?.volume24h ?? -1;
+  const mcap = t => _mkt(t.address)?.marketCap ?? -1;
+  if (_launchedSort === 'new') items.sort((a, b) => _tokenTs(b) - _tokenTs(a));
+  else if (_launchedSort === 'mcap') items.sort((a, b) => mcap(b) - mcap(a));
+  else if (_launchedSort === 'vol' || _launchedSort === 'trending') items.sort((a, b) => vol(b) - vol(a) || _tokenTs(b) - _tokenTs(a));
   const countEl = document.getElementById('discCount');
   if (countEl) countEl.textContent = _launchedAll.length ? `${items.length} of ${_launchedAll.length} token${_launchedAll.length === 1 ? '' : 's'}` : '';
   if (!items.length) {
@@ -2105,56 +2500,7 @@ function renderLaunchedGrid() {
     </div>`;
     return;
   }
-  // Update stats
-  updateStats(items);
-  grid.innerHTML = items.map(t => {
-    const ago      = _timeAgo((t.deployedAt || t.timestamp) ? (t.deployedAt || t.timestamp * 1000) : null);
-    const col      = tokenColor(t.symbol);
-    const initials = (t.symbol||'?').slice(0,3);
-    const net      = network || 'mainnet';
-    const explorer = NET[net]?.explorer ?? 'https://basescan.org';
-    const shortCA  = t.address ? t.address.slice(0,6)+'…'+t.address.slice(-4) : '';
-    const ca       = t.address ? _esc(t.address) : '';
-    return `<div class="lcard">
-      <div class="lcard-top">
-        ${t.image ? `<div class="lcard-ico" style="padding:0;overflow:hidden"><img src="${_esc(t.image)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>` : `<div class="lcard-ico" style="background:${col}">${initials}</div>`}
-        <div class="lcard-info">
-          <div class="lcard-name">${_esc(t.name||'Unknown')}</div>
-          <div class="lcard-sym">${_esc(t.symbol||'???')}</div>
-        </div>
-        <div class="lcard-badges">
-          ${(_tokenTs(t) && (Date.now()-_tokenTs(t) < 3600000)) ? `<span class="lbadge-new">New</span>` : ''}
-          <span class="lcard-badge ${t.variant==='stablecoin'?'lbadge-stable':'lbadge-asset'}">${_esc(t.variant||'asset')}</span>
-        </div>
-      </div>
-      ${ca ? `<div class="lcard-ca">
-        <span class="lcard-ca-val" title="${ca}">${shortCA}</span>
-        <button class="lcard-ca-copy" onclick="navigator.clipboard.writeText('${ca}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1400)" title="Copy CA">Copy</button>
-        <a class="lcard-ca-link" href="${explorer}/address/${ca}" target="_blank" rel="noopener">↗</a>
-      </div>` : ''}
-      <div class="lcard-meta">
-        <div class="lcard-meta-row"><span style="opacity:.5">⏱</span>${ago}</div>
-        <div class="lcard-meta-row"><span style="opacity:.5">👤</span>${t.deployer?_esc(t.deployer.slice(0,6))+'…'+_esc(t.deployer.slice(-4)):'unknown'}</div>
-        ${t.supply?`<div class="lcard-meta-row"><span style="opacity:.5">◎</span>${Number(t.supply).toLocaleString()} supply</div>`:''}
-      </div>
-      <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openTrade('${ca}')">Trade</button>
-        <button class="lcard-act" onclick="openDashboard('${ca}')">Dashboard</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function updateStats(items) {
-  const all = _launchedAll;
-  document.getElementById('statTokens').textContent = all.length;
-  const deployers = new Set(all.map(t => t.deployer).filter(Boolean));
-  document.getElementById('statDeployers').textContent = deployers.size;
-  const assets = all.filter(t => t.variant !== 'stablecoin').length;
-  const stables = all.length - assets;
-  document.getElementById('statVariant').textContent = assets + ' / ' + stables;
-  const vEl = document.getElementById('statVolume');
-  if (vEl) vEl.textContent = (_launchedVolume != null) ? _fmtUsd(_launchedVolume) : '—';
+  grid.innerHTML = items.map(_lcardTemplate).join('');
 }
 
 // ── Token Dashboard (chart + live info + on-site Uniswap trade) ────────────────
@@ -2492,6 +2838,7 @@ async function loadLaunched() {
   } catch(_) {}
   _launchedAll.sort((a, b) => ((b.timestamp || 0) - (a.timestamp || 0)));
   renderLaunchedGrid();
+  fetchMarketBatch(_launchedAll.slice(0, 30));
 }
 
 function _timeAgo(ms) {

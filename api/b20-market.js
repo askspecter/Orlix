@@ -39,6 +39,39 @@ async function getMarket(ca) {
   };
 }
 
+// Batch market snapshot for the Discover card grid — one DexScreener multi-token
+// call (up to 30 addresses) instead of one request per card. Picks the deepest
+// pool per token and approximates "last trade" recency from m5/h1/h24 txn counts
+// (DexScreener doesn't expose an exact last-trade timestamp in this endpoint).
+async function getMarketBatch(addresses) {
+  const uniq = [...new Set(addresses.map(a => a.toLowerCase()).filter(Boolean))].slice(0, 30);
+  const out = {};
+  if (!uniq.length) return out;
+  const d = await getJson('https://api.dexscreener.com/latest/dex/tokens/' + uniq.join(','));
+  const pairs = (d && d.pairs) || [];
+  const byToken = {};
+  for (const p of pairs) {
+    const base = (p.baseToken?.address || '').toLowerCase();
+    if (!uniq.includes(base)) continue;
+    const liq = p.liquidity?.usd || 0;
+    if (!byToken[base] || liq > (byToken[base].liquidity?.usd || 0)) byToken[base] = p;
+  }
+  for (const addr of uniq) {
+    const p = byToken[addr];
+    if (!p) { out[addr] = { price: null, marketCap: null, volume24h: null, lastTrade: null }; continue; }
+    const txns = p.txns || {};
+    const activity = (b) => (txns[b]?.buys || 0) + (txns[b]?.sells || 0) > 0;
+    const lastTrade = activity('m5') ? 'm5' : activity('h1') ? 'h1' : activity('h6') ? 'h6' : activity('h24') ? 'h24' : null;
+    out[addr] = {
+      price:      p.priceUsd ? Number(p.priceUsd) : null,
+      marketCap:  p.marketCap || p.fdv || null,
+      volume24h:  p.volume?.h24 != null ? Number(p.volume.h24) : null,
+      lastTrade,
+    };
+  }
+  return out;
+}
+
 // Base Blockscout: top holders + total supply → percentages.
 async function getHolders(ca) {
   const [meta, hold] = await Promise.all([
@@ -107,11 +140,19 @@ module.exports = async (req, res) => {
   try {
     const token  = String(req.query?.token  || '').trim();
     const holder = String(req.query?.holder || '').trim();
+    const tokensCsv = String(req.query?.tokens || '').trim();
 
     if (holder && /^0x[0-9a-fA-F]{40}$/.test(holder)) {
       const tokens = await getHoldings(holder);
       res.writeHead(200, CORS);
       return res.end(JSON.stringify({ ok: true, tokens }));
+    }
+
+    if (tokensCsv) {
+      const addrs = tokensCsv.split(',').map(s => s.trim()).filter(a => /^0x[0-9a-fA-F]{40}$/.test(a));
+      const markets = await getMarketBatch(addrs);
+      res.writeHead(200, CORS);
+      return res.end(JSON.stringify({ ok: true, markets }));
     }
 
     if (!/^0x[0-9a-fA-F]{40}$/.test(token)) {
