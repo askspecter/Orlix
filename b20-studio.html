@@ -20,7 +20,7 @@
   --blue:#3B82F6;--green:#22C55E;--red:#EF4444;--yellow:#EAB308;
   --t1:#E0E0E0;--t2:#8a8a8a;--t3:#505050;
   --font:'JetBrains Mono',monospace;--mono:'JetBrains Mono',monospace;
-  --r:10px;
+  --r:12px;
   --accent:#F07830;--surface:#181818;--border:rgba(255,255,255,.07);
 }
 :root.light{--bg:#F4F4F5;--s1:#EAEAEC;--s2:#DDDDE0;--s3:#D0D0D4;--s4:#C4C4C8;--b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.18);--b3:rgba(0,0,0,.25);--t1:#1a1a1a;--t2:#555555;--t3:#999999;--orange-d:rgba(224,104,32,.08);--accent:#E06820;--surface:#DDDDE0;--border:rgba(0,0,0,.1)}
@@ -31,6 +31,8 @@
 :root.light .acc-body{background:var(--bg)}
 :root.light .variant-card{background:var(--bg)}
 :root.light .variant-card.sel{background:rgba(240,120,48,.05)}
+:root.light .stat-box{background:var(--s1)}
+:root.light .mode-card{background:var(--s1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--t2);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,textarea,select{font-family:var(--font)}
@@ -44,58 +46,126 @@ a{text-decoration:none}
   border-bottom:1px solid var(--b1);
 }
 .nav-left{display:flex;align-items:center;gap:8px}
-.nav-mid{display:flex;align-items:center;gap:10px;flex:1;justify-content:center}
+.nav-mid{display:flex;align-items:center;gap:8px}
 .nav-right{display:flex;align-items:center;gap:8px}
 .nav-badge{display:flex;align-items:center;gap:8px}
 .nav-badge-label{font-size:.875rem;font-weight:700;color:var(--t1);letter-spacing:-.01em}
 .live-tag{font-size:.6rem;font-weight:700;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:4px;padding:2px 7px;letter-spacing:.07em}
 @media(max-width:640px){.nav-status{display:none}}
+.nav-status{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;color:var(--t3);white-space:nowrap}
+.nav-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.nav-status-dot.green{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.5)}
+.nav-status-dot.amber{background:var(--orange);box-shadow:0 0 6px rgba(240,120,48,.4)}
+.nav-home-btn{display:flex;align-items:center;gap:5px;color:var(--t3);border:1px solid var(--b1);border-radius:7px;padding:5px 10px;font-size:.72rem;font-weight:600;text-decoration:none;transition:all .15s;white-space:nowrap;font-family:var(--font);margin-right:2px}
+.nav-home-btn:hover{color:var(--t1);border-color:var(--b2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* ── LAYOUT ── */
-.layout{
-  display:grid;
-  grid-template-columns:200px 1fr;
-  min-height:100vh;
-  padding-top:56px;
-}
+/* ── SHELL (centered column, no sidebar) ── */
+.shell{max-width:960px;margin:0 auto;padding:80px 20px 100px}
 
-/* ── SIDEBAR ── */
-.sidebar{
-  border-right:1px solid var(--b1);
-  padding:20px 0 20px;
-  position:sticky;top:56px;height:calc(100vh - 56px);
-  background:var(--s1);overflow-y:auto;
-}
-.sb-sect{
-  font-size:.625rem;font-weight:700;color:var(--t3);
-  letter-spacing:.13em;text-transform:uppercase;
-  padding:0 18px;margin:22px 0 4px;
-}
-.sb-sect:first-child{margin-top:6px}
-.sb-link{
-  display:flex;align-items:center;gap:9px;padding:8px 18px;
-  font-size:.8rem;font-weight:500;color:var(--t3);cursor:pointer;
-  transition:color .12s,background .12s;border-left:2px solid transparent;
-  user-select:none;
-}
-.sb-link:hover{color:var(--t2);background:rgba(255,255,255,.025)}
-.sb-link.active{color:var(--t1);font-weight:600;background:rgba(240,120,48,.07);border-left-color:var(--orange)}
-.sb-ico{display:flex;align-items:center;justify-content:center;width:15px;flex-shrink:0;opacity:.5}
-.sb-link.active .sb-ico,.sb-link:hover .sb-ico{opacity:.85}
+/* ── HERO HEADER ── */
+.hero{text-align:center;margin-bottom:36px}
+.hero-title{font-size:2rem;font-weight:800;color:var(--t1);letter-spacing:-.04em;line-height:1.15;margin-bottom:8px}
+.hero-sub{font-size:.82rem;color:var(--t3);max-width:440px;margin:0 auto;line-height:1.6}
 
-/* ── CONTENT ── */
-.content{padding:32px 28px 40px;min-width:0;overflow-x:hidden}
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+.stat-box{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  padding:16px 18px;text-align:center;
+}
+.stat-val{font-size:1.2rem;font-weight:800;color:var(--t1);margin-bottom:2px}
+.stat-label{font-size:.62rem;font-weight:600;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
+
+/* ── TAB BAR (Discover / Launch) ── */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--b1);margin-bottom:24px}
+.tab-btn{
+  padding:10px 24px;font-size:.82rem;font-weight:700;color:var(--t3);
+  background:none;border:none;border-bottom:2px solid transparent;
+  cursor:pointer;transition:all .15s;font-family:var(--font);
+}
+.tab-btn:hover{color:var(--t2)}
+.tab-btn.active{color:var(--orange);border-bottom-color:var(--orange)}
+
+/* ── FILTER CHIPS ── */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.lchip{padding:6px 14px;border-radius:99px;border:1px solid var(--b1);background:none;color:var(--t3);font-size:.72rem;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--font)}
+.lchip:hover{border-color:var(--b2);color:var(--t2)}
+.lchip.active{border-color:var(--orange);color:var(--orange);background:rgba(240,120,48,.08)}
+.filter-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* ── TOKEN GRID ── */
+.launched-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.lcard{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px;transition:border-color .15s,transform .2s;cursor:pointer}
+.lcard:hover{border-color:rgba(240,120,48,.25);transform:translateY(-2px)}
+.lcard-top{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.lcard-ico{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;color:#fff;flex-shrink:0}
+.lcard-info{min-width:0;flex:1}
+.lcard-name{font-size:.875rem;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lcard-sym{font-size:.7rem;color:var(--t3);font-family:var(--mono);margin-top:2px}
+.lcard-badge{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;flex-shrink:0}
+.lbadge-asset{background:rgba(240,120,48,.1);color:var(--orange);border:1px solid rgba(240,120,48,.2)}
+.lbadge-stable{background:rgba(74,222,128,.07);color:#4ade80;border:1px solid rgba(74,222,128,.18)}
+.lcard-meta{display:flex;flex-direction:column;gap:3px;font-size:.7rem;color:var(--t3);margin-bottom:13px}
+.lcard-ca{display:flex;align-items:center;gap:5px;background:rgba(240,120,48,.05);border:1px solid rgba(240,120,48,.15);border-radius:7px;padding:4px 8px;margin-bottom:10px}
+.lcard-ca-val{font-family:var(--mono);font-size:.68rem;color:var(--t2);flex:1}
+.lcard-ca-copy{font-size:.6rem;font-weight:600;padding:1px 7px;border-radius:4px;border:1px solid var(--b1);background:transparent;color:var(--t3);cursor:pointer;transition:.12s;font-family:var(--font)}
+.lcard-ca-copy:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.lcard-ca-link{font-size:.7rem;color:var(--accent);text-decoration:none;font-weight:700;padding:0 2px}
+.lcard-ca-link:hover{text-decoration:underline}
+.lcard-actions{display:flex;gap:7px}
+.lcard-act{flex:1;padding:7px 8px;border-radius:7px;border:1px solid var(--b1);background:none;color:var(--t3);font-size:.7rem;cursor:pointer;transition:.15s;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;font-family:var(--font)}
+.lcard-act:hover{border-color:var(--b2);color:var(--t1)}
+.lcard-act-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.lcard-act-primary:hover{opacity:.88;border-color:var(--accent);color:#fff}
+.launched-empty{text-align:center;padding:60px 20px}
+.le-ico{font-size:2rem;margin-bottom:14px;opacity:.2}
+.le-title{font-size:.9rem;font-weight:700;color:var(--t1);margin-bottom:7px}
+.le-sub{font-size:.78rem;color:var(--t3);line-height:1.65;max-width:300px;margin:0 auto 18px}
+.launched-spin{text-align:center;padding:48px;color:var(--t3);font-size:.78rem}
+
+/* ── LAUNCH MODE CARDS ── */
+.mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px}
+.mode-card{
+  background:var(--s2);border:1.5px solid var(--b1);border-radius:14px;
+  padding:28px 24px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+}
+.mode-card:hover{border-color:var(--b3);transform:translateY(-2px)}
+.mode-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--mc-color,var(--orange)),transparent);
+  opacity:.6;
+}
+.mode-card-ico{font-size:1.6rem;margin-bottom:12px}
+.mode-card-title{font-size:1rem;font-weight:800;color:var(--t1);margin-bottom:6px}
+.mode-card-desc{font-size:.72rem;color:var(--t3);line-height:1.6}
+.mode-card.guided{--mc-color:#3B82F6}
+.mode-card.guided:hover{border-color:rgba(59,130,246,.4);box-shadow:0 4px 24px rgba(59,130,246,.1)}
+.mode-card.quick{--mc-color:#EC4899}
+.mode-card.quick:hover{border-color:rgba(236,72,153,.4);box-shadow:0 4px 24px rgba(236,72,153,.1)}
+
+/* ── CREATE FORM ── */
+.create-wrap{display:none}
+.create-back{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:var(--t3);background:none;border:none;cursor:pointer;margin-bottom:20px;font-family:var(--font);transition:color .15s;padding:0}
+.create-back:hover{color:var(--t1)}
 .pg-label{font-size:.625rem;font-weight:700;color:var(--orange);letter-spacing:.13em;text-transform:uppercase;margin-bottom:6px}
-.pg-title{font-size:1.6rem;font-weight:800;color:var(--t1);letter-spacing:-.03em;margin-bottom:6px;line-height:1.15}
+.pg-title{font-size:1.4rem;font-weight:800;color:var(--t1);letter-spacing:-.03em;margin-bottom:6px;line-height:1.15}
 .pg-sub{font-size:.8rem;color:var(--t3);margin-bottom:24px;line-height:1.6}
 
 /* ── CARD ── */
-.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.card{
+  background:linear-gradient(180deg,var(--s2) 0%,var(--s1) 180px);
+  border:1px solid var(--b1);border-radius:var(--r);padding:28px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(240,120,48,.5),transparent);
+}
 .sec-label{font-size:.625rem;font-weight:700;color:var(--t3);letter-spacing:.13em;text-transform:uppercase;margin-bottom:14px}
 
-/* ── AI FILL ── */
 /* ── AI PILL ── */
-.ai-pill-wrap{margin-bottom:14px}
+.ai-pill-wrap{margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--b1)}
 .ai-pill-label{font-size:.62rem;font-weight:700;color:var(--orange);letter-spacing:.11em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .ai-pill{
   display:flex;align-items:center;
@@ -142,8 +212,8 @@ a{text-decoration:none}
 .vc-desc{font-size:.72rem;color:var(--t3);line-height:1.55}
 
 /* ── FIELDS ── */
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.field{margin-bottom:12px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.field{margin-bottom:14px}
 .field:last-child{margin-bottom:0}
 .field-label{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;color:var(--t2);margin-bottom:6px}
 .field-label .sub{color:var(--t3);font-weight:400}
@@ -254,27 +324,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
 }
 .det-btn:hover{color:var(--t1);border-color:var(--b2)}
 
-/* ── NAV ── */
-.nav-mid{display:flex;align-items:center;gap:8px}
-/* mainnet warning banner */
-.mainnet-bar{
-  display:flex;align-items:center;gap:8px;
-  background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.25);
-  border-radius:9px;padding:10px 16px;margin-bottom:18px;
-  font-size:.78rem;font-weight:600;color:#ca8a04;
-}
-:root.light .mainnet-bar{background:rgba(234,179,8,.08);color:#92400e}
-.mainnet-bar button{background:none;border:none;color:inherit;font-weight:700;cursor:pointer;text-decoration:underline;font-size:inherit;font-family:inherit;padding:0}
-.mainnet-bar button:hover{opacity:.8}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-/* status dot */
-.nav-status{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;color:var(--t3);white-space:nowrap}
-.nav-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.nav-status-dot.green{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.5)}
-.nav-status-dot.amber{background:var(--orange);box-shadow:0 0 6px rgba(240,120,48,.4)}
-.nav-home-btn{display:flex;align-items:center;gap:5px;color:var(--t3);border:1px solid var(--b1);border-radius:7px;padding:5px 10px;font-size:.72rem;font-weight:600;text-decoration:none;transition:all .15s;white-space:nowrap;font-family:var(--font);margin-right:2px}
-.nav-home-btn:hover{color:var(--t1);border-color:var(--b2)}
-
 /* ── DEPLOY BTN ── */
 .deploy-btn{
   width:100%;padding:16px 20px;border-radius:12px;border:none;cursor:pointer;
@@ -286,13 +335,13 @@ select.inp option{background:var(--s2);color:var(--t1)}
 }
 .deploy-btn:hover{opacity:.92;transform:translateY(-1px);box-shadow:0 6px 28px rgba(240,120,48,.4)}
 .deploy-btn:active{transform:translateY(0)}
-.deploy-sub{font-size:.68rem;font-weight:500;opacity:.7}
+.deploy-sub{font-size:.66rem;font-weight:400;opacity:.6;letter-spacing:.01em}
 .deploy-btn.dep-loading{opacity:.6;cursor:not-allowed;background:#374151;box-shadow:none;transform:none}
 .deploy-btn.dep-success{background:var(--green);box-shadow:0 2px 16px rgba(34,197,94,.25)}
 .deploy-btn.dep-error{background:var(--red);box-shadow:0 2px 16px rgba(239,68,68,.25)}
-.deployed-card{margin-top:14px;background:rgba(34,197,94,.07);border:1.5px solid rgba(34,197,94,.3);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
-.dc-header{display:flex;align-items:flex-start;gap:10px}
-.dc-check{width:28px;height:28px;flex-shrink:0;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700}
+.deployed-card{margin-top:16px;background:rgba(34,197,94,.07);border:1.5px solid rgba(34,197,94,.3);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 4px 24px rgba(34,197,94,.08)}
+.dc-header{display:flex;align-items:center;gap:12px}
+.dc-check{width:32px;height:32px;flex-shrink:0;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700}
 .dc-check.pending{background:#6b7280;animation:pulse 1.2s infinite}
 .dc-header-text{display:flex;flex-direction:column;gap:2px}
 .dc-title{font-size:.9rem;font-weight:700;color:var(--t1)}
@@ -301,86 +350,18 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .dc-field-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t2)}
 .dc-field-row{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:6px 10px}
 .dc-field-val{font-family:monospace;font-size:.72rem;color:var(--t1);flex:1;word-break:break-all}
-.dc-copy-btn{flex-shrink:0;font-size:.65rem;font-weight:600;padding:2px 9px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--t2);cursor:pointer;transition:all .15s}
+.dc-copy-btn{flex-shrink:0;font-size:.65rem;font-weight:600;padding:2px 9px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--t2);cursor:pointer;transition:all .15s;font-family:var(--font)}
 .dc-copy-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .dc-ext-link{flex-shrink:0;font-size:.65rem;font-weight:600;color:var(--accent);text-decoration:none;padding:2px 7px;border-radius:5px;border:1px solid rgba(240,120,48,.3)}
 .dc-ext-link:hover{background:rgba(240,120,48,.12)}
 .dc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
-.dc-action-btn{font-size:.75rem;font-weight:600;padding:6px 13px;border-radius:4px;border:none;cursor:pointer;transition:all .15s}
+.dc-action-btn{font-size:.75rem;font-weight:600;padding:6px 13px;border-radius:4px;border:none;cursor:pointer;transition:all .15s;font-family:var(--font)}
 .dc-action-primary{background:var(--accent);color:#fff}
 .dc-action-primary:hover{opacity:.88}
 .dc-action-outline{background:transparent;color:var(--t1);border:1px solid var(--border)}
 .dc-action-outline:hover{background:var(--surface)}
 .dc-action-ext{background:transparent;color:var(--t2);border:1px solid var(--border);text-decoration:none;display:inline-flex;align-items:center}
 .dc-action-ext:hover{background:var(--surface)}
-
-/* ── RIGHT PANEL ── */
-.right-panel{
-  border-left:1px solid var(--b1);padding:22px 18px;
-  background:var(--s1);position:sticky;top:56px;
-  height:calc(100vh - 56px);overflow-y:auto;
-}
-.rp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.rp-section-label{font-size:.625rem;font-weight:700;color:var(--t3);letter-spacing:.13em;text-transform:uppercase}
-.rp-card{background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:14px;margin-bottom:10px}
-.rp-tok-top{display:flex;align-items:center;gap:11px;margin-bottom:13px}
-.rp-tok-ico{
-  width:36px;height:36px;border-radius:9px;
-  background:rgba(240,120,48,.1);border:1px solid rgba(240,120,48,.15);
-  display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;
-}
-.rp-tok-name{font-size:.875rem;font-weight:700;color:var(--t1)}
-.rp-tok-sym{font-size:.7rem;color:var(--t3);font-family:var(--mono);margin-top:2px}
-.act-row{margin-bottom:10px}
-.act-lbl{font-size:.7rem;color:var(--t3);margin-bottom:6px}
-.act-sub{font-size:.65rem;color:var(--t3);opacity:.65}
-.act-btns{display:flex;gap:6px}
-.act-btn{
-  flex:1;padding:7px 6px;border-radius:7px;border:1px solid var(--b1);
-  background:var(--s3);color:var(--t2);font-size:.74rem;font-weight:600;
-  cursor:pointer;transition:all .15s;text-align:center;white-space:nowrap;
-}
-.act-btn:hover{border-color:var(--b2);color:var(--t1)}
-.act-btn.primary{background:rgba(240,120,48,.1);border-color:rgba(240,120,48,.25);color:var(--orange)}
-.act-btn.primary:hover{background:rgba(240,120,48,.16)}
-.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--b1)}
-.stat-row:last-child{border-bottom:none;padding-bottom:0}
-.stat-lbl{font-size:.72rem;color:var(--t3)}
-.stat-val{font-size:.75rem;font-weight:600;color:var(--t1);font-family:var(--mono)}
-
-/* ── EXPLORE / LAUNCHED ── */
-.launched-bar{display:flex;align-items:center;gap:8px;margin-bottom:22px;flex-wrap:wrap}
-.lchip{padding:5px 13px;border-radius:99px;border:1px solid var(--b1);background:none;color:var(--t3);font-size:.72rem;font-weight:600;cursor:pointer;transition:.15s}
-.lchip:hover{border-color:var(--b2);color:var(--t2)}
-.lchip.active{border-color:var(--orange);color:var(--orange);background:rgba(240,120,48,.08)}
-.launched-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.lcard{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px;transition:border-color .15s,transform .2s}
-.lcard:hover{border-color:rgba(240,120,48,.25);transform:translateY(-2px)}
-.lcard-top{display:flex;align-items:center;gap:11px;margin-bottom:12px}
-.lcard-ico{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;color:#fff;flex-shrink:0}
-.lcard-info{min-width:0}
-.lcard-name{font-size:.875rem;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lcard-sym{font-size:.7rem;color:var(--t3);font-family:var(--mono);margin-top:2px}
-.lcard-badge{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-left:auto;flex-shrink:0}
-.lbadge-asset{background:rgba(240,120,48,.1);color:var(--orange);border:1px solid rgba(240,120,48,.2)}
-.lbadge-stable{background:rgba(74,222,128,.07);color:#4ade80;border:1px solid rgba(74,222,128,.18)}
-.lcard-meta{display:flex;flex-direction:column;gap:3px;font-size:.7rem;color:var(--t3);margin-bottom:13px}
-.lcard-ca{display:flex;align-items:center;gap:5px;background:rgba(240,120,48,.05);border:1px solid rgba(240,120,48,.15);border-radius:7px;padding:4px 8px;margin-bottom:10px}
-.lcard-ca-val{font-family:var(--mono);font-size:.68rem;color:var(--t2);flex:1}
-.lcard-ca-copy{font-size:.6rem;font-weight:600;padding:1px 7px;border-radius:4px;border:1px solid var(--b1);background:transparent;color:var(--t3);cursor:pointer;transition:.12s}
-.lcard-ca-copy:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-.lcard-ca-link{font-size:.7rem;color:var(--accent);text-decoration:none;font-weight:700;padding:0 2px}
-.lcard-ca-link:hover{text-decoration:underline}
-.lcard-actions{display:flex;gap:7px}
-.lcard-act{flex:1;padding:6px 8px;border-radius:7px;border:1px solid var(--b1);background:none;color:var(--t3);font-size:.7rem;cursor:pointer;transition:.15s;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}
-.lcard-act:hover{border-color:var(--b2);color:var(--t1)}
-.lcard-act-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.lcard-act-primary:hover{opacity:.88;border-color:var(--accent);color:#fff}
-.launched-empty{text-align:center;padding:60px 20px}
-.le-ico{font-size:2rem;margin-bottom:14px;opacity:.2}
-.le-title{font-size:.9rem;font-weight:700;color:var(--t1);margin-bottom:7px}
-.le-sub{font-size:.78rem;color:var(--t3);line-height:1.65;max-width:300px;margin:0 auto 18px}
-.launched-spin{text-align:center;padding:48px;color:var(--t3);font-size:.78rem}
 
 /* ── EMPTY STATES ── */
 .empty{
@@ -391,23 +372,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
 }
 .empty-ico{font-size:2rem;margin-bottom:14px;opacity:.3}
 .empty-t{color:var(--t2);font-weight:600;margin-bottom:7px;font-size:.875rem}
-
-
-/* ── MOBILE BOTTOM NAV ── */
-.bottom-nav{
-  display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
-  background:rgba(8,8,12,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-top:1px solid var(--b1);
-  grid-template-columns:repeat(5,1fr);
-}
-.bn-item{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;padding:10px 4px 12px;cursor:pointer;
-  border:none;background:none;color:var(--t3);text-decoration:none;transition:color .15s;
-}
-.bn-item.active,.bn-item:hover{color:var(--orange)}
-.bn-ico{display:flex;align-items:center;justify-content:center;height:20px}
-.bn-lbl{font-size:.6rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
 
 /* ── WALLET BUTTON (fallback + Privy override) ── */
 #wallet-fallback,
@@ -446,28 +410,37 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .wnd-badge.live{background:rgba(74,222,128,.1);color:#4ADE80;border:1px solid rgba(74,222,128,.25)}
 .wnd-badge.soon{background:var(--s3);color:var(--t3);border:1px solid var(--b1)}
 
-/* ── RESPONSIVE ── */
-@media(max-width:1100px){
-  .layout{grid-template-columns:190px 1fr}
-  .right-panel{display:none}
+/* ── MOBILE BOTTOM NAV ── */
+.bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(8,8,12,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--b1);
+  grid-template-columns:repeat(4,1fr);
 }
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:10px 4px 12px;cursor:pointer;
+  border:none;background:none;color:var(--t3);text-decoration:none;transition:color .15s;font-family:var(--font);
+}
+.bn-item.active,.bn-item:hover{color:var(--orange)}
+.bn-ico{display:flex;align-items:center;justify-content:center;height:20px}
+.bn-lbl{font-size:.6rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+
+/* ── RESPONSIVE ── */
 @media(max-width:720px){
-  .layout{grid-template-columns:1fr;padding-top:56px}
-  .sidebar{display:none}
-  .content{padding:20px 16px 80px}
+  .shell{padding:70px 16px 100px}
+  .hero-title{font-size:1.4rem}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .mode-cards{grid-template-columns:1fr}
   .field-row,.variant-grid{grid-template-columns:1fr}
   .logo-name-row{grid-template-columns:90px 1fr;gap:12px;align-items:center}
   .logo-upload{width:90px;height:90px;min-height:90px;max-height:90px;flex:none;aspect-ratio:1}
-  .pg-title{font-size:1.25rem}
   .card{padding:16px}
   .bottom-nav{display:grid}
-  /* Nav: tighter on mobile */
   .nav{padding:0 14px;gap:6px}
   .nav-left{gap:6px}
   .nav-mid{flex:0 0 auto}
-  /* Hide home link text on mobile — icon only */
   .nav-home-btn span,.nav-home-text{display:none}
-  /* Wallet button: tighter */
   #wallet-fallback,
   #orlix-wallet .ow-btn,
   #orlix-wallet button:not(#wallet-fallback){
@@ -479,18 +452,16 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .nav-home-btn{display:none}
   .nav-badge-label{font-size:.8rem}
   .deploy-sub{font-size:.65rem}
-  /* Compact CA field text */
   .dc-field-val{font-size:.65rem}
   .dc-title{font-size:.82rem}
-  /* Compact action buttons in deployed card */
   .dc-action-btn{font-size:.68rem;padding:5px 10px}
-  /* Smaller launch cards */
   .lcard-ca-val{font-size:.62rem}
+  .stat-val{font-size:1rem}
+  .stats-row{gap:8px}
 }
 @media(max-width:380px){
   .nav-badge-label{font-size:.75rem}
 }
-/* ── responsive polish for newer sections ── */
 #dashModal{padding:14px}
 @media(max-width:560px){
   #dashModal{padding:0}
@@ -500,6 +471,13 @@ select.inp option{background:var(--s2);color:var(--t1)}
 }
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
 :root.light .crt-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);opacity:.3}
+
+/* mainnet bar (compact pill) */
+.mainnet-bar{
+  display:inline-flex;align-items:center;gap:7px;
+  background:none;border:none;padding:0;margin-bottom:16px;
+  font-size:.7rem;font-weight:600;color:var(--t3);
+}
 </style>
 </head>
 <body>
@@ -536,372 +514,364 @@ select.inp option{background:var(--s2);color:var(--t1)}
   </div>
 </nav>
 
-<div class="layout">
-
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sb-sect">Studio</div>
-  <a class="sb-link active" id="sbCreate" onclick="showTab('create',this)">
-    <span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M6.5 10h7"/></svg></span> Create
-  </a>
-  <a class="sb-link" id="sbNew" onclick="showTab('new',this)">
-    <span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,15 7,9.5 11.5,12.5 17.5,5"/><polyline points="13.5,5 17.5,5 17.5,9"/></svg></span> New Launched
-  </a>
-  <a class="sb-link" id="sbTokens" onclick="showTab('tokens',this)">
-    <span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="10" cy="6.5" rx="5.5" ry="2"/><path d="M4.5 6.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/><path d="M4.5 9.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/></svg></span> My Tokens
-  </a>
-  <a class="sb-link" id="sbManage" onclick="showTab('manage',this)">
-    <span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5h14"/><circle cx="7" cy="5" r="2"/><path d="M3 10h14"/><circle cx="13" cy="10" r="2"/><path d="M3 15h14"/><circle cx="7" cy="15" r="2"/></svg></span> Manage
-  </a>
-  <a class="sb-link" id="sbMint" onclick="showTab('mint',this)">
-    <span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M7 10h6"/></svg></span> Mint
-  </a>
-  <div class="sb-sect">Orlix</div>
-  <a class="sb-link" href="/app#playground"><span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg></span> Use in Orlix</a>
-  <a class="sb-link" href="/docs/api"><span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5L3 10l3.5 3.5"/><path d="M13.5 6.5L17 10l-3.5 3.5"/><path d="M11.5 4.5l-3 11"/></svg></span> API Docs</a>
-  <a class="sb-link" href="/docs"><span class="sb-ico"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="2.5" width="12" height="15" rx="1.5"/><path d="M7 7h6M7 10.5h6M7 14h4"/></svg></span> Docs</a>
-</aside>
-
 <!-- MAIN CONTENT -->
-<main class="content">
+<div class="shell">
 
-  <!-- CREATE TAB -->
-  <div id="tabCreate">
-    <div class="pg-label">Create</div>
-    <h1 class="pg-title">Create a B20 Token</h1>
-    <p class="pg-sub">Deploy a native Base token. Role-gated, ERC-20 compatible, precompile-backed.</p>
+  <!-- ════════════ DISCOVER VIEW (default landing) ════════════ -->
+  <div id="viewDiscover">
 
-    <!-- NETWORK STATUS BANNER -->
-    <div id="mainnetBar" class="mainnet-bar" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25);color:#4ade80">
-      <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite"></span> B20 is live on Base mainnet. Deploy your token now.</span>
+    <div class="hero">
+      <h1 class="hero-title">B20 Studio</h1>
+      <p class="hero-sub">Launch native tokens on Base. Explore what's been deployed.</p>
     </div>
 
-    <!-- AI AUTO-FILL -->
-    <div class="ai-pill-wrap">
-      <div class="ai-pill-label">
-        <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg>
-        AI Auto-Fill
-      </div>
-      <div class="ai-pill">
-        <input class="ai-pill-inp" id="aiDesc" type="text"
-          placeholder="Describe your token — e.g. gaming reward token 500M supply burn mechanic"
-          onkeydown="if(event.key==='Enter'){aiAutoFill()}">
-        <button class="ai-pill-btn" id="aiFillBtn" onclick="aiAutoFill()" aria-label="Generate">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10 17V3"/><path d="M4 9l6-6 6 6"/>
-          </svg>
-        </button>
-      </div>
-      <div class="ai-status" id="aiStatus"></div>
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-box"><div class="stat-val" id="statTokens">—</div><div class="stat-label">Tokens</div></div>
+      <div class="stat-box"><div class="stat-val" id="statDeployers">—</div><div class="stat-label">Deployers</div></div>
+      <div class="stat-box"><div class="stat-val" id="statVariant">—</div><div class="stat-label">Asset / Stable</div></div>
+      <div class="stat-box"><div class="stat-val" id="statLatest">—</div><div class="stat-label">Latest</div></div>
     </div>
 
-    <div class="card">
+    <!-- Tab bar: Discover / Launch -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tbDiscover" onclick="switchView('discover')">Discover</button>
+      <button class="tab-btn" id="tbLaunch" onclick="switchView('launch')">Launch</button>
+      <button class="tab-btn" id="tbMyTokens" onclick="switchView('mytokens')">My Tokens</button>
+      <button class="tab-btn" id="tbMint" onclick="switchView('mint')">Mint</button>
+    </div>
 
-      <!-- Variant -->
-      <div class="sec-label">Token Variant</div>
-      <div class="variant-grid">
-        <div class="variant-card sel" id="varAsset" onclick="setVariant('asset')">
-          <div class="vc-chk">✓</div>
-          <div class="vc-name">Asset</div>
-          <div class="vc-desc">6–18 decimals, 1B supply, batched issuance.</div>
-        </div>
-        <div class="variant-card" id="varStable" onclick="setVariant('stablecoin')">
-          <div class="vc-chk">✓</div>
-          <div class="vc-name">Stablecoin</div>
-          <div class="vc-desc">Fixed 6 decimals, fiat currency code, issuance controls.</div>
+    <!-- Discover: filter + token grid -->
+    <div id="panelDiscover">
+      <div class="filter-bar">
+        <button class="lchip active" id="lchipAll" onclick="filterLaunched('all',this)">All</button>
+        <button class="lchip" id="lchipAsset" onclick="filterLaunched('asset',this)">Asset</button>
+        <button class="lchip" id="lchipStable" onclick="filterLaunched('stablecoin',this)">Stablecoin</button>
+        <div class="filter-right">
+          <button onclick="loadLaunched()" style="background:none;border:1px solid var(--b1);border-radius:7px;color:var(--t3);padding:5px 12px;font-size:.72rem;cursor:pointer;font-family:var(--font);transition:.15s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">↻ Refresh</button>
         </div>
       </div>
+      <div id="launchedGrid" class="launched-grid">
+        <div class="launched-spin">Loading...</div>
+      </div>
+    </div>
 
-      <!-- Logo + Name/Symbol -->
-      <div class="logo-name-row">
-        <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
-          <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
-          <div class="logo-placeholder" id="logoPlaceholder">
-            <div class="logo-placeholder-ico">&#x1F4CE;</div>
-            <div class="logo-placeholder-txt">Upload logo<br>PNG / JPG</div>
-          </div>
-          <button class="logo-remove-btn" id="logoRemove" style="display:none" onclick="removeLogo(event)">&#x2715;</button>
-          <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
+    <!-- Launch: two mode cards -->
+    <div id="panelLaunch" style="display:none">
+      <div class="mode-cards">
+        <div class="mode-card guided" onclick="openCreate('guided')">
+          <div class="mode-card-ico">&#x1F9ED;</div>
+          <div class="mode-card-title">Guided B20 Token Setup</div>
+          <div class="mode-card-desc">Step-by-step wizard. AI fills the form for you. Best for first-time deployers.</div>
         </div>
-        <div class="logo-name-fields">
-          <div>
-            <label class="field-label">Token Name</label>
-            <input class="inp" id="fName" type="text" placeholder="e.g. GameFi Token" oninput="onFormChange()" autocomplete="off">
-          </div>
-          <div>
-            <label class="field-label">Symbol</label>
-            <input class="inp" id="fSym" type="text" placeholder="e.g. GAME" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
-          </div>
+        <div class="mode-card quick" onclick="openCreate('quick')">
+          <div class="mode-card-ico">&#x26A1;</div>
+          <div class="mode-card-title">Quick Launch</div>
+          <div class="mode-card-desc">Jump straight to the form. Name, symbol, deploy. For devs who know what they want.</div>
         </div>
       </div>
-
-      <!-- Decimals + Supply -->
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Decimals</label>
-          <select class="inp" id="fDec" onchange="onDecChange()">
-            <option value="6">6</option>
-            <option value="8">8</option>
-            <option value="10">10</option>
-            <option value="12">12</option>
-            <option value="18" selected>18</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label">Supply Cap</label>
-          <input class="inp" id="fSupplyCap" type="text" value="100000000000" oninput="onSupplyCapChange()" style="font-size:.72rem" placeholder="e.g. 100000000000">
-          <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Total supply, minted then seeded into the pool</div>
-        </div>
+      <div style="text-align:center;margin-top:8px">
+        <a href="/docs" style="font-size:.72rem;color:var(--t3);text-decoration:underline;transition:color .15s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">Read the B20 docs</a>
       </div>
-      <!-- The full supply is minted then seeded into the pool (like RWAGMI). Roles are set later in Manage. -->
-      <input type="hidden" id="fInitSupply" value="100000000000">
-      <input type="hidden" id="fCap" value="100000000000">
-      <input type="hidden" id="fUncapped">
+    </div>
 
-      <!-- Initial Admin -->
-      <div class="field">
-        <label class="field-label">Initial Admin</label>
-        <input class="inp" id="fAdmin" type="text" placeholder="0x… (auto-fills on connect)" style="font-size:.72rem" oninput="onFormChange()" autocomplete="off">
-      </div>
+    <!-- My Tokens panel -->
+    <div id="panelMyTokens" style="display:none">
+      <div id="myTokensGrid" class="launched-grid"></div>
+    </div>
 
-      <!-- Description & Social -->
-      <div class="acc" id="accSocial">
-        <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
-          <div class="acc-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg></div>
-          <div class="acc-title">
-            <div class="acc-title-main">Description & Social</div>
-            <div class="acc-title-sub">Telegram, website, X, and Farcaster</div>
-          </div>
-          <div class="acc-arrow">&#x25BC;</div>
+    <!-- Mint panel -->
+    <div id="panelMint" style="display:none">
+      <div class="card">
+        <div class="sec-label">Token</div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Contract Address</label>
+          <input id="mintTokenAddr" type="text" placeholder="0x..." style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none" oninput="lookupMintToken()">
         </div>
-        <div class="acc-body">
-          <div class="field">
-            <textarea class="inp" id="fDesc" rows="3" placeholder="What's this token about?" style="resize:vertical;min-height:60px"></textarea>
+        <div id="mintTokenInfo" style="display:none;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:10px 14px;margin-bottom:10px">
+          <div style="font-size:.85rem;font-weight:700;color:var(--t1)" id="mintTokenName">—</div>
+          <div style="font-size:.68rem;color:var(--t3);margin-top:2px" id="mintTokenDecimals">—</div>
+          <input type="hidden" id="mintDecimals" value="18">
+        </div>
+        <div id="mintRoleBanner" style="display:none;border-radius:4px;padding:12px 14px;margin-bottom:14px;font-size:.8rem">
+          <div id="mintRoleMsg" style="font-weight:600;margin-bottom:6px"></div>
+          <button id="mintGrantBtn" onclick="grantMintRole()" style="display:none;padding:7px 16px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:var(--font)">Grant MINT_ROLE to my wallet</button>
+          <div id="mintGrantTx" style="display:none;font-family:var(--mono);font-size:.68rem;color:#4ade80;margin-top:6px;word-break:break-all"></div>
+        </div>
+        <div id="mintForm" style="display:none">
+          <div class="sec-label" style="margin-top:4px">Amount</div>
+          <div style="margin-bottom:14px;margin-top:8px">
+            <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Amount to Mint</label>
+            <input id="mintAmount" type="text" placeholder="e.g. 1000000" style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-size:.85rem;outline:none">
           </div>
-          <div class="field">
-            <input class="inp" id="fTelegram" type="url" placeholder="Telegram — https://t.me/…" autocomplete="off">
+          <div style="margin-bottom:18px">
+            <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Recipient Address</label>
+            <input id="mintRecipient" type="text" placeholder="0x... (defaults to your wallet)" style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none">
           </div>
-          <div class="field">
-            <input class="inp" id="fWebsite" type="url" placeholder="Website — https://…" autocomplete="off">
-          </div>
-          <div class="field">
-            <input class="inp" id="fTwitter" type="url" placeholder="X (Twitter) — https://x.com/…" autocomplete="off">
-          </div>
-          <div class="field" style="margin-bottom:0">
-            <input class="inp" id="fFarcaster" type="url" placeholder="Farcaster — https://warpcast.com/…" autocomplete="off">
+          <button onclick="onMint()" style="width:100%;padding:13px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 2px 14px rgba(240,120,48,.28);transition:opacity .15s;font-family:var(--font)" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Mint Tokens</button>
+          <div id="mintTxRow" style="display:none;margin-top:14px;background:var(--s2);border:1px solid rgba(74,222,128,.25);border-radius:4px;padding:10px 14px">
+            <div style="font-size:.68rem;color:var(--t3);margin-bottom:3px">TX SUBMITTED</div>
+            <div id="mintTxHash" style="font-family:var(--mono);font-size:.74rem;color:#4ade80;word-break:break-all"></div>
           </div>
         </div>
       </div>
+    </div>
 
-      <input type="hidden" id="fRebase">
-      <input type="hidden" id="fUri">
+  </div>
 
-      <!-- Token powers (RWAGMI-style: Immutable vs Admin) -->
-      <div class="sec-label" style="margin-top:8px">Token powers</div>
-      <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Whether the token keeps an admin after launch. Compliance policies (allowlist, blocklist, freeze) and roles are configured later in the <strong style="color:var(--t2)">Manage</strong> tab.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
-        <div id="powImmutable" onclick="setPowers('immutable')" style="border:1px solid var(--orange);border-radius:10px;padding:14px;cursor:pointer;background:rgba(240,120,48,.06);transition:.15s">
-          <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Immutable</div>
-          <div style="font-size:.68rem;color:var(--t2);line-height:1.5">No admin after launch. Supply fixed — no one can mint or change policy.</div>
-        </div>
-        <div id="powAdmin" onclick="setPowers('admin')" style="border:1px solid var(--b1);border-radius:10px;padding:14px;cursor:pointer;background:var(--s2);transition:.15s">
-          <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Admin powers</div>
-          <div style="font-size:.68rem;color:var(--t2);line-height:1.5">You keep admin — grant roles, mint more, pause, set policies later.</div>
-        </div>
+  <!-- ════════════ CREATE VIEW (shown when user clicks a launch mode) ════════════ -->
+  <div id="viewCreate" class="create-wrap">
+    <button class="create-back" onclick="closeCreate()">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10H5"/><path d="M10 15l-5-5 5-5"/></svg>
+      Back
+    </button>
+
+    <!-- hidden tab containers kept for JS compatibility -->
+    <div id="tabCreate">
+      <div class="pg-label">Create</div>
+      <h1 class="pg-title">Create a B20 Token</h1>
+      <p class="pg-sub">Launch a token on Base in one click.</p>
+
+      <div id="mainnetBar" class="mainnet-bar" style="color:#4ade80">
+        <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite"></span> Base Mainnet &middot; Live</span>
       </div>
-      <!-- hidden state carried through the deploy flow (Immutable = admin-less by default) -->
-      <input type="checkbox" id="fAdminless" checked style="display:none">
-      <input type="checkbox" id="fAllow" style="display:none">
-      <input type="checkbox" id="fBlock" style="display:none">
-      <input type="checkbox" id="fFreeze" style="display:none">
 
-      <!-- Pool & Launch (Uniswap V4) — always created so the token is tradeable -->
-      <div class="sec-label" style="margin-top:22px">Pool &amp; Launch</div>
-      <p style="font-size:.72rem;color:var(--t3);margin-bottom:14px;line-height:1.55">Your token is paired with <strong style="color:var(--t2)">WETH on Uniswap V4</strong> and the supply is seeded as single-sided liquidity — buyers bring the ETH and your token is tradeable instantly.</p>
-      <input type="checkbox" id="fCreatePool" checked style="display:none">
-      <div id="poolEconomics">
+      <div class="card">
+
+        <!-- AI Auto-Fill -->
+        <div class="ai-pill-wrap" id="aiSection">
+          <div class="ai-pill-label">
+            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg>
+            AI Auto-Fill
+          </div>
+          <div class="ai-pill">
+            <input class="ai-pill-inp" id="aiDesc" type="text"
+              placeholder="Describe your token — e.g. gaming reward token 500M supply burn mechanic"
+              onkeydown="if(event.key==='Enter'){aiAutoFill()}">
+            <button class="ai-pill-btn" id="aiFillBtn" onclick="aiAutoFill()" aria-label="Generate">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 17V3"/><path d="M4 9l6-6 6 6"/>
+              </svg>
+            </button>
+          </div>
+          <div class="ai-status" id="aiStatus"></div>
+        </div>
+
+        <!-- Variant -->
+        <div class="sec-label">Token Variant</div>
+        <div class="variant-grid">
+          <div class="variant-card sel" id="varAsset" onclick="setVariant('asset')">
+            <div class="vc-chk">&#x2713;</div>
+            <div class="vc-name">Asset</div>
+            <div class="vc-desc">General purpose token. Configurable decimals.</div>
+          </div>
+          <div class="variant-card" id="varStable" onclick="setVariant('stablecoin')">
+            <div class="vc-chk">&#x2713;</div>
+            <div class="vc-name">Stablecoin</div>
+            <div class="vc-desc">Fiat-pegged. Fixed 6 decimals, currency code.</div>
+          </div>
+        </div>
+
+        <!-- Logo + Name/Symbol -->
+        <div class="logo-name-row">
+          <div class="logo-upload" id="logoUpload" onclick="document.getElementById('logoFile').click()">
+            <div class="logo-preview" id="logoPreview" style="display:none"><img id="logoImg" alt="logo"></div>
+            <div class="logo-placeholder" id="logoPlaceholder">
+              <div class="logo-placeholder-ico">&#x1F4CE;</div>
+              <div class="logo-placeholder-txt">Upload logo<br>PNG / JPG</div>
+            </div>
+            <button class="logo-remove-btn" id="logoRemove" style="display:none" onclick="removeLogo(event)">&#x2715;</button>
+            <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none" onchange="onLogoSelect(this)">
+          </div>
+          <div class="logo-name-fields">
+            <div>
+              <label class="field-label">Token Name</label>
+              <input class="inp" id="fName" type="text" placeholder="e.g. GameFi Token" oninput="onFormChange()" autocomplete="off">
+            </div>
+            <div>
+              <label class="field-label">Symbol</label>
+              <input class="inp" id="fSym" type="text" placeholder="e.g. GAME" maxlength="11" oninput="onFormChange()" autocomplete="off" style="text-transform:uppercase">
+            </div>
+          </div>
+        </div>
+
+        <!-- Decimals + Supply -->
         <div class="field-row">
           <div class="field">
-            <label class="field-label">Initial price (ETH per token)</label>
-            <input class="inp" id="fPoolPrice" type="text" value="0.000000000025" style="font-size:.72rem" oninput="updatePoolPreview()">
-            <div id="poolMcapHint" style="font-size:.6rem;color:var(--t3);margin-top:3px"></div>
-          </div>
-          <div class="field">
-            <label class="field-label">LP fee</label>
-            <select class="inp" id="fPoolFee" style="font-size:.72rem">
-              <option value="10000" selected>1.00% (default)</option>
-              <option value="3000">0.30%</option>
-              <option value="500">0.05%</option>
+            <label class="field-label">Decimals</label>
+            <select class="inp" id="fDec" onchange="onDecChange()">
+              <option value="6">6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+              <option value="12">12</option>
+              <option value="18" selected>18</option>
             </select>
           </div>
-        </div>
-        <div class="field-row">
           <div class="field">
-            <label class="field-label">Dev buy (ETH) — optional</label>
-            <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = none" style="font-size:.72rem">
-            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Buy your own token at launch, at the launch price</div>
-          </div>
-          <div class="field"></div>
-        </div>
-        <!-- Full supply always seeded into the pool (fair launch — no free creator supply) -->
-        <input type="hidden" id="fPoolLp" value="100000000000">
-      </div>
-
-      <!-- Deploy / Launch -->
-      <button class="deploy-btn" onclick="onDeploy()">
-        <span>🚀 Launch Token</span>
-        <span class="deploy-sub" id="deploySubtitle">Loading…</span>
-      </button>
-
-      <!-- Deployed CA card (hidden until success) -->
-      <div id="deployedCard" style="display:none" class="deployed-card">
-        <div class="dc-header">
-          <div class="dc-check pending" id="dcCheck">⏳</div>
-          <div class="dc-header-text">
-            <div class="dc-title" id="dcTitle">Token deployed on Base</div>
-            <div class="dc-sub" id="dcSub">Confirming…</div>
+            <label class="field-label">Supply Cap</label>
+            <input class="inp" id="fSupplyCap" type="text" value="100000000000" oninput="onSupplyCapChange()" style="font-size:.72rem" placeholder="e.g. 100000000000">
+            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Minted and seeded into the Uniswap pool.</div>
           </div>
         </div>
-        <div class="dc-field" id="dcCAField" style="display:none">
-          <div class="dc-field-label">Contract Address</div>
-          <div class="dc-field-row">
-            <span id="dcCA" class="dc-field-val">—</span>
-            <button class="dc-copy-btn" onclick="copyField('dcCA',this)">Copy</button>
-            <a id="dcScanLink" href="#" target="_blank" class="dc-ext-link">Explorer ↗</a>
+        <input type="hidden" id="fInitSupply" value="100000000000">
+        <input type="hidden" id="fCap" value="100000000000">
+        <input type="hidden" id="fUncapped">
+
+        <!-- Initial Admin (auto-set from wallet) -->
+        <input type="hidden" id="fAdmin" value="">
+
+        <!-- Description & Social -->
+        <div class="acc" id="accSocial">
+          <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+            <div class="acc-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg></div>
+            <div class="acc-title">
+              <div class="acc-title-main">Description & Social</div>
+              <div class="acc-title-sub">Telegram, website, X, and Farcaster</div>
+            </div>
+            <div class="acc-arrow">&#x25BC;</div>
+          </div>
+          <div class="acc-body">
+            <div class="field">
+              <textarea class="inp" id="fDesc" rows="3" placeholder="What's this token about?" style="resize:vertical;min-height:60px"></textarea>
+            </div>
+            <div class="field">
+              <input class="inp" id="fTelegram" type="url" placeholder="Telegram — https://t.me/..." autocomplete="off">
+            </div>
+            <div class="field">
+              <input class="inp" id="fWebsite" type="url" placeholder="Website — https://..." autocomplete="off">
+            </div>
+            <div class="field">
+              <input class="inp" id="fTwitter" type="url" placeholder="X (Twitter) — https://x.com/..." autocomplete="off">
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <input class="inp" id="fFarcaster" type="url" placeholder="Farcaster — https://warpcast.com/..." autocomplete="off">
+            </div>
           </div>
         </div>
-        <div class="dc-field">
-          <div class="dc-field-label">Transaction Hash</div>
-          <div class="dc-field-row">
-            <span id="dcTxHash" class="dc-field-val">—</span>
-            <button class="dc-copy-btn" onclick="copyField('dcTxHash',this)">Copy</button>
-            <a id="dcTxLink" href="#" target="_blank" class="dc-ext-link">Explorer ↗</a>
+
+        <input type="hidden" id="fRebase">
+        <input type="hidden" id="fUri">
+
+        <!-- Token powers -->
+        <div class="sec-label" style="margin-top:8px">Token powers</div>
+        <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Choose whether the token stays immutable or keeps an admin.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
+          <div id="powImmutable" onclick="setPowers('immutable')" style="border:1px solid var(--orange);border-radius:10px;padding:14px;cursor:pointer;background:rgba(240,120,48,.06);transition:.15s">
+            <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Immutable</div>
+            <div style="font-size:.68rem;color:var(--t2);line-height:1.5">No admin after launch. Supply fixed — no one can mint or change policy.</div>
+          </div>
+          <div id="powAdmin" onclick="setPowers('admin')" style="border:1px solid var(--b1);border-radius:10px;padding:14px;cursor:pointer;background:var(--s2);transition:.15s">
+            <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Admin powers</div>
+            <div style="font-size:.68rem;color:var(--t2);line-height:1.5">You keep admin — grant roles, mint more, pause, set policies later.</div>
           </div>
         </div>
-        <!-- Pool creation progress (Uniswap V4) — runs automatically after deploy -->
-        <div id="dcPoolPanel" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
-          <div style="font-size:.8rem;font-weight:700;color:var(--t1);margin-bottom:8px">Liquidity Pool — Uniswap V4</div>
-          <div id="poolStatus" style="font-size:.72rem;color:var(--t2);line-height:1.5"></div>
-          <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%;margin-top:10px;display:none">Retry pool creation</button>
+        <input type="checkbox" id="fAdminless" checked style="display:none">
+        <input type="checkbox" id="fAllow" style="display:none">
+        <input type="checkbox" id="fBlock" style="display:none">
+        <input type="checkbox" id="fFreeze" style="display:none">
+
+        <!-- Pool & Launch -->
+        <div class="sec-label" style="margin-top:22px">Pool &amp; Launch</div>
+        <p style="font-size:.72rem;color:var(--t3);margin-bottom:14px;line-height:1.55">Full supply seeded as WETH liquidity on Uniswap V4.</p>
+        <input type="checkbox" id="fCreatePool" checked style="display:none">
+        <div id="poolEconomics">
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">Initial price (ETH per token)</label>
+              <input class="inp" id="fPoolPrice" type="text" value="0.000000000025" style="font-size:.72rem" oninput="updatePoolPreview()">
+              <div id="poolMcapHint" style="font-size:.6rem;color:var(--t3);margin-top:3px"></div>
+            </div>
+            <div class="field">
+              <label class="field-label">LP fee</label>
+              <select class="inp" id="fPoolFee" style="font-size:.72rem">
+                <option value="10000" selected>1.00% (default)</option>
+                <option value="3000">0.30%</option>
+                <option value="500">0.05%</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">Dev buy (ETH) — optional</label>
+              <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = none" style="font-size:.72rem">
+              <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Buy your own token at launch, at the launch price</div>
+            </div>
+            <div class="field"></div>
+          </div>
+          <input type="hidden" id="fPoolLp" value="100000000000">
         </div>
 
-        <div class="dc-actions" id="dcActions" style="display:none">
-          <button class="dc-action-btn dc-action-outline" onclick="mintFromCard(document.getElementById('dcCA').textContent)">Mint supply</button>
-          <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan ↗</a>
-          <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
+        <!-- Deploy -->
+        <button class="deploy-btn" onclick="onDeploy()">
+          <span>Launch Token</span>
+          <span class="deploy-sub" id="deploySubtitle">Loading...</span>
+        </button>
+
+        <!-- Deployed CA card -->
+        <div id="deployedCard" style="display:none" class="deployed-card">
+          <div class="dc-header">
+            <div class="dc-check pending" id="dcCheck">&#x23F3;</div>
+            <div class="dc-header-text">
+              <div class="dc-title" id="dcTitle">Token deployed on Base</div>
+              <div class="dc-sub" id="dcSub">Confirming...</div>
+            </div>
+          </div>
+          <div class="dc-field" id="dcCAField" style="display:none">
+            <div class="dc-field-label">Contract Address</div>
+            <div class="dc-field-row">
+              <span id="dcCA" class="dc-field-val">—</span>
+              <button class="dc-copy-btn" onclick="copyField('dcCA',this)">Copy</button>
+              <a id="dcScanLink" href="#" target="_blank" class="dc-ext-link">Explorer &#x2197;</a>
+            </div>
+          </div>
+          <div class="dc-field">
+            <div class="dc-field-label">Transaction Hash</div>
+            <div class="dc-field-row">
+              <span id="dcTxHash" class="dc-field-val">—</span>
+              <button class="dc-copy-btn" onclick="copyField('dcTxHash',this)">Copy</button>
+              <a id="dcTxLink" href="#" target="_blank" class="dc-ext-link">Explorer &#x2197;</a>
+            </div>
+          </div>
+          <div id="dcPoolPanel" style="display:none;margin-top:14px;padding:14px;border:1px solid var(--b1);border-radius:8px;background:var(--s2)">
+            <div style="font-size:.8rem;font-weight:700;color:var(--t1);margin-bottom:8px">Liquidity Pool — Uniswap V4</div>
+            <div id="poolStatus" style="font-size:.72rem;color:var(--t2);line-height:1.5"></div>
+            <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%;margin-top:10px;display:none">Retry pool creation</button>
+          </div>
+          <div class="dc-actions" id="dcActions" style="display:none">
+            <button class="dc-action-btn dc-action-outline" onclick="mintFromCard(document.getElementById('dcCA').textContent)">Mint supply</button>
+            <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan &#x2197;</a>
+            <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
+          </div>
         </div>
-      </div>
 
-    </div>
-
-  </div>
-
-  <!-- MY TOKENS TAB -->
-  <div id="tabTokens" style="display:none">
-    <div class="pg-label">My Tokens</div>
-    <h1 class="pg-title">My B20 Tokens</h1>
-    <p class="pg-sub">Tokens you deploy on Base. Click Mint to add supply.</p>
-    <div id="myTokensGrid" class="launched-grid" style="margin-top:18px"></div>
-  </div>
-
-  <!-- MANAGE TAB -->
-  <div id="tabManage" style="display:none">
-    <div class="pg-label">Manage</div>
-    <h1 class="pg-title">Manage Token</h1>
-    <p class="pg-sub">Mint, burn, pause, and configure roles for your deployed B20 token.</p>
-    <div class="empty">
-      <div class="empty-ico">⚙</div>
-      <div class="empty-t">No token selected</div>
-      Deploy a token first, then manage it here.
-    </div>
-  </div>
-
-  <!-- MINT TAB -->
-  <div id="tabMint" style="display:none">
-    <div class="pg-label">Mint</div>
-    <h1 class="pg-title">Mint B20 Tokens</h1>
-    <p class="pg-sub">Add supply to your deployed B20 token.</p>
-    <div class="card">
-      <div class="sec-label">Token</div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Contract Address</label>
-        <input id="mintTokenAddr" type="text" placeholder="0x…" style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none" oninput="lookupMintToken()">
-      </div>
-      <div id="mintTokenInfo" style="display:none;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:10px 14px;margin-bottom:10px">
-        <div style="font-size:.85rem;font-weight:700;color:var(--t1)" id="mintTokenName">—</div>
-        <div style="font-size:.68rem;color:var(--t3);margin-top:2px" id="mintTokenDecimals">—</div>
-        <input type="hidden" id="mintDecimals" value="18">
-      </div>
-
-      <!-- Role status banner — shown after token lookup -->
-      <div id="mintRoleBanner" style="display:none;border-radius:4px;padding:12px 14px;margin-bottom:14px;font-size:.8rem">
-        <div id="mintRoleMsg" style="font-weight:600;margin-bottom:6px"></div>
-        <button id="mintGrantBtn" onclick="grantMintRole()" style="display:none;padding:7px 16px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:var(--font)">Grant MINT_ROLE to my wallet</button>
-        <div id="mintGrantTx" style="display:none;font-family:var(--mono);font-size:.68rem;color:#4ade80;margin-top:6px;word-break:break-all"></div>
-      </div>
-
-      <!-- Mint form — only shown when user has MINT_ROLE -->
-      <div id="mintForm" style="display:none">
-        <div class="sec-label" style="margin-top:4px">Amount</div>
-        <div style="margin-bottom:14px;margin-top:8px">
-          <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Amount to Mint</label>
-          <input id="mintAmount" type="text" placeholder="e.g. 1000000" style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-size:.85rem;outline:none">
-        </div>
-        <div style="margin-bottom:18px">
-          <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Recipient Address</label>
-          <input id="mintRecipient" type="text" placeholder="0x… (defaults to your wallet)" style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none">
-        </div>
-        <button onclick="onMint()" style="width:100%;padding:13px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 2px 14px rgba(240,120,48,.28);transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">→ Mint Tokens</button>
-        <div id="mintTxRow" style="display:none;margin-top:14px;background:var(--s2);border:1px solid rgba(74,222,128,.25);border-radius:4px;padding:10px 14px">
-          <div style="font-size:.68rem;color:var(--t3);margin-bottom:3px">TX SUBMITTED</div>
-          <div id="mintTxHash" style="font-family:var(--mono);font-size:.74rem;color:#4ade80;word-break:break-all"></div>
-        </div>
       </div>
     </div>
+
+    <!-- hidden tab containers for JS compatibility -->
+    <div id="tabTokens" style="display:none"></div>
+    <div id="tabManage" style="display:none"></div>
+    <div id="tabNew" style="display:none"></div>
+    <div id="tabMint" style="display:none"></div>
+
   </div>
-
-  <!-- NEW LAUNCHED TAB -->
-  <div id="tabNew" style="display:none">
-    <div class="pg-label">Explore</div>
-    <h1 class="pg-title">New Launched</h1>
-    <p class="pg-sub">B20 tokens deployed on Base — live as they hit the chain.</p>
-    <div class="launched-bar">
-      <button class="lchip active" id="lchipAll"    onclick="filterLaunched('all',this)">All</button>
-      <button class="lchip"        id="lchipAsset"  onclick="filterLaunched('asset',this)">Asset</button>
-      <button class="lchip"        id="lchipStable" onclick="filterLaunched('stablecoin',this)">Stablecoin</button>
-      <button onclick="loadLaunched()" style="margin-left:auto;background:none;border:1px solid var(--b1);border-radius:7px;color:var(--t3);padding:4px 11px;font-size:.72rem;cursor:pointer;font-family:var(--font);transition:.15s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">↻ Refresh</button>
-    </div>
-    <div id="launchedGrid" class="launched-grid">
-      <div class="launched-spin">Loading…</div>
-    </div>
-  </div>
-
-</main>
-
-<!-- RIGHT PANEL -->
-
 
 </div>
 
 <!-- MOBILE BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav">
-  <button class="bn-item active" id="bnCreate" onclick="showTab('create',this,true)">
-    <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M6.5 10h7"/></svg></span>
-    <span class="bn-lbl">Create</span>
-  </button>
-  <button class="bn-item" id="bnNew" onclick="showTab('new',this,true)">
+  <button class="bn-item active" id="bnDiscover" onclick="switchView('discover');this.focus()">
     <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,15 7,9.5 11.5,12.5 17.5,5"/><polyline points="13.5,5 17.5,5 17.5,9"/></svg></span>
-    <span class="bn-lbl">New</span>
+    <span class="bn-lbl">Discover</span>
   </button>
-  <button class="bn-item" id="bnTokens" onclick="showTab('tokens',this,true)">
+  <button class="bn-item" id="bnLaunch" onclick="switchView('launch');this.focus()">
+    <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M6.5 10h7"/></svg></span>
+    <span class="bn-lbl">Launch</span>
+  </button>
+  <button class="bn-item" id="bnMyTokens" onclick="switchView('mytokens');this.focus()">
     <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><ellipse cx="10" cy="6.5" rx="5.5" ry="2"/><path d="M4.5 6.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/><path d="M4.5 9.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/></svg></span>
     <span class="bn-lbl">My Tokens</span>
   </button>
-  <button class="bn-item" id="bnManage" onclick="showTab('manage',this,true)">
-    <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 5h14"/><circle cx="7" cy="5" r="2"/><path d="M3 10h14"/><circle cx="13" cy="10" r="2"/><path d="M3 15h14"/><circle cx="7" cy="15" r="2"/></svg></span>
-    <span class="bn-lbl">Manage</span>
-  </button>
-  <button class="bn-item" id="bnMint" onclick="showTab('mint',this,true)">
+  <button class="bn-item" id="bnMint" onclick="switchView('mint');this.focus()">
     <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M7 10h6"/></svg></span>
     <span class="bn-lbl">Mint</span>
   </button>
@@ -916,14 +886,13 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <div id="dmName" style="font-size:.95rem;font-weight:800;color:var(--t1,#fff)">Token</div>
         <div id="dmCA" style="font-size:.66rem;color:var(--t3,#8a8a96);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       </div>
-      <button onclick="closeDashboard()" style="background:none;border:none;color:var(--t2,#aaa);font-size:1.4rem;cursor:pointer;line-height:1;padding:4px 8px">×</button>
+      <button onclick="closeDashboard()" style="background:none;border:none;color:var(--t2,#aaa);font-size:1.4rem;cursor:pointer;line-height:1;padding:4px 8px">&#xD7;</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr;gap:0">
       <div style="padding:0">
         <iframe id="dmChart" src="" title="chart" style="width:100%;height:420px;border:0;background:#0b0d12"></iframe>
       </div>
       <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
-        <!-- Buy widget -->
         <div style="border:1px solid var(--b1,#262a33);border-radius:10px;padding:14px;background:var(--s2,#181b22)">
           <div style="font-size:.82rem;font-weight:700;color:var(--t1,#fff);margin-bottom:10px">Buy <span id="dmBuySym">token</span> with ETH</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
@@ -936,9 +905,9 @@ select.inp option{background:var(--s2);color:var(--t1)}
           <div id="dmBuyStatus" style="font-size:.7rem;color:var(--t2,#aaa);margin-top:8px;line-height:1.5"></div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a id="dmSell" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">Sell on Uniswap ↗</a>
-          <a id="dmDex" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">DexScreener ↗</a>
-          <a id="dmScan" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">BaseScan ↗</a>
+          <a id="dmSell" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">Sell on Uniswap &#x2197;</a>
+          <a id="dmDex" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">DexScreener &#x2197;</a>
+          <a id="dmScan" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">BaseScan &#x2197;</a>
         </div>
       </div>
     </div>
@@ -949,7 +918,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
 <script>
 let b20Activated = true;
 let variant = 'asset';
-let network = 'mainnet'; // B20 is Base mainnet only
+let network = 'mainnet';
 let walletAddress = null;
 let deploying = false;
 let deployedTxHash = null;
@@ -969,11 +938,70 @@ function setNetwork(n) {
     btn.onclick = onDeploy;
     updateSubtitle();
   }
-  // Load tokens for current network in New Launched tab if visible
   if (document.getElementById('tabNew')?.style.display !== 'none') loadNewTokens();
 }
 
-function showToast() {} // notifications disabled
+function showToast() {}
+
+// ── view switching ───────────────────────────────────────────────────────────
+function switchView(name) {
+  const panels = ['panelDiscover','panelLaunch','panelMyTokens','panelMint'];
+  const tabs = ['tbDiscover','tbLaunch','tbMyTokens','tbMint'];
+  const bns = ['bnDiscover','bnLaunch','bnMyTokens','bnMint'];
+  const map = {discover:0,launch:1,mytokens:2,mint:3};
+  const idx = map[name] ?? 0;
+
+  // hide create view, show discover view
+  document.getElementById('viewCreate').style.display = 'none';
+  document.getElementById('viewDiscover').style.display = '';
+
+  panels.forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = i === idx ? '' : 'none';
+  });
+  tabs.forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', i === idx);
+  });
+  bns.forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', i === idx);
+  });
+
+  if (name === 'discover') loadLaunched();
+  if (name === 'mytokens') renderMyTokens();
+  if (name === 'mint' && walletAddress) {
+    const el = document.getElementById('mintRecipient');
+    if (el) el.placeholder = walletAddress;
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function openCreate(mode) {
+  document.getElementById('viewDiscover').style.display = 'none';
+  document.getElementById('viewCreate').style.display = '';
+  document.getElementById('tabCreate').style.display = '';
+  // guided mode: show AI section, quick mode: hide it
+  const ai = document.getElementById('aiSection');
+  if (ai) ai.style.display = mode === 'guided' ? '' : 'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function closeCreate() {
+  document.getElementById('viewCreate').style.display = 'none';
+  document.getElementById('viewDiscover').style.display = '';
+  switchView('launch');
+}
+
+// ── legacy showTab (kept for JS compat — sidebar IDs are gone but we null-guard) ──
+function showTab(name, el, isMobile) {
+  if (name === 'create') { openCreate('quick'); return; }
+  if (name === 'new') { switchView('discover'); return; }
+  if (name === 'tokens') { switchView('mytokens'); return; }
+  if (name === 'manage') { return; }
+  if (name === 'mint') { switchView('mint'); return; }
+}
+function cap1(s) { return s[0].toUpperCase() + s.slice(1); }
 
 // ── variant ───────────────────────────────────────────────────────────────────
 function setVariant(v) {
@@ -986,16 +1014,12 @@ function setVariant(v) {
   onFormChange();
 }
 
-// ── decimals ──────────────────────────────────────────────────────────────────
 function onDecChange() {}
-
-// ── supply cap (fixed at 1B) ─────────────────────────────────────────────────
 function onCapToggle() {}
 
 // ── logo upload ──────────────────────────────────────────────────────────────
-var _logoDataUrl = null;   // full preview
-var _logoStore = null;     // compressed (~128px) version stored with the launch
-// Downscale the chosen logo to a small data URL so it fits in the launch feed + localStorage.
+var _logoDataUrl = null;
+var _logoStore = null;
 function _compressLogo(dataUrl, cb) {
   try {
     if (/^data:image\/svg/i.test(dataUrl)) { cb(dataUrl.length < 40000 ? dataUrl : null); return; }
@@ -1043,11 +1067,8 @@ function removeLogo(e) {
 }
 
 function onFormChange() {}
+function onPolicyChange() {}
 
-// ── policies ──────────────────────────────────────────────────────────────────
-function onPolicyChange() { /* compliance toggles moved to the Manage tab */ }
-
-// Token powers selector (Immutable vs Admin) — drives the hidden fAdminless flag.
 function setPowers(mode) {
   const immutable = mode !== 'admin';
   const flag = document.getElementById('fAdminless'); if (flag) flag.checked = immutable;
@@ -1055,30 +1076,6 @@ function setPowers(mode) {
   if (imm) { imm.style.borderColor = immutable ? 'var(--orange)' : 'var(--b1)'; imm.style.background = immutable ? 'rgba(240,120,48,.06)' : 'var(--s2)'; }
   if (adm) { adm.style.borderColor = !immutable ? 'var(--orange)' : 'var(--b1)'; adm.style.background = !immutable ? 'rgba(240,120,48,.06)' : 'var(--s2)'; }
 }
-
-// ── tabs ──────────────────────────────────────────────────────────────────────
-function showTab(name, el, isMobile) {
-  ['tabCreate','tabTokens','tabManage','tabNew','tabMint'].forEach(id => {
-    document.getElementById(id).style.display = (id === 'tab' + cap1(name)) ? '' : 'none';
-  });
-  ['sbCreate','sbTokens','sbManage','sbNew','sbMint'].forEach(id => {
-    const e2 = document.getElementById(id); if (e2) e2.classList.remove('active');
-  });
-  const sbMap = {create:'sbCreate',tokens:'sbTokens',manage:'sbManage',new:'sbNew',mint:'sbMint'};
-  const sbEl = document.getElementById(sbMap[name]);
-  if (sbEl) sbEl.classList.add('active');
-  ['bnCreate','bnTokens','bnManage','bnNew','bnMint'].forEach(id => {
-    const e2 = document.getElementById(id); if (e2) e2.classList.remove('active');
-  });
-  const bnMap = {create:'bnCreate',tokens:'bnTokens',manage:'bnManage',new:'bnNew',mint:'bnMint'};
-  const bnEl = document.getElementById(bnMap[name]);
-  if (bnEl) bnEl.classList.add('active');
-  if (name === 'new') loadLaunched();
-  if (name === 'tokens') renderMyTokens();
-  if (name === 'mint' && walletAddress) document.getElementById('mintRecipient').placeholder = walletAddress;
-  if (isMobile) window.scrollTo({top:0,behavior:'smooth'});
-}
-function cap1(s) { return s[0].toUpperCase() + s.slice(1); }
 
 // ── deploy button state ───────────────────────────────────────────────────────
 function setDeployBtn(state, label, sub) {
@@ -1097,22 +1094,21 @@ function setDeployBtn(state, label, sub) {
     if (deployedTxHash) btn.onclick = () => window.open(NET[network].explorer + '/tx/' + deployedTxHash, '_blank');
   } else if (state === 'error') {
     btn.classList.add('dep-error');
-    span.textContent = '→ Try Again'; subEl.textContent = sub || label;
+    span.textContent = 'Try Again'; subEl.textContent = sub || label;
   } else {
-    span.textContent = '🚀 Launch Token'; updateSubtitle();
+    span.textContent = 'Launch Token'; updateSubtitle();
   }
 }
 
-// ── deploy subtitle countdown ─────────────────────────────────────────────────
 function updateSubtitle() {
   const el = document.getElementById('deploySubtitle');
   if (!el) return;
   const netName = NET[network]?.name || 'Base';
   if (!b20Activated) {
-    el.textContent = walletAddress ? `Checking B20 activation on ${netName}…` : `Connect wallet to deploy on ${netName}`;
+    el.textContent = walletAddress ? `Checking B20 activation on ${netName}...` : `Connect wallet to deploy on ${netName}`;
     return;
   }
-  el.textContent = walletAddress ? `${netName} ready — deploy your token` : 'Connect wallet to deploy';
+  el.textContent = walletAddress ? `${netName} ready` : 'Connect wallet to deploy';
 }
 
 async function checkB20Activation() {
@@ -1129,30 +1125,25 @@ async function checkB20Activation() {
 async function onDeploy() {
   if (deploying) return;
 
-  // Pre-Beryl: show countdown modal
-
-  // Form validation
   const name = document.getElementById('fName').value.trim();
   const sym  = document.getElementById('fSym').value.trim().toUpperCase();
   if (!name) { setDeployBtn('error', '', 'Token Name is required'); return; }
   if (!sym)  { setDeployBtn('error', '', 'Symbol is required'); return; }
-  if (sym.length > 11) { setDeployBtn('error', '', 'Symbol must be ≤ 11 characters'); return; }
+  if (sym.length > 11) { setDeployBtn('error', '', 'Symbol must be 11 characters max'); return; }
 
-  // Wallet check
   if (!walletAddress) {
     setDeployBtn('error', '', 'Connect your wallet first (top right)');
     return;
   }
   if (!window.ethereum) {
-    setDeployBtn('error', '', 'No Ethereum wallet found — install MetaMask');
+    setDeployBtn('error', '', 'No Ethereum wallet found');
     return;
   }
 
   deploying = true;
 
   try {
-    // ── Step 1: Prepare tx via b20-skill API ─────────────────────────────────
-    setDeployBtn('loading', '⏳ Preparing…', 'Fetching live gas + nonce from Base…');
+    setDeployBtn('loading', 'Preparing...', 'Fetching live gas + nonce from Base...');
 
     const adminless = document.getElementById('fAdminless').checked;
     _deployDecimals = parseInt(document.getElementById('fDec').value) || 18;
@@ -1165,10 +1156,10 @@ async function onDeploy() {
       supply_cap:     (document.getElementById('fSupplyCap')?.value || '100000000000').replace(/[^0-9]/g,'') || '100000000000',
       initial_supply: (document.getElementById('fInitSupply').value || '0').replace(/[^0-9]/g, '') || '0',
       admin:       adminless ? undefined : walletAddress,
-      creator:     walletAddress, // receives the minted supply (even when immutable), to seed the pool
+      creator:     walletAddress,
       adminless,
-      policies: {},               // compliance configured post-deploy in Manage
-      roles: {},                  // roles managed after deploy in the Manage tab
+      policies: {},
+      roles: {},
       network,
     };
     const uri     = document.getElementById('fUri').value.trim();
@@ -1191,8 +1182,6 @@ async function onDeploy() {
       deploying = false;
       return;
     }
-    // Hard-block ONLY on definitive factory errors (wrong params, existing token, etc.)
-    // Do NOT block on activation uncertainty — let the tx reach the chain and report back.
     const DEFINITIVE_ERRORS = [
       'UnsupportedVersion','MissingRequiredField','InvalidCurrency',
       'InvalidDecimals','InvalidVariant','NonPayable',
@@ -1210,7 +1199,7 @@ async function onDeploy() {
       data.warnings.forEach(w => console.warn('[B20]', w));
     }
     if (!data.activated) {
-      showToast(`Activation check inconclusive — broadcasting tx to ${NET[network]?.name || 'Base'}`, 'info');
+      showToast(`Activation check inconclusive`, 'info');
     }
 
     const tx = data.deployment?.tx;
@@ -1220,9 +1209,8 @@ async function onDeploy() {
       return;
     }
 
-    // ── Step 2: Switch to correct network ────────────────────────────────────
     const net = NET[network];
-    setDeployBtn('loading', '🔄 Switching network…', `Switching to ${net.name}…`);
+    setDeployBtn('loading', 'Switching network...', `Switching to ${net.name}...`);
     try {
       await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: net.chainId }] });
     } catch (swErr) {
@@ -1234,7 +1222,6 @@ async function onDeploy() {
       } else { throw swErr; }
     }
 
-    // Verify chain
     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
     if (chainId.toLowerCase() !== net.chainId.toLowerCase()) {
       setDeployBtn('error', '', `Switch to ${net.name} in your wallet, then try again`);
@@ -1242,14 +1229,12 @@ async function onDeploy() {
       return;
     }
 
-    // ── Step 2.5: One-confirmation launch (deploy + pool + dev buy batched, EIP-5792) ──
-    // Smart wallets (e.g. Coinbase Wallet) can execute all calls in a single atomic
-    // transaction with one confirmation. Falls back to the sequential flow otherwise.
+    // EIP-5792 one-confirmation launch
     const wantPool = document.getElementById('fCreatePool')?.checked;
     const predicted = data.predictedAddress;
     if (wantPool && predicted && /^0x[0-9a-fA-F]{40}$/.test(predicted)) {
       try {
-        setDeployBtn('loading', '⏳ Building launch…', 'Preparing a one-tap launch…');
+        setDeployBtn('loading', 'Building launch...', 'Preparing a one-tap launch...');
         const price  = (document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '');
         const lp     = (document.getElementById('fPoolLp').value || '').replace(/[^0-9]/g, '');
         const feeSel = document.getElementById('fPoolFee').value;
@@ -1268,13 +1253,13 @@ async function onDeploy() {
             ? (tx.value.startsWith('0x') ? tx.value : '0x' + BigInt(tx.value).toString(16)) : '0x0';
           const calls = [{ to: tx.to, data: tx.data, value: dVal },
             ...pd.txs.map(t => ({ to: t.to, data: t.data, value: t.value || '0x0' }))];
-          setDeployBtn('signing', '✍ Confirm once…', 'Approve the whole launch in one confirmation');
-          const bundleId = await sendCallsBatch(calls); // throws if wallet can't batch → fallback
-          setDeployBtn('success', '✓ Submitted!', 'Launching in one transaction…');
+          setDeployBtn('signing', 'Confirm once...', 'Approve the whole launch in one confirmation');
+          const bundleId = await sendCallsBatch(calls);
+          setDeployBtn('success', 'Submitted!', 'Launching in one transaction...');
           showDeployedCard('—', network, predicted);
-          document.getElementById('dcTitle').textContent = 'Launching — deploy + pool in one confirmation…';
+          document.getElementById('dcTitle').textContent = 'Launching — deploy + pool in one confirmation...';
           const panel = document.getElementById('dcPoolPanel'); if (panel) panel.style.display = 'block';
-          setPoolStatus('Waiting for the launch transaction to confirm…');
+          setPoolStatus('Waiting for the launch transaction to confirm...');
           const outcome = await waitCallsBatch(bundleId);
           if (!outcome.reverted) {
             _deployedTokenName = document.getElementById('fName')?.value?.trim() || 'Token';
@@ -1294,20 +1279,20 @@ async function onDeploy() {
             setPoolStatus('✅ Launched in one confirmation — token deployed, pool seeded, tradeable!', 'ok');
             saveMyToken({ address: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, variant: variant || 'asset', decimals: _deployDecimals, image: _logoStore || null, txHash: dhash || null, deployedAt: Date.now(), network });
             fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'register_launch', token: predicted, name: _deployedTokenName, symbol: _deployedTokenSym, deployer: walletAddress, variant: variant || 'asset', decimals: _deployDecimals, txHash: dhash || null, image: _logoStore || undefined }) }).catch(() => {});
-            setDeployBtn('success', '✓ Launched!', 'Token live & tradeable on Base');
+            setDeployBtn('success', 'Launched!', 'Token live & tradeable on Base');
             deploying = false;
             return;
           }
-          setPoolStatus('The batched launch reverted — retrying as separate steps…', 'err');
+          setPoolStatus('The batched launch reverted — retrying as separate steps...', 'err');
         }
       } catch (batchErr) {
-        if (batchErr.code === 4001 || batchErr.code === 4100) { setDeployBtn('error', '', 'Rejected — try again'); deploying = false; return; }
+        if (batchErr.code === 4001 || batchErr.code === 4100) { setDeployBtn('error', '', 'Rejected'); deploying = false; return; }
         console.warn('[B20] one-confirmation launch unavailable, falling back:', batchErr?.message);
       }
     }
 
-    // ── Step 3: Sign + broadcast transaction ──────────────────────────────────
-    setDeployBtn('signing', '✍ Sign in wallet…', 'Confirm the transaction in your wallet');
+    // Sequential fallback
+    setDeployBtn('signing', 'Sign in wallet...', 'Confirm the transaction in your wallet');
 
     const rawVal = tx.value ?? '0x0';
     const hexVal = rawVal === '0' || rawVal === '' ? '0x0'
@@ -1327,8 +1312,7 @@ async function onDeploy() {
     const hash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [txParams] });
     deployedTxHash = hash;
 
-    // ── Step 4: Success — show card, poll for receipt ──────────────────────────────────────────────
-    setDeployBtn('success', '✓ Submitted!', `Confirming on ${NET[network]?.name || 'Base'}…`);
+    setDeployBtn('success', 'Submitted!', `Confirming on ${NET[network]?.name || 'Base'}...`);
     showDeployedCard(hash, network, data.predictedAddress);
     pollReceipt(hash, network, data.predictedAddress);
 
@@ -1356,8 +1340,7 @@ function showDeployedCard(hash, net, predictedCA) {
   document.getElementById('dcTitle').textContent = `Token deployed on ${NET[network]?.name || 'Base'}`;
   document.getElementById('dcTxHash').textContent = hash;
   document.getElementById('dcTxLink').href = explorer + '/tx/' + hash;
-  // Always hide CA and actions until receipt confirms — avoids showing "CA exists" when tx hasn't landed
-  document.getElementById('dcSub').textContent = 'Waiting for block confirmation… (10-30s)';
+  document.getElementById('dcSub').textContent = 'Waiting for block confirmation... (10-30s)';
   document.getElementById('dcCA').textContent = predictedCA || '—';
   document.getElementById('dcCAField').style.display = 'none';
   document.getElementById('dcActions').style.display = 'none';
@@ -1391,14 +1374,12 @@ async function pollReceipt(hash, net, predictedCA) {
           document.getElementById('dcScanLink').href = explorer + '/address/' + ca;
           document.getElementById('dcBaseScanBtn').href = explorer + '/address/' + ca;
         }
-        // Save confirmed token to My Tokens
         saveMyToken({
           address: ca || null, name: _deployedTokenName, symbol: _deployedTokenSym,
           variant: variant || 'asset',
           decimals: _deployDecimals, image: _logoStore || null,
           txHash: hash, deployedAt: Date.now(), network: net,
         });
-        // Register to the shared "New Launched on Orlix" feed
         if (ca) {
           fetch('/api/b20-skill', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1411,10 +1392,9 @@ async function pollReceipt(hash, net, predictedCA) {
           }).catch(() => {});
         }
         document.getElementById('dcActions').style.display = 'flex';
-        setDeployBtn('success', '✓ Deployed!', `Token live on ${NET[network]?.name || 'Base'}`);
-        // Wizard: if "create pool on launch" is on, continue straight into seeding the V4 pool
+        setDeployBtn('success', 'Deployed!', `Token live on ${NET[network]?.name || 'Base'}`);
         if (ca && document.getElementById('fCreatePool')?.checked) {
-          document.getElementById('dcTitle').textContent = 'Token deployed — creating liquidity pool…';
+          document.getElementById('dcTitle').textContent = 'Token deployed — creating liquidity pool...';
           createPool();
         }
         return;
@@ -1431,7 +1411,7 @@ async function pollReceipt(hash, net, predictedCA) {
     } catch {}
   }
   document.getElementById('dcSub').textContent = 'Still pending — check BaseScan';
-  setDeployBtn('success', '✓ Submitted!', 'View on BaseScan →');
+  setDeployBtn('success', 'Submitted!', 'View on BaseScan');
 }
 
 function copyField(elId, btn) {
@@ -1452,14 +1432,13 @@ function deployAnother() {
   setDeployBtn('default');
 }
 
-// ── Uniswap V4 liquidity pool (make token tradeable) ─────────────────────────
+// ── Uniswap V4 liquidity pool ───────────────────────────────────────────────
 function togglePoolEconomics() {
   const on = document.getElementById('fCreatePool')?.checked;
   const el = document.getElementById('poolEconomics');
   if (el) el.style.display = on ? '' : 'none';
 }
 
-// Keep supply cap, initial mint and pool LP amount in sync (full supply → pool).
 function onSupplyCapChange() {
   const v = (document.getElementById('fSupplyCap').value || '').replace(/[^0-9]/g, '') || '100000000000';
   const init = document.getElementById('fInitSupply'); if (init) init.value = v;
@@ -1473,7 +1452,7 @@ function updatePoolPreview() {
   if (!el) return;
   const p = parseFloat((document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '')) || 0;
   const supply = parseFloat((document.getElementById('fSupplyCap')?.value || '100000000000').replace(/[^0-9]/g, '')) || 1e11;
-  const ethUsd = 4000;     // rough display estimate
+  const ethUsd = 4000;
   const mcap = p * supply * ethUsd;
   el.textContent = p > 0
     ? `≈ $${mcap.toLocaleString(undefined, { maximumFractionDigits: 0 })} starting market cap (@ ~$${ethUsd}/ETH)`
@@ -1487,9 +1466,7 @@ function setPoolStatus(msg, kind) {
   el.style.color = kind === 'err' ? '#ef4444' : kind === 'ok' ? '#22c55e' : 'var(--t2)';
 }
 
-// ── EIP-5792 batched calls (one wallet confirmation for many txs) ────────────
-// Coinbase Wallet (and other smart wallets) support wallet_sendCalls. Returns a
-// bundle id, or throws if the wallet doesn't support batching (→ caller falls back).
+// ── EIP-5792 batched calls ──────────────────────────────────────────────────
 async function sendCallsBatch(calls) {
   const chainId = NET[network]?.chainId || '0x2105';
   const res = await window.ethereum.request({
@@ -1504,7 +1481,6 @@ async function sendCallsBatch(calls) {
   });
   return (res && typeof res === 'object') ? (res.id || res.bundleId || res) : res;
 }
-// Poll wallet_getCallsStatus until the batch confirms; throw if any call reverted.
 async function waitCallsBatch(id) {
   for (let i = 0; i < 60; i++) {
     await new Promise(r => setTimeout(r, 3000));
@@ -1517,15 +1493,13 @@ async function waitCallsBatch(id) {
       const reverted = receipts.find(r => r.status === '0x0' || r.status === 0);
       if (reverted) return { reverted: true, receipts };
     }
-    // status: v2 numeric (100 pending, 200 confirmed); v1 string ('CONFIRMED')
     const s = st.status;
     const done = s === 200 || s === '200' || s === 'CONFIRMED' || (typeof s === 'number' && s >= 200 && receipts.length);
     if (done) return { reverted: false, receipts };
   }
-  throw new Error('Batch confirmation timed out — check your wallet activity');
+  throw new Error('Batch confirmation timed out');
 }
 
-// Wait for a tx receipt via the injected wallet provider.
 async function waitTx(hash) {
   for (let i = 0; i < 40; i++) {
     await new Promise(r => setTimeout(r, 3000));
@@ -1542,8 +1516,8 @@ async function waitTx(hash) {
 
 async function createPool() {
   const token = (document.getElementById('dcCA')?.textContent || '').trim();
-  if (!token || token === '—') { setPoolStatus('No token address yet — wait for the deploy to confirm.', 'err'); return; }
-  if (!walletAddress || !window.ethereum) { setPoolStatus('Connect your wallet first (top right).', 'err'); return; }
+  if (!token || token === '—') { setPoolStatus('No token address yet.', 'err'); return; }
+  if (!walletAddress || !window.ethereum) { setPoolStatus('Connect your wallet first.', 'err'); return; }
 
   const price = (document.getElementById('fPoolPrice').value || '').replace(/[^0-9.]/g, '');
   const lp    = (document.getElementById('fPoolLp').value || '').replace(/[^0-9]/g, '');
@@ -1552,11 +1526,11 @@ async function createPool() {
   const panel = document.getElementById('dcPoolPanel');
   if (panel) panel.style.display = 'block';
   const btn = document.getElementById('poolBtn');
-  if (!price || parseFloat(price) <= 0) { setPoolStatus('Enter a valid initial price (ETH per token).', 'err'); if (btn) { btn.style.display=''; btn.disabled=false; } return; }
+  if (!price || parseFloat(price) <= 0) { setPoolStatus('Enter a valid initial price.', 'err'); if (btn) { btn.style.display=''; btn.disabled=false; } return; }
   if (btn) { btn.disabled = true; btn.style.display = 'none'; }
   let lastHash = null, lastStep = '';
   try {
-    setPoolStatus('Preparing pool transactions…');
+    setPoolStatus('Preparing pool transactions...');
     const r = await fetch('/api/b20-skill', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1569,7 +1543,6 @@ async function createPool() {
     const d = await r.json();
     if (!d.ok) { setPoolStatus('Error: ' + (d.error || 'prepare failed'), 'err'); btn.disabled = false; return; }
 
-    // Ensure we're on Base
     const net = NET[network];
     try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: net.chainId }] }); } catch (e) {}
 
@@ -1577,16 +1550,16 @@ async function createPool() {
     for (let i = 0; i < txs.length; i++) {
       const t = txs[i];
       lastStep = t.title;
-      setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — confirm in your wallet…`);
+      setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — confirm in your wallet...`);
       const hash = await window.ethereum.request({
         method: 'eth_sendTransaction',
         params: [{ from: walletAddress, to: t.to, data: t.data, value: t.value || '0x0', gas: t.gas }],
       });
       lastHash = hash;
-      setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — submitted, waiting for confirmation…`);
+      setPoolStatus(`Step ${i + 1}/${txs.length}: ${t.title} — submitted, waiting...`);
       await waitTx(hash);
     }
-    setPoolStatus('✅ Pool created and liquidity seeded — your token is now tradeable! It may take a minute to appear on DexScreener.', 'ok');
+    setPoolStatus('✅ Pool created and liquidity seeded — your token is now tradeable!', 'ok');
     if (btn) btn.style.display = 'none';
   } catch (e) {
     const msg = (e.code === 4001 || e.code === 4100) ? 'Rejected in wallet' : (e.message || 'failed').slice(0, 140);
@@ -1594,7 +1567,7 @@ async function createPool() {
     const explorer = NET[network]?.explorer || 'https://basescan.org';
     if (el && typeof lastHash !== 'undefined' && lastHash) {
       el.innerHTML = `<span style="color:#ef4444">Failed on "${lastStep}": ${msg}.</span> ` +
-        `<a href="${explorer}/tx/${lastHash}" target="_blank" style="color:var(--accent);text-decoration:underline">View failed tx ↗</a> — copy this link so it can be diagnosed.`;
+        `<a href="${explorer}/tx/${lastHash}" target="_blank" style="color:var(--accent);text-decoration:underline">View failed tx ↗</a>`;
     } else {
       setPoolStatus('Error: ' + msg + ' — you can retry below.', 'err');
     }
@@ -1604,7 +1577,7 @@ async function createPool() {
 
 function mintFromCard(tokenAddr) {
   if (!tokenAddr || tokenAddr === '—') return;
-  showTab('mint', document.getElementById('sbMint'));
+  switchView('mint');
   const input = document.getElementById('mintTokenAddr');
   if (input) {
     input.value = tokenAddr;
@@ -1634,11 +1607,11 @@ function renderMyTokens() {
   if (!grid) return;
   const tokens = loadMyTokens();
   if (!tokens.length) {
-    grid.innerHTML = `<div class="empty" style="padding:40px 0">
-      <div class="empty-ico">◈</div>
-      <div class="empty-t">No tokens yet</div>
-      <p style="font-size:.8rem;color:var(--t2)">Tokens you deploy will appear here automatically.</p>
-      <button onclick="showTab('create',document.getElementById('sbCreate'))" style="margin-top:8px;padding:8px 18px;border-radius:4px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:.78rem;font-weight:700;font-family:var(--font)">+ Deploy Token</button>
+    grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1">
+      <div class="le-ico">◈</div>
+      <div class="le-title">No tokens yet</div>
+      <div class="le-sub">Tokens you deploy will appear here automatically.</div>
+      <button onclick="switchView('launch')" style="margin-top:8px;padding:8px 18px;border-radius:8px;background:var(--orange);color:#fff;border:none;cursor:pointer;font-size:.78rem;font-weight:700;font-family:var(--font)">+ Deploy Token</button>
     </div>`;
     return;
   }
@@ -1670,7 +1643,7 @@ function renderMyTokens() {
       </div>
       <div class="lcard-actions">
         ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade / Chart</button>` : ''}
-        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
+        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1684,7 +1657,7 @@ async function aiAutoFill() {
   const status = document.getElementById('aiStatus');
   btn.disabled = true;
   btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="10" cy="10" r="7" stroke-dasharray="32" stroke-dashoffset="32"><animate attributeName="stroke-dashoffset" from="32" to="0" dur=".6s" fill="freeze"/></circle></svg>';
-  status.className = 'ai-status'; status.textContent = 'Asking AI…';
+  status.className = 'ai-status'; status.textContent = 'Asking AI...';
   try {
     const r = await fetch(`${location.origin}/api/b20-ai`, {
       method: 'POST',
@@ -1697,7 +1670,6 @@ async function aiAutoFill() {
     if (d.symbol) document.getElementById('fSym').value = d.symbol.toUpperCase().slice(0,11);
     if (d.variant) setVariant(d.variant);
     if (d.decimals !== undefined) { document.getElementById('fDec').value = d.decimals; onDecChange(); }
-    // Supply cap is fixed at 1B — ignore AI suggestions for supply
     if (d.allowlist !== undefined) document.getElementById('fAllow').checked = !!d.allowlist;
     if (d.blocklist !== undefined) document.getElementById('fBlock').checked = !!d.blocklist;
     if (d.freeze   !== undefined) document.getElementById('fFreeze').checked  = !!d.freeze;
@@ -1725,11 +1697,13 @@ function renderLaunchedGrid() {
     grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1">
       <div class="le-ico">🚀</div>
       <div class="le-title">${_launchedAll.length ? 'No tokens match this filter' : 'No B20 tokens deployed yet'}</div>
-      <div class="le-sub">${_launchedAll.length ? 'Try a different filter.' : 'B20 Studio goes live with Base Beryl. Be the first to deploy a token.'}</div>
-      ${!_launchedAll.length ? `<button onclick="showTab('create',document.getElementById('sbCreate'))" style="margin-top:2px;padding:8px 18px;border-radius:4px;background:var(--orange);color:#fff;border:none;cursor:pointer;font-size:.78rem;font-weight:700;font-family:var(--font)">+ Create First Token</button>` : ''}
+      <div class="le-sub">${_launchedAll.length ? 'Try a different filter.' : 'Be the first to deploy a token on B20 Studio.'}</div>
+      ${!_launchedAll.length ? `<button onclick="switchView('launch')" style="margin-top:2px;padding:8px 18px;border-radius:8px;background:var(--orange);color:#fff;border:none;cursor:pointer;font-size:.78rem;font-weight:700;font-family:var(--font)">+ Create First Token</button>` : ''}
     </div>`;
     return;
   }
+  // Update stats
+  updateStats(items);
   grid.innerHTML = items.map(t => {
     const ago      = _timeAgo((t.deployedAt || t.timestamp) ? (t.deployedAt || t.timestamp * 1000) : null);
     const col      = tokenColor(t.symbol);
@@ -1759,10 +1733,24 @@ function renderLaunchedGrid() {
       </div>
       <div class="lcard-actions">
         ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade / Chart</button>` : ''}
-        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint ↑</button>` : ''}
+        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint</button>` : ''}
       </div>
     </div>`;
   }).join('');
+}
+
+function updateStats(items) {
+  const all = _launchedAll;
+  document.getElementById('statTokens').textContent = all.length;
+  const deployers = new Set(all.map(t => t.deployer).filter(Boolean));
+  document.getElementById('statDeployers').textContent = deployers.size;
+  const assets = all.filter(t => t.variant !== 'stablecoin').length;
+  const stables = all.length - assets;
+  document.getElementById('statVariant').textContent = assets + ' / ' + stables;
+  if (all.length) {
+    const latest = all[0];
+    document.getElementById('statLatest').textContent = _timeAgo((latest.deployedAt || latest.timestamp) ? (latest.deployedAt || latest.timestamp * 1000) : null);
+  }
 }
 
 // ── Token Dashboard (chart + on-site buy) ─────────────────────────────────────
@@ -1801,25 +1789,25 @@ async function buyToken() {
   const btn = document.getElementById('dmBuyBtn');
   if (!_dashCA) return;
   if (!amt || parseFloat(amt) <= 0) { st.textContent = 'Enter an ETH amount.'; st.style.color = '#ef4444'; return; }
-  if (!walletAddress || !window.ethereum) { st.textContent = 'Connect your wallet first (top right).'; st.style.color = '#ef4444'; return; }
+  if (!walletAddress || !window.ethereum) { st.textContent = 'Connect your wallet first.'; st.style.color = '#ef4444'; return; }
   btn.disabled = true;
   try {
-    st.style.color = 'var(--t2,#aaa)'; st.textContent = 'Finding pool…';
+    st.style.color = 'var(--t2,#aaa)'; st.textContent = 'Finding pool...';
     let fee = 10000;
     try {
       const pr = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'pool_status', token: _dashCA }) });
       const pd = await pr.json();
       if (pd.ok && pd.pools) { const keys = Object.keys(pd.pools); if (keys.length) fee = parseInt(keys[0], 10); }
     } catch (_) {}
-    st.textContent = 'Preparing buy…';
+    st.textContent = 'Preparing buy...';
     const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'prepare_swap', side: 'buy', token: _dashCA, amount: amt, fee }) });
     const d = await r.json();
     if (!d.ok || !d.tx) { st.textContent = 'Error: ' + (d.error || 'prepare failed'); st.style.color = '#ef4444'; btn.disabled = false; return; }
     const net = NET[network];
     try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: net.chainId }] }); } catch (_) {}
-    st.textContent = 'Confirm the swap in your wallet…';
+    st.textContent = 'Confirm the swap in your wallet...';
     const hash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: d.tx.to, data: d.tx.data, value: d.tx.value || '0x0', gas: d.tx.gas }] });
-    st.textContent = 'Buy submitted — waiting for confirmation…';
+    st.textContent = 'Buy submitted — waiting for confirmation...';
     await waitTx(hash);
     const ex = NET[network]?.explorer || 'https://basescan.org';
     st.style.color = '#22c55e';
@@ -1843,7 +1831,7 @@ function loadNewTokens() { _launchedLoaded = false; loadLaunched(); }
 
 async function loadLaunched() {
   if (_launchedLoaded && _launchedNet === network) { renderLaunchedGrid(); return; }
-  document.getElementById('launchedGrid').innerHTML = '<div class="launched-spin">Fetching from ' + (NET[network]?.name || 'Base') + '…</div>';
+  document.getElementById('launchedGrid').innerHTML = '<div class="launched-spin">Fetching from ' + (NET[network]?.name || 'Base') + '...</div>';
   try {
     const r = await fetch(`${location.origin}/api/b20-tokens?network=${network}`);
     if (r.ok) {
@@ -1853,8 +1841,6 @@ async function loadLaunched() {
       _launchedNet = network;
     }
   } catch(_) {}
-  // New Launched reflects the shared feed only (single source of truth across
-  // devices). Your own personal list lives in the My Tokens tab.
   _launchedAll.sort((a, b) => ((b.timestamp || 0) - (a.timestamp || 0)));
   renderLaunchedGrid();
 }
@@ -1869,7 +1855,7 @@ function _timeAgo(ms) {
 }
 function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── wallet fallback — only shown if wallet.js fails to load ──────────────────
+// ── wallet fallback ──────────────────────────────────────────────────────────
 function toggleWalletDrop(e) {
   e.stopPropagation();
   const drop = document.getElementById('wallet-net-drop');
@@ -1888,7 +1874,6 @@ async function walletFallback(net) {
   if (net === 'mainnet') { setNetwork('mainnet'); return; }
   if (!window.ethereum) { alert('No wallet detected. Install MetaMask or open in a wallet browser.'); return; }
   try {
-    // Switch to selected network first
     const netCfg = NET[net] || NET.mainnet;
     const chainId = netCfg.chainId;
     const chainName = netCfg.name;
@@ -1916,19 +1901,17 @@ async function walletFallback(net) {
   } catch(e) { console.warn('wallet fallback:', e); }
 }
 
-// Show fallback only if wallet.js hasn't injected within 2.5s
 setTimeout(() => {
   const fb = document.getElementById('wallet-fallback');
   if (fb && !document.querySelector('.ow-btn')) fb.style.visibility = 'visible';
 }, 2500);
 
-// Hide fallback as soon as Privy widget appears
 new MutationObserver(() => {
   const fb = document.getElementById('wallet-fallback');
   if (fb && document.querySelector('.ow-btn')) fb.style.display = 'none';
 }).observe(document.getElementById('orlix-wallet') || document.body, { childList: true, subtree: true });
 
-// ── wallet events (dispatched by /wallet-dist/wallet.js) ─────────────────────
+// ── wallet events ─────────────────────────────────────────────────────────────
 window.addEventListener('orlix:wallet:connected', async (e) => {
   const addr = e.detail?.address;
   if (!addr) return;
@@ -1936,7 +1919,6 @@ window.addEventListener('orlix:wallet:connected', async (e) => {
   const el = document.getElementById('fAdmin');
   if (el && !el.value) { el.value = addr; onFormChange(); }
   updateSubtitle();
-  // Auto-switch to the active network in B20 Studio (Base mainnet)
   if (window.ethereum) {
     const net = NET[network] || NET.mainnet;
     try {
@@ -1949,7 +1931,6 @@ window.addEventListener('orlix:wallet:connected', async (e) => {
             await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: net.chainId, chainName: net.name, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: [net.rpc], blockExplorerUrls: [net.explorer] }] });
           }
         }
-        showToast(`Switched to ${net.name}`, 'info');
       }
     } catch {}
   }
@@ -1962,18 +1943,15 @@ window.addEventListener('orlix:wallet:disconnected', () => {
 });
 
 // ── mint tab ──────────────────────────────────────────────────────────────────
-// Role constants (keccak256 values from b20-skill.js)
 const MINT_ROLE_HASH         = '0x154c00819833dac601ee5ddded6fda79d9d8b506b911b3dbd54cdb95fe6c3686';
 const DEFAULT_ADMIN_ROLE_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 async function ethCallLocal(to, data) {
-  // Direct eth_call via the connected wallet provider (avoids needing our API for simple reads)
   return window.ethereum.request({ method: 'eth_call', params: [{ to, data }, 'latest'] });
 }
 
 async function hasRole(tokenAddr, role, account) {
   try {
-    // hasRole(bytes32,address) = 0x91d14854
     const roleHex = role.replace('0x', '').padStart(64, '0');
     const addrHex = account.replace('0x', '').toLowerCase().padStart(64, '0');
     const result  = await ethCallLocal(tokenAddr, '0x91d14854' + roleHex + addrHex);
@@ -2004,8 +1982,7 @@ async function lookupMintToken() {
     }
   } catch {}
 
-  // Check wallet's MINT_ROLE and DEFAULT_ADMIN_ROLE on this token
-  if (!walletAddress) { form.style.display = ''; return; } // not connected — just show form
+  if (!walletAddress) { form.style.display = ''; return; }
   const [hasMint, hasAdmin] = await Promise.all([
     hasRole(addr, MINT_ROLE_HASH, walletAddress),
     hasRole(addr, DEFAULT_ADMIN_ROLE_HASH, walletAddress),
@@ -2019,7 +1996,7 @@ async function lookupMintToken() {
     banner.style.background = 'rgba(34,197,94,.08)';
     banner.style.border = '1px solid rgba(34,197,94,.25)';
     msg.style.color = '#22c55e';
-    msg.textContent = '✓ Your wallet has MINT_ROLE — you can mint freely';
+    msg.textContent = '✓ Your wallet has MINT_ROLE';
     grantBtn.style.display = 'none';
     grantTx.style.display  = 'none';
     banner.style.display = '';
@@ -2028,17 +2005,16 @@ async function lookupMintToken() {
     banner.style.background = 'rgba(245,158,11,.08)';
     banner.style.border = '1px solid rgba(245,158,11,.3)';
     msg.style.color = '#f59e0b';
-    msg.textContent = '⚠ You are the admin but don\'t have MINT_ROLE yet. Grant it to yourself to start minting:';
+    msg.textContent = 'You are the admin but don\'t have MINT_ROLE yet. Grant it to yourself:';
     grantBtn.style.display = '';
     grantBtn.dataset.token  = addr;
     grantTx.style.display  = 'none';
     banner.style.display = '';
-    // Don't show mint form yet — wait until they grant the role
   } else {
     banner.style.background = 'rgba(239,68,68,.07)';
     banner.style.border = '1px solid rgba(239,68,68,.2)';
     msg.style.color = '#ef4444';
-    msg.textContent = '✗ Your wallet doesn\'t have MINT_ROLE or DEFAULT_ADMIN_ROLE on this token.';
+    msg.textContent = 'Your wallet doesn\'t have MINT_ROLE or ADMIN_ROLE on this token.';
     grantBtn.style.display = 'none';
     grantTx.style.display  = 'none';
     banner.style.display = '';
@@ -2051,51 +2027,44 @@ async function grantMintRole() {
   const grantTx = document.getElementById('mintGrantTx');
   if (!addr || !walletAddress) return;
   try {
-    btn.disabled = true; btn.textContent = 'Sending…';
-    // grantRole(bytes32 role, address account) = 0x2f2ff15d
+    btn.disabled = true; btn.textContent = 'Sending...';
     const roleHex = MINT_ROLE_HASH.replace('0x', '').padStart(64, '0');
     const addrHex = walletAddress.replace('0x', '').toLowerCase().padStart(64, '0');
     const data    = '0x2f2ff15d' + roleHex + addrHex;
     const net     = NET[network];
     try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: net.chainId }] }); } catch {}
-    const hash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: addr, data, gas: '0x186A0' /* 100k */ }] });
+    const hash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: addr, data, gas: '0x186A0' }] });
     grantTx.textContent = 'Tx: ' + hash;
     grantTx.style.display = '';
     btn.textContent = '✓ Role granted!';
-    showToast('MINT_ROLE granted — waiting for confirmation…', 'ok');
-    // Poll until role appears, then show mint form
     for (let i = 0; i < 15; i++) {
       await new Promise(r => setTimeout(r, 3000));
       if (await hasRole(addr, MINT_ROLE_HASH, walletAddress)) {
-        document.getElementById('mintRoleMsg').textContent = '✓ MINT_ROLE confirmed — you can now mint!';
+        document.getElementById('mintRoleMsg').textContent = '✓ MINT_ROLE confirmed';
         document.getElementById('mintRoleMsg').style.color = '#22c55e';
         document.getElementById('mintRoleBanner').style.background = 'rgba(34,197,94,.08)';
         document.getElementById('mintRoleBanner').style.border = '1px solid rgba(34,197,94,.25)';
         btn.style.display = 'none';
         document.getElementById('mintForm').style.display = '';
-        showToast('MINT_ROLE confirmed — mint form unlocked!', 'ok');
         return;
       }
     }
-    showToast('Tx sent — reload this tab in a few seconds to mint', 'info');
   } catch(e) {
     btn.disabled = false; btn.textContent = 'Grant MINT_ROLE to my wallet';
-    showToast(e.code === 4001 ? 'Rejected' : (e.message || 'Failed').slice(0,80), 'warn');
   }
 }
 
 async function onMint() {
-  if (!walletAddress) { showToast('Connect wallet first', 'warn'); return; }
+  if (!walletAddress) return;
   const tokenAddr = (document.getElementById('mintTokenAddr').value || '').trim();
   const amountStr = (document.getElementById('mintAmount').value || '').trim().replace(/,/g, '');
   const recipient = (document.getElementById('mintRecipient').value || '').trim() || walletAddress;
   const decimals  = parseInt(document.getElementById('mintDecimals').value || '18');
 
-  if (!/^0x[0-9a-fA-F]{40}$/.test(tokenAddr)) { showToast('Enter a valid token contract address', 'warn'); return; }
-  if (!amountStr || isNaN(Number(amountStr)) || Number(amountStr) <= 0) { showToast('Enter a valid mint amount', 'warn'); return; }
-  if (!/^0x[0-9a-fA-F]{40}$/.test(recipient)) { showToast('Enter a valid recipient address', 'warn'); return; }
+  if (!/^0x[0-9a-fA-F]{40}$/.test(tokenAddr)) return;
+  if (!amountStr || isNaN(Number(amountStr)) || Number(amountStr) <= 0) return;
+  if (!/^0x[0-9a-fA-F]{40}$/.test(recipient)) return;
 
-  // Encode mint(address to, uint256 amount) = selector 0x40c10f19
   const [intPart, fracPart = ''] = amountStr.split('.');
   const paddedFrac = (fracPart + '0'.repeat(decimals)).slice(0, decimals);
   const amountWei = BigInt(intPart + paddedFrac);
@@ -2113,9 +2082,8 @@ async function onMint() {
     const txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: tokenAddr, data, gas: '0x30D40' }] });
     document.getElementById('mintTxHash').textContent = txHash;
     document.getElementById('mintTxRow').style.display = '';
-    showToast('Mint submitted — check BaseScan for confirmation', 'info');
   } catch (e) {
-    showToast(e.code === 4001 ? 'Rejected in wallet' : (e.message || 'Mint failed').slice(0, 80), 'warn');
+    console.warn('Mint error:', e);
   }
 }
 
@@ -2125,6 +2093,7 @@ async function onMint() {
   onFormChange();
   togglePoolEconomics();
   updatePoolPreview();
+  loadLaunched();
 })();
 </script>
 
