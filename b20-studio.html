@@ -415,7 +415,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
   background:rgba(8,8,12,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--b1);
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(3,1fr);
 }
 .bn-item{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -533,12 +533,11 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <div class="stat-box"><div class="stat-val" id="statLatest">—</div><div class="stat-label">Latest</div></div>
     </div>
 
-    <!-- Tab bar: Discover / Launch -->
+    <!-- Tab bar: Discover / Launch / My Tokens -->
     <div class="tab-bar">
       <button class="tab-btn active" id="tbDiscover" onclick="switchView('discover')">Discover</button>
-      <button class="tab-btn" id="tbLaunch" onclick="switchView('launch')">Launch</button>
+      <button class="tab-btn" id="tbLaunch" onclick="openCreate('guided')">Launch</button>
       <button class="tab-btn" id="tbMyTokens" onclick="switchView('mytokens')">My Tokens</button>
-      <button class="tab-btn" id="tbMint" onclick="switchView('mint')">Mint</button>
     </div>
 
     <!-- Discover: filter + token grid -->
@@ -556,66 +555,14 @@ select.inp option{background:var(--s2);color:var(--t1)}
       </div>
     </div>
 
-    <!-- Launch: two mode cards -->
-    <div id="panelLaunch" style="display:none">
-      <div class="mode-cards">
-        <div class="mode-card guided" onclick="openCreate('guided')">
-          <div class="mode-card-ico">&#x1F9ED;</div>
-          <div class="mode-card-title">Guided B20 Token Setup</div>
-          <div class="mode-card-desc">Step-by-step wizard. AI fills the form for you. Best for first-time deployers.</div>
-        </div>
-        <div class="mode-card quick" onclick="openCreate('quick')">
-          <div class="mode-card-ico">&#x26A1;</div>
-          <div class="mode-card-title">Quick Launch</div>
-          <div class="mode-card-desc">Jump straight to the form. Name, symbol, deploy. For devs who know what they want.</div>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:8px">
-        <a href="/docs" style="font-size:.72rem;color:var(--t3);text-decoration:underline;transition:color .15s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">Read the B20 docs</a>
-      </div>
-    </div>
-
     <!-- My Tokens panel -->
     <div id="panelMyTokens" style="display:none">
       <div id="myTokensGrid" class="launched-grid"></div>
     </div>
 
-    <!-- Mint panel -->
-    <div id="panelMint" style="display:none">
-      <div class="card">
-        <div class="sec-label">Token</div>
-        <div style="margin-bottom:10px">
-          <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Contract Address</label>
-          <input id="mintTokenAddr" type="text" placeholder="0x..." style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none" oninput="lookupMintToken()">
-        </div>
-        <div id="mintTokenInfo" style="display:none;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:10px 14px;margin-bottom:10px">
-          <div style="font-size:.85rem;font-weight:700;color:var(--t1)" id="mintTokenName">—</div>
-          <div style="font-size:.68rem;color:var(--t3);margin-top:2px" id="mintTokenDecimals">—</div>
-          <input type="hidden" id="mintDecimals" value="18">
-        </div>
-        <div id="mintRoleBanner" style="display:none;border-radius:4px;padding:12px 14px;margin-bottom:14px;font-size:.8rem">
-          <div id="mintRoleMsg" style="font-weight:600;margin-bottom:6px"></div>
-          <button id="mintGrantBtn" onclick="grantMintRole()" style="display:none;padding:7px 16px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:var(--font)">Grant MINT_ROLE to my wallet</button>
-          <div id="mintGrantTx" style="display:none;font-family:var(--mono);font-size:.68rem;color:#4ade80;margin-top:6px;word-break:break-all"></div>
-        </div>
-        <div id="mintForm" style="display:none">
-          <div class="sec-label" style="margin-top:4px">Amount</div>
-          <div style="margin-bottom:14px;margin-top:8px">
-            <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Amount to Mint</label>
-            <input id="mintAmount" type="text" placeholder="e.g. 1000000" style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-size:.85rem;outline:none">
-          </div>
-          <div style="margin-bottom:18px">
-            <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:5px">Recipient Address</label>
-            <input id="mintRecipient" type="text" placeholder="0x... (defaults to your wallet)" style="width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:4px;padding:9px 13px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none">
-          </div>
-          <button onclick="onMint()" style="width:100%;padding:13px;border-radius:4px;border:none;background:var(--accent);color:#fff;font-size:.88rem;font-weight:700;cursor:pointer;box-shadow:0 2px 14px rgba(240,120,48,.28);transition:opacity .15s;font-family:var(--font)" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Mint Tokens</button>
-          <div id="mintTxRow" style="display:none;margin-top:14px;background:var(--s2);border:1px solid rgba(74,222,128,.25);border-radius:4px;padding:10px 14px">
-            <div style="font-size:.68rem;color:var(--t3);margin-bottom:3px">TX SUBMITTED</div>
-            <div id="mintTxHash" style="font-family:var(--mono);font-size:.74rem;color:#4ade80;word-break:break-all"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- hidden panels for JS compat -->
+    <div id="panelLaunch" style="display:none"></div>
+    <div id="panelMint" style="display:none"></div>
 
   </div>
 
@@ -838,7 +785,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
             <button class="dc-action-btn dc-action-primary" id="poolBtn" onclick="createPool()" style="width:100%;margin-top:10px;display:none">Retry pool creation</button>
           </div>
           <div class="dc-actions" id="dcActions" style="display:none">
-            <button class="dc-action-btn dc-action-outline" onclick="mintFromCard(document.getElementById('dcCA').textContent)">Mint supply</button>
             <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan &#x2197;</a>
             <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
           </div>
@@ -871,10 +817,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
     <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><ellipse cx="10" cy="6.5" rx="5.5" ry="2"/><path d="M4.5 6.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/><path d="M4.5 9.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/></svg></span>
     <span class="bn-lbl">My Tokens</span>
   </button>
-  <button class="bn-item" id="bnMint" onclick="switchView('mint');this.focus()">
-    <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 6.5v7M7 10h6"/></svg></span>
-    <span class="bn-lbl">Mint</span>
-  </button>
 </nav>
 
 <!-- TOKEN DASHBOARD MODAL (chart + on-site buy) -->
@@ -905,7 +847,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
           <div id="dmBuyStatus" style="font-size:.7rem;color:var(--t2,#aaa);margin-top:8px;line-height:1.5"></div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a id="dmSell" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">Sell on Uniswap &#x2197;</a>
+          <a id="dmSell" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">Trade on Uniswap &#x2197;</a>
           <a id="dmDex" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">DexScreener &#x2197;</a>
           <a id="dmScan" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">BaseScan &#x2197;</a>
         </div>
@@ -945,13 +887,14 @@ function showToast() {}
 
 // ── view switching ───────────────────────────────────────────────────────────
 function switchView(name) {
-  const panels = ['panelDiscover','panelLaunch','panelMyTokens','panelMint'];
-  const tabs = ['tbDiscover','tbLaunch','tbMyTokens','tbMint'];
-  const bns = ['bnDiscover','bnLaunch','bnMyTokens','bnMint'];
-  const map = {discover:0,launch:1,mytokens:2,mint:3};
+  if (name === 'launch') { openCreate('guided'); return; }
+
+  const panels = ['panelDiscover','panelMyTokens'];
+  const tabs = ['tbDiscover','tbMyTokens'];
+  const bns = ['bnDiscover','bnMyTokens'];
+  const map = {discover:0,mytokens:1};
   const idx = map[name] ?? 0;
 
-  // hide create view, show discover view
   document.getElementById('viewCreate').style.display = 'none';
   document.getElementById('viewDiscover').style.display = '';
 
@@ -967,13 +910,13 @@ function switchView(name) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('active', i === idx);
   });
+  const tbLaunch = document.getElementById('tbLaunch');
+  if (tbLaunch) tbLaunch.classList.remove('active');
+  const bnLaunch = document.getElementById('bnLaunch');
+  if (bnLaunch) bnLaunch.classList.remove('active');
 
   if (name === 'discover') loadLaunched();
   if (name === 'mytokens') renderMyTokens();
-  if (name === 'mint' && walletAddress) {
-    const el = document.getElementById('mintRecipient');
-    if (el) el.placeholder = walletAddress;
-  }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -981,16 +924,19 @@ function openCreate(mode) {
   document.getElementById('viewDiscover').style.display = 'none';
   document.getElementById('viewCreate').style.display = '';
   document.getElementById('tabCreate').style.display = '';
-  // guided mode: show AI section, quick mode: hide it
   const ai = document.getElementById('aiSection');
   if (ai) ai.style.display = mode === 'guided' ? '' : 'none';
+  ['tbDiscover','tbMyTokens'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('active'); });
+  ['bnDiscover','bnMyTokens'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('active'); });
+  const tbL = document.getElementById('tbLaunch'); if (tbL) tbL.classList.add('active');
+  const bnL = document.getElementById('bnLaunch'); if (bnL) bnL.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function closeCreate() {
   document.getElementById('viewCreate').style.display = 'none';
   document.getElementById('viewDiscover').style.display = '';
-  switchView('launch');
+  switchView('discover');
 }
 
 // ── legacy showTab (kept for JS compat — sidebar IDs are gone but we null-guard) ──
@@ -999,7 +945,7 @@ function showTab(name, el, isMobile) {
   if (name === 'new') { switchView('discover'); return; }
   if (name === 'tokens') { switchView('mytokens'); return; }
   if (name === 'manage') { return; }
-  if (name === 'mint') { switchView('mint'); return; }
+  if (name === 'mint') { switchView('discover'); return; }
 }
 function cap1(s) { return s[0].toUpperCase() + s.slice(1); }
 
@@ -1642,8 +1588,7 @@ function renderMyTokens() {
         ${t.decimals !== undefined ? `<div class="lcard-meta-row"><span style="opacity:.5">·</span>${t.decimals} decimals</div>` : ''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade / Chart</button>` : ''}
-        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint</button>` : ''}
+        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1732,8 +1677,7 @@ function renderLaunchedGrid() {
         ${t.supply?`<div class="lcard-meta-row"><span style="opacity:.5">◎</span>${Number(t.supply).toLocaleString()} supply</div>`:''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade / Chart</button>` : ''}
-        ${ca ? `<button class="lcard-act" onclick="mintFromCard('${ca}')">Mint</button>` : ''}
+        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1770,7 +1714,7 @@ function openDashboard(ca) {
   if (image) { ico.innerHTML = `<img src="${_esc(image)}" style="width:100%;height:100%;object-fit:cover" alt="">`; }
   else { ico.textContent = (sym || '?').slice(0, 3); ico.style.background = tokenColor(sym || '?'); }
   document.getElementById('dmChart').src = `https://dexscreener.com/base/${ca}?embed=1&theme=dark&trades=0&info=0`;
-  document.getElementById('dmSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=${ca}&outputCurrency=ETH`;
+  document.getElementById('dmSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=${ca}`;
   document.getElementById('dmDex').href = `https://dexscreener.com/base/${ca}`;
   document.getElementById('dmScan').href = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca;
   document.getElementById('dmBuyStatus').textContent = '';
