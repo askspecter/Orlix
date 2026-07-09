@@ -31,6 +31,15 @@ const POLICY_REGISTRY     = '0x8453000000000000000000000000000000000002';
 // Vested-allocation vault — unset until OrlixVestingVault.sol is deployed
 // (see contracts/README-vesting.md). "Vested allocations" is refused server-side
 // while this is empty, so no token is ever minted to an unconfigured address.
+// One-transaction launcher (OrlixLauncher.sol) — unset until deployed. When set,
+// a whole launch (create token + mint + seed pool + optional dev buy) is a SINGLE
+// contract call = one wallet confirmation on any wallet, even a plain EOA.
+const B20_LAUNCHER = (process.env.B20_LAUNCHER || '').trim();
+const LAUNCHER_IFACE = new ethers.Interface([
+  'function launch((uint8 variant,bytes32 salt,bytes b20Params,uint256 supplyRaw,uint24 fee,int24 tickSpacing,uint160 sqrtPriceX96,int24 tickLower,int24 tickUpper,uint128 liquidity,address creator) p) payable returns (address token)',
+  'function predict(uint8 variant, bytes32 salt) view returns (address)',
+]);
+
 const VESTING_VAULT = (process.env.B20_VESTING_VAULT || '').trim();
 const VAULT_IFACE = new ethers.Interface([
   'function createSchedule(address token, address beneficiary, uint128 totalAmount, uint64 start, uint64 cliffSeconds, uint64 durationSeconds, bool revocable) returns (bytes32 id)',
@@ -534,6 +543,13 @@ async function handleInfo(net, res) {
         note: VESTING_VAULT
           ? 'OrlixVestingVault is live — Vested allocations are enabled'
           : 'OrlixVestingVault not deployed yet — Vested allocations are disabled (see contracts/README-vesting.md)',
+      },
+      launcher: {
+        address:    B20_LAUNCHER || null,
+        configured: !!B20_LAUNCHER,
+        note: B20_LAUNCHER
+          ? 'OrlixLauncher is live — launches are a single one-confirmation transaction'
+          : 'OrlixLauncher not deployed yet — launches use per-step confirmations (see contracts/README-launcher.md)',
       },
       variants: [
         { name: 'asset',      description: 'General-purpose. Configurable decimals (6–18), rebasing, issuer metadata.' },
@@ -1369,6 +1385,102 @@ async function handlePreparePool(body, res) {
   }));
 }
 
+// One-transaction launch via OrlixLauncher — returns a SINGLE tx that creates the
+// token, seeds the V4 pool, and optionally dev-buys, so the user signs exactly
+// once regardless of wallet (no EIP-5792 batching needed). Requires B20_LAUNCHER
+// to be deployed/configured. The launcher mints the full supply into the pool, so
+// insider/vested allocations are not supported on this path.
+async function handlePrepareLaunch(body, res) {
+  if (!B20_LAUNCHER)
+    return res.end(JSON.stringify({ ok: false, error: 'One-tx launcher not deployed yet — set B20_LAUNCHER (see contracts/README-launcher.md)' }));
+
+  const { errors, config } = parseConfig(body);
+  if (errors.length)
+    return res.end(JSON.stringify({ ok: false, error: errors.join(', ') }));
+  if ((config.insider_allocations || []).length || (config.vested_allocations || []).length)
+    return res.end(JSON.stringify({ ok: false, error: 'The one-tx launcher seeds the full supply into the pool — remove insider/vested allocations or use the standard launch.' }));
+
+  const creator = (body.creator || config.admin || '').trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(creator))
+    return res.end(JSON.stringify({ ok: false, error: 'creator must be a valid 0x address' }));
+
+  const fee = parseInt(body.fee || '10000', 10);
+  if (!FEE_SPACING[fee])
+    return res.end(JSON.stringify({ ok: false, error: 'fee must be 500, 3000, or 10000' }));
+  const priceStr = String(body.price ?? body.initial_price ?? '');
+  if (!priceStr)
+    return res.end(JSON.stringify({ ok: false, error: 'price (ETH per token) is required' }));
+
+  try {
+    const variant   = config.variant === 'stablecoin' ? 1 : 0;
+    const decimals  = config.variant === 'stablecoin' ? 6 : (Number(config.decimals) || 18);
+    const supplyRaw = BigInt(config.supply_cap) * (10n ** BigInt(decimals));
+    const b20Params = encodeCreateParams(config);
+
+    const spacing     = FEE_SPACING[fee];
+    const weiPerToken = toWei18(priceStr);
+    if (weiPerToken <= 0n) return res.end(JSON.stringify({ ok: false, error: 'price must be > 0' }));
+    const tokenUnit = 10n ** BigInt(decimals);
+
+    const sqrtPriceX96 = sqrtPriceX96From(tokenUnit, weiPerToken);
+    if (sqrtPriceX96 <= 0n) return res.end(JSON.stringify({ ok: false, error: 'price out of range — adjust initial price' }));
+    const currentTick = tickFromPrice(Number(tokenUnit) / Number(weiPerToken));
+
+    const maxTick = poolMaxUsableTick(spacing);
+    let tickUpper = poolAlignDown(currentTick, spacing);
+    if (tickUpper >= currentTick) tickUpper -= spacing;
+    const tickLower = -maxTick;
+    if (tickLower >= tickUpper)
+      return res.end(JSON.stringify({ ok: false, error: 'Invalid tick range — raise the initial price or lower the fee tier' }));
+
+    const sqrtA = getSqrtRatioAtTick(tickLower);
+    const sqrtB = getSqrtRatioAtTick(tickUpper);
+    const liquidity = liquidityForAmount1(sqrtA, sqrtB, supplyRaw);
+    if (liquidity <= 0n)
+      return res.end(JSON.stringify({ ok: false, error: 'Computed liquidity is zero — increase supply or adjust price' }));
+
+    const salt = body.salt ?? ethers.hexlify(ethers.randomBytes(32));
+
+    // Predict the token address (deployed by the launcher, so getB20Address is
+    // keyed on the launcher, not the creator).
+    let predictedAddress = null;
+    try {
+      const r = await ethCall('mainnet', B20_LAUNCHER, LAUNCHER_IFACE.encodeFunctionData('predict', [variant, salt]));
+      if (r && r !== '0x') predictedAddress = ABI_CODER.decode(['address'], r)[0];
+    } catch {}
+
+    const params = {
+      variant, salt, b20Params, supplyRaw, fee, tickSpacing: spacing,
+      sqrtPriceX96, tickLower, tickUpper, liquidity,
+      creator: ethers.getAddress(creator),
+    };
+    const data = LAUNCHER_IFACE.encodeFunctionData('launch', [params]);
+
+    // Optional dev buy → msg.value.
+    let devWei = 0n;
+    const devEthStr = String(body.dev_buy_eth ?? body.devBuy ?? '0').trim();
+    if (devEthStr && devEthStr !== '0') { try { devWei = toWei18(devEthStr); } catch { devWei = 0n; } }
+
+    const gas = await fetchGas('mainnet').catch(() => null);
+    return res.end(JSON.stringify({
+      ok: true,
+      launcher: B20_LAUNCHER,
+      predictedAddress,
+      salt,
+      tx: {
+        to: B20_LAUNCHER,
+        data,
+        value: '0x' + devWei.toString(16),
+        gas: '0x' + (4_000_000).toString(16),
+        ...(gas ? { maxFeePerGas: gas.maxFeePerGas, maxPriorityFeePerGas: gas.maxPriorityFeePerGas } : {}),
+      },
+      note: 'Single tx: create token + seed V4 pool + optional dev buy. One confirmation.',
+    }));
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: e.message }));
+  }
+}
+
 async function handlePoolStatus(body, res) {
   const token = (body.token || '').trim();
   if (!/^0x[0-9a-fA-F]{40}$/.test(token))
@@ -1632,6 +1744,7 @@ module.exports = async (req, res) => {
     if (action === 'prepare' || action === 'deploy')   return handlePrepare(body, res);
     if (action === 'agent_deploy')                     return handleAgentDeploy(req, body, res);
     if (action === 'receipt')                          return handleReceipt(body, res);
+    if (action === 'prepare_launch')                   return handlePrepareLaunch(body, res);
     if (action === 'prepare_pool')                     return handlePreparePool(body, res);
     if (action === 'pool_status')                      return handlePoolStatus(body, res);
     if (action === 'prepare_vesting')                  return handlePrepareVesting(body, res);
