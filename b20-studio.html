@@ -339,7 +339,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .alloc-total{font-size:.68rem;color:var(--t3);margin-top:4px}
 .alloc-total.warn{color:var(--red);font-weight:700}
 .alloc-disabled-note{font-size:.68rem;color:var(--t3);background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px 12px;line-height:1.55;margin-bottom:10px}
-@media(max-width:640px){.alloc-row,.alloc-row.vested{grid-template-columns:1fr;gap:6px}.alloc-rm{width:100%}}
 
 /* ── CAP INLINE ── */
 .cap-label-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
@@ -500,11 +499,24 @@ select.inp option{background:var(--s2);color:var(--t1)}
   .nav-badge-label{font-size:.75rem}
 }
 #dashModal{padding:14px}
+/* Dashboard header close pinned top-right; market stats wrap instead of overflowing */
+.dm-close{position:absolute;top:12px;right:10px;z-index:4}
+.dm-stat-grid{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important}
+.dm-info-v{word-break:break-word}
 @media(max-width:560px){
   #dashModal{padding:0}
   #dashModal > div{max-height:100vh;border-radius:0}
   #dmChart{height:260px!important}
   #powImmutable,#powAdmin{padding:11px}
+  .dm-stat-grid{grid-template-columns:repeat(2,1fr)!important}
+  .dm-head{padding-right:44px!important}
+}
+/* Allocation rows: address full-width, other fields + remove share a compact second row */
+@media(max-width:640px){
+  .alloc-row,.alloc-row.vested{display:flex!important;flex-wrap:wrap;align-items:center}
+  .alloc-row .inp:first-child{flex:1 1 100%}
+  .alloc-row .inp:not(:first-child){flex:1 1 0;min-width:56px}
+  .alloc-rm{width:auto;flex:0 0 auto;padding:0 14px;height:34px}
 }
 .crt-scan{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);opacity:.4}
 :root.light .crt-scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);opacity:.3}
@@ -1116,7 +1128,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   <div class="dash-card" style="background:var(--s1);border:1px solid var(--b1);border-radius:16px;width:100%;max-width:1200px;margin:24px auto;box-shadow:0 24px 80px rgba(0,0,0,.5);overflow:hidden">
 
     <!-- Header -->
-    <div style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--b1);position:sticky;top:0;background:var(--s1);z-index:3;flex-wrap:wrap">
+    <div class="dm-head" style="display:flex;align-items:center;gap:14px;padding:16px 48px 16px 20px;border-bottom:1px solid var(--b1);position:sticky;top:0;background:var(--s1);z-index:3;flex-wrap:wrap">
       <div id="dmIco" style="width:46px;height:46px;border-radius:14px;background:#333;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1rem"></div>
       <div style="flex:1;min-width:120px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1133,11 +1145,11 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <a id="dmUniBtn" href="#" target="_blank" rel="noopener" class="dm-hbtn">Uniswap &#x2197;</a>
         <a id="dmClaimBtn" href="javascript:void(0)" class="dm-hbtn dm-hbtn-claim">Claim Fees</a>
       </div>
-      <button onclick="closeDashboard()" style="background:none;border:none;color:var(--t2);font-size:1.5rem;cursor:pointer;line-height:1;padding:4px 8px">&#xD7;</button>
+      <button class="dm-close" onclick="closeDashboard()" style="background:none;border:none;color:var(--t2);font-size:1.5rem;cursor:pointer;line-height:1;padding:4px 8px">&#xD7;</button>
     </div>
 
     <!-- Market stats -->
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)">
+    <div class="dm-stat-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)">
       <div class="dm-info"><div class="dm-info-l">Market Cap</div><div class="dm-info-v" id="dmMcap">—</div></div>
       <div class="dm-info"><div class="dm-info-l">24h Volume</div><div class="dm-info-v" id="dmVol">—</div></div>
       <div class="dm-info"><div class="dm-info-l">Price</div><div class="dm-info-v" id="dmPrice">—</div></div>
