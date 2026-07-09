@@ -50,7 +50,12 @@ a{text-decoration:none}
 .nav-logo img{height:26px;width:auto;display:block}
 .nav-divider{width:1px;height:20px;background:var(--b2);flex-shrink:0}
 @media(max-width:480px){.nav-logo img{height:22px}.nav-divider{display:none}}
-.nav-mid{display:flex;align-items:center;gap:8px}
+.nav-mid{position:absolute;left:50%;top:0;bottom:0;transform:translateX(-50%);display:flex;align-items:center}
+.nav-tabs{display:flex;align-items:center;gap:4px;background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:4px}
+.nav-tab{padding:7px 20px;border-radius:999px;border:none;background:none;color:var(--t3);font-family:var(--font);font-weight:700;font-size:.78rem;cursor:pointer;transition:.15s;white-space:nowrap}
+.nav-tab:hover{color:var(--t1)}
+.nav-tab.active{background:rgba(240,120,48,.15);color:var(--orange)}
+@media(max-width:820px){.nav-mid{display:none}}
 .nav-right{display:flex;align-items:center;gap:8px}
 .nav-badge{display:flex;align-items:center;gap:8px}
 .nav-badge-label{font-size:.875rem;font-weight:700;color:var(--t1);letter-spacing:-.01em}
@@ -624,7 +629,13 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <span class="live-tag">LIVE</span>
     </div>
   </div>
-  <div class="nav-mid"></div>
+  <div class="nav-mid">
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="ntDiscover" onclick="switchView('discover')">Discover</button>
+      <button class="nav-tab" id="ntLaunch" onclick="openCreate('guided')">Launch</button>
+      <button class="nav-tab" id="ntPortfolio" onclick="switchView('mytokens')">Portfolio</button>
+    </div>
+  </div>
   <div class="nav-right">
     <div id="orlix-wallet" style="display:flex;align-items:center;position:relative">
       <button id="wallet-fallback" onclick="toggleWalletDrop(event)" style="visibility:hidden">
@@ -660,15 +671,9 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <div class="stat-box"><div class="stat-val" id="statTokens">—</div><div class="stat-label">Tokens</div></div>
       <div class="stat-box"><div class="stat-val" id="statDeployers">—</div><div class="stat-label">Deployers</div></div>
       <div class="stat-box"><div class="stat-val" id="statVariant">—</div><div class="stat-label">Asset / Stable</div></div>
-      <div class="stat-box"><div class="stat-val" id="statLatest">—</div><div class="stat-label">Latest</div></div>
+      <div class="stat-box"><div class="stat-val" id="statVolume">—</div><div class="stat-label">24h Volume</div></div>
     </div>
 
-    <!-- Tab bar: Discover / Launch / My Tokens -->
-    <div class="tab-bar">
-      <button class="tab-btn active" id="tbDiscover" onclick="switchView('discover')">Discover</button>
-      <button class="tab-btn" id="tbLaunch" onclick="openCreate('guided')">Launch</button>
-      <button class="tab-btn" id="tbMyTokens" onclick="switchView('mytokens')">Portfolio</button>
-    </div>
 
     <!-- Discover: search + filter + token grid -->
     <div id="panelDiscover">
@@ -715,6 +720,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
       </div>
       <div class="pf-section-title">Created Tokens</div>
       <div id="myTokensGrid" class="launched-grid"></div>
+      <div class="pf-section-title" style="margin-top:28px">Token Holdings</div>
+      <div id="pfHoldingsGrid" class="launched-grid"></div>
     </div>
 
     <!-- hidden panels for JS compat -->
@@ -1227,6 +1234,7 @@ function switchView(name) {
   if (tbLaunch) tbLaunch.classList.remove('active');
   const bnLaunch = document.getElementById('bnLaunch');
   if (bnLaunch) bnLaunch.classList.remove('active');
+  _setNavActive(name);
 
   if (name === 'discover') loadLaunched();
   if (name === 'mytokens') renderMyTokens();
@@ -1255,7 +1263,16 @@ function openCreate(mode) {
   ['bnDiscover','bnMyTokens'].forEach(id => { const e = document.getElementById(id); if (e) e.classList.remove('active'); });
   const tbL = document.getElementById('tbLaunch'); if (tbL) tbL.classList.add('active');
   const bnL = document.getElementById('bnLaunch'); if (bnL) bnL.classList.add('active');
+  _setNavActive('launch');
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function _setNavActive(which) {
+  const map = { discover: 'ntDiscover', launch: 'ntLaunch', mytokens: 'ntPortfolio' };
+  ['ntDiscover', 'ntLaunch', 'ntPortfolio'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.classList.toggle('active', id === map[which]);
+  });
 }
 
 function wizGo(step) {
@@ -1926,7 +1943,7 @@ function renderMyTokens() {
   const av = document.getElementById('pfAvatar');
   if (av && walletAddress) av.style.background = tokenColor(walletAddress);
   _dmSet('pfCreated', tokens.length);
-  _dmSet('pfHeld', tokens.length);
+  loadHoldings();
   if (!tokens.length) {
     grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1">
       <div class="le-ico">◈</div>
@@ -1970,6 +1987,52 @@ function renderMyTokens() {
   }).join('');
 }
 
+// ── Portfolio: tokens the connected wallet holds (server-side balances) ───────
+async function loadHoldings() {
+  const grid = document.getElementById('pfHoldingsGrid');
+  if (!grid) return;
+  if (!walletAddress) {
+    _dmSet('pfHeld', '0');
+    grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1"><div class="le-ico">👛</div><div class="le-title">Connect your wallet</div><div class="le-sub">B20 tokens you hold will show here once your wallet is connected.</div></div>`;
+    return;
+  }
+  grid.innerHTML = `<div class="launched-spin">Loading holdings…</div>`;
+  try {
+    const r = await fetch(`/api/b20-market?holder=${walletAddress}`);
+    const d = await r.json();
+    const tokens = (d && d.ok && d.tokens) || [];
+    _dmSet('pfHeld', tokens.length);
+    if (!tokens.length) {
+      grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1"><div class="le-ico">◈</div><div class="le-title">No token holdings</div><div class="le-sub">B20 tokens you buy or receive will appear here.</div></div>`;
+      return;
+    }
+    const explorer = NET[network]?.explorer ?? 'https://basescan.org';
+    grid.innerHTML = tokens.map(t => {
+      const col = tokenColor(t.symbol);
+      const initials = (t.symbol || '?').slice(0, 3);
+      const ca = _esc(t.address);
+      const bal = (t.balance != null) ? Number(t.balance).toLocaleString(undefined, { maximumFractionDigits: 4 }) : '—';
+      return `<div class="lcard">
+        <div class="lcard-top">
+          <div class="lcard-ico" style="background:${col}">${initials}</div>
+          <div class="lcard-info">
+            <div class="lcard-name">${_esc(t.name || 'Token')}</div>
+            <div class="lcard-sym">${_esc(t.symbol || '???')}</div>
+          </div>
+        </div>
+        <div class="lcard-meta"><div class="lcard-meta-row"><span style="opacity:.5">◎</span>Balance: ${bal} ${_esc(t.symbol || '')}</div></div>
+        <div class="lcard-actions">
+          <button class="lcard-act lcard-act-primary" onclick="openTrade('${ca}')">Trade</button>
+          <button class="lcard-act" onclick="openDashboard('${ca}')">Dashboard</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (_) {
+    _dmSet('pfHeld', '0');
+    grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1"><div class="le-sub">Couldn't load holdings right now.</div></div>`;
+  }
+}
+
 // ── AI auto-fill ──────────────────────────────────────────────────────────────
 async function aiAutoFill() {
   const desc = (document.getElementById('aiDesc').value || '').trim();
@@ -2006,7 +2069,7 @@ async function aiAutoFill() {
 }
 
 // ── new launched ──────────────────────────────────────────────────────────────
-let _launchedAll = [], _launchedFilter = 'all', _launchedLoaded = false, _launchedSearch = '';
+let _launchedAll = [], _launchedFilter = 'all', _launchedLoaded = false, _launchedSearch = '', _launchedVolume = null;
 
 const TOKEN_COLORS = ['#F07830','#A78BFA','#22C55E','#3B82F6','#F59E0B','#EF4444','#06B6D4','#EC4899'];
 function tokenColor(sym) { let h=0; for(const c of (sym||'?')) h=(h*31+c.charCodeAt(0))&0xffff; return TOKEN_COLORS[h % TOKEN_COLORS.length]; }
@@ -2090,10 +2153,8 @@ function updateStats(items) {
   const assets = all.filter(t => t.variant !== 'stablecoin').length;
   const stables = all.length - assets;
   document.getElementById('statVariant').textContent = assets + ' / ' + stables;
-  if (all.length) {
-    const latest = all[0];
-    document.getElementById('statLatest').textContent = _timeAgo((latest.deployedAt || latest.timestamp) ? (latest.deployedAt || latest.timestamp * 1000) : null);
-  }
+  const vEl = document.getElementById('statVolume');
+  if (vEl) vEl.textContent = (_launchedVolume != null) ? _fmtUsd(_launchedVolume) : '—';
 }
 
 // ── Token Dashboard (chart + live info + on-site Uniswap trade) ────────────────
@@ -2136,6 +2197,7 @@ function openDashboard(ca, focus) {
   document.getElementById('dmUniBtn').href = `https://app.uniswap.org/swap?chain=base&outputCurrency=${ca}&inputCurrency=ETH`;
   document.getElementById('dsSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=${ca}&outputCurrency=ETH`;
   _dmSet('dmTrades', 'Loading trades…');
+  _dmSet('dmHolders', 'Loading holders…');
   dsSetSide('buy');
 
   renderMeta(item);
@@ -2143,10 +2205,9 @@ function openDashboard(ca, focus) {
   document.getElementById('dashModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  // Live enrich: on-chain token_info + pool + off-chain market/trades/holders
+  // Live enrich: on-chain token_info + pool + one server call for market/trades/holders
   loadDashLive(ca, sym);
   loadMarket(ca);
-  loadHolders(ca);
 }
 
 function renderMeta(item) {
@@ -2362,67 +2423,48 @@ function _fmtPrice(n) {
 }
 async function loadMarket(ca) {
   try {
-    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + ca);
+    const r = await fetch(`/api/b20-market?token=${ca}`);
     const d = await r.json();
     if (_dashCA !== ca) return;
-    const pairs = (d && d.pairs) || [];
-    if (!pairs.length) { _dmSet('dmMcap', 'no data'); _dmSet('dmVol', '—'); _dmSet('dmPrice', '—'); loadTrades(null); return; }
-    const p = pairs.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
-    _dmSet('dmMcap', p.marketCap || p.fdv ? _fmtUsd(p.marketCap || p.fdv) : '—');
-    _dmSet('dmVol', p.volume?.h24 != null ? _fmtUsd(p.volume.h24) : '—');
-    _dmSet('dmPrice', p.priceUsd ? _fmtPrice(p.priceUsd) : '—');
-    loadTrades(p.pairAddress);
-  } catch (_) { _dmSet('dmMcap', '—'); loadTrades(null); }
+    if (!d || !d.ok) { _dmSet('dmMcap', '—'); _dmSet('dmVol', '—'); _dmSet('dmPrice', '—'); renderTrades([]); renderHolders(ca, []); return; }
+    _dmSet('dmMcap', d.marketCap != null ? _fmtUsd(d.marketCap) : 'no data');
+    _dmSet('dmVol', d.volume24h != null ? _fmtUsd(d.volume24h) : '—');
+    _dmSet('dmPrice', d.price != null ? _fmtPrice(d.price) : '—');
+    renderTrades(d.trades || []);
+    renderHolders(ca, d.holders || []);
+  } catch (_) {
+    if (_dashCA === ca) { _dmSet('dmMcap', '—'); renderTrades([]); renderHolders(ca, []); }
+  }
 }
-async function loadTrades(pool) {
+function renderTrades(list) {
   const el = document.getElementById('dmTrades');
   if (!el) return;
-  if (!pool) { el.innerHTML = `<div style="color:var(--t3)">No pool yet — trades appear once the token is live.</div>`; return; }
-  try {
-    const r = await fetch(`https://api.geckoterminal.com/api/v2/networks/base/pools/${pool}/trades`);
-    const d = await r.json();
-    const list = (d && d.data) || [];
-    if (!list.length) { el.innerHTML = `<div style="color:var(--t3)">No trades yet.</div>`; return; }
-    el.innerHTML = list.slice(0, 12).map(t => {
-      const a = t.attributes || {};
-      const buy = (a.kind || '').toLowerCase() === 'buy';
-      const usd = Number(a.volume_in_usd || 0);
-      const who = (a.tx_from_address || '').slice(0, 6) + '…' + (a.tx_from_address || '').slice(-4);
-      const ago = a.block_timestamp ? _timeAgo(new Date(a.block_timestamp).getTime()) : '';
-      return `<div class="dm-trade-row">
-        <span style="font-weight:800;color:${buy ? '#22c55e' : '#ef4444'}">${buy ? 'BUY' : 'SELL'}</span>
-        <span style="color:var(--t3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${who} · ${ago}</span>
-        <span style="font-weight:700;color:var(--t1)">${_fmtUsd(usd)}</span>
-      </div>`;
-    }).join('');
-  } catch (_) { el.innerHTML = `<div style="color:var(--t3)">Live trades unavailable right now.</div>`; }
+  if (!list.length) { el.innerHTML = `<div style="color:var(--t3)">No trades yet — they appear here as people buy and sell.</div>`; return; }
+  el.innerHTML = list.map(t => {
+    const buy = t.kind === 'buy';
+    const who = (t.from || '').slice(0, 6) + '…' + (t.from || '').slice(-4);
+    const ago = t.ts ? _timeAgo(t.ts) : '';
+    return `<div class="dm-trade-row">
+      <span style="font-weight:800;color:${buy ? '#22c55e' : '#ef4444'}">${buy ? 'BUY' : 'SELL'}</span>
+      <span style="color:var(--t3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${who} · ${ago}</span>
+      <span style="font-weight:700;color:var(--t1)">${_fmtUsd(t.usd)}</span>
+    </div>`;
+  }).join('');
 }
-async function loadHolders(ca) {
+function renderHolders(ca, list) {
   const el = document.getElementById('dmHolders');
   if (!el) return;
-  el.innerHTML = `<div style="color:var(--t3)">Loading holders…</div>`;
   const ex = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca + '#balances';
-  const fallback = `<div style="color:var(--t3);line-height:1.6;margin-bottom:8px">Holder list isn't indexed yet.</div>
-    <a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block">View holders on BaseScan &#x2197;</a>`;
-  try {
-    const base = 'https://base.blockscout.com/api/v2/tokens/' + ca;
-    const [tRes, hRes] = await Promise.all([fetch(base), fetch(base + '/holders')]);
-    const t = await tRes.json().catch(() => ({}));
-    const h = await hRes.json().catch(() => ({}));
-    if (_dashCA !== ca) return;
-    const supply = t && t.total_supply ? BigInt(t.total_supply) : 0n;
-    const items = (h && h.items) || [];
-    if (!items.length) { el.innerHTML = fallback; return; }
-    el.innerHTML = items.slice(0, 10).map((it, i) => {
-      const addr = (it.address && it.address.hash) || it.address || '';
-      let val = 0n; try { val = BigInt(it.value || '0'); } catch (_) {}
-      const pct = supply > 0n ? (Number(val * 10000n / supply) / 100).toFixed(2) + '%' : '';
-      const short = addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : '—';
-      return `<div class="dm-hold-row"><span style="color:var(--t2);font-family:var(--mono)">#${i + 1}&nbsp; ${short}</span><span style="font-weight:700;color:var(--t1)">${pct}</span></div>`;
-    }).join('') + `<a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block;margin-top:10px">All holders &#x2197;</a>`;
-  } catch (_) {
-    if (_dashCA === ca) el.innerHTML = fallback;
+  if (!list.length) {
+    el.innerHTML = `<div style="color:var(--t3);line-height:1.6;margin-bottom:8px">Holder list isn't indexed yet.</div>
+      <a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block">View holders on BaseScan &#x2197;</a>`;
+    return;
   }
+  el.innerHTML = list.map((h, i) => {
+    const short = h.address ? h.address.slice(0, 6) + '…' + h.address.slice(-4) : '—';
+    const pct = h.pct != null ? h.pct.toFixed(2) + '%' : '';
+    return `<div class="dm-hold-row"><span style="color:var(--t2);font-family:var(--mono)">#${i + 1}&nbsp; ${short}</span><span style="font-weight:700;color:var(--t1)">${pct}</span></div>`;
+  }).join('') + `<a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block;margin-top:10px">All holders &#x2197;</a>`;
 }
 
 function filterLaunched(type, el) {
@@ -2443,6 +2485,7 @@ async function loadLaunched() {
     if (r.ok) {
       const d = await r.json();
       _launchedAll = d.tokens || [];
+      _launchedVolume = (d.volume24h != null) ? d.volume24h : _launchedVolume;
       _launchedLoaded = true;
       _launchedNet = network;
     }

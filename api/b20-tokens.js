@@ -90,6 +90,29 @@ async function ensureFeedCleanup() {
   } catch { _feedChecked = false; }  // retry on next request if it errored
 }
 
+// Sum 24h USD volume across our tokens via DexScreener's multi-token endpoint
+// (comma-separated, up to 30 addresses per call). Best-effort; returns null on failure.
+async function aggregate24hVolume(addresses) {
+  try {
+    const uniq = [...new Set(addresses.filter(Boolean))].slice(0, 30);
+    if (!uniq.length) return null;
+    const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + uniq.join(','), {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const pairs = (d && d.pairs) || [];
+    let total = 0;
+    const seen = new Set();
+    for (const p of pairs) {
+      if (!p || !p.pairAddress || seen.has(p.pairAddress)) continue;
+      seen.add(p.pairAddress);
+      total += Number(p.volume?.h24 || 0);
+    }
+    return total;
+  } catch { return null; }
+}
+
 async function rpcCall(method, params) {
   const rpcUrl = NETWORKS[_currentNet]?.rpc ?? NETWORKS.mainnet.rpc;
   const r = await fetch(rpcUrl, {
@@ -352,8 +375,9 @@ module.exports = async (req, res) => {
         variant:  t.variant || ((t.decimals === 6) ? 'stablecoin' : 'asset'),
         source:   'orlix',
       }));
+      const volume24h = await aggregate24hVolume(tokens.map(t => t.address));
       res.writeHead(200, CORS);
-      return res.end(JSON.stringify({ tokens, network: _currentNet, source: 'orlix', feedConfigured }));
+      return res.end(JSON.stringify({ tokens, volume24h, network: _currentNet, source: 'orlix', feedConfigured }));
     }
 
     // Fallback: on-chain discovery via the B20 factory.
