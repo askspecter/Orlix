@@ -24,8 +24,10 @@ async function fetchOrlixLaunched(limit) {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN || '';
   if (!url || !token) return [];
   try {
-    const r = await fetch(`${url}/LRANGE/b20:launched/0/${Math.max(limit * 2, 40) - 1}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['LRANGE', 'b20:launched', '0', String(Math.max(limit * 2, 40) - 1)]),
       signal: AbortSignal.timeout(6000),
     });
     if (!r.ok) return [];

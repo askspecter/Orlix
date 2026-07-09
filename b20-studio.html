@@ -1845,6 +1845,25 @@ async function loadLaunched() {
       _launchedNet = network;
     }
   } catch(_) {}
+  // Backfill: push my own deployed tokens (localStorage) into the shared feed once
+  // each, so tokens launched before the feed worked also appear on other devices.
+  try {
+    const mine = loadMyTokens();
+    const fed = new Set((JSON.parse(localStorage.getItem('b20_fed') || '[]')).map(a => String(a).toLowerCase()));
+    for (const m of mine) {
+      if (!m.address || fed.has(m.address.toLowerCase())) continue;
+      fed.add(m.address.toLowerCase());
+      fetch('/api/b20-skill', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'register_launch', token: m.address, name: m.name, symbol: m.symbol,
+          deployer: walletAddress || null, variant: m.variant || 'asset',
+          decimals: m.decimals, txHash: m.txHash || null, image: m.image || undefined,
+        }),
+      }).catch(() => {});
+    }
+    localStorage.setItem('b20_fed', JSON.stringify([...fed]));
+  } catch(_) {}
   // Always include tokens deployed from this browser (localStorage), so what you
   // launch shows up here immediately even if the shared feed hasn't caught up.
   try {

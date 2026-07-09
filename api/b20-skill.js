@@ -855,7 +855,13 @@ function _redisEnv() {
 async function _redis(...args) {
   const { url, token } = _redisEnv();
   if (!url || !token) return undefined;                // not configured
-  const r = await fetch(`${url}/${args.map(encodeURIComponent).join('/')}`, { headers: { Authorization: `Bearer ${token}` } });
+  // POST the command as a JSON body (Upstash REST). Path-style URLs break for
+  // large values (e.g. a token logo in an LPUSH), so always use the body form.
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args.map(String)),
+  });
   if (!r.ok) throw new Error('redis ' + r.status);
   return (await r.json()).result;
 }
