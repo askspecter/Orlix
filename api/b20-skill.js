@@ -1359,6 +1359,44 @@ async function handleRegisterLaunch(body, res) {
   return res.end(JSON.stringify({ ok: true }));
 }
 
+// Admin: wipe the launched feed and optionally seed a single token. Guarded by
+// the same X-Orlix-Key allowlist as agent deploys (fail-closed).
+async function handleResetFeed(req, body, res) {
+  const key = req.headers['x-orlix-key'] || '';
+  const adminKey = (process.env.FEED_ADMIN_KEY || '').trim();
+  const ok = agentAllowed(key) || (adminKey.length >= 6 && key === adminKey);
+  if (!ok) {
+    res.statusCode = 403;
+    return res.end(JSON.stringify({ ok: false, error: 'Forbidden: set FEED_ADMIN_KEY and pass it as X-Orlix-Key' }));
+  }
+  const keep = (body.token || '').trim();
+  try {
+    await _redis('DEL', 'b20:launched');
+    if (/^0x[0-9a-fA-F]{40}$/.test(keep) && keep.toLowerCase().startsWith('0xb2')) {
+      let name = '', symbol = '', decimals = 18;
+      try {
+        const [n, s, d] = await Promise.all([
+          ethCall('mainnet', keep, '0x' + SEL.name),
+          ethCall('mainnet', keep, '0x' + SEL.symbol),
+          ethCall('mainnet', keep, '0x' + SEL.decimals),
+        ]);
+        name = decodeString(n); symbol = decodeString(s); decimals = decodeUint8(d) || 18;
+      } catch {}
+      const entry = JSON.stringify({
+        address: ethers.getAddress(keep), name, symbol, decimals,
+        variant: decimals === 6 ? 'stablecoin' : 'asset',
+        deployer: null, txHash: null,
+        image: (typeof body.image === 'string' && /^data:image\//.test(body.image) && body.image.length <= 50000) ? body.image : null,
+        ts: Date.now(),
+      });
+      await _redis('LPUSH', 'b20:launched', entry);
+    }
+    return res.end(JSON.stringify({ ok: true, kept: keep || null }));
+  } catch (e) {
+    return res.end(JSON.stringify({ ok: false, error: e.message }));
+  }
+}
+
 // ── Router ────────────────────────────────────────────────────────────────────
 
 module.exports = async (req, res) => {
@@ -1385,6 +1423,7 @@ module.exports = async (req, res) => {
     if (action === 'pool_status')                      return handlePoolStatus(body, res);
     if (action === 'prepare_swap')                     return handlePrepareSwap(body, res);
     if (action === 'register_launch')                  return handleRegisterLaunch(body, res);
+    if (action === 'reset_feed')                       return handleResetFeed(req, body, res);
 
     return res.end(JSON.stringify({
       ok: false, error: `Unknown action: "${action}"`,

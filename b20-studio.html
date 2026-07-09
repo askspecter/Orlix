@@ -1845,43 +1845,9 @@ async function loadLaunched() {
       _launchedNet = network;
     }
   } catch(_) {}
-  // Backfill: push my own deployed tokens (localStorage) into the shared feed once
-  // each, so tokens launched before the feed worked also appear on other devices.
-  try {
-    const mine = loadMyTokens();
-    const fed = new Set((JSON.parse(localStorage.getItem('b20_fed') || '[]')).map(a => String(a).toLowerCase()));
-    for (const m of mine) {
-      if (!m.address || fed.has(m.address.toLowerCase())) continue;
-      fed.add(m.address.toLowerCase());
-      fetch('/api/b20-skill', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'register_launch', token: m.address, name: m.name, symbol: m.symbol,
-          deployer: walletAddress || null, variant: m.variant || 'asset',
-          decimals: m.decimals, txHash: m.txHash || null, image: m.image || undefined,
-        }),
-      }).catch(() => {});
-    }
-    localStorage.setItem('b20_fed', JSON.stringify([...fed]));
-  } catch(_) {}
-  // Always include tokens deployed from this browser (localStorage), so what you
-  // launch shows up here immediately even if the shared feed hasn't caught up.
-  try {
-    const mine = loadMyTokens();
-    const seen = new Set(_launchedAll.map(t => (t.address||'').toLowerCase()));
-    for (const m of mine) {
-      if (!m.address || seen.has(m.address.toLowerCase())) continue;
-      seen.add(m.address.toLowerCase());
-      _launchedAll.push({
-        address: m.address, name: m.name, symbol: m.symbol,
-        decimals: m.decimals, variant: m.variant || 'asset',
-        deployer: null, txHash: m.txHash || null, image: m.image || null,
-        timestamp: m.deployedAt ? Math.floor(m.deployedAt / 1000) : null,
-        source: 'local',
-      });
-    }
-    _launchedAll.sort((a, b) => ((b.timestamp || 0) - (a.timestamp || 0)));
-  } catch(_) {}
+  // New Launched reflects the shared feed only (single source of truth across
+  // devices). Your own personal list lives in the My Tokens tab.
+  _launchedAll.sort((a, b) => ((b.timestamp || 0) - (a.timestamp || 0)));
   renderLaunchedGrid();
 }
 
