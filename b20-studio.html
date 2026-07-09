@@ -754,7 +754,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
         <button class="tab-btn" data-pf="holdings" onclick="setPfTab('holdings',this)">Holdings</button>
         <button class="tab-btn" data-pf="fees" onclick="setPfTab('fees',this)">Fees</button>
         <button class="tab-btn" data-pf="vesting" onclick="setPfTab('vesting',this)">Vesting</button>
-        <button class="tab-btn" data-pf="referrals" onclick="setPfTab('referrals',this)">Referrals</button>
       </div>
 
       <div id="pfPanelLaunches">
@@ -768,12 +767,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
       </div>
       <div id="pfPanelVesting" style="display:none">
         <div id="pfVestingList"></div>
-      </div>
-      <div id="pfPanelReferrals" style="display:none">
-        <div class="empty" id="pfReferralBox">
-          <div class="empty-t">Connect your wallet</div>
-          <div style="font-size:.78rem;line-height:1.6">Your referral link will appear here once connected.</div>
-        </div>
       </div>
     </div>
 
@@ -1178,6 +1171,11 @@ select.inp option{background:var(--s2);color:var(--t1)}
 
       <!-- SIDEBAR: swap + holders -->
       <div class="dash-side" style="padding:14px 16px;display:flex;flex-direction:column;gap:16px">
+        <!-- Your balance -->
+        <div id="dmYourBalanceBox" style="display:none;background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:11px 14px">
+          <div style="font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:4px">Your balance</div>
+          <div id="dmYourBalance" style="font-size:.95rem;font-weight:800;color:var(--t1);font-family:var(--mono)">—</div>
+        </div>
         <!-- Swap -->
         <div>
           <div style="font-size:.78rem;font-weight:800;color:var(--t1);margin-bottom:10px">Swap</div>
@@ -2235,7 +2233,11 @@ async function loadHoldings() {
   }
   grid.innerHTML = `<div class="launched-spin">Loading holdings…</div>`;
   try {
-    const r = await fetch(`/api/b20-market?holder=${walletAddress}`);
+    // Pass every token address we already know about (created + on Discover) so
+    // the server checks their on-chain balanceOf even before any indexer sees them.
+    const known = [...loadMyTokens(), ...(_launchedAll || [])].map(t => t.address).filter(Boolean);
+    const csv = [...new Set(known.map(a => a.toLowerCase()))].slice(0, 60).join(',');
+    const r = await fetch(`/api/b20-market?holder=${walletAddress}${csv ? '&tokens=' + csv : ''}`);
     const d = await r.json();
     const tokens = (d && d.ok && d.tokens) || [];
     _dmSet('pfHeld', tokens.length);
@@ -2255,8 +2257,8 @@ async function loadHoldings() {
   }
 }
 
-// ── Profile sub-tabs: Launches / Holdings / Fees / Vesting / Referrals ────────
-const PF_TABS = ['launches', 'holdings', 'fees', 'vesting', 'referrals'];
+// ── Profile sub-tabs: Launches / Holdings / Fees / Vesting ────────────────────
+const PF_TABS = ['launches', 'holdings', 'fees', 'vesting'];
 function setPfTab(name, el) {
   PF_TABS.forEach(t => {
     const panel = document.getElementById('pfPanel' + t[0].toUpperCase() + t.slice(1));
@@ -2265,7 +2267,6 @@ function setPfTab(name, el) {
   document.querySelectorAll('#pfTabBar .tab-btn').forEach(b => b.classList.toggle('active', b === el));
   if (name === 'fees') renderFeesTab();
   if (name === 'vesting') renderVestingTab();
-  if (name === 'referrals') renderReferralsTab();
 }
 
 // Fees: creator's claimable LP fee position for each token they launched.
@@ -2328,23 +2329,6 @@ async function _claimVesting(tx) {
     await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: walletAddress, to: tx.to, data: tx.data, value: tx.value || '0x0', gas: tx.gas }] });
     setTimeout(renderVestingTab, 3000);
   } catch (_) {}
-}
-
-// Referrals: a shareable link back to Discover. Orlix doesn't currently route or
-// track referral revenue on-chain — this is a plain shareable link, not a paid
-// referral program.
-function renderReferralsTab() {
-  const box = document.getElementById('pfReferralBox');
-  if (!box) return;
-  if (!walletAddress) { box.innerHTML = `<div class="empty-t">Connect your wallet</div><div style="font-size:.78rem;line-height:1.6">Your referral link will appear here once connected.</div>`; return; }
-  const link = `${location.origin}/b20-studio.html?ref=${walletAddress}`;
-  box.innerHTML = `
-    <div class="empty-t" style="margin-bottom:8px">Your referral link</div>
-    <div style="font-size:.7rem;color:var(--t3);line-height:1.6;margin-bottom:14px">Share this link — anyone who opens it lands on B20 Studio's Discover page. Orlix doesn't currently track or pay referral revenue on-chain; this is a plain shareable link.</div>
-    <div class="dc-field-row" style="max-width:480px;margin:0 auto">
-      <span class="dc-field-val">${_esc(link)}</span>
-      <button class="dc-copy-btn" onclick="navigator.clipboard.writeText('${link}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1400)">Copy</button>
-    </div>`;
 }
 
 // ── AI auto-fill ──────────────────────────────────────────────────────────────
@@ -2535,6 +2519,7 @@ function openDashboard(ca, focus) {
   _dmSet('dmLpFee', '—');
   _dmSet('dmMcap', 'loading…'); _dmSet('dmVol', '—'); _dmSet('dmPrice', '—');
   _dmSet('dsBuySym', sym); _dmSet('dsSellSym', sym); _dmSet('dsBuyStatus', '');
+  const _bb = document.getElementById('dmYourBalanceBox'); if (_bb) _bb.style.display = 'none';
 
   const isDark = !document.documentElement.classList.contains('light');
   document.getElementById('dmChart').src = `https://dexscreener.com/base/${ca}?embed=1&theme=${isDark ? 'dark' : 'light'}&trades=0&info=0`;
@@ -2623,13 +2608,19 @@ function renderClaim() {
 }
 
 async function loadDashLive(ca, sym) {
-  // Token metadata
+  // Token metadata + the connected wallet's live balance (holder param reads
+  // balanceOf on-chain, so "Your balance" is correct the moment a token launches).
   try {
-    const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'token_info', address: ca, network }) });
+    const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'token_info', address: ca, holder: walletAddress || undefined, network }) });
     const d = await r.json();
     if (d.ok && _dashCA === ca) {
       if (d.totalSupply) { _dmSet('dmSupply', d.totalSupply + ' ' + (d.symbol || sym)); _dmSet('dmCap', d.totalSupply + ' ' + (d.symbol || sym)); }
       if (d.name) _dmSet('dmName', d.name);
+      const box = document.getElementById('dmYourBalanceBox');
+      if (walletAddress && d.holder && box) {
+        _dmSet('dmYourBalance', (d.holder.balance || '0') + ' ' + (d.symbol || sym));
+        box.style.display = '';
+      } else if (box) { box.style.display = 'none'; }
     }
   } catch (_) {}
   // Pool / fee tier
