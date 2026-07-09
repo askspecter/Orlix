@@ -60,8 +60,10 @@ a{text-decoration:none}
 .nav-home-btn:hover{color:var(--t1);border-color:var(--b2)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* ── SHELL (centered column, no sidebar) ── */
-.shell{max-width:960px;margin:0 auto;padding:80px 20px 100px}
+/* ── SHELL (wide, near full-screen on laptop) ── */
+.shell{max-width:1400px;margin:0 auto;padding:80px 36px 100px}
+/* keep the create wizard readable at a comfortable column width */
+#viewCreate{max-width:960px;margin:0 auto}
 
 /* ── HERO HEADER ── */
 .hero{text-align:center;margin-bottom:36px}
@@ -565,6 +567,18 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .lbadge-new{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
 .disc-count{font-size:.7rem;color:var(--t3);font-weight:600;white-space:nowrap;margin-left:2px}
 
+/* Portfolio */
+.pf-header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--b1);border-radius:14px;padding:20px 22px;margin-bottom:22px}
+.pf-id{display:flex;align-items:center;gap:14px}
+.pf-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#F5A623);flex-shrink:0}
+.pf-addr{font-size:1rem;font-weight:800;color:var(--t1);font-family:var(--mono)}
+.pf-role{font-size:.72rem;color:var(--t3);margin-top:3px}
+.pf-stats{display:flex;gap:26px;flex-wrap:wrap}
+.pf-stat-l{font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.pf-stat-v{font-size:1.15rem;font-weight:800;color:var(--t1)}
+.pf-section-title{font-size:.9rem;font-weight:800;color:var(--t1);margin-bottom:14px}
+@media(max-width:720px){.pf-header{padding:16px}.pf-stats{gap:18px}}
+
 /* Dashboard modal */
 .dm-info{background:var(--s1);padding:13px 16px}
 .dm-info-l{font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
@@ -649,7 +663,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
     <div class="tab-bar">
       <button class="tab-btn active" id="tbDiscover" onclick="switchView('discover')">Discover</button>
       <button class="tab-btn" id="tbLaunch" onclick="openCreate('guided')">Launch</button>
-      <button class="tab-btn" id="tbMyTokens" onclick="switchView('mytokens')">My Tokens</button>
+      <button class="tab-btn" id="tbMyTokens" onclick="switchView('mytokens')">Portfolio</button>
     </div>
 
     <!-- Discover: search + filter + token grid -->
@@ -679,8 +693,23 @@ select.inp option{background:var(--s2);color:var(--t1)}
       </div>
     </div>
 
-    <!-- My Tokens panel -->
+    <!-- Portfolio panel -->
     <div id="panelMyTokens" style="display:none">
+      <div class="pf-header" id="pfHeader">
+        <div class="pf-id">
+          <div class="pf-avatar" id="pfAvatar"></div>
+          <div>
+            <div class="pf-addr" id="pfAddr">Connect your wallet</div>
+            <div class="pf-role">Token holder &amp; creator</div>
+          </div>
+        </div>
+        <div class="pf-stats">
+          <div class="pf-stat"><div class="pf-stat-l">Tokens Created</div><div class="pf-stat-v" id="pfCreated">0</div></div>
+          <div class="pf-stat"><div class="pf-stat-l">Tokens Held</div><div class="pf-stat-v" id="pfHeld">0</div></div>
+          <div class="pf-stat"><div class="pf-stat-l">Network</div><div class="pf-stat-v" style="color:#4ade80">Base</div></div>
+        </div>
+      </div>
+      <div class="pf-section-title">Created Tokens</div>
       <div id="myTokensGrid" class="launched-grid"></div>
     </div>
 
@@ -979,7 +1008,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
   </button>
   <button class="bn-item" id="bnMyTokens" onclick="switchView('mytokens');this.focus()">
     <span class="bn-ico"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><ellipse cx="10" cy="6.5" rx="5.5" ry="2"/><path d="M4.5 6.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/><path d="M4.5 9.5v3c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-3"/></svg></span>
-    <span class="bn-lbl">My Tokens</span>
+    <span class="bn-lbl">Portfolio</span>
   </button>
 </nav>
 
@@ -1843,6 +1872,13 @@ function renderMyTokens() {
   const grid = document.getElementById('myTokensGrid');
   if (!grid) return;
   const tokens = loadMyTokens();
+  // Portfolio header
+  const addrEl = document.getElementById('pfAddr');
+  if (addrEl) addrEl.textContent = walletAddress ? walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4) : 'Connect your wallet';
+  const av = document.getElementById('pfAvatar');
+  if (av && walletAddress) av.style.background = tokenColor(walletAddress);
+  _dmSet('pfCreated', tokens.length);
+  _dmSet('pfHeld', tokens.length);
   if (!tokens.length) {
     grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1">
       <div class="le-ico">◈</div>
