@@ -51,19 +51,31 @@ Write a Foundry test that: predicts the address (`predict(variant, salt)`),
 calls `launch(params)` with a tiny supply, then asserts the pool exists
 (`StateView.getSlot0`) and the creator owns a position NFT.
 
-## How the frontend will call it (once you give me `LAUNCHER`)
+## Wiring (already done — you just set one env var)
 
-The backend already computes everything the contract needs (sqrtPriceX96,
-tickLower/upper, liquidity, salt, b20Params). Send me the deployed `LAUNCHER`
-address and I will:
+The frontend + backend are **already wired for this**. Deploy the contract, then:
 
-- add it to `api/b20-skill.js`
-- return a single `launch(...)` calldata bundle from `prepare`
-- have `b20-studio.html` send exactly one `eth_sendTransaction` to `LAUNCHER`
-  (value = dev-buy ETH)
+```env
+B20_LAUNCHER=0x...   # the deployed OrlixLauncher address
+```
 
-Result: **one confirmation**, supply seeded straight into the pool, no `+1B`
-in the wallet — matching RWAGMI.
+Redeploy the Vercel functions. From that point:
+
+- `api/b20-skill.js` `handleInfo` reports `launcher: { address, configured }`,
+  which `b20-studio.html` reads to decide whether to use the one-tx path.
+- The `prepare_launch` action computes everything the contract needs
+  (sqrtPriceX96, tickLower/upper, liquidity, salt, b20Params) and returns a
+  single `launch(...)` tx.
+- `b20-studio.html` sends exactly **one** `eth_sendTransaction` to the launcher
+  (value = dev-buy ETH) → **one confirmation on any wallet**, no EIP-5792
+  batching required, no `+1B` in the wallet — matching RWAGMI.
+
+Until `B20_LAUNCHER` is set, launches automatically fall back to the existing
+path (EIP-5792 batch when supported, else per-step confirmations).
+
+**Limitation:** the launcher seeds the *full* supply into the pool, so it does
+not support insider/vested allocations. When a launch has allocations the
+frontend skips the launcher and uses the standard multi-step path.
 
 ## Addresses baked into the contract (Base mainnet)
 
