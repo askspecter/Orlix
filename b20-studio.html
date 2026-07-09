@@ -729,16 +729,14 @@ select.inp option{background:var(--s2);color:var(--t1)}
         </div>
         <div class="field-row">
           <div class="field">
-            <label class="field-label">Liquidity tokens (into pool)</label>
-            <input class="inp" id="fPoolLp" type="text" value="100000000000" placeholder="blank = all" style="font-size:.72rem">
-            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Moved from your wallet into the pool</div>
-          </div>
-          <div class="field">
             <label class="field-label">Dev buy (ETH) — optional</label>
             <input class="inp" id="fPoolDevBuy" type="text" value="0" placeholder="0 = none" style="font-size:.72rem">
-            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Buy your own token at launch</div>
+            <div style="font-size:.6rem;color:var(--t3);margin-top:3px">Buy your own token at launch, at the launch price</div>
           </div>
+          <div class="field"></div>
         </div>
+        <!-- Full supply always seeded into the pool (fair launch — no free creator supply) -->
+        <input type="hidden" id="fPoolLp" value="100000000000">
       </div>
 
       <!-- Deploy / Launch -->
