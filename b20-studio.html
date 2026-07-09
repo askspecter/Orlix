@@ -45,7 +45,11 @@ a{text-decoration:none}
   background:rgba(10,10,10,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--b1);
 }
-.nav-left{display:flex;align-items:center;gap:8px}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-logo{display:flex;align-items:center;height:26px}
+.nav-logo img{height:26px;width:auto;display:block}
+.nav-divider{width:1px;height:20px;background:var(--b2);flex-shrink:0}
+@media(max-width:480px){.nav-logo img{height:22px}.nav-divider{display:none}}
 .nav-mid{display:flex;align-items:center;gap:8px}
 .nav-right{display:flex;align-items:center;gap:8px}
 .nav-badge{display:flex;align-items:center;gap:8px}
@@ -613,10 +617,8 @@ select.inp option{background:var(--s2);color:var(--t1)}
 <!-- NAV -->
 <nav class="nav">
   <div class="nav-left">
-    <a href="/" class="nav-home-btn">
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 10L10 3l7.5 7"/><path d="M4.5 8.5v8h4v-4h3v4h4v-8"/></svg>
-      <span class="nav-home-text">Home</span>
-    </a>
+    <a href="/" class="nav-logo" aria-label="Orlix home"><img src="/orlix-wordmark.png" alt="ORLIX"></a>
+    <div class="nav-divider"></div>
     <div class="nav-badge">
       <span class="nav-badge-label" style="font-size:.82rem;font-weight:700;color:var(--t1)">B20 Studio</span>
       <span class="live-tag">LIVE</span>
@@ -651,13 +653,6 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <span class="hero-eyebrow"><span class="dot"></span>Base Mainnet · Live</span>
       <h1 class="hero-title">Launch <span class="hero-grad">B20</span> tokens</h1>
       <p class="hero-sub">Native precompile tokens on Base — deploy, seed a Uniswap pool, and go tradeable in one confirmation. Explore what the community has launched.</p>
-      <div class="hero-cta">
-        <button class="hero-launch-btn" onclick="openCreate('guided')">
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16V4"/><path d="M5 9l5-5 5 5"/></svg>
-          Launch a Token
-        </button>
-        <a class="hero-ghost-btn" href="/docs">Read docs</a>
-      </div>
     </div>
 
     <!-- Stats -->
