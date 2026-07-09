@@ -519,6 +519,52 @@ select.inp option{background:var(--s2);color:var(--t1)}
   background:none;border:none;padding:0;margin-bottom:16px;
   font-size:.7rem;font-weight:600;color:var(--t3);
 }
+
+/* ═══════════ LAUNCHPAD POLISH ═══════════ */
+/* Hero */
+.hero{position:relative;padding-top:6px;margin-bottom:30px}
+.hero::before{content:'';position:absolute;top:-34px;left:50%;transform:translateX(-50%);width:580px;max-width:92vw;height:250px;background:radial-gradient(50% 50% at 50% 50%,rgba(240,120,48,.15),transparent 70%);filter:blur(26px);pointer-events:none;z-index:0}
+.hero>*{position:relative;z-index:1}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:.6rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--orange);background:rgba(240,120,48,.08);border:1px solid rgba(240,120,48,.2);border-radius:99px;padding:5px 13px;margin-bottom:16px}
+.hero-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.6);animation:pulse 2s ease-in-out infinite}
+.hero-title{font-size:2.4rem}
+.hero-grad{background:linear-gradient(92deg,var(--orange),#F5A623);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.hero-cta{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+.hero-launch-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:99px;border:none;cursor:pointer;background:var(--orange);color:#fff;font-family:var(--font);font-weight:700;font-size:.86rem;box-shadow:0 4px 24px rgba(240,120,48,.35);transition:transform .12s,box-shadow .15s}
+.hero-launch-btn:hover{transform:translateY(-2px);box-shadow:0 8px 34px rgba(240,120,48,.5)}
+.hero-launch-btn:active{transform:translateY(0)}
+.hero-ghost-btn{display:inline-flex;align-items:center;gap:6px;padding:13px 22px;border-radius:99px;border:1px solid var(--b2);background:none;color:var(--t2);font-family:var(--font);font-weight:600;font-size:.86rem;cursor:pointer;transition:.15s}
+.hero-ghost-btn:hover{border-color:var(--b3);color:var(--t1)}
+
+/* Stat boxes */
+.stat-box{position:relative;overflow:hidden;transition:border-color .15s,transform .2s}
+.stat-box:hover{border-color:var(--b2);transform:translateY(-2px)}
+.stat-box::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(240,120,48,.5),transparent);opacity:0;transition:opacity .2s}
+.stat-box:hover::after{opacity:1}
+
+/* Search + sort */
+.disc-tools{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.disc-search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--b1);border-radius:10px;padding:8px 14px;transition:border-color .15s,box-shadow .15s}
+.disc-search:focus-within{border-color:rgba(240,120,48,.4);box-shadow:0 0 0 3px rgba(240,120,48,.06)}
+.disc-search svg{flex-shrink:0;color:var(--t3)}
+.disc-search input{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:var(--font);font-size:.8rem;min-width:0}
+.disc-search input::placeholder{color:var(--t3)}
+.disc-sort{background:var(--s1);border:1px solid var(--b1);border-radius:10px;color:var(--t2);font-family:var(--font);font-size:.76rem;padding:8px 30px 8px 12px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8A96' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;transition:border-color .15s}
+.disc-sort:hover{border-color:var(--b2)}
+
+/* Card polish */
+.lcard{position:relative;background:linear-gradient(180deg,var(--s2),var(--s1));overflow:hidden}
+:root.light .lcard{background:var(--s1)}
+.lcard::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(240,120,48,.4),transparent);opacity:0;transition:opacity .2s}
+.lcard:hover::after{opacity:1}
+.lcard:hover{border-color:rgba(240,120,48,.35);box-shadow:0 10px 32px rgba(0,0,0,.35)}
+:root.light .lcard:hover{box-shadow:0 10px 28px rgba(0,0,0,.08)}
+.lcard-ico{box-shadow:0 0 0 2px var(--s1),0 0 0 3px rgba(240,120,48,.15)}
+.lcard-meta-row{display:flex;align-items:center;gap:6px}
+.lcard-badges{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.lbadge-new{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.disc-count{font-size:.7rem;color:var(--t3);font-weight:600;white-space:nowrap;margin-left:2px}
+@media(max-width:720px){.hero-title{font-size:1.7rem}.disc-search{min-width:140px}}
 </style>
 </head>
 <body>
@@ -562,8 +608,16 @@ select.inp option{background:var(--s2);color:var(--t1)}
   <div id="viewDiscover">
 
     <div class="hero">
-      <h1 class="hero-title">B20 Studio</h1>
-      <p class="hero-sub">Launch native tokens on Base. Explore what's been deployed.</p>
+      <span class="hero-eyebrow"><span class="dot"></span>Base Mainnet · Live</span>
+      <h1 class="hero-title">Launch <span class="hero-grad">B20</span> tokens</h1>
+      <p class="hero-sub">Native precompile tokens on Base — deploy, seed a Uniswap pool, and go tradeable in one confirmation. Explore what the community has launched.</p>
+      <div class="hero-cta">
+        <button class="hero-launch-btn" onclick="openCreate('guided')">
+          <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16V4"/><path d="M5 9l5-5 5 5"/></svg>
+          Launch a Token
+        </button>
+        <a class="hero-ghost-btn" href="/docs">Read docs</a>
+      </div>
     </div>
 
     <!-- Stats -->
@@ -581,14 +635,26 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <button class="tab-btn" id="tbMyTokens" onclick="switchView('mytokens')">My Tokens</button>
     </div>
 
-    <!-- Discover: filter + token grid -->
+    <!-- Discover: search + filter + token grid -->
     <div id="panelDiscover">
+      <div class="disc-tools">
+        <div class="disc-search">
+          <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="6"/><path d="M17 17l-3.5-3.5"/></svg>
+          <input id="discSearch" type="text" placeholder="Search by name, symbol or address…" oninput="onDiscSearch()" autocomplete="off">
+        </div>
+        <select class="disc-sort" id="discSort" onchange="renderLaunchedGrid()">
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        <button onclick="loadLaunched()" style="background:var(--s1);border:1px solid var(--b1);border-radius:10px;color:var(--t3);padding:8px 14px;font-size:.76rem;cursor:pointer;font-family:var(--font);transition:.15s" onmouseover="this.style.color='var(--t1)';this.style.borderColor='var(--b2)'" onmouseout="this.style.color='var(--t3)';this.style.borderColor='var(--b1)'">↻ Refresh</button>
+      </div>
       <div class="filter-bar">
         <button class="lchip active" id="lchipAll" onclick="filterLaunched('all',this)">All</button>
         <button class="lchip" id="lchipAsset" onclick="filterLaunched('asset',this)">Asset</button>
         <button class="lchip" id="lchipStable" onclick="filterLaunched('stablecoin',this)">Stablecoin</button>
         <div class="filter-right">
-          <button onclick="loadLaunched()" style="background:none;border:1px solid var(--b1);border-radius:7px;color:var(--t3);padding:5px 12px;font-size:.72rem;cursor:pointer;font-family:var(--font);transition:.15s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">↻ Refresh</button>
+          <span class="disc-count" id="discCount"></span>
         </div>
       </div>
       <div id="launchedGrid" class="launched-grid">
@@ -1007,7 +1073,7 @@ let _wizStep = 1;
 function openCreate(mode) {
   _wizMode = mode || 'guided';
   document.getElementById('viewDiscover').style.display = 'none';
-  document.getElementById('viewCreate').style.display = '';
+  document.getElementById('viewCreate').style.display = 'block';
   document.getElementById('tabCreate').style.display = '';
   const ai = document.getElementById('aiSection');
   if (ai) ai.style.display = _wizMode === 'guided' ? '' : 'none';
@@ -1754,14 +1820,33 @@ async function aiAutoFill() {
 }
 
 // ── new launched ──────────────────────────────────────────────────────────────
-let _launchedAll = [], _launchedFilter = 'all', _launchedLoaded = false;
+let _launchedAll = [], _launchedFilter = 'all', _launchedLoaded = false, _launchedSearch = '';
 
 const TOKEN_COLORS = ['#F07830','#A78BFA','#22C55E','#3B82F6','#F59E0B','#EF4444','#06B6D4','#EC4899'];
 function tokenColor(sym) { let h=0; for(const c of (sym||'?')) h=(h*31+c.charCodeAt(0))&0xffff; return TOKEN_COLORS[h % TOKEN_COLORS.length]; }
 
+function _tokenTs(t) { return (t.deployedAt || (t.timestamp ? t.timestamp * 1000 : 0)) || 0; }
+
+function onDiscSearch() {
+  _launchedSearch = (document.getElementById('discSearch')?.value || '').trim().toLowerCase();
+  renderLaunchedGrid();
+}
+
 function renderLaunchedGrid() {
   const grid = document.getElementById('launchedGrid');
-  const items = _launchedFilter === 'all' ? _launchedAll : _launchedAll.filter(t => t.variant === _launchedFilter);
+  let items = _launchedFilter === 'all' ? _launchedAll.slice() : _launchedAll.filter(t => t.variant === _launchedFilter);
+  if (_launchedSearch) {
+    items = items.filter(t =>
+      (t.name || '').toLowerCase().includes(_launchedSearch) ||
+      (t.symbol || '').toLowerCase().includes(_launchedSearch) ||
+      (t.address || '').toLowerCase().includes(_launchedSearch));
+  }
+  const sort = document.getElementById('discSort')?.value || 'new';
+  if (sort === 'new') items.sort((a, b) => _tokenTs(b) - _tokenTs(a));
+  else if (sort === 'old') items.sort((a, b) => _tokenTs(a) - _tokenTs(b));
+  else if (sort === 'name') items.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const countEl = document.getElementById('discCount');
+  if (countEl) countEl.textContent = _launchedAll.length ? `${items.length} of ${_launchedAll.length} token${_launchedAll.length === 1 ? '' : 's'}` : '';
   if (!items.length) {
     grid.innerHTML = `<div class="launched-empty" style="grid-column:1/-1">
       <div class="le-ico">🚀</div>
@@ -1788,7 +1873,10 @@ function renderLaunchedGrid() {
           <div class="lcard-name">${_esc(t.name||'Unknown')}</div>
           <div class="lcard-sym">${_esc(t.symbol||'???')}</div>
         </div>
-        <span class="lcard-badge ${t.variant==='stablecoin'?'lbadge-stable':'lbadge-asset'}">${_esc(t.variant||'asset')}</span>
+        <div class="lcard-badges">
+          ${(_tokenTs(t) && (Date.now()-_tokenTs(t) < 3600000)) ? `<span class="lbadge-new">New</span>` : ''}
+          <span class="lcard-badge ${t.variant==='stablecoin'?'lbadge-stable':'lbadge-asset'}">${_esc(t.variant||'asset')}</span>
+        </div>
       </div>
       ${ca ? `<div class="lcard-ca">
         <span class="lcard-ca-val" title="${ca}">${shortCA}</span>
