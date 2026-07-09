@@ -207,20 +207,21 @@ function buildInitCalls(config) {
     calls.push(B20_IFACE.encodeFunctionData('updateSupplyCap', [capRaw]));
   }
 
-  // Mint the initial supply to the admin during the bootstrap window.
+  // Mint the full supply to the creator wallet during the bootstrap window.
   // Per the B20 spec, factory-originated initCalls BYPASS the token's role gates,
-  // so `mint` succeeds without first granting MINT_ROLE. Only MINT_RECEIVER_POLICY
-  // is enforced during initCalls, and it defaults to ALWAYS_ALLOW.
-  if (config.admin && !config.adminless) {
-    const adminAddr = ethers.getAddress(config.admin);
-    // 1. Mint initial supply to admin (scaled by decimals, so mint == cap, never exceeding it)
-    if (config.initial_supply && config.initial_supply !== '0') {
-      const raw = BigInt(config.initial_supply) * (10n ** BigInt(decimals));
-      calls.push(B20_IFACE.encodeFunctionData('mint', [adminAddr, raw]));
+  // so `mint` succeeds without first granting MINT_ROLE — this works even for
+  // immutable (admin-less) launches. Only MINT_RECEIVER_POLICY is enforced during
+  // initCalls, and it defaults to ALWAYS_ALLOW.
+  const mintTo = config.mint_to || (config.adminless ? null : config.admin);
+  if (mintTo && config.initial_supply && config.initial_supply !== '0') {
+    const recipient = ethers.getAddress(mintTo);
+    const raw = BigInt(config.initial_supply) * (10n ** BigInt(decimals));
+    calls.push(B20_IFACE.encodeFunctionData('mint', [recipient, raw]));
+    // Keep MINT_ROLE only when the token retains an admin (Admin powers mode);
+    // an immutable token grants no roles so no one can mint again.
+    if (config.admin && !config.adminless) {
+      calls.push(B20_IFACE.encodeFunctionData('grantRole', [ROLES.MINT_ROLE, ethers.getAddress(config.admin)]));
     }
-    // 2. Grant MINT_ROLE to admin so they can mint more later (admin holds
-    //    DEFAULT_ADMIN_ROLE from initialAdmin, but not MINT_ROLE by default).
-    calls.push(B20_IFACE.encodeFunctionData('grantRole', [ROLES.MINT_ROLE, adminAddr]));
   }
 
   // Explicit role grants from config (user-specified via roles section)
@@ -358,6 +359,12 @@ function parseConfig(input) {
     }
   }
 
+  // Mint recipient: the creator wallet receives the full supply (to seed the pool),
+  // even for immutable (admin-less) launches. Falls back to admin.
+  const creatorRaw = (input.creator ?? '').trim().toLowerCase();
+  const mintTo = /^0x[0-9a-f]{40}$/.test(creatorRaw) ? creatorRaw
+               : (!adminless && /^0x[0-9a-f]{40}$/.test(admin) ? admin : null);
+
   return {
     errors, warnings,
     config: {
@@ -365,6 +372,7 @@ function parseConfig(input) {
       supply_cap:     supplyCap,
       initial_supply: initialSupply,
       admin:          adminless ? null : admin,
+      mint_to:        mintTo,
       adminless,
       policies,
       roles,
@@ -670,14 +678,16 @@ async function handlePrepare(body, res) {
     // Keep activated from registry check
   }
 
-  // Fetch live gas + nonce
+  // Fetch live gas + nonce. The deployer (tx signer) is the creator wallet — for
+  // immutable launches config.admin is null, so use mint_to/creator as the deployer.
+  const deployer = config.mint_to || config.admin || null;
   let gas = null, nonce = null, ethBalance = null, predictedAddress = null;
   try {
-    const adminAddr = config.admin ?? ethers.ZeroAddress;
+    const deployerAddr = deployer ?? ethers.ZeroAddress;
     const [gasResult, nonceResult, balResult] = await Promise.all([
       fetchGas(net),
-      rpc(net, 'eth_getTransactionCount', [adminAddr, 'pending']),
-      config.admin ? rpc(net, 'eth_getBalance', [config.admin, 'latest']) : Promise.resolve('0x0'),
+      rpc(net, 'eth_getTransactionCount', [deployerAddr, 'pending']),
+      deployer ? rpc(net, 'eth_getBalance', [deployer, 'latest']) : Promise.resolve('0x0'),
     ]);
     gas   = gasResult;
     nonce = parseInt(nonceResult ?? '0x0', 16);
@@ -688,14 +698,14 @@ async function handlePrepare(body, res) {
     const costWei = 600000n * maxFee;
     const costEth = Number(costWei) / 1e18;
     ethBalance = { wei: balWei.toString(), ether: balEth.toFixed(6) };
-    if (balWei < costWei) warnings.push(`Admin wallet has ${balEth.toFixed(6)} ETH — estimated deploy cost ~${costEth.toFixed(6)} ETH`);
+    if (deployer && balWei < costWei) warnings.push(`Wallet has ${balEth.toFixed(6)} ETH — estimated deploy cost ~${costEth.toFixed(6)} ETH`);
 
-    // Predict token address
-    if (config.admin) {
+    // Predict token address (deterministic from the deployer + salt)
+    if (deployer) {
       try {
         const data   = FACTORY_IFACE.encodeFunctionData('getB20Address', [
           config.variant === 'stablecoin' ? 1 : 0,
-          config.admin,
+          deployer,
           saltHex,
         ]);
         const result = await ethCall(net, B20_FACTORY, data);

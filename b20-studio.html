@@ -688,70 +688,29 @@ select.inp option{background:var(--s2);color:var(--t1)}
       <input type="hidden" id="fRebase">
       <input type="hidden" id="fUri">
 
-      <!-- Compliance -->
-      <div class="sec-label" style="margin-top:8px">Compliance Policy</div>
-      <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Compliance policies are configured <strong style="color:var(--t2)">post-deploy</strong> via the Manage tab using your admin wallet. The toggles below are saved for reference.</p>
-      <div class="policy-row" id="polAllow">
-        <div>
-          <div class="p-name">Allowlist enabled</div>
-          <div class="p-desc">Only addresses on the allowlist can hold or receive the token.</div>
+      <!-- Token powers (RWAGMI-style: Immutable vs Admin) -->
+      <div class="sec-label" style="margin-top:8px">Token powers</div>
+      <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Whether the token keeps an admin after launch. Compliance policies (allowlist, blocklist, freeze) and roles are configured later in the <strong style="color:var(--t2)">Manage</strong> tab.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
+        <div id="powImmutable" onclick="setPowers('immutable')" style="border:1px solid var(--orange);border-radius:10px;padding:14px;cursor:pointer;background:rgba(240,120,48,.06);transition:.15s">
+          <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Immutable</div>
+          <div style="font-size:.68rem;color:var(--t2);line-height:1.5">No admin after launch. Supply fixed — no one can mint or change policy.</div>
         </div>
-        <label class="toggle">
-          <input type="checkbox" id="fAllow" onchange="onPolicyChange()">
-          <div class="tg-track"></div><div class="tg-thumb"></div>
-        </label>
-      </div>
-      <div class="policy-row" id="polBlock">
-        <div>
-          <div class="p-name">Blocklist enabled</div>
-          <div class="p-desc">Addresses on the blocklist cannot send or receive the token.</div>
+        <div id="powAdmin" onclick="setPowers('admin')" style="border:1px solid var(--b1);border-radius:10px;padding:14px;cursor:pointer;background:var(--s2);transition:.15s">
+          <div style="font-weight:800;font-size:.86rem;color:var(--t1);margin-bottom:4px">Admin powers</div>
+          <div style="font-size:.68rem;color:var(--t2);line-height:1.5">You keep admin — grant roles, mint more, pause, set policies later.</div>
         </div>
-        <label class="toggle">
-          <input type="checkbox" id="fBlock" onchange="onPolicyChange()">
-          <div class="tg-track"></div><div class="tg-thumb"></div>
-        </label>
       </div>
-      <div class="policy-row" id="polFreeze">
-        <div>
-          <div class="p-name">Freeze-and-seize</div>
-          <div class="p-desc">Lets the admin freeze an address's balance and move it elsewhere. Powerful — use only when compliance requires it.</div>
-          <div class="p-warn" id="freezeWarn">Admin can freeze accounts and seize token balances at any time.</div>
-        </div>
-        <label class="toggle danger">
-          <input type="checkbox" id="fFreeze" onchange="onPolicyChange()">
-          <div class="tg-track"></div><div class="tg-thumb"></div>
-        </label>
-      </div>
+      <!-- hidden state carried through the deploy flow (Immutable = admin-less by default) -->
+      <input type="checkbox" id="fAdminless" checked style="display:none">
+      <input type="checkbox" id="fAllow" style="display:none">
+      <input type="checkbox" id="fBlock" style="display:none">
+      <input type="checkbox" id="fFreeze" style="display:none">
 
-      <!-- Roles are managed after deploy in the Manage tab (kept simple, like RWAGMI). -->
-
-      <!-- Admin-less -->
-      <div class="adminless-row" style="margin-top:8px">
-        <label class="toggle danger" style="margin-top:2px">
-          <input type="checkbox" id="fAdminless">
-          <div class="tg-track"></div>
-          <div class="tg-thumb"></div>
-        </label>
-        <div>
-          <div class="al-name">Launch admin-less</div>
-          <div class="al-desc">Irreversible — no one can mint, pause, or change policy after deploy.</div>
-        </div>
-      </div>
-
-      <!-- Pool & Launch (Uniswap V4) -->
+      <!-- Pool & Launch (Uniswap V4) — always created so the token is tradeable -->
       <div class="sec-label" style="margin-top:22px">Pool &amp; Launch</div>
-      <p style="font-size:.72rem;color:var(--t3);margin-bottom:12px;line-height:1.55">Right after deploy, your token is paired with <strong style="color:var(--t2)">WETH on Uniswap V4</strong> and the supply is seeded as single-sided liquidity — so buyers bring the ETH and your token is tradeable instantly.</p>
-      <div class="adminless-row" style="margin-top:0;margin-bottom:14px">
-        <label class="toggle" style="margin-top:2px">
-          <input type="checkbox" id="fCreatePool" checked onchange="togglePoolEconomics()">
-          <div class="tg-track"></div>
-          <div class="tg-thumb"></div>
-        </label>
-        <div>
-          <div class="al-name">Create liquidity pool on launch</div>
-          <div class="al-desc">Makes the token tradeable in the same flow (recommended).</div>
-        </div>
-      </div>
+      <p style="font-size:.72rem;color:var(--t3);margin-bottom:14px;line-height:1.55">Your token is paired with <strong style="color:var(--t2)">WETH on Uniswap V4</strong> and the supply is seeded as single-sided liquidity — buyers bring the ETH and your token is tradeable instantly.</p>
+      <input type="checkbox" id="fCreatePool" checked style="display:none">
       <div id="poolEconomics">
         <div class="field-row">
           <div class="field">
@@ -1080,14 +1039,15 @@ function removeLogo(e) {
 function onFormChange() {}
 
 // ── policies ──────────────────────────────────────────────────────────────────
-function onPolicyChange() {
-  const al = document.getElementById('fAllow').checked;
-  const bl = document.getElementById('fBlock').checked;
-  const fr = document.getElementById('fFreeze').checked;
-  document.getElementById('polAllow').classList.toggle('on', al);
-  document.getElementById('polBlock').classList.toggle('on', bl);
-  document.getElementById('polFreeze').classList.toggle('on-red', fr);
-  document.getElementById('freezeWarn').classList.toggle('show', fr);
+function onPolicyChange() { /* compliance toggles moved to the Manage tab */ }
+
+// Token powers selector (Immutable vs Admin) — drives the hidden fAdminless flag.
+function setPowers(mode) {
+  const immutable = mode !== 'admin';
+  const flag = document.getElementById('fAdminless'); if (flag) flag.checked = immutable;
+  const imm = document.getElementById('powImmutable'), adm = document.getElementById('powAdmin');
+  if (imm) { imm.style.borderColor = immutable ? 'var(--orange)' : 'var(--b1)'; imm.style.background = immutable ? 'rgba(240,120,48,.06)' : 'var(--s2)'; }
+  if (adm) { adm.style.borderColor = !immutable ? 'var(--orange)' : 'var(--b1)'; adm.style.background = !immutable ? 'rgba(240,120,48,.06)' : 'var(--s2)'; }
 }
 
 // ── tabs ──────────────────────────────────────────────────────────────────────
@@ -1199,13 +1159,10 @@ async function onDeploy() {
       supply_cap:     (document.getElementById('fSupplyCap')?.value || '100000000000').replace(/[^0-9]/g,'') || '100000000000',
       initial_supply: (document.getElementById('fInitSupply').value || '0').replace(/[^0-9]/g, '') || '0',
       admin:       adminless ? undefined : walletAddress,
+      creator:     walletAddress, // receives the minted supply (even when immutable), to seed the pool
       adminless,
-      policies: {
-        allowlist: document.getElementById('fAllow').checked,
-        blocklist: document.getElementById('fBlock').checked,
-        freeze:    document.getElementById('fFreeze').checked,
-      },
-      roles: {}, // roles managed after deploy in the Manage tab
+      policies: {},               // compliance configured post-deploy in Manage
+      roles: {},                  // roles managed after deploy in the Manage tab
       network,
     };
     const uri     = document.getElementById('fUri').value.trim();
