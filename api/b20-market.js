@@ -28,6 +28,18 @@ async function getJson(url, timeout = 8000) {
 }
 
 // ── Base RPC (ground-truth balances, independent of any indexer) ───────────────
+async function rpcSingle(method, params) {
+  try {
+    const r = await fetch(RPC_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+      signal: AbortSignal.timeout(9000),
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d && d.result != null ? d.result : null;
+  } catch { return null; }
+}
 async function rpcBatch(calls) {
   try {
     const body = calls.map((c, id) => ({ jsonrpc: '2.0', id, method: c.method, params: c.params }));
@@ -131,24 +143,62 @@ async function getMarketBatch(addresses) {
   return out;
 }
 
-// Base Blockscout: top holders + total supply → percentages.
+// Top holders, read straight from the chain. B20 tokens are precompile-based, so
+// indexers (Blockscout/DexScreener) don't reliably list their holders — the chain
+// is the source of truth. Scan Transfer events to discover every address that
+// ever touched the token, then read live balanceOf and rank. For fresh tokens
+// this is exact; the range cap keeps it fast for busy ones.
+const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 async function getHolders(ca) {
-  const [meta, hold] = await Promise.all([
-    getJson(`${BLOCKSCOUT}/tokens/${ca}`),
-    getJson(`${BLOCKSCOUT}/tokens/${ca}/holders`),
-  ]);
-  const items = (hold && hold.items) || [];
-  let supply = 0n;
-  try { supply = meta && meta.total_supply ? BigInt(meta.total_supply) : 0n; } catch {}
-  return items.slice(0, 10).map(it => {
-    const address = (it.address && it.address.hash) || it.address || '';
-    let val = 0n; try { val = BigInt(it.value || '0'); } catch {}
-    const pct = supply > 0n ? Number(val * 10000n / supply) / 100 : null;
-    return { address, pct };
-  });
+  try {
+    const latestHex = await rpcSingle('eth_blockNumber', []);
+    const latest = latestHex ? parseInt(latestHex, 16) : 0;
+    const fromBlock = '0x' + Math.max(latest - 200000, 0).toString(16); // ~5 days on Base
+    const logs = await rpcSingle('eth_getLogs', [{ address: ca, fromBlock, toBlock: 'latest', topics: [TRANSFER_TOPIC] }]);
+    if (!Array.isArray(logs) || !logs.length) return [];
+
+    const addrs = new Set();
+    for (const l of logs) {
+      const t = l.topics || [];
+      if (t[1]) addrs.add('0x' + t[1].slice(26).toLowerCase()); // from
+      if (t[2]) addrs.add('0x' + t[2].slice(26).toLowerCase()); // to
+    }
+    addrs.delete('0x0000000000000000000000000000000000000000');
+    const list = [...addrs].slice(0, 100);
+    if (!list.length) return [];
+
+    const [bals, supHex] = await Promise.all([
+      rpcBatch(list.map(a => ({ method: 'eth_call', params: [{ to: ca, data: '0x70a08231' + '000000000000000000000000' + a.slice(2) }, 'latest'] }))),
+      rpcSingle('eth_call', [{ to: ca, data: '0x18160ddd' }, 'latest']),
+    ]);
+    let supply = 0n; try { supply = BigInt(supHex || '0x0'); } catch {}
+
+    const held = [];
+    list.forEach((a, i) => {
+      let b = 0n; try { b = BigInt(bals[i] && bals[i].result || '0x0'); } catch {}
+      if (b > 0n) held.push({ address: a, raw: b });
+    });
+    held.sort((x, y) => (x.raw < y.raw ? 1 : x.raw > y.raw ? -1 : 0));
+    return held.slice(0, 10).map(h => ({
+      address: h.address,
+      pct: supply > 0n ? Number(h.raw * 10000n / supply) / 100 : null,
+    }));
+  } catch { return []; }
 }
 
-// GeckoTerminal: recent pool trades.
+// GeckoTerminal: the token's deepest pool (address used for both the chart embed
+// and the trades feed, so everything on the dashboard comes from one source).
+async function getGeckoPool(ca) {
+  const d = await getJson(`https://api.geckoterminal.com/api/v2/networks/base/tokens/${ca}/pools?page=1`);
+  const pools = (d && d.data) || [];
+  if (!pools.length) return null;
+  // Pick the highest 24h-volume pool (GT usually returns them ranked already).
+  const best = pools.sort((a, b) =>
+    Number(b.attributes?.volume_usd?.h24 || 0) - Number(a.attributes?.volume_usd?.h24 || 0))[0];
+  return (best && best.attributes && best.attributes.address) || null;
+}
+
+// GeckoTerminal: recent pool trades (buys/sells).
 async function getTrades(pool) {
   if (!pool) return [];
   const d = await getJson(`https://api.geckoterminal.com/api/v2/networks/base/pools/${pool}/trades`);
@@ -261,10 +311,15 @@ module.exports = async (req, res) => {
       return res.end(JSON.stringify({ ok: false, error: 'valid ?token= or ?holder= address required' }));
     }
 
-    const market  = await getMarket(token);
-    const [holders, trades] = await Promise.all([getHolders(token), getTrades(market.pool)]);
+    const [market, geckoPool] = await Promise.all([getMarket(token), getGeckoPool(token)]);
+    // Trades come from GeckoTerminal's pool (fall back to the DexScreener pool if
+    // GT hasn't indexed one yet); holders are read on-chain.
+    const [holders, trades] = await Promise.all([
+      getHolders(token),
+      getTrades(geckoPool || market.pool),
+    ]);
     res.writeHead(200, CORS);
-    return res.end(JSON.stringify({ ok: true, ...market, holders, trades }));
+    return res.end(JSON.stringify({ ok: true, ...market, geckoPool, holders, trades }));
   } catch (e) {
     res.writeHead(200, CORS);
     return res.end(JSON.stringify({ ok: false, error: e.message || 'market fetch failed' }));

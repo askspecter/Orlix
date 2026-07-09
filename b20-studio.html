@@ -2841,6 +2841,17 @@ async function loadMarket(ca) {
     _dmSet('dmPrice', d.price != null ? _fmtPrice(d.price) : '—');
     renderTrades(d.trades || []);
     renderHolders(ca, d.holders || []);
+    // Upgrade the chart to GeckoTerminal once its pool is known (chart + trades
+    // both come from GT). Falls back to the DexScreener token embed set in
+    // openDashboard when GT hasn't indexed a pool yet.
+    if (d.geckoPool && /^0x[0-9a-fA-F]{40}$/.test(d.geckoPool)) {
+      const dark = !document.documentElement.classList.contains('light');
+      const iframe = document.getElementById('dmChart');
+      const gtSrc = `https://www.geckoterminal.com/base/pools/${d.geckoPool}?embed=1&info=0&swaps=0&grayscale=0&light_chart=${dark ? 0 : 1}&theme=${dark ? 'dark' : 'light'}`;
+      if (iframe && iframe.src !== gtSrc) iframe.src = gtSrc;
+      const gk = document.getElementById('dmGecko');
+      if (gk) gk.href = `https://www.geckoterminal.com/base/pools/${d.geckoPool}`;
+    }
   } catch (_) {
     if (_dashCA === ca) { _dmSet('dmMcap', '—'); renderTrades([]); renderHolders(ca, []); }
   }
@@ -2863,17 +2874,17 @@ function renderTrades(list) {
 function renderHolders(ca, list) {
   const el = document.getElementById('dmHolders');
   if (!el) return;
-  const ex = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca + '#balances';
+  const gt = 'https://www.geckoterminal.com/base/tokens/' + ca + '?tab=holders';
   if (!list.length) {
-    el.innerHTML = `<div style="color:var(--t3);line-height:1.6;margin-bottom:8px">Holder list isn't indexed yet.</div>
-      <a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block">View holders on BaseScan &#x2197;</a>`;
+    el.innerHTML = `<div style="color:var(--t3);line-height:1.6;margin-bottom:8px">No holders yet — they appear once the token has a balance on-chain.</div>
+      <a href="${gt}" target="_blank" rel="noopener" class="dm-link" style="display:block">View on GeckoTerminal &#x2197;</a>`;
     return;
   }
   el.innerHTML = list.map((h, i) => {
     const short = h.address ? h.address.slice(0, 6) + '…' + h.address.slice(-4) : '—';
     const pct = h.pct != null ? h.pct.toFixed(2) + '%' : '';
     return `<div class="dm-hold-row"><span style="color:var(--t2);font-family:var(--mono)">#${i + 1}&nbsp; ${short}</span><span style="font-weight:700;color:var(--t1)">${pct}</span></div>`;
-  }).join('') + `<a href="${ex}" target="_blank" rel="noopener" class="dm-link" style="display:block;margin-top:10px">All holders &#x2197;</a>`;
+  }).join('') + `<a href="${gt}" target="_blank" rel="noopener" class="dm-link" style="display:block;margin-top:10px">All holders on GeckoTerminal &#x2197;</a>`;
 }
 
 function filterLaunched(type, el) {
