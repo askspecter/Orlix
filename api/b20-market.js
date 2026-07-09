@@ -2,8 +2,9 @@
 // Proxies DexScreener / GeckoTerminal / Base Blockscout so the browser never has
 // to make cross-origin calls (avoids CORS + rate-limit + indexing flakiness).
 //
-// GET ?token=0x..   → { ok, price, marketCap, volume24h, holders[], trades[], pool }
-// GET ?holder=0x..  → { ok, tokens:[{address,name,symbol,balance,decimals}] }  (B20 only)
+// GET ?token=0x..              → { ok, price, marketCap, volume24h, holders[], trades[], pool }
+// GET ?holder=0x..[&tokens=..] → { ok, tokens:[{address,name,symbol,balance,decimals}] }  (B20, on-chain balanceOf)
+// GET ?tokens=0x,0x            → { ok, markets:{addr:{price,marketCap,volume24h,lastTrade}} }
 const { checkLimits, allowedOrigin } = require('./_guard');
 
 const CORS = {
@@ -16,6 +17,7 @@ const CORS = {
 };
 
 const BLOCKSCOUT = 'https://base.blockscout.com/api/v2';
+const RPC_URL    = 'https://mainnet.base.org';
 
 async function getJson(url, timeout = 8000) {
   try {
@@ -23,6 +25,63 @@ async function getJson(url, timeout = 8000) {
     if (!r.ok) return null;
     return await r.json();
   } catch { return null; }
+}
+
+// ── Base RPC (ground-truth balances, independent of any indexer) ───────────────
+async function rpcBatch(calls) {
+  try {
+    const body = calls.map((c, id) => ({ jsonrpc: '2.0', id, method: c.method, params: c.params }));
+    const r = await fetch(RPC_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body), signal: AbortSignal.timeout(9000),
+    });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d) ? d.sort((a, b) => a.id - b.id) : [];
+  } catch { return []; }
+}
+
+function _strip0x(h) { return (h || '').startsWith('0x') ? h.slice(2) : (h || ''); }
+function _decodeAbiString(hex) {
+  const raw = _strip0x(hex);
+  if (raw.length < 128) return '';
+  const len = parseInt(raw.slice(64, 128), 16);
+  if (!len || len > 256) return '';
+  const chars = raw.slice(128, 128 + len * 2);
+  let s = '';
+  for (let i = 0; i < chars.length; i += 2) {
+    const code = parseInt(chars.slice(i, i + 2), 16);
+    if (code) s += String.fromCharCode(code);
+  }
+  return s;
+}
+
+// Upstash REST — read the "launched on Orlix" feed so holdings can be computed
+// against every token we know about, not just what the client happened to pass.
+async function redisCmd(args) {
+  const url   = process.env.UPSTASH_REDIS_REST_URL   || process.env.STORAGE_UPSTASH_REDIS_REST_URL   || '';
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN || '';
+  if (!url || !token) return undefined;
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args.map(String)),
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return undefined;
+    return (await r.json()).result;
+  } catch { return undefined; }
+}
+async function fetchLaunchedAddresses() {
+  const arr = await redisCmd(['LRANGE', 'b20:launched', '0', '199']);
+  if (!Array.isArray(arr)) return [];
+  const out = [];
+  for (const s of arr) {
+    let t; try { t = JSON.parse(s); } catch { continue; }
+    if (t && t.address) out.push(t.address.toLowerCase());
+  }
+  return out;
 }
 
 // DexScreener price / market cap / 24h volume + the deepest pool address.
@@ -105,28 +164,67 @@ async function getTrades(pool) {
   });
 }
 
-// Base Blockscout: ERC-20 tokens held by a wallet, filtered to B20 (0xb2… factory).
-async function getHoldings(wallet) {
+// Blockscout: discover extra B20 addresses a wallet touched (best-effort — only
+// used to widen the candidate set; balances are always confirmed on-chain below).
+async function discoverB20FromBlockscout(wallet) {
   const d = await getJson(`${BLOCKSCOUT}/addresses/${wallet}/tokens?type=ERC-20`);
   const items = (d && d.items) || [];
   const out = [];
   for (const it of items) {
     const tk = it.token || {};
-    const addr = tk.address || tk.address_hash || '';
-    if (!addr || !addr.toLowerCase().startsWith('0xb2')) continue;   // B20 only
-    const dec = Number(tk.decimals) || 18;
-    let bal = 0;
-    try { bal = Number(BigInt(it.value || '0') / (10n ** BigInt(Math.max(dec - 6, 0)))) / 1e6; } catch {}
-    out.push({
-      address: addr,
-      name:    tk.name || 'Unknown',
-      symbol:  tk.symbol || '???',
-      decimals: dec,
-      balance: bal,
-    });
-    if (out.length >= 50) break;
+    const addr = (tk.address || tk.address_hash || '').toLowerCase();
+    if (addr && addr.startsWith('0xb2')) out.push(addr);
   }
   return out;
+}
+
+// Wallet's B20 holdings — read straight from the chain via balanceOf so it works
+// the instant a token launches, independent of any indexer's crawl lag. Candidate
+// set = the Orlix launched feed ∪ client-passed addresses ∪ Blockscout discovery;
+// only the on-chain balance decides what's actually held.
+async function getHoldings(wallet, extraTokens = []) {
+  const [feed, discovered] = await Promise.all([
+    fetchLaunchedAddresses(),
+    discoverB20FromBlockscout(wallet).catch(() => []),
+  ]);
+  const candidates = [...new Set(
+    [...feed, ...extraTokens, ...discovered]
+      .map(a => (a || '').toLowerCase())
+      .filter(a => /^0x[0-9a-f]{40}$/.test(a) && a.startsWith('0xb2'))
+  )].slice(0, 80);
+  if (!candidates.length) return [];
+
+  const walletArg = '000000000000000000000000' + wallet.slice(2).toLowerCase();
+  const balResults = await rpcBatch(candidates.map(addr => ({
+    method: 'eth_call', params: [{ to: addr, data: '0x70a08231' + walletArg }, 'latest'],
+  })));
+
+  const held = [];
+  candidates.forEach((addr, i) => {
+    let raw = 0n;
+    try { raw = BigInt(balResults[i]?.result || '0x0'); } catch {}
+    if (raw > 0n) held.push({ address: addr, raw });
+  });
+  if (!held.length) return [];
+
+  // Fetch name/symbol/decimals for the held tokens in one more batch.
+  const metaCalls = [];
+  held.forEach(h => {
+    metaCalls.push({ method: 'eth_call', params: [{ to: h.address, data: '0x06fdde03' }, 'latest'] }); // name
+    metaCalls.push({ method: 'eth_call', params: [{ to: h.address, data: '0x95d89b41' }, 'latest'] }); // symbol
+    metaCalls.push({ method: 'eth_call', params: [{ to: h.address, data: '0x313ce567' }, 'latest'] }); // decimals
+  });
+  const meta = await rpcBatch(metaCalls);
+
+  return held.map((h, i) => {
+    const name   = _decodeAbiString(meta[i * 3]?.result) || 'Unknown';
+    const symbol = _decodeAbiString(meta[i * 3 + 1]?.result) || '???';
+    let dec = 18;
+    try { dec = parseInt(meta[i * 3 + 2]?.result || '0x12', 16) || 18; } catch {}
+    // Scale down without precision loss on huge balances.
+    const balance = Number(h.raw / (10n ** BigInt(Math.max(dec - 6, 0)))) / 1e6;
+    return { address: h.address, name, symbol, decimals: dec, balance };
+  }).sort((a, b) => b.balance - a.balance);
 }
 
 module.exports = async (req, res) => {
@@ -143,7 +241,10 @@ module.exports = async (req, res) => {
     const tokensCsv = String(req.query?.tokens || '').trim();
 
     if (holder && /^0x[0-9a-fA-F]{40}$/.test(holder)) {
-      const tokens = await getHoldings(holder);
+      // The client may pass ?tokens= to widen the candidate set with addresses it
+      // already knows about (its created tokens, whatever's on Discover, etc.).
+      const extra = tokensCsv ? tokensCsv.split(',').map(s => s.trim()).filter(a => /^0x[0-9a-fA-F]{40}$/.test(a)) : [];
+      const tokens = await getHoldings(holder, extra);
       res.writeHead(200, CORS);
       return res.end(JSON.stringify({ ok: true, tokens }));
     }
