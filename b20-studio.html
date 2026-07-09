@@ -564,7 +564,24 @@ select.inp option{background:var(--s2);color:var(--t1)}
 .lcard-badges{display:flex;align-items:center;gap:5px;flex-shrink:0}
 .lbadge-new{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
 .disc-count{font-size:.7rem;color:var(--t3);font-weight:600;white-space:nowrap;margin-left:2px}
-@media(max-width:720px){.hero-title{font-size:1.7rem}.disc-search{min-width:140px}}
+
+/* Dashboard modal */
+.dm-info{background:var(--s1);padding:13px 16px}
+.dm-info-l{font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.dm-info-v{font-size:.82rem;font-weight:700;color:var(--t1)}
+.dm-amt{flex:1;min-width:62px;padding:8px;border-radius:7px;border:1px solid var(--b1);background:var(--s3);color:var(--t2);cursor:pointer;font-size:.72rem;font-family:var(--mono);transition:.12s}
+.dm-amt:hover{border-color:var(--accent);color:var(--t1)}
+.dm-link{flex:1;min-width:110px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1);background:var(--s2);color:var(--t1);text-decoration:none;font-size:.74rem;font-weight:700;transition:.12s}
+.dm-link:hover{border-color:var(--b2);background:var(--s3)}
+.dm-support{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:9px 12px;font-size:.74rem;font-weight:600;color:var(--t2)}
+.dm-support .yes{color:#22c55e;font-weight:700;font-size:.66rem}
+.dm-support .no{color:var(--t3);font-weight:700;font-size:.62rem;letter-spacing:.04em}
+@media(max-width:720px){
+  .hero-title{font-size:1.7rem}.disc-search{min-width:140px}
+  .dash-body{grid-template-columns:1fr!important}
+  .dash-body>div:first-child{border-right:none!important;border-bottom:1px solid var(--b1)}
+  #dmChart{height:340px!important}
+}
 </style>
 </head>
 <body>
@@ -966,40 +983,96 @@ select.inp option{background:var(--s2);color:var(--t1)}
   </button>
 </nav>
 
-<!-- TOKEN DASHBOARD MODAL (chart + on-site buy) -->
-<div id="dashModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeDashboard()">
-  <div style="background:var(--s1,#12141a);border:1px solid var(--b1,#262a33);border-radius:14px;width:100%;max-width:940px;max-height:92vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.5)">
-    <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--b1,#262a33);position:sticky;top:0;background:var(--s1,#12141a);z-index:2">
-      <div id="dmIco" style="width:40px;height:40px;border-radius:50%;background:#333;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff"></div>
+<!-- TOKEN DASHBOARD MODAL (rwagmi-style: chart + live info + on-site Uniswap trade) -->
+<div id="dashModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:16px;overflow:auto" onclick="if(event.target===this)closeDashboard()">
+  <div class="dash-card" style="background:var(--s1);border:1px solid var(--b1);border-radius:16px;width:100%;max-width:1000px;margin:24px auto;box-shadow:0 24px 80px rgba(0,0,0,.5);overflow:hidden">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:14px;padding:18px 20px;border-bottom:1px solid var(--b1);position:sticky;top:0;background:var(--s1);z-index:3">
+      <div id="dmIco" style="width:48px;height:48px;border-radius:14px;background:#333;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1rem"></div>
       <div style="flex:1;min-width:0">
-        <div id="dmName" style="font-size:.95rem;font-weight:800;color:var(--t1,#fff)">Token</div>
-        <div id="dmCA" style="font-size:.66rem;color:var(--t3,#8a8a96);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span id="dmName" style="font-size:1.05rem;font-weight:800;color:var(--t1)">Token</span>
+          <span id="dmVariantBadge" class="lcard-badge lbadge-asset">asset</span>
+          <span id="dmLpBadge" class="lcard-badge" style="background:rgba(59,130,246,.1);color:#3B82F6;border:1px solid rgba(59,130,246,.2);display:none">LP —</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <span id="dmCA" style="font-size:.68rem;color:var(--t3);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+          <button id="dmCopyCA" onclick="dashCopyCA(this)" style="flex-shrink:0;font-size:.58rem;font-weight:600;padding:2px 7px;border-radius:5px;border:1px solid var(--b1);background:transparent;color:var(--t3);cursor:pointer;font-family:var(--font)">Copy</button>
+        </div>
       </div>
-      <button onclick="closeDashboard()" style="background:none;border:none;color:var(--t2,#aaa);font-size:1.4rem;cursor:pointer;line-height:1;padding:4px 8px">&#xD7;</button>
+      <a id="dmTradeTop" href="#dmTradePanel" onclick="document.getElementById('dmTradePanel').scrollIntoView({behavior:'smooth'});return false" style="display:none">Trade</a>
+      <button onclick="closeDashboard()" style="background:none;border:none;color:var(--t2);font-size:1.5rem;cursor:pointer;line-height:1;padding:4px 8px">&#xD7;</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr;gap:0">
-      <div style="padding:0">
-        <iframe id="dmChart" src="" title="chart" style="width:100%;height:420px;border:0;background:#0b0d12"></iframe>
-      </div>
-      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
-        <div style="border:1px solid var(--b1,#262a33);border-radius:10px;padding:14px;background:var(--s2,#181b22)">
-          <div style="font-size:.82rem;font-weight:700;color:var(--t1,#fff);margin-bottom:10px">Buy <span id="dmBuySym">token</span> with ETH</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-            <button class="dm-amt" onclick="setBuyAmt('0.001')" style="flex:1;min-width:70px;padding:7px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--s3,#1e222b);color:var(--t2,#ccc);cursor:pointer;font-size:.72rem">0.001</button>
-            <button class="dm-amt" onclick="setBuyAmt('0.01')" style="flex:1;min-width:70px;padding:7px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--s3,#1e222b);color:var(--t2,#ccc);cursor:pointer;font-size:.72rem">0.01</button>
-            <button class="dm-amt" onclick="setBuyAmt('0.05')" style="flex:1;min-width:70px;padding:7px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--s3,#1e222b);color:var(--t2,#ccc);cursor:pointer;font-size:.72rem">0.05</button>
+
+    <!-- Info grid -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)">
+      <div class="dm-info"><div class="dm-info-l">Network</div><div class="dm-info-v">Base</div></div>
+      <div class="dm-info"><div class="dm-info-l">Type</div><div class="dm-info-v" id="dmType">—</div></div>
+      <div class="dm-info"><div class="dm-info-l">LP Fee</div><div class="dm-info-v" id="dmLpFee">—</div></div>
+      <div class="dm-info"><div class="dm-info-l">Supply</div><div class="dm-info-v" id="dmSupply">—</div></div>
+      <div class="dm-info"><div class="dm-info-l">Cap</div><div class="dm-info-v" id="dmCap">—</div></div>
+      <div class="dm-info"><div class="dm-info-l">Status</div><div class="dm-info-v" id="dmStatus" style="color:#22c55e">Ready</div></div>
+    </div>
+
+    <!-- Chart + Trade -->
+    <div class="dash-body" style="display:grid;grid-template-columns:1.55fr 1fr;gap:0">
+      <!-- Chart column -->
+      <div style="border-right:1px solid var(--b1);min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--b1)">
+          <div>
+            <div style="font-size:.8rem;font-weight:800;color:var(--t1);letter-spacing:.02em">PRICE CHART</div>
+            <div style="font-size:.66rem;color:var(--t3);margin-top:2px">Live market data · Uniswap V4 on Base</div>
           </div>
-          <input id="dmBuyAmt" type="text" value="0.01" inputmode="decimal" style="width:100%;box-sizing:border-box;padding:10px;border-radius:6px;border:1px solid var(--b1,#262a33);background:var(--bg,#0b0d12);color:var(--t1,#fff);font-size:.85rem;margin-bottom:10px" placeholder="ETH amount">
-          <button id="dmBuyBtn" onclick="buyToken()" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--green,#22c55e);color:#fff;font-weight:800;cursor:pointer;font-size:.85rem">Buy</button>
-          <div id="dmBuyStatus" style="font-size:.7rem;color:var(--t2,#aaa);margin-top:8px;line-height:1.5"></div>
+          <a id="dmGecko" href="#" target="_blank" rel="noopener" style="font-size:.66rem;font-weight:700;color:var(--accent);border:1px solid rgba(240,120,48,.3);border-radius:7px;padding:6px 10px;text-decoration:none;white-space:nowrap">GeckoTerminal &#x2197;</a>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <a id="dmSell" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">Trade on Uniswap &#x2197;</a>
-          <a id="dmDex" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">DexScreener &#x2197;</a>
-          <a id="dmScan" href="#" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;padding:9px;border-radius:8px;border:1px solid var(--b1,#262a33);background:var(--s2,#181b22);color:var(--t1,#fff);text-decoration:none;font-size:.78rem;font-weight:700">BaseScan &#x2197;</a>
+        <iframe id="dmChart" src="" title="chart" style="width:100%;height:440px;border:0;background:#0b0d12;display:block"></iframe>
+      </div>
+
+      <!-- Trade column -->
+      <div id="dmTradePanel" style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <!-- Buy / Sell tabs -->
+        <div style="display:flex;background:var(--s3);border:1px solid var(--b1);border-radius:10px;padding:4px;gap:4px">
+          <button id="dmTabBuy" onclick="setTradeSide('buy')" style="flex:1;padding:8px;border-radius:7px;border:none;cursor:pointer;font-family:var(--font);font-weight:700;font-size:.78rem;background:var(--green);color:#fff">Buy</button>
+          <button id="dmTabSell" onclick="setTradeSide('sell')" style="flex:1;padding:8px;border-radius:7px;border:none;cursor:pointer;font-family:var(--font);font-weight:700;font-size:.78rem;background:transparent;color:var(--t2)">Sell</button>
+        </div>
+
+        <!-- BUY panel (on-site swap vs Uniswap V4 pool) -->
+        <div id="dmBuyPanel">
+          <div style="font-size:.74rem;color:var(--t2);margin-bottom:8px">Buy <span id="dmBuySym" style="font-weight:700;color:var(--t1)">token</span> with ETH — swaps directly against the Uniswap&nbsp;V4 pool.</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
+            <button class="dm-amt" onclick="setBuyAmt('0.005')">0.005</button>
+            <button class="dm-amt" onclick="setBuyAmt('0.01')">0.01</button>
+            <button class="dm-amt" onclick="setBuyAmt('0.05')">0.05</button>
+            <button class="dm-amt" onclick="setBuyAmt('0.1')">0.1</button>
+          </div>
+          <div style="position:relative;margin-bottom:10px">
+            <input id="dmBuyAmt" type="text" value="0.01" inputmode="decimal" style="width:100%;box-sizing:border-box;padding:11px 46px 11px 12px;border-radius:9px;border:1px solid var(--b1);background:var(--bg);color:var(--t1);font-size:.9rem;font-family:var(--mono)" placeholder="ETH amount">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.72rem;font-weight:700;color:var(--t3)">ETH</span>
+          </div>
+          <button id="dmBuyBtn" onclick="buyToken()" style="width:100%;padding:12px;border-radius:9px;border:none;background:var(--green);color:#fff;font-weight:800;cursor:pointer;font-size:.86rem;font-family:var(--font)">Buy on Uniswap V4</button>
+          <div id="dmBuyStatus" style="font-size:.7rem;color:var(--t2);margin-top:8px;line-height:1.5"></div>
+        </div>
+
+        <!-- SELL panel (routes through Uniswap V4) -->
+        <div id="dmSellPanel" style="display:none">
+          <div style="font-size:.74rem;color:var(--t2);margin-bottom:10px;line-height:1.55">Sell <span id="dmSellSym" style="font-weight:700;color:var(--t1)">token</span> back to ETH on the Uniswap&nbsp;V4 pool. Opens the Uniswap swap pre-filled — approve once, then confirm.</div>
+          <a id="dmSell" href="#" target="_blank" rel="noopener" style="display:block;text-align:center;padding:12px;border-radius:9px;border:none;background:var(--orange);color:#fff;text-decoration:none;font-size:.86rem;font-weight:800">Sell on Uniswap V4 &#x2197;</a>
+        </div>
+
+        <div style="border-top:1px solid var(--b1);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <a id="dmDex" href="#" target="_blank" rel="noopener" class="dm-link">DexScreener &#x2197;</a>
+          <a id="dmScan" href="#" target="_blank" rel="noopener" class="dm-link">BaseScan &#x2197;</a>
         </div>
       </div>
     </div>
+
+    <!-- What this token supports -->
+    <div style="padding:16px 20px;border-top:1px solid var(--b1)">
+      <div style="font-size:.8rem;font-weight:800;color:var(--t1);margin-bottom:12px">What this token supports</div>
+      <div id="dmSupports" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1778,7 +1851,8 @@ function renderMyTokens() {
         ${t.decimals !== undefined ? `<div class="lcard-meta-row"><span style="opacity:.5">·</span>${t.decimals} decimals</div>` : ''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade</button>` : ''}
+        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}','trade')">Trade</button>
+        <button class="lcard-act" onclick="openDashboard('${ca}')">Dashboard</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1889,7 +1963,8 @@ function renderLaunchedGrid() {
         ${t.supply?`<div class="lcard-meta-row"><span style="opacity:.5">◎</span>${Number(t.supply).toLocaleString()} supply</div>`:''}
       </div>
       <div class="lcard-actions">
-        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}')">Trade</button>` : ''}
+        ${ca ? `<button class="lcard-act lcard-act-primary" onclick="openDashboard('${ca}','trade')">Trade</button>
+        <button class="lcard-act" onclick="openDashboard('${ca}')">Dashboard</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1909,30 +1984,124 @@ function updateStats(items) {
   }
 }
 
-// ── Token Dashboard (chart + on-site buy) ─────────────────────────────────────
-let _dashCA = null, _dashSym = '';
-function openDashboard(ca) {
+// ── Token Dashboard (chart + live info + on-site Uniswap trade) ────────────────
+let _dashCA = null, _dashSym = '', _dashFee = 10000, _dashHasPool = false;
+
+function _dmSet(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+function openDashboard(ca, focus) {
   if (!ca) return;
   let item = null;
   try { item = (_launchedAll || []).concat(loadMyTokens()).find(t => (t.address || '').toLowerCase() === ca.toLowerCase()); } catch (_) {}
   const sym = (item && item.symbol) || 'token';
   const name = (item && item.name) || sym;
   const image = (item && item.image) || null;
-  _dashCA = ca; _dashSym = sym;
-  document.getElementById('dmName').textContent = name;
-  document.getElementById('dmCA').textContent = ca;
-  document.getElementById('dmBuySym').textContent = sym;
+  const variant = (item && item.variant) || (ca.toLowerCase().indexOf('0xb2') === 0 ? 'asset' : 'asset');
+  _dashCA = ca; _dashSym = sym; _dashFee = 10000; _dashHasPool = false;
+
+  _dmSet('dmName', name);
+  _dmSet('dmCA', ca);
+  _dmSet('dmBuySym', sym);
+  _dmSet('dmSellSym', sym);
+  _dmSet('dmType', variant === 'stablecoin' ? 'stablecoin' : 'asset');
+  const vb = document.getElementById('dmVariantBadge');
+  if (vb) { vb.textContent = variant; vb.className = 'lcard-badge ' + (variant === 'stablecoin' ? 'lbadge-stable' : 'lbadge-asset'); }
+
   const ico = document.getElementById('dmIco');
   if (image) { ico.innerHTML = `<img src="${_esc(image)}" style="width:100%;height:100%;object-fit:cover" alt="">`; }
   else { ico.textContent = (sym || '?').slice(0, 3); ico.style.background = tokenColor(sym || '?'); }
-  document.getElementById('dmChart').src = `https://dexscreener.com/base/${ca}?embed=1&theme=dark&trades=0&info=0`;
-  document.getElementById('dmSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=ETH&outputCurrency=${ca}`;
+
+  // Supply / cap (best-effort from feed until live read resolves)
+  _dmSet('dmSupply', item && item.supply ? Number(item.supply).toLocaleString() + ' ' + sym : '—');
+  _dmSet('dmCap', item && item.supply ? Number(item.supply).toLocaleString() + ' ' + sym : '—');
+  _dmSet('dmLpFee', '—');
+  _dmSet('dmBuyStatus', '');
+
+  const isDark = !document.documentElement.classList.contains('light');
+  document.getElementById('dmChart').src = `https://dexscreener.com/base/${ca}?embed=1&theme=${isDark ? 'dark' : 'light'}&trades=0&info=0`;
+  document.getElementById('dmGecko').href = `https://www.geckoterminal.com/base/tokens/${ca}`;
+  document.getElementById('dmSell').href = `https://app.uniswap.org/swap?chain=base&inputCurrency=${ca}&outputCurrency=ETH`;
   document.getElementById('dmDex').href = `https://dexscreener.com/base/${ca}`;
   document.getElementById('dmScan').href = (NET[network]?.explorer || 'https://basescan.org') + '/token/' + ca;
-  document.getElementById('dmBuyStatus').textContent = '';
+
+  setTradeSide('buy');
+  renderSupports({ hasPool: null });
   document.getElementById('dashModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  if (focus === 'trade' && window.matchMedia('(max-width:720px)').matches) {
+    setTimeout(() => { try { document.getElementById('dmTradePanel').scrollIntoView({ behavior: 'smooth' }); } catch (_) {} }, 200);
+  }
+
+  // Live enrich: token_info (supply/decimals/name) + pool_status (fee tier)
+  loadDashLive(ca, sym);
 }
+
+async function loadDashLive(ca, sym) {
+  // Token metadata
+  try {
+    const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'token_info', address: ca, network }) });
+    const d = await r.json();
+    if (d.ok && _dashCA === ca) {
+      if (d.totalSupply) { _dmSet('dmSupply', d.totalSupply + ' ' + (d.symbol || sym)); _dmSet('dmCap', d.totalSupply + ' ' + (d.symbol || sym)); }
+      if (d.name) _dmSet('dmName', d.name);
+    }
+  } catch (_) {}
+  // Pool / fee tier
+  try {
+    const pr = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'pool_status', token: ca }) });
+    const pd = await pr.json();
+    if (_dashCA !== ca) return;
+    if (pd.ok && pd.pools && Object.keys(pd.pools).length) {
+      const fee = parseInt(Object.keys(pd.pools)[0], 10);
+      _dashFee = fee; _dashHasPool = true;
+      const feeMap = { 10000: '1.00%', 3000: '0.30%', 500: '0.05%' };
+      _dmSet('dmLpFee', feeMap[fee] || (fee / 10000).toFixed(2) + '%');
+      const lb = document.getElementById('dmLpBadge'); if (lb) { lb.textContent = 'LP ' + (feeMap[fee] || fee); lb.style.display = ''; }
+      _dmSet('dmStatus', 'Ready');
+    } else {
+      _dashHasPool = false;
+      _dmSet('dmLpFee', 'no pool');
+      _dmSet('dmStatus', 'No pool yet');
+      const stEl = document.getElementById('dmStatus'); if (stEl) stEl.style.color = 'var(--t3)';
+    }
+    renderSupports({ hasPool: _dashHasPool });
+  } catch (_) { renderSupports({ hasPool: null }); }
+}
+
+function renderSupports(o) {
+  const el = document.getElementById('dmSupports');
+  if (!el) return;
+  const ca = _dashCA || '';
+  const isB20 = ca.toLowerCase().indexOf('0xb2') === 0;
+  const pool = o && o.hasPool;
+  const rows = [
+    ['ERC-20', true],
+    ['B20 native precompile', isB20],
+    ['Uniswap V4 pool', pool === null ? 'checking' : pool],
+    ['Tradeable on Orlix', pool === null ? 'checking' : pool],
+    ['Base mainnet', true],
+    ['Role-based access', isB20],
+  ];
+  el.innerHTML = rows.map(([label, v]) => {
+    const badge = v === 'checking' ? `<span class="no">checking…</span>` : v ? `<span class="yes">YES</span>` : `<span class="no">NO</span>`;
+    return `<div class="dm-support"><span>${label}</span>${badge}</div>`;
+  }).join('');
+}
+
+function setTradeSide(side) {
+  const buy = side !== 'sell';
+  document.getElementById('dmBuyPanel').style.display = buy ? '' : 'none';
+  document.getElementById('dmSellPanel').style.display = buy ? 'none' : '';
+  const tb = document.getElementById('dmTabBuy'), ts = document.getElementById('dmTabSell');
+  if (tb) { tb.style.background = buy ? 'var(--green)' : 'transparent'; tb.style.color = buy ? '#fff' : 'var(--t2)'; }
+  if (ts) { ts.style.background = !buy ? 'var(--orange)' : 'transparent'; ts.style.color = !buy ? '#fff' : 'var(--t2)'; }
+}
+
+function dashCopyCA(btn) {
+  if (!_dashCA) return;
+  navigator.clipboard.writeText(_dashCA).then(() => { const o = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = o, 1400); });
+}
+
 function closeDashboard() {
   document.getElementById('dashModal').style.display = 'none';
   document.getElementById('dmChart').src = '';
