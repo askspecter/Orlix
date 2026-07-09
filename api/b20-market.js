@@ -153,18 +153,37 @@ async function getHolders(ca) {
   try {
     const latestHex = await rpcSingle('eth_blockNumber', []);
     const latest = latestHex ? parseInt(latestHex, 16) : 0;
-    const fromBlock = '0x' + Math.max(latest - 200000, 0).toString(16); // ~5 days on Base
-    const logs = await rpcSingle('eth_getLogs', [{ address: ca, fromBlock, toBlock: 'latest', topics: [TRANSFER_TOPIC] }]);
-    if (!Array.isArray(logs) || !logs.length) return [];
+    if (!latest) return [];
+
+    // Scan Transfer logs in small chunks and in one batched request — a single
+    // 200k-block eth_getLogs times out on the public Base RPC, which is why the
+    // holders came back empty. ~90k blocks ≈ 2 days on Base covers fresh tokens.
+    const CHUNK = 9000, CHUNKS = 10;
+    const ranges = [];
+    for (let i = 0; i < CHUNKS; i++) {
+      const hi = latest - i * CHUNK;
+      const lo = Math.max(hi - CHUNK + 1, 0);
+      if (hi < 0) break;
+      ranges.push([lo, hi]);
+      if (lo === 0) break;
+    }
+    const logResults = await rpcBatch(ranges.map(([lo, hi]) => ({
+      method: 'eth_getLogs',
+      params: [{ address: ca, fromBlock: '0x' + lo.toString(16), toBlock: '0x' + hi.toString(16), topics: [TRANSFER_TOPIC] }],
+    })));
 
     const addrs = new Set();
-    for (const l of logs) {
-      const t = l.topics || [];
-      if (t[1]) addrs.add('0x' + t[1].slice(26).toLowerCase()); // from
-      if (t[2]) addrs.add('0x' + t[2].slice(26).toLowerCase()); // to
+    for (const r of logResults) {
+      const logs = r && r.result;
+      if (!Array.isArray(logs)) continue;
+      for (const l of logs) {
+        const t = l.topics || [];
+        if (t[1]) addrs.add('0x' + t[1].slice(26).toLowerCase()); // from
+        if (t[2]) addrs.add('0x' + t[2].slice(26).toLowerCase()); // to
+      }
     }
     addrs.delete('0x0000000000000000000000000000000000000000');
-    const list = [...addrs].slice(0, 100);
+    const list = [...addrs].slice(0, 120);
     if (!list.length) return [];
 
     const [bals, supHex] = await Promise.all([
