@@ -1549,7 +1549,7 @@ function renderInsiderRows() {
   if (!el) return;
   el.innerHTML = _insiderAllocations.map((a, i) => `
     <div class="alloc-row">
-      <input class="inp" placeholder="0x… beneficiary address" value="${_esc(a.address)}" oninput="updInsiderRow(${i},'address',this.value)">
+      <input class="inp" placeholder="0x… or name.b20" value="${_esc(a.address)}" oninput="updInsiderRow(${i},'address',this.value)">
       <input class="inp" placeholder="%" inputmode="decimal" value="${_esc(a.percent)}" oninput="updInsiderRow(${i},'percent',this.value)">
       <button type="button" class="alloc-rm" onclick="rmInsiderRow(${i})" aria-label="Remove">✕</button>
     </div>`).join('') || `<div class="alloc-empty">No insider allocations — 100% of supply flows to the pool/creator.</div>`;
@@ -1576,7 +1576,7 @@ function renderVestedRows() {
   if (!el) return;
   el.innerHTML = _vestedAllocations.map((a, i) => `
     <div class="alloc-row vested">
-      <input class="inp" placeholder="0x… beneficiary address" value="${_esc(a.address)}" oninput="updVestedRow(${i},'address',this.value)">
+      <input class="inp" placeholder="0x… or name.b20" value="${_esc(a.address)}" oninput="updVestedRow(${i},'address',this.value)">
       <input class="inp" placeholder="%" inputmode="decimal" value="${_esc(a.percent)}" oninput="updVestedRow(${i},'percent',this.value)">
       <input class="inp" placeholder="cliff d" inputmode="numeric" value="${_esc(a.cliff_days)}" oninput="updVestedRow(${i},'cliff_days',this.value)">
       <input class="inp" placeholder="dur d" inputmode="numeric" value="${_esc(a.duration_days)}" oninput="updVestedRow(${i},'duration_days',this.value)">
@@ -1668,6 +1668,25 @@ async function onDeploy() {
 
     const adminless = document.getElementById('fAdminless').checked;
     _deployDecimals = parseInt(document.getElementById('fDec').value) || 18;
+
+    // Allocation rows may use a .b20 name instead of a 0x address — resolve first.
+    const _resolveAlloc = async (rows) => {
+      const out = [];
+      for (const a of rows) {
+        if (!a.address || !a.percent) continue;
+        let addr = a.address.trim();
+        if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+          const r = window.OrlixNames ? await OrlixNames.resolve(addr) : null;
+          if (!r) throw new Error(`Couldn't resolve allocation name "${addr}" — check the .b20 name`);
+          addr = r;
+        }
+        out.push({ ...a, address: addr });
+      }
+      return out;
+    };
+    const _insiderResolved = await _resolveAlloc(_insiderAllocations);
+    const _vestedResolved  = await _resolveAlloc(_vestedAllocations);
+
     const payload   = {
       action:      'prepare',
       name,
@@ -1681,9 +1700,9 @@ async function onDeploy() {
       adminless,
       policies: {},
       roles: (!adminless && document.getElementById('fMetaEditable')?.checked) ? { meta_admin: walletAddress } : {},
-      insider_allocations: _insiderAllocations.filter(a => a.address && a.percent).map(a => ({ address: a.address.trim(), percent: parseFloat(a.percent) })),
-      vested_allocations: _vestedAllocations.filter(a => a.address && a.percent).map(a => ({
-        address: a.address.trim(), percent: parseFloat(a.percent),
+      insider_allocations: _insiderResolved.map(a => ({ address: a.address, percent: parseFloat(a.percent) })),
+      vested_allocations: _vestedResolved.map(a => ({
+        address: a.address, percent: parseFloat(a.percent),
         cliff_days: parseFloat(a.cliff_days) || 0, duration_days: parseFloat(a.duration_days) || 30,
       })),
       network,
@@ -2283,7 +2302,16 @@ function renderMyTokens() {
   const tokens = loadMyTokens();
   // Portfolio header
   const addrEl = document.getElementById('pfAddr');
-  if (addrEl) addrEl.textContent = walletAddress ? walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4) : 'Connect your wallet';
+  if (addrEl) {
+    addrEl.textContent = walletAddress ? walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4) : 'Connect your wallet';
+    if (walletAddress) {
+      try {
+        if (window.OrlixNames) OrlixNames.reverse(walletAddress).then(name => {
+          if (name && walletAddress) { addrEl.textContent = name; addrEl.title = walletAddress; }
+        });
+      } catch (_) {}
+    }
+  }
   const av = document.getElementById('pfAvatar');
   if (av && walletAddress) av.style.background = tokenColor(walletAddress);
   _dmSet('pfCreated', tokens.length);
@@ -2666,7 +2694,17 @@ function renderClaim() {
   const note = document.getElementById('dmClaimNote');
   if (!btn) return;
   const creator = _dashCreator;
-  if (rec) rec.textContent = creator ? creator.slice(0, 6) + '…' + creator.slice(-4) : 'unknown';
+  if (rec) {
+    rec.textContent = creator ? creator.slice(0, 6) + '…' + creator.slice(-4) : 'unknown';
+    rec.style.color = 'var(--t1)';
+    if (creator) {
+      try {
+        if (window.OrlixNames) OrlixNames.reverse(creator).then(name => {
+          if (name && _dashCreator === creator) { rec.textContent = name; rec.title = creator; rec.style.color = 'var(--orange)'; }
+        });
+      } catch (_) {}
+    }
+  }
   if (ico) ico.style.background = creator ? tokenColor(creator) : '#444';
   const isCreator = creator && walletAddress && walletAddress.toLowerCase() === creator;
   if (isCreator) {
@@ -2871,7 +2909,8 @@ function renderTrades(list) {
   if (!list.length) { el.innerHTML = `<div style="color:var(--t3)">No trades yet — they appear here as people buy and sell.</div>`; return; }
   el.innerHTML = list.map(t => {
     const buy = t.kind === 'buy';
-    const who = (t.from || '').slice(0, 6) + '…' + (t.from || '').slice(-4);
+    const shortAddr = (t.from || '').slice(0, 6) + '…' + (t.from || '').slice(-4);
+    const who = t.from ? `<span data-orlix-name data-addr="${_esc(t.from)}">${shortAddr}</span>` : shortAddr;
     const ago = t.ts ? _timeAgo(t.ts) : '';
     return `<div class="dm-trade-row">
       <span style="font-weight:800;color:${buy ? '#22c55e' : '#ef4444'}">${buy ? 'BUY' : 'SELL'}</span>
@@ -2879,6 +2918,7 @@ function renderTrades(list) {
       <span style="font-weight:700;color:var(--t1)">${_fmtUsd(t.usd)}</span>
     </div>`;
   }).join('');
+  try { if (window.OrlixNames) OrlixNames.hydrate(el); } catch (_) {}
 }
 function renderHolders(ca, list) {
   const el = document.getElementById('dmHolders');
@@ -2891,9 +2931,11 @@ function renderHolders(ca, list) {
   }
   el.innerHTML = list.map((h, i) => {
     const short = h.address ? h.address.slice(0, 6) + '…' + h.address.slice(-4) : '—';
+    const who = h.address ? `<span data-orlix-name data-addr="${_esc(h.address)}">${short}</span>` : '—';
     const pct = h.pct != null ? h.pct.toFixed(2) + '%' : '';
-    return `<div class="dm-hold-row"><span style="color:var(--t2);font-family:var(--mono)">#${i + 1}&nbsp; ${short}</span><span style="font-weight:700;color:var(--t1)">${pct}</span></div>`;
+    return `<div class="dm-hold-row"><span style="color:var(--t2);font-family:var(--mono)">#${i + 1}&nbsp; ${who}</span><span style="font-weight:700;color:var(--t1)">${pct}</span></div>`;
   }).join('') + `<a href="${gt}" target="_blank" rel="noopener" class="dm-link" style="display:block;margin-top:10px">All holders on GeckoTerminal &#x2197;</a>`;
+  try { if (window.OrlixNames) OrlixNames.hydrate(el); } catch (_) {}
 }
 
 function filterLaunched(type, el) {
@@ -3138,8 +3180,16 @@ async function onMint() {
   if (!walletAddress) return;
   const tokenAddr = (document.getElementById('mintTokenAddr').value || '').trim();
   const amountStr = (document.getElementById('mintAmount').value || '').trim().replace(/,/g, '');
-  const recipient = (document.getElementById('mintRecipient').value || '').trim() || walletAddress;
+  let recipient   = (document.getElementById('mintRecipient').value || '').trim() || walletAddress;
   const decimals  = parseInt(document.getElementById('mintDecimals').value || '18');
+
+  // Accept a .b20 name in the recipient field — resolve it to an address.
+  if (recipient && !/^0x[0-9a-fA-F]{40}$/.test(recipient)) {
+    const resolved = window.OrlixNames ? await OrlixNames.resolve(recipient) : null;
+    const msg = document.getElementById('mintRoleMsg');
+    if (!resolved) { if (msg) { msg.textContent = `Couldn't resolve "${recipient}" — check the .b20 name`; msg.style.color = '#ef4444'; } return; }
+    recipient = resolved;
+  }
 
   if (!/^0x[0-9a-fA-F]{40}$/.test(tokenAddr)) return;
   if (!amountStr || isNaN(Number(amountStr)) || Number(amountStr) <= 0) return;
@@ -3177,6 +3227,8 @@ async function onMint() {
 })();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js" defer></script>
+<script src="/assets/orlix-names.js" defer></script>
 <script src="/wallet-dist/wallet.js" defer></script>
 <script>
 (function(){var r=document.documentElement;if(localStorage.getItem('orlix-theme')==='light')r.classList.add('light');window.addEventListener('storage',function(e){if(e.key==='orlix-theme'){e.newValue==='light'?r.classList.add('light'):r.classList.remove('light');}});})();
