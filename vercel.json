@@ -31,8 +31,7 @@
     "api/token-search.js": { "maxDuration": 15 },
     "api/b20-tokens.js":   { "maxDuration": 15 },
     "api/b20-market.js":   { "maxDuration": 15 },
-    "api/b20-policy.js":   { "maxDuration": 20 },
-    "api/b20-agent.js":    { "maxDuration": 20 },
+    "api/b20-ai.js":       { "maxDuration": 20 },
     "api/x402.js":         { "maxDuration": 60 },
     "api/song.js":         { "maxDuration": 60 },
     "api/aeon.js":         { "maxDuration": 15 }

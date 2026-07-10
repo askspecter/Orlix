@@ -147,11 +147,11 @@ pre{background:var(--bg);border:1px solid var(--b1);border-radius:10px;padding:1
 
   <details class="agentbox">
     <summary>🤖 Agent economy — launch tokens programmatically</summary>
-    <p style="font-size:.78rem;color:var(--t2);line-height:1.6;margin-bottom:12px">Allow-listed AI agents can turn a natural-language <b>brief</b> into a ready-to-execute launch plan via <code>/api/b20-agent</code>, then deploy custodially (Turnkey) under a daily spend cap. The planner never moves funds — execution stays on the audited deploy path.</p>
-    <pre>curl -X POST https://orlixai.xyz/api/b20-agent \
+    <p style="font-size:.78rem;color:var(--t2);line-height:1.6;margin-bottom:12px">Allow-listed AI agents can turn a natural-language <b>brief</b> into a ready-to-execute launch plan via <code>/api/b20-ai</code> (mode <code>agent</code>), then deploy custodially (Turnkey) under a daily spend cap. The planner never moves funds — execution stays on the audited deploy path.</p>
+    <pre>curl -X POST https://orlixai.xyz/api/b20-ai \
   -H "X-Orlix-Key: &lt;agent-key&gt;" \
   -H "Content-Type: application/json" \
-  -d '{ "brief": "Launch an immutable community token for the Base builder meta, cap 1B, ban blocklisted wallets" }'
+  -d '{ "mode": "agent", "brief": "Launch an immutable community token for the Base builder meta, cap 1B, ban blocklisted wallets" }'
 
 # → { plan: { token, onchain, advisory, trust }, execute: { endpoint, body } }
 # then POST execute.body to /api/b20-skill to deploy.</pre>
@@ -176,7 +176,7 @@ async function compile(){
   if(!rules){st.className='status err';st.textContent='Write your rules first.';return;}
   btn.disabled=true; btn.innerHTML='<span class="spin"></span> Compiling…'; st.className='status'; st.textContent='AI is compiling your policy…';
   try{
-    const r=await fetch('/api/b20-policy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rules})});
+    const r=await fetch('/api/b20-ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'policy',rules})});
     const d=await r.json();
     if(!d.ok) throw new Error(d.error||'Compile failed');
     render(d); st.textContent='';
