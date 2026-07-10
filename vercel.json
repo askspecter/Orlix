@@ -31,6 +31,8 @@
     "api/token-search.js": { "maxDuration": 15 },
     "api/b20-tokens.js":   { "maxDuration": 15 },
     "api/b20-market.js":   { "maxDuration": 15 },
+    "api/b20-policy.js":   { "maxDuration": 20 },
+    "api/b20-agent.js":    { "maxDuration": 20 },
     "api/x402.js":         { "maxDuration": 60 },
     "api/song.js":         { "maxDuration": 60 },
     "api/aeon.js":         { "maxDuration": 15 }
@@ -64,6 +66,8 @@
     { "source": "/terms",        "destination": "/terms.html" },
     { "source": "/token",        "destination": "/token.html" },
     { "source": "/b20",          "destination": "/b20-studio.html" },
+    { "source": "/policy",       "destination": "/b20-policy.html" },
+    { "source": "/policy-lab",   "destination": "/b20-policy.html" },
     { "source": "/montage",      "destination": "/montage.html" },
     { "source": "/base-city",     "destination": "/neural-map.html" },
     { "source": "/zero",          "destination": "/zero.html" },
