@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>.b20 Names — Own your name | Orlix</title>
+<meta name="description" content="Register your .b20 name on Base — one identity for your wallet, paid in $ORLIX. Buy and sell names on-chain.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('orlix-theme');if(t==='light')document.documentElement.classList.add('light');})()</script>
+<style>
+:root{
+  --bg:#0a0a0a;--s1:#111;--s2:#181818;--s3:#202020;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.14);--b3:rgba(255,255,255,.22);
+  --orange:#F07830;--green:#22C55E;--red:#EF4444;
+  --t1:#E8E8E8;--t2:#8a8a8a;--t3:#555;
+  --font:'JetBrains Mono',monospace;--r:12px;
+}
+:root.light{--bg:#F4F4F5;--s1:#EAEAEC;--s2:#DDDDE0;--s3:#D0D0D4;--b1:rgba(0,0,0,.1);--b2:rgba(0,0,0,.18);--b3:rgba(0,0,0,.25);--t1:#1a1a1a;--t2:#555;--t3:#999;--orange:#E06820}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--t2);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:var(--font)}
+a{text-decoration:none;color:inherit}
+.crt{position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px);opacity:.4}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
+:root.light .nav{background:rgba(244,244,245,.92)}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-logo img{height:24px;display:block}
+.nav-badge{font-size:.82rem;font-weight:700;color:var(--t1)}
+.dotb20{color:var(--orange)}
+.nav-mid{position:absolute;left:50%;top:0;bottom:0;transform:translateX(-50%);display:flex;align-items:center}
+.tabs{display:flex;gap:4px;background:var(--s1);border:1px solid var(--b1);border-radius:999px;padding:4px}
+.tab{padding:7px 18px;border-radius:999px;border:none;background:none;color:var(--t3);font-family:var(--font);font-weight:700;font-size:.76rem;cursor:pointer;transition:.15s;white-space:nowrap}
+.tab:hover{color:var(--t1)}
+.tab.active{background:rgba(240,120,48,.15);color:var(--orange)}
+@media(max-width:820px){.nav-mid{display:none}}
+.connect{display:flex;align-items:center;gap:7px;background:var(--orange);border:none;border-radius:999px;padding:8px 16px;font-size:.76rem;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;box-shadow:0 2px 12px rgba(240,120,48,.35)}
+.connect:hover{opacity:.9}
+.connect .dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.7)}
+
+.shell{max-width:1100px;margin:0 auto;padding:84px 20px 100px}
+
+/* not-deployed banner */
+.gate{display:none;margin:0 auto 22px;max-width:760px;background:rgba(240,120,48,.06);border:1px solid rgba(240,120,48,.25);border-radius:12px;padding:13px 16px;font-size:.78rem;color:var(--t2);line-height:1.6;text-align:center}
+.gate b{color:var(--orange)}
+
+/* HERO */
+.hero{text-align:center;padding:14px 0 8px;position:relative}
+.hero::before{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:560px;max-width:92vw;height:230px;background:radial-gradient(50% 50% at 50% 50%,rgba(240,120,48,.14),transparent 70%);filter:blur(26px);z-index:0}
+.hero>*{position:relative;z-index:1}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);background:rgba(240,120,48,.08);border:1px solid rgba(240,120,48,.2);border-radius:99px;padding:5px 13px;margin-bottom:18px}
+.live .d{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.h1{font-size:2.6rem;font-weight:800;color:var(--t1);letter-spacing:-.03em;line-height:1.08}
+.h1 .b20{color:var(--orange)}
+.sub{font-size:.86rem;color:var(--t3);max-width:520px;margin:14px auto 0;line-height:1.6}
+@media(max-width:640px){.h1{font-size:1.9rem}}
+
+/* token pill */
+.tokpill{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;background:var(--s1);border:1px solid var(--b1);border-radius:14px;padding:12px 18px;max-width:560px;margin:22px auto 0;font-size:.8rem}
+.tokpill .sym{color:var(--orange);font-weight:800}
+.tokpill .px{color:var(--t1);font-weight:700}
+.tokpill .chg{color:#4ade80;font-weight:700}
+.tokpill .ca{color:var(--t3);font-size:.7rem}
+.tokpill a,.tokpill button{color:var(--t3);border:1px solid var(--b1);background:var(--s2);border-radius:7px;padding:5px 8px;cursor:pointer;font-size:.66rem}
+
+/* search */
+.searchbox{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--b2);border-radius:16px;padding:10px 10px 10px 20px;max-width:680px;margin:26px auto 0;transition:border-color .15s,box-shadow .15s}
+.searchbox:focus-within{border-color:rgba(240,120,48,.5);box-shadow:0 0 0 4px rgba(240,120,48,.08)}
+.searchbox svg{color:var(--t3);flex-shrink:0}
+.searchbox input{flex:1;background:none;border:none;outline:none;color:var(--t1);font-size:1.15rem;font-weight:600;font-family:var(--font);min-width:0}
+.searchbox input::placeholder{color:var(--t3)}
+.searchbox .tld{color:var(--orange);font-size:1.15rem;font-weight:700;white-space:nowrap}
+.searchbox .go{width:46px;height:46px;border-radius:50%;background:var(--orange);border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.searchbox .go:hover{opacity:.9}
+.searchbox .go:disabled{opacity:.4;cursor:wait}
+.chips{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin:16px auto 0;max-width:680px}
+.chips .lbl{color:var(--t3);font-size:.74rem;align-self:center}
+.chip{background:var(--s1);border:1px solid var(--b1);border-radius:99px;padding:8px 15px;color:var(--t2);font-size:.76rem;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--orange);color:var(--orange)}
+
+/* result card */
+.result{max-width:560px;margin:26px auto 0;background:var(--s1);border:1px solid var(--b1);border-radius:16px;padding:22px;display:none}
+.result.show{display:block}
+.result-name{font-size:1.5rem;font-weight:800;color:var(--t1);word-break:break-all}
+.result-name .b20{color:var(--orange)}
+.result-status{display:inline-flex;align-items:center;gap:7px;margin-top:10px;font-size:.78rem;font-weight:700;padding:5px 12px;border-radius:99px}
+.st-avail{color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25)}
+.st-taken{color:var(--red);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.22)}
+.result-row{display:flex;align-items:center;justify-content:space-between;margin-top:18px;gap:12px;flex-wrap:wrap}
+.result-price{font-size:.82rem;color:var(--t2)}
+.result-price b{color:var(--t1);font-size:1.05rem;font-weight:800}
+.btn{background:var(--orange);border:none;border-radius:11px;padding:13px 26px;font-size:.86rem;font-weight:800;color:#fff;cursor:pointer;font-family:var(--font);box-shadow:0 2px 16px rgba(240,120,48,.3);transition:.15s}
+.btn:hover{opacity:.92;transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.ghost{background:none;border:1px solid var(--b2);color:var(--t1);box-shadow:none}
+.btn.sm{padding:8px 15px;font-size:.74rem;border-radius:8px}
+.status-line{font-size:.74rem;color:var(--t3);margin-top:12px;text-align:center;min-height:16px;line-height:1.5}
+.status-line.err{color:var(--red)}.status-line.ok{color:#4ade80}
+
+/* section heads */
+.mkt-head{margin-bottom:6px}
+.mkt-eyebrow{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange)}
+.mkt-title{font-size:1.9rem;font-weight:800;color:var(--t1);letter-spacing:-.02em;margin-top:4px}
+.mkt-sub{font-size:.82rem;color:var(--t3);max-width:520px;margin-top:8px;line-height:1.6}
+
+/* filters */
+.filters{display:flex;gap:12px;flex-wrap:wrap;background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px 16px;margin:20px 0 8px}
+.filt{display:flex;align-items:center;gap:8px}
+.filt label{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.filt select{background:var(--s2);border:1px solid var(--b1);border-radius:8px;color:var(--t1);font-family:var(--font);font-size:.76rem;padding:7px 26px 7px 11px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A8A96' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
+
+/* grid + cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:16px}
+.ncard{background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--b1);border-radius:14px;padding:18px;transition:border-color .15s,transform .2s;position:relative;overflow:hidden}
+.ncard:hover{border-color:rgba(240,120,48,.3);transform:translateY(-2px)}
+.ncard::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(240,120,48,.5),transparent);opacity:0;transition:.2s}
+.ncard:hover::after{opacity:1}
+.ncard-name{font-size:1.15rem;font-weight:800;color:var(--t1);word-break:break-all}
+.ncard-name .b20{color:var(--orange)}
+.ncard-meta{font-size:.7rem;color:var(--t3);margin-top:8px;line-height:1.6}
+.ncard-price{font-size:.95rem;font-weight:800;color:var(--t1);margin-top:12px}
+.ncard-price span{font-size:.66rem;color:var(--t3);font-weight:500}
+.ncard-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.empty{text-align:center;padding:50px 20px;color:var(--t3);font-size:.82rem;border:1px dashed var(--b2);border-radius:14px;line-height:1.7;margin-top:16px}
+.spin{text-align:center;padding:40px;color:var(--t3);font-size:.8rem}
+
+/* modal */
+.modal{display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px}
+.modal.show{display:flex}
+.modal-card{background:var(--s1);border:1px solid var(--b1);border-radius:16px;width:100%;max-width:420px;padding:22px}
+.modal-title{font-size:1.05rem;font-weight:800;color:var(--t1);margin-bottom:14px}
+.inp{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:12px 14px;color:var(--t1);font-family:var(--font);font-size:.85rem;outline:none}
+.inp:focus{border-color:rgba(240,120,48,.4)}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+
+.view{display:none}.view.active{display:block}
+@media(max-width:720px){.shell{padding:74px 14px 90px}.mkt-title{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<div class="crt"></div>
+
+<nav class="nav">
+  <div class="nav-left">
+    <a href="/" class="nav-logo" aria-label="Orlix home"><img src="/orlix-wordmark.png" alt="ORLIX"></a>
+    <span class="nav-badge"><span class="dotb20">.</span>b20 names</span>
+  </div>
+  <div class="nav-mid">
+    <div class="tabs">
+      <button class="tab active" data-v="register" onclick="showView('register')">Register</button>
+      <button class="tab" data-v="mynames" onclick="showView('mynames')">My Names</button>
+      <button class="tab" data-v="market" onclick="showView('market')">Marketplace</button>
+    </div>
+  </div>
+  <button class="connect" id="connectBtn" onclick="connectWallet()"><span class="dot"></span><span id="connectLbl">Connect</span></button>
+</nav>
+
+<div class="shell">
+  <div class="gate" id="gate">Names are <b>launching soon</b> — the registry contract isn't live yet. The page is ready; once the contract is deployed and its address is set, Register / Marketplace go live.</div>
+
+  <!-- REGISTER -->
+  <div class="view active" id="v-register">
+    <div class="hero">
+      <span class="live"><span class="d"></span>Live on Base</span>
+      <h1 class="h1">Own your name<br>on the <span class="b20">.b20</span> chain</h1>
+      <p class="sub">One identity for your wallet, your profile, and your money. Search a name, check it live, and claim it on-chain — paid in $ORLIX.</p>
+
+      <div class="tokpill" id="tokpill">
+        <span class="sym">$ORLIX</span>
+        <span class="px" id="tkPx">—</span>
+        <span class="chg" id="tkChg"></span>
+        <span class="ca">0x799c…cBA3</span>
+        <button onclick="navigator.clipboard.writeText('0x799c28BAC95B3E0B26534D1e9A586511895EcBA3');this.textContent='✓'">copy</button>
+        <a href="https://dexscreener.com/base/0x799c28BAC95B3E0B26534D1e9A586511895EcBA3" target="_blank" rel="noopener">chart ↗</a>
+      </div>
+
+      <div class="searchbox">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="6"/><path d="M17 17l-3.5-3.5"/></svg>
+        <input id="q" type="text" placeholder="yourname" autocomplete="off" spellcheck="false" oninput="onType()" onkeydown="if(event.key==='Enter')doSearch()">
+        <span class="tld">.b20</span>
+        <button class="go" id="goBtn" onclick="doSearch()" aria-label="Search">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12"/><path d="M11 5l5 5-5 5"/></svg>
+        </button>
+      </div>
+      <div class="chips">
+        <span class="lbl">Try</span>
+        <button class="chip" onclick="tryChip('degen')">degen.b20</button>
+        <button class="chip" onclick="tryChip('based')">based.b20</button>
+        <button class="chip" onclick="tryChip('alpha')">alpha.b20</button>
+        <button class="chip" onclick="tryChip('whale')">whale.b20</button>
+      </div>
+
+      <div class="result" id="result">
+        <div class="result-name" id="rName">name<span class="b20">.b20</span></div>
+        <span class="result-status" id="rStatus">—</span>
+        <div class="result-row">
+          <div class="result-price" id="rPrice"></div>
+          <button class="btn" id="rBtn" onclick="doRegister()">Register</button>
+        </div>
+        <div class="status-line" id="rMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY NAMES -->
+  <div class="view" id="v-mynames">
+    <div class="mkt-head"><div class="mkt-eyebrow">Your identity</div><div class="mkt-title">My names</div><div class="mkt-sub">Names you own. Set a primary, point it anywhere, or list it for sale.</div></div>
+    <div id="myGrid" class="grid"></div>
+  </div>
+
+  <!-- MARKETPLACE -->
+  <div class="view" id="v-market">
+    <div class="mkt-head"><div class="mkt-eyebrow">Marketplace</div><div class="mkt-title">Buy &amp; sell names</div><div class="mkt-sub">Names listed for sale by their owners — bought on-chain in one tx, no middleman. Or claim a fresh name in Register.</div></div>
+    <div class="filters">
+      <div class="filt"><label>Sort</label><select id="fSort" onchange="renderMarket()"><option value="new">Newest</option><option value="plow">Price ↑</option><option value="phigh">Price ↓</option></select></div>
+      <div class="filt"><label>Length</label><select id="fLen" onchange="renderMarket()"><option value="all">All</option><option value="3">3</option><option value="4">4</option><option value="5">5+</option></select></div>
+      <div style="margin-left:auto"><button class="btn sm ghost" onclick="loadMarket(true)">↻ Refresh</button></div>
+    </div>
+    <div id="mktGrid" class="grid"><div class="spin">Loading listings…</div></div>
+  </div>
+</div>
+
+<!-- LIST MODAL -->
+<div class="modal" id="listModal">
+  <div class="modal-card">
+    <div class="modal-title">List <span id="listName" style="color:var(--orange)"></span> for sale</div>
+    <input class="inp" id="listPrice" type="text" inputmode="decimal" placeholder="Price in $ORLIX (e.g. 2000000)">
+    <div class="status-line" id="listMsg"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" style="flex:1" onclick="closeList()">Cancel</button>
+      <button class="btn" style="flex:1" id="listConfirm" onclick="confirmList()">List</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIG — set NAMES_CONTRACT to the deployed OrlixNames address to go live.
+const NAMES_CONTRACT = ""; // e.g. "0x...."  (see contracts/README-names.md)
+const ORLIX_TOKEN   = "0x799c28BAC95B3E0B26534D1e9A586511895EcBA3";
+const BASE_CHAIN_ID = "0x2105"; // 8453
+const RPC = "https://mainnet.base.org";
+
+const NAMES_ABI = [
+  "function available(string sld) view returns (bool)",
+  "function priceFor(string sld) view returns (uint256)",
+  "function ownerOfName(string sld) view returns (address)",
+  "function register(string sld) returns (uint256)",
+  "function totalNames() view returns (uint256)",
+  "function nameAt(uint256 i) view returns (string)",
+  "function tokenIdOf(string label) pure returns (uint256)",
+  "function fullLabel(string sld) pure returns (string)",
+  "function labelOf(uint256 id) view returns (string)",
+  "function resolveOf(uint256 id) view returns (address)",
+  "function ownerOf(uint256 id) view returns (address)",
+  "function primaryOf(address a) view returns (uint256)",
+  "function setPrimary(uint256 id)",
+  "function totalListings() view returns (uint256)",
+  "function listingAt(uint256 i) view returns (uint256 id, address seller, uint256 price, bool active, string label)",
+  "function list(uint256 id, uint256 price)",
+  "function unlist(uint256 id)",
+  "function buy(uint256 id)",
+];
+const ERC20_ABI = [
+  "function allowance(address o, address s) view returns (uint256)",
+  "function approve(address s, uint256 a) returns (bool)",
+  "function balanceOf(address a) view returns (uint256)",
+];
+
+const HAS_ETHERS = (typeof ethers !== 'undefined');
+const LIVE = HAS_ETHERS && /^0x[0-9a-fA-F]{40}$/.test(NAMES_CONTRACT);
+let provider, signer, account = null;
+let roProvider = HAS_ETHERS ? new ethers.JsonRpcProvider(RPC) : null;
+let namesRO = LIVE ? new ethers.Contract(NAMES_CONTRACT, NAMES_ABI, roProvider) : null;
+
+function fmt(n){ try{ return Number(ethers.formatEther(n)).toLocaleString(undefined,{maximumFractionDigits:0}); }catch(_){ return "0"; } }
+function short(a){ return a ? a.slice(0,6)+'…'+a.slice(-4) : ''; }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function showView(v){
+  ['register','mynames','market'].forEach(x=>{
+    document.getElementById('v-'+x).classList.toggle('active', x===v);
+  });
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.v===v));
+  if(v==='market') loadMarket();
+  if(v==='mynames') loadMyNames();
+}
+
+// ── wallet ──
+async function connectWallet(){
+  if(!HAS_ETHERS){ alert('Still loading — try again in a moment.'); return; }
+  if(!window.ethereum){ alert('No wallet found. Install MetaMask.'); return; }
+  try{
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BASE_CHAIN_ID}]}); }catch(_){}
+    signer = await provider.getSigner();
+    account = await signer.getAddress();
+    document.getElementById('connectLbl').textContent = short(account);
+    document.getElementById('connectBtn').style.background = 'var(--s2)';
+    document.getElementById('connectBtn').querySelector('.dot').style.background = '#4ade80';
+  }catch(e){ /* rejected */ }
+}
+function namesRW(){ return new ethers.Contract(NAMES_CONTRACT, NAMES_ABI, signer); }
+function orlixRW(){ return new ethers.Contract(ORLIX_TOKEN, ERC20_ABI, signer); }
+
+async function ensureAllowance(amount){
+  const erc = new ethers.Contract(ORLIX_TOKEN, ERC20_ABI, signer);
+  const cur = await erc.allowance(account, NAMES_CONTRACT);
+  if(cur >= amount) return;
+  const tx = await erc.approve(NAMES_CONTRACT, ethers.MaxUint256);
+  await tx.wait();
+}
+
+// ── search / register ──
+function clean(v){ return (v||'').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,32); }
+function onType(){ const el=document.getElementById('q'); el.value=clean(el.value); document.getElementById('result').classList.remove('show'); }
+function tryChip(n){ document.getElementById('q').value=n; doSearch(); }
+
+let _lastSld='';
+async function doSearch(){
+  const sld = clean(document.getElementById('q').value);
+  if(sld.length<3){ flashMsg('rMsg','Name must be at least 3 characters','err'); document.getElementById('result').classList.add('show'); document.getElementById('rName').innerHTML=esc(sld||'name')+'<span class="b20">.b20</span>'; document.getElementById('rStatus').className='result-status st-taken'; document.getElementById('rStatus').textContent='too short'; document.getElementById('rPrice').textContent=''; document.getElementById('rBtn').style.display='none'; return; }
+  _lastSld = sld;
+  const res=document.getElementById('result'); res.classList.add('show');
+  document.getElementById('rName').innerHTML = esc(sld)+'<span class="b20">.b20</span>';
+  document.getElementById('rStatus').textContent='checking…'; document.getElementById('rStatus').className='result-status';
+  document.getElementById('rPrice').textContent=''; document.getElementById('rMsg').textContent='';
+  document.getElementById('rBtn').style.display='';
+  if(!LIVE){ document.getElementById('rStatus').className='result-status'; document.getElementById('rStatus').textContent='launching soon'; document.getElementById('rBtn').style.display='none'; document.getElementById('rPrice').innerHTML='Registry not deployed yet'; return; }
+  try{
+    const [avail, price] = await Promise.all([ namesRO.available(sld), namesRO.priceFor(sld) ]);
+    const st=document.getElementById('rStatus');
+    if(avail){
+      st.className='result-status st-avail'; st.textContent='✓ available';
+      document.getElementById('rPrice').innerHTML = '<b>'+fmt(price)+'</b> $ORLIX';
+      document.getElementById('rBtn').style.display=''; document.getElementById('rBtn').disabled=false;
+      document.getElementById('rBtn').dataset.price=price.toString();
+    }else{
+      st.className='result-status st-taken'; st.textContent='✕ taken';
+      const own = await namesRO.ownerOfName(sld);
+      document.getElementById('rPrice').innerHTML = 'Owned by '+short(own);
+      document.getElementById('rBtn').style.display='none';
+    }
+  }catch(e){ flashMsg('rMsg','Lookup failed — try again','err'); }
+}
+
+async function doRegister(){
+  if(!account){ await connectWallet(); if(!account) return; }
+  const sld=_lastSld; const price=BigInt(document.getElementById('rBtn').dataset.price||'0');
+  const btn=document.getElementById('rBtn');
+  try{
+    btn.disabled=true; flashMsg('rMsg','Approving $ORLIX…','');
+    await ensureAllowance(price);
+    flashMsg('rMsg','Confirm registration in your wallet…','');
+    const tx = await namesRW().register(sld);
+    flashMsg('rMsg','Registering '+sld+'.b20…','');
+    await tx.wait();
+    flashMsg('rMsg','✓ '+sld+'.b20 is yours!','ok');
+    document.getElementById('rStatus').className='result-status st-taken'; document.getElementById('rStatus').textContent='✓ registered';
+    btn.style.display='none';
+  }catch(e){
+    const m=(e.shortMessage||e.message||'failed');
+    flashMsg('rMsg', /insufficient|balance|allowance/i.test(m)?'Not enough $ORLIX balance':m.slice(0,90),'err');
+    btn.disabled=false;
+  }
+}
+
+// ── my names ──
+async function loadMyNames(){
+  const grid=document.getElementById('myGrid');
+  if(!account){ grid.innerHTML='<div class="empty">Connect your wallet to see the names you own.</div>'; return; }
+  if(!LIVE){ grid.innerHTML='<div class="empty">Names launching soon.</div>'; return; }
+  grid.innerHTML='<div class="spin">Loading your names…</div>';
+  try{
+    const total = Number(await namesRO.totalNames());
+    const cap=Math.min(total,800); const mine=[];
+    for(let i=total-1;i>=Math.max(0,total-cap);i--){
+      const label = await namesRO.nameAt(i);
+      const id = await namesRO.tokenIdOf(label);
+      const own = await namesRO.ownerOf(id);
+      if(own.toLowerCase()===account.toLowerCase()) mine.push({label,id});
+      if(mine.length>=60) break;
+    }
+    if(!mine.length){ grid.innerHTML='<div class="empty">You don\'t own any .b20 names yet.<br>Grab one in <b>Register</b>.</div>'; return; }
+    grid.innerHTML = mine.map(n=>{
+      const sld=n.label.replace('.b20','');
+      return `<div class="ncard">
+        <div class="ncard-name">${esc(sld)}<span class="b20">.b20</span></div>
+        <div class="ncard-meta">Token #${n.id.toString().slice(0,8)}…</div>
+        <div class="ncard-actions">
+          <button class="btn sm" onclick="openList('${esc(sld)}','${n.id}')">List for sale</button>
+          <button class="btn sm ghost" onclick="setPrimary('${n.id}')">Set primary</button>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){ grid.innerHTML='<div class="empty">Couldn\'t load your names.</div>'; }
+}
+async function setPrimary(id){
+  if(!account){ await connectWallet(); if(!account) return; }
+  try{ const tx=await namesRW().setPrimary(id); await tx.wait(); }catch(_){}
+}
+
+// ── marketplace ──
+let _listings=[];
+async function loadMarket(force){
+  const grid=document.getElementById('mktGrid');
+  if(!LIVE){ grid.innerHTML='<div class="empty">Marketplace launching soon.</div>'; return; }
+  if(_listings.length && !force){ renderMarket(); return; }
+  grid.innerHTML='<div class="spin">Loading listings…</div>';
+  try{
+    const total=Number(await namesRO.totalListings());
+    const out=[];
+    for(let i=total-1;i>=Math.max(0,total-200);i--){
+      const L = await namesRO.listingAt(i);
+      if(L.active) out.push({id:L.id, seller:L.seller, price:L.price, label:L.label});
+    }
+    _listings=out; renderMarket();
+  }catch(e){ grid.innerHTML='<div class="empty">Couldn\'t load the marketplace.</div>'; }
+}
+function renderMarket(){
+  const grid=document.getElementById('mktGrid');
+  let items=_listings.slice();
+  const flen=document.getElementById('fLen').value;
+  if(flen!=='all'){ items=items.filter(x=>{const l=x.label.replace('.b20','').length; return flen==='5'?l>=5:l===Number(flen);}); }
+  const sort=document.getElementById('fSort').value;
+  if(sort==='plow') items.sort((a,b)=>a.price<b.price?-1:1);
+  else if(sort==='phigh') items.sort((a,b)=>a.price>b.price?-1:1);
+  if(!items.length){ grid.innerHTML='<div class="empty">No names listed for sale yet.<br>Own a .b20? List it from <b>My Names</b>.</div>'; return; }
+  grid.innerHTML=items.map(x=>{
+    const sld=x.label.replace('.b20','');
+    const mine=account && x.seller.toLowerCase()===account.toLowerCase();
+    return `<div class="ncard">
+      <div class="ncard-name">${esc(sld)}<span class="b20">.b20</span></div>
+      <div class="ncard-meta">Seller ${short(x.seller)}</div>
+      <div class="ncard-price">${fmt(x.price)} <span>$ORLIX</span></div>
+      <div class="ncard-actions">
+        ${mine?`<button class="btn sm ghost" onclick="unlist('${x.id}')">Unlist</button>`
+              :`<button class="btn sm" onclick="buyName('${x.id}','${x.price}')">Buy</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+async function buyName(id, price){
+  if(!account){ await connectWallet(); if(!account) return; }
+  try{
+    await ensureAllowance(BigInt(price));
+    const tx=await namesRW().buy(id); await tx.wait();
+    _listings=[]; loadMarket(true);
+  }catch(e){ alert((e.shortMessage||e.message||'failed').slice(0,120)); }
+}
+async function unlist(id){
+  if(!account){ await connectWallet(); if(!account) return; }
+  try{ const tx=await namesRW().unlist(id); await tx.wait(); _listings=[]; loadMarket(true); }catch(_){}
+}
+
+// ── list modal ──
+let _listId=null;
+function openList(sld,id){ _listId=id; document.getElementById('listName').textContent=sld+'.b20'; document.getElementById('listPrice').value=''; document.getElementById('listMsg').textContent=''; document.getElementById('listModal').classList.add('show'); }
+function closeList(){ document.getElementById('listModal').classList.remove('show'); }
+async function confirmList(){
+  if(!account){ await connectWallet(); if(!account) return; }
+  const raw=(document.getElementById('listPrice').value||'').replace(/[^0-9.]/g,'');
+  if(!raw||Number(raw)<=0){ flashMsg('listMsg','Enter a price','err'); return; }
+  try{
+    const price=ethers.parseEther(raw);
+    flashMsg('listMsg','Confirm in wallet…','');
+    const tx=await namesRW().list(_listId, price); await tx.wait();
+    closeList(); loadMyNames();
+  }catch(e){ flashMsg('listMsg',(e.shortMessage||e.message||'failed').slice(0,80),'err'); }
+}
+
+function flashMsg(id,msg,kind){ const el=document.getElementById(id); if(!el) return; el.textContent=msg; el.className=(id==='rMsg'||id==='listMsg')?('status-line '+(kind||'')):el.className; }
+
+// ── $ORLIX price pill ──
+async function loadTokenPrice(){
+  try{
+    const r=await fetch('https://api.dexscreener.com/latest/dex/tokens/'+ORLIX_TOKEN);
+    const d=await r.json(); const p=(d.pairs||[]).sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    if(p){ document.getElementById('tkPx').textContent='$'+Number(p.priceUsd).toLocaleString(undefined,{maximumSignificantDigits:4});
+      const ch=p.priceChange?.h24; if(ch!=null){ const el=document.getElementById('tkChg'); el.textContent=(ch>=0?'+':'')+ch+'%'; el.style.color=ch>=0?'#4ade80':'#ef4444'; } }
+  }catch(_){}
+}
+
+// init
+if(!LIVE) document.getElementById('gate').style.display='block';
+loadTokenPrice();
+if(HAS_ETHERS && window.ethereum && window.ethereum.selectedAddress) connectWallet();
+</script>
+</body>
+</html>
