@@ -58,26 +58,49 @@ wallet (the only address allowed to call `configureLaunch`).
 
 ---
 
-## 2. B20 native policies (allowlist / blocklist / freeze) — needs exact ABI
+## 2. B20 native policies (allowlist / blocklist / freeze)
 
-The Policy Compiler already produces the intent + config. To **enforce** it we add
-`initCalls` to `createB20`. Confirmed from the B20 spec:
+The Policy Compiler already produces the intent + config. To **enforce** it we
+create a policy on the registry, set its members, and bind it to a token scope.
 
-- policy id is `uint64`; there is a **PolicyRegistry**; `ALWAYS_ALLOW = 0`,
-  `ALWAYS_BLOCK = 72057594037927937` (2^56 + 1); batch cap 64.
-- membership managed via `updateAllowlist(...)` / `updateBlocklist(...)`.
-- freeze/seize path: deny via `TRANSFER_SENDER_POLICY` + `burnBlocked(...)`.
-- gated ops call `isAuthorized` and revert `PolicyForbids`.
+Facts from the B20 spec:
+- policy id is `uint64`; `ALWAYS_ALLOW = 0`, `ALWAYS_BLOCK = 72057594037927937`
+  (2^56 + 1); batch cap 64. Gated ops call `isAuthorized` and revert `PolicyForbids`.
+- **PolicyRegistry** precompile: `0x8453000000000000000000000000000000000002`.
 
-**Blocker — need the verbatim signatures** (docs.base.org returns 403 to fetch):
+### Verified ABI (from `github.com/base/base-std`, `IPolicyRegistry.sol` + `IB20.sol`)
+
+```solidity
+// PolicyRegistry (0x8453…0002)
+enum PolicyType { BLOCKLIST, ALLOWLIST }          // BLOCKLIST = 0, ALLOWLIST = 1
+function createPolicy(address admin, PolicyType policyType) external returns (uint64 newPolicyId);
+function updateAllowlist(uint64 policyId, bool allowed, address[] accounts) external;   // NOTE: (id, bool, accounts)
+function updateBlocklist(uint64 policyId, bool blocked, address[] accounts) external;   // NOTE: (id, bool, accounts)
+
+// B20 token — bind a policy id to a transfer/mint scope
+function updatePolicy(bytes32 policyScope, uint64 newPolicyId) external;
+// scope selectors are bytes32 VIEW getters on the token (read once, then reuse):
+function TRANSFER_SENDER_POLICY()   view returns (bytes32);  // checked against `from` on transfer
+function TRANSFER_RECEIVER_POLICY() view returns (bytes32);  // checked against `to`   on transfer
+function TRANSFER_EXECUTOR_POLICY() view returns (bytes32);  // checked against msg.sender on transferFrom
+function MINT_RECEIVER_POLICY()     view returns (bytes32);  // checked against `to`   on mint
 ```
-updateAllowlist(uint64 policyId, address[] accounts, bool allowed)   // arg order/types?
-updateBlocklist(uint64 policyId, address[] accounts, bool blocked)   // arg order/types?
-burnBlocked(address account, uint256 amount)                          // ?
-// and the setter that binds a token scope to a policy id, e.g.:
-setPolicy(uint256 scope, uint64 policyId)  // exact name + the scope constants
-// scope constants: TRANSFER_SENDER_POLICY / TRANSFER_RECEIVER_POLICY / MINT_RECEIVER_POLICY ids
-```
-Paste these from https://docs.base.org/base-chain/specs/upgrades/beryl/b20 (the
-"Policies" / interface section) and the wiring lands the same day, guarded by the
-existing `ethCallSim` pre-flight so a bad config reverts in simulation, never for a user.
+
+> ⚠️ The earlier draft of this section had the arg order wrong
+> (`updateAllowlist(uint64, address[], bool)`). The verified order is
+> `(uint64 policyId, bool allowed, address[] accounts)`.
+
+### Wiring notes / gotchas
+- `createPolicy` **returns** the new `policyId`, so enforcement can't live purely
+  in `createB20` initCalls (initCalls can't capture a return value). Do it as a
+  short post-launch tx sequence: `createPolicy` → `updateAllowlist/Blocklist` →
+  token `updatePolicy(scope, policyId)`. Read the returned id from the
+  `createPolicy` receipt (or an `eth_call` simulation of it).
+- The scope selectors are `bytes32` view getters — read them from the deployed
+  token once and cache; they're identical for every B20 token.
+- **Allowlist on a public launch breaks trading**: the Uniswap pool, router and
+  every buyer would need to be allowlisted. For launchpad tokens only a
+  **blocklist** (ban specific addresses) or **freeze** is safe; keep allowlist
+  behind an explicit "restricted token" opt-in.
+- Guard every build with the existing `ethCallSim` pre-flight so a bad config
+  reverts in simulation, never for a user.
