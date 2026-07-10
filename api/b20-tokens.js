@@ -318,6 +318,8 @@ async function enrichTimestamps(tokens) {
 }
 
 module.exports = async (req, res) => {
+  // Merged endpoint: /api/b20-market rewrites here with __svc=market (holders/price/trades/holdings)
+  if ((req.query?.__svc === 'market') || req.query?.token || req.query?.holder) return require('./_b20-market')(req, res);
   CORS['Access-Control-Allow-Origin'] = allowedOrigin(req);
   if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
   if (req.method !== 'GET') {

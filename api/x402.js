@@ -9,7 +9,7 @@ const { getOrlixTier, withTier } = require('./_orlix-tier');
 const analyzeHandler = require('./analyze');
 const chatHandler    = require('./chat');
 const songHandler    = require('./song');
-const b20Handler     = require('./b20');
+const b20Handler     = require('./_b20-info');
 
 // ── Market handler ───────────────────────────────────────────────────────────
 const EXCLUDE = new Set(['USDT','USDC','DAI','WETH','WBTC','CBETH','USDBC','USDB','EURC','RETH','STETH','WSTETH','ETH','FRAX']);

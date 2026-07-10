@@ -161,6 +161,8 @@ async function compilePolicy(rules) {
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 module.exports = async (req, res) => {
+  // Merged endpoint: /api/b20 (standard info, GET) rewrites here with __svc=info
+  if (req.query?.__svc === 'info') return require('./_b20-info')(req, res);
   CORS['Access-Control-Allow-Origin'] = allowedOrigin(req);
   if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
   if (req.method !== 'POST') { res.writeHead(405, CORS); return res.end(JSON.stringify({ error: 'POST only' })); }

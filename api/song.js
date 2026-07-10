@@ -136,6 +136,8 @@ Non-negotiable:
 }
 
 module.exports = async (req, res) => {
+  // Merged endpoint: /api/music rewrites here with __svc=music
+  if (req.query?.__svc === 'music') return require('./_music')(req, res);
   CORS['Access-Control-Allow-Origin'] = allowedOrigin(req);
   if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
   if (req.method !== 'POST') { res.writeHead(405, CORS); return res.end(JSON.stringify({ error: 'Method not allowed' })); }
