@@ -991,9 +991,6 @@ select.inp{cursor:pointer}
     </div>
     <div class="sb-sect">
       <span class="sb-label">crypto tools</span>
-      <div class="sb-item" data-view="token-analyzer"><span class="ic"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,15 7,9.5 11.5,12.5 17.5,5"/><polyline points="13.5,5 17.5,5 17.5,9"/></svg></span>token analyzer</div>
-      <div class="sb-item" data-view="wallet-watcher"><span class="ic"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 2.5a6 6 0 016 6c0 2.5.5 4 1.5 5H2.5c1-1 1.5-2.5 1.5-5a6 6 0 016-6z"/><path d="M8.5 17.5a1.5 1.5 0 003 0"/></svg></span>wallet watcher</div>
-      <div class="sb-item" data-view="song"><span class="ic"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 15V5l9-2v10"/><circle cx="6" cy="15" r="2"/><circle cx="15" cy="13" r="2"/></svg></span>token song</div>
       <div class="sb-item" data-view="gallery"><span class="ic"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg></span>gallery</div>
     </div>
     <div class="sb-footer">
@@ -1512,113 +1509,6 @@ select.inp{cursor:pointer}
           <button class="chat-send-btn" id="chatSendBtn">
             <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="16" x2="10" y2="4"/><polyline points="5,9 10,4 15,9"/></svg>
           </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ LEADERBOARD ═══ -->
-    <div class="view" id="view-token-analyzer">
-      <div class="page-hd">
-        <div class="file">$ orlix analyze --token</div>
-        <h1>🪙 token analyzer</h1>
-        <div class="sub">Paste any contract address for instant AI analysis</div>
-      </div>
-      <div class="analyzer-input-row">
-        <select id="analyzerChain" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-3);color:var(--text-1);font-family:inherit;font-size:.85rem;cursor:pointer">
-          <option value="base">Base</option>
-          <option value="robinhood">Robinhood</option>
-        </select>
-        <input type="text" id="analyzerInput" placeholder="0x... contract address" spellcheck="false">
-        <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()">Analyze →</button>
-      </div>
-      <div id="analyzerResult"></div>
-    </div>
-
-    <div class="view" id="view-wallet-watcher">
-      <div class="page-hd">
-        <div class="file">$ orlix watch --wallet</div>
-        <h1>🔔 wallet watcher</h1>
-        <div class="sub">Monitor any Base wallet in real-time</div>
-      </div>
-      <div class="watcher-input-row">
-        <input type="text" id="watcherInput" placeholder="0x... wallet address" spellcheck="false">
-        <button class="watch-btn" id="watchBtn" onclick="toggleWatcher()">▶ Watch</button>
-      </div>
-      <div class="watcher-status">
-        <div class="watcher-dot" id="watcherDot"></div>
-        <span id="watcherStatusText">Not watching</span>
-      </div>
-      <div class="tx-feed" id="txFeed">
-        <div style="color:var(--dim-2);font-size:.75rem;text-align:center;padding:20px 0">Enter a wallet address above and click Watch to start monitoring</div>
-      </div>
-    </div>
-
-    <!-- ═══ TOKEN SONG ═══ -->
-    <div class="view" id="view-song">
-      <div class="song-wrap">
-        <div class="song-hero">
-          <div class="s-hero-tag">✦ AI Song Generator</div>
-          <h1 class="s-hero-title">Every token<br>deserves a <span>banger</span></h1>
-          <p class="s-hero-sub">Drop any Base token. We pull the real on-chain data and write a custom song — price action, volume, buy pressure, all in the lyrics.</p>
-        </div>
-        <div class="song-examples">
-          <div class="ex-chip" onclick="setSongExample('BRETT')">$BRETT</div>
-          <div class="ex-chip" onclick="setSongExample('DEGEN')">$DEGEN</div>
-          <div class="ex-chip" onclick="setSongExample('TOSHI')">$TOSHI</div>
-          <div class="ex-chip" onclick="setSongExample('AERO')">$AERO</div>
-          <div class="ex-chip" onclick="setSongExample('MOG')">$MOG</div>
-          <div class="ex-chip" onclick="setSongExample('VIRTUAL')">$VIRTUAL</div>
-        </div>
-        <div class="song-card">
-          <div class="s-field">
-            <label class="s-field-label" for="songTokenInp">Token name, ticker, or address</label>
-            <input class="s-field-input" id="songTokenInp" type="text" placeholder="e.g. BRETT, $DEGEN, 0x4ed4…" autocomplete="off" autocorrect="off" spellcheck="false"/>
-          </div>
-          <div class="s-field">
-            <label class="s-field-label">Genre</label>
-            <div class="genre-grid">
-              <button class="genre-btn active" data-genre="trap" onclick="setSongGenre('trap',this)"><span class="g-ico">🎤</span>Trap</button>
-              <button class="genre-btn" data-genre="phonk" onclick="setSongGenre('phonk',this)"><span class="g-ico">🌑</span>Phonk</button>
-              <button class="genre-btn" data-genre="pop" onclick="setSongGenre('pop',this)"><span class="g-ico">🌟</span>Pop</button>
-              <button class="genre-btn" data-genre="drill" onclick="setSongGenre('drill',this)"><span class="g-ico">🔫</span>Drill</button>
-              <button class="genre-btn" data-genre="hype" onclick="setSongGenre('hype',this)"><span class="g-ico">⚡</span>Hype</button>
-              <button class="genre-btn" data-genre="ballad" onclick="setSongGenre('ballad',this)"><span class="g-ico">🌙</span>Ballad</button>
-            </div>
-          </div>
-          <button class="s-gen-btn" id="songGenBtn" onclick="generateSong()">
-            <span>🎵</span> Generate Song
-          </button>
-        </div>
-        <div class="s-lyrics-card" id="songLyricsCard">
-          <div class="lyrics-header">
-            <div class="lyrics-title" id="songLyricsTitle">Song for $TOKEN</div>
-            <span class="s-genre-tag" id="songGenreTag" style="background:var(--orange-dim);color:var(--orange)">TRAP</span>
-          </div>
-          <div class="s-token-chip" id="songTokenChip" style="display:none"></div>
-          <div class="s-music-player" id="songMusicPlayer" style="display:none">
-            <button class="s-play-btn" id="songPlayBtn" onclick="toggleSongPlay()" disabled>▶</button>
-            <div class="s-player-info" id="songPlayerInfo">
-              <div class="s-player-loading">
-                <span>Generating music</span>
-                <span class="s-gen-dots"><span>.</span><span>.</span><span>.</span></span>
-              </div>
-            </div>
-          </div>
-          <div id="songLyricsBodyWrap"></div>
-          <div class="s-lyrics-actions" id="songLyricsActions" style="display:none">
-            <button class="s-act-btn primary" onclick="shareSongOnX()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.26 5.638L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              Share on X
-            </button>
-            <button class="s-act-btn" onclick="copySongLyrics()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy Lyrics
-            </button>
-            <button class="s-act-btn" onclick="generateSong()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-              Regenerate
-            </button>
-          </div>
         </div>
       </div>
     </div>

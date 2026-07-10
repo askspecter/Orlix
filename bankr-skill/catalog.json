@@ -12,7 +12,7 @@
   "setup": [
     "No authentication required — the platform and B20 API are fully open",
     "Install: `install the orlix skill from https://github.com/BankrBot/skills/tree/main/orlix`",
-    "For AI chat and token analysis: visit https://orlixai.xyz or message @orlixai_bot on Telegram",
+    "For AI chat and token analysis: visit https://orlixai.xyz",
     "For B20 tokens: POST to https://orlixai.xyz/api/b20-skill — all actions fetch live data from Base RPC",
     "For visual B20 configuration: use the B20 Studio at https://orlixai.xyz/b20"
   ],

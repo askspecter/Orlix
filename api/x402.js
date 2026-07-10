@@ -6,9 +6,7 @@ const { withX402 }           = require('./_x402guard');
 const { getOrlixTier, withTier } = require('./_orlix-tier');
 
 // ── Existing core handlers ───────────────────────────────────────────────────
-const analyzeHandler = require('./analyze');
 const chatHandler    = require('./chat');
-const songHandler    = require('./song');
 const b20Handler     = require('./_b20-info');
 
 // ── Market handler ───────────────────────────────────────────────────────────
@@ -176,12 +174,9 @@ const walletHandler = async (req, res) => {
 
 // ── Service registry ─────────────────────────────────────────────────────────
 const SERVICES = {
-  analyze: { amountUsdc: 0.05,  description: 'Orlix AI token security analysis on Base',                 handler: analyzeHandler },
-  chat:    { amountUsdc: 0.002, description: 'Orlix AI chat — 19 frontier models',                       handler: chatHandler    },
-  song:    { amountUsdc: 0.05,  description: 'Orlix AI crypto song lyrics — trap, phonk, pop and more',  handler: songHandler    },
-  b20:     { amountUsdc: 0.01,  description: 'B20 token standard info on Base + deployment guide',        handler: b20Handler     },
-  market:  { amountUsdc: 0.01,  description: 'Live Base market data — top tokens by volume',              handler: marketHandler  },
-  wallet:  { amountUsdc: 0.03,  description: 'Base wallet analysis — balances, tier, AI profile',        handler: walletHandler  },
+  chat:    { amountUsdc: 0.002, description: 'Orlix AI chat — 19 frontier models',                 handler: chatHandler   },
+  b20:     { amountUsdc: 0.01,  description: 'B20 token standard info on Base + deployment guide',  handler: b20Handler    },
+  market:  { amountUsdc: 0.01,  description: 'Live Base market data — top tokens by volume',        handler: marketHandler },
 };
 
 // Pre-wrap each service with its x402 guard
