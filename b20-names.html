@@ -37,9 +37,16 @@ a{text-decoration:none;color:inherit}
 .tab:hover{color:var(--t1)}
 .tab.active{background:rgba(240,120,48,.15);color:var(--orange)}
 @media(max-width:820px){.nav-mid{display:none}}
-.connect{display:flex;align-items:center;gap:7px;background:var(--orange);border:none;border-radius:999px;padding:8px 16px;font-size:.76rem;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;box-shadow:0 2px 12px rgba(240,120,48,.35)}
-.connect:hover{opacity:.9}
-.connect .dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.7)}
+/* Privy wallet button (wallet.js injects .ow-btn; #wallet-fallback until it does) */
+#wallet-fallback,#orlix-wallet .ow-btn,#orlix-wallet button:not(#wallet-fallback){
+  display:flex!important;align-items:center!important;gap:7px!important;
+  background:var(--orange)!important;border:none!important;border-radius:999px!important;
+  padding:8px 16px!important;font-size:.76rem!important;font-weight:700!important;color:#fff!important;
+  cursor:pointer!important;white-space:nowrap!important;box-shadow:0 2px 12px rgba(240,120,48,.35)!important;
+  font-family:var(--font)!important;
+}
+#wallet-fallback:hover,#orlix-wallet .ow-btn:hover,#orlix-wallet button:not(#wallet-fallback):hover{opacity:.88!important;box-shadow:0 4px 20px rgba(240,120,48,.45)!important}
+#wallet-fallback .wf-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.7);flex-shrink:0}
 
 .shell{max-width:1100px;margin:0 auto;padding:84px 20px 100px}
 
@@ -156,7 +163,13 @@ a{text-decoration:none;color:inherit}
       <button class="tab" data-v="market" onclick="showView('market')">Marketplace</button>
     </div>
   </div>
-  <button class="connect" id="connectBtn" onclick="connectWallet()"><span class="dot"></span><span id="connectLbl">Connect</span></button>
+  <div class="nav-right" style="display:flex;align-items:center">
+    <div id="orlix-wallet" style="display:flex;align-items:center;position:relative">
+      <button id="wallet-fallback" onclick="connectWallet()" style="visibility:hidden">
+        <span class="wf-dot"></span>Connect Wallet
+      </button>
+    </div>
+  </div>
 </nav>
 
 <div class="shell">
@@ -238,6 +251,7 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+<script src="/wallet-dist/wallet.js" defer></script>
 <script>
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG — set NAMES_CONTRACT to the deployed OrlixNames address to go live.
@@ -291,21 +305,32 @@ function showView(v){
   if(v==='mynames') loadMyNames();
 }
 
-// ── wallet ──
-async function connectWallet(){
-  if(!HAS_ETHERS){ alert('Still loading — try again in a moment.'); return; }
-  if(!window.ethereum){ alert('No wallet found. Install MetaMask.'); return; }
-  try{
-    provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send('eth_requestAccounts', []);
-    try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BASE_CHAIN_ID}]}); }catch(_){}
-    signer = await provider.getSigner();
-    account = await signer.getAddress();
-    document.getElementById('connectLbl').textContent = short(account);
-    document.getElementById('connectBtn').style.background = 'var(--s2)';
-    document.getElementById('connectBtn').querySelector('.dot').style.background = '#4ade80';
-  }catch(e){ /* rejected */ }
+// ── wallet (Privy — same as the rest of the site) ──
+// wallet.js renders the Privy connect button into #orlix-wallet and fires
+// `orlix:wallet:connected`. #wallet-fallback is a plain connect used if the
+// Privy button hasn't rendered (or the user opens in a wallet browser).
+async function _onConnected(addr){
+  account = addr;
+  if(HAS_ETHERS && window.ethereum){
+    try{ provider = new ethers.BrowserProvider(window.ethereum); signer = await provider.getSigner(); }catch(_){}
+  }
+  const fb=document.getElementById('wallet-fallback');
+  if(fb){ fb.innerHTML=`<span class="wf-dot" style="background:#4ADE80;box-shadow:0 0 5px rgba(74,222,128,.5)"></span>${short(addr)}`; fb.style.background='var(--s2)'; fb.style.border='1px solid rgba(74,222,128,.3)'; fb.style.color='#f1f1f3'; }
 }
+async function connectWallet(){
+  if(!window.ethereum){ alert('No wallet found. Install MetaMask or open in a wallet browser.'); return; }
+  try{
+    try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BASE_CHAIN_ID}]}); }
+    catch(sw){ if(sw.code===4902){ await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:BASE_CHAIN_ID,chainName:'Base',nativeCurrency:{name:'Ether',symbol:'ETH',decimals:18},rpcUrls:[RPC],blockExplorerUrls:['https://basescan.org']}]}); } }
+    const accts = await window.ethereum.request({ method:'eth_requestAccounts' });
+    if(accts[0]) window.dispatchEvent(new CustomEvent('orlix:wallet:connected',{detail:{address:accts[0]}}));
+  }catch(_){}
+}
+window.addEventListener('orlix:wallet:connected', e=>{ const a=e.detail&&e.detail.address; if(a) _onConnected(a); });
+window.addEventListener('orlix:wallet:disconnected', ()=>{ account=null; signer=null; });
+// Show the fallback button if Privy's button hasn't rendered; hide it once it does.
+setTimeout(()=>{ const fb=document.getElementById('wallet-fallback'); if(fb && !document.querySelector('.ow-btn')) fb.style.visibility='visible'; }, 2500);
+new MutationObserver(()=>{ const fb=document.getElementById('wallet-fallback'); if(fb && document.querySelector('.ow-btn')) fb.style.display='none'; }).observe(document.getElementById('orlix-wallet')||document.body,{childList:true,subtree:true});
 function namesRW(){ return new ethers.Contract(NAMES_CONTRACT, NAMES_ABI, signer); }
 function orlixRW(){ return new ethers.Contract(ORLIX_TOKEN, ERC20_ABI, signer); }
 
@@ -490,7 +515,7 @@ async function loadTokenPrice(){
 // init
 if(!LIVE) document.getElementById('gate').style.display='block';
 loadTokenPrice();
-if(HAS_ETHERS && window.ethereum && window.ethereum.selectedAddress) connectWallet();
+if(HAS_ETHERS && window.ethereum && window.ethereum.selectedAddress) _onConnected(window.ethereum.selectedAddress);
 </script>
 </body>
 </html>
