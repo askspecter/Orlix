@@ -1,14 +1,3 @@
-api/ping.js
-api/bankr-tokens.js
-api/music.js
-api/b20-ai.js
-api/search.js
-api/x402-analyze.js
-api/x402-chat.js
-api/x402-song.js
-api/x402-b20.js
-api/x402-market.js
-api/x402-wallet.js
 x402/
 dexscreener-ingestion/
 contracts/
