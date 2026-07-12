@@ -4072,7 +4072,7 @@ function copySongLyrics(){
     if(btn){const orig=btn.innerHTML;btn.innerHTML='✓ Copied!';setTimeout(()=>btn.innerHTML=orig,2000);}
   }).catch(()=>{});
 }
-document.getElementById('songTokenInp').addEventListener('keydown',e=>{if(e.key==='Enter')generateSong();});
+document.getElementById('songTokenInp')?.addEventListener('keydown',e=>{if(e.key==='Enter')generateSong();});
 
 // ───────── GALLERY VIEW ─────────
 let _gallBuilds=[];
