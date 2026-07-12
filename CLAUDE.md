@@ -78,9 +78,17 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - DexScreener chain ID: `'robinhood'` (used in API filters)
 - Supported in: `analyze.js`, `chat.js`, `token-search.js`, `x402.js`, `x402-market.js`, `app.html`, `index.html`
 - NOT supported in B20 files (B20 is Base-only)
-- Multi-chain filter pattern: `p.chainId === 'base' || p.chainId === 'robinhood'`
-- `analyze.js` uses a CHAINS config object with `chain` query param (defaults to `'base'`)
-- `app.html` has a chain selector dropdown that passes chain param to the analyze API
+
+### Arbitrum Integration (added July 2026)
+- DexScreener chain ID: `'arbitrum'` (Arbitrum One, chain 42161) — analytics/search only, same tier as Robinhood
+- Onchain write-actions (balance/gas/tx tools in `chat.js`, `x402.js`) stay **Base-only** — Arbitrum is DexScreener read-only
+- Supported in: `chat.js` (dexscreener_search/token), `_token-search.js`, `x402.js`, `app.html` (quick actions + system prompt)
+- Multi-chain now driven by a set/label map, not chained ternaries:
+  - `chat.js`: `SUPPORTED_CHAINS = new Set(['base','robinhood','arbitrum'])` + `CHAIN_LABELS`
+  - `_token-search.js`: `SUPPORTED` set gates the `?chain=` query param
+  - `x402.js`: `validPair()` allows base/robinhood/arbitrum
+- To add another DexScreener chain later: add its id to those sets + `CHAIN_LABELS`
+- NOTE: `/api/analyze` no longer exists (consolidated out under Vercel's 12-fn limit); the app's live multi-chain path is the AI chat's DexScreener tools. `token.html` stays Base-only.
 
 ### Cinematic Homepage (`/index.html`, added July 2026)
 - Awwwards-style scroll film: preloader → hero → manifesto → horizontal "reel" → 3D depth descent → finale → film credits

@@ -21,7 +21,7 @@ const BASE_SEARCHES = [
 ];
 
 function validPair(p) {
-  return (p.chainId === 'base' || p.chainId === 'robinhood') && !!p.baseToken?.address
+  return (p.chainId === 'base' || p.chainId === 'robinhood' || p.chainId === 'arbitrum') && !!p.baseToken?.address
     && !EXCLUDE.has((p.baseToken.symbol || '').toUpperCase())
     && (p.liquidity?.usd || 0) >= 5000;
 }

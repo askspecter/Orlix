@@ -2045,7 +2045,7 @@ const AEON_SKILLS = {
     { icon:'', name:'Code Review', desc:'Review code for bugs, security, improvements', tag:'code', prompt:'Review this code for bugs, security issues, and improvements:\n\n```\n[PASTE CODE HERE]\n```' },
   ],
   crypto: [
-    { icon:'', name:'Token Search', desc:'Search tokens on Base & Robinhood Chain', tag:'dexscreener_search', prompt:'Search for this token on Base and Robinhood Chain and show me price, liquidity, volume, and market cap:\n\n[TOKEN NAME OR SYMBOL]' },
+    { icon:'', name:'Token Search', desc:'Search tokens on Base, Robinhood & Arbitrum', tag:'dexscreener_search', prompt:'Search for this token on Base, Robinhood Chain, and Arbitrum and show me price, liquidity, volume, and market cap:\n\n[TOKEN NAME OR SYMBOL]' },
     { icon:'', name:'Market Data', desc:'Full market data for any token address', tag:'dexscreener_token', prompt:'Get full market data for this token — price, liquidity, 24h volume, buy/sell ratio:\n\n[TOKEN ADDRESS 0x...]' },
     { icon:'', name:'Swap Tokens', desc:'Swap any token pair on Uniswap Base', tag:'uniswap_quote + uniswap_prepare_swap', prompt:'I want to swap [AMOUNT] ETH to USDC on Uniswap Base. Get me a quote and prepare the swap transaction.' },
     { icon:'', name:'New Launches', desc:'Latest meme token launches on Flaunch', tag:'flaunch_new_tokens', prompt:'Show me the 10 newest token launches on Flaunch Base with price and market cap.' },
@@ -3371,8 +3371,8 @@ Use these tools proactively — never wait to be asked:
 - fetch_webpage: read any public URL
 - github_repo_info: GitHub metadata and stats
 - base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info: Base blockchain tools
-- dexscreener_search: search any token on Base or Robinhood Chain by name/symbol
-- dexscreener_token: full market data (price, liq, vol, txns) for a token address on Base or Robinhood Chain
+- dexscreener_search: search any token on Base, Robinhood Chain, or Arbitrum by name/symbol
+- dexscreener_token: full market data (price, liq, vol, txns) for a token address on Base, Robinhood Chain, or Arbitrum
 - flaunch_new_tokens: newest meme token launches on Flaunch/Base
 - flaunch_top_tokens: top tokens by market cap on Flaunch
 - uniswap_quote: get best swap price on Base via Odos (works for any token pair)

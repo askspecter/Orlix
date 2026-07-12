@@ -117,7 +117,7 @@ const ALL_TOOLS = [
   },
   {
     name: 'dexscreener_search',
-    description: 'Search for tokens on DexScreener by name or symbol. Returns price, liquidity, volume, and market data for Base and Robinhood Chain tokens.',
+    description: 'Search for tokens on DexScreener by name or symbol. Returns price, liquidity, volume, and market data for Base, Robinhood Chain, and Arbitrum tokens.',
     input_schema: {
       type: 'object',
       properties: {
@@ -128,7 +128,7 @@ const ALL_TOOLS = [
   },
   {
     name: 'dexscreener_token',
-    description: 'Get full market data for a specific token on Base or Robinhood Chain: price, liquidity, volume, price changes 1h/6h/24h, buy/sell txns, market cap, FDV',
+    description: 'Get full market data for a specific token on Base, Robinhood Chain, or Arbitrum: price, liquidity, volume, price changes 1h/6h/24h, buy/sell txns, market cap, FDV',
     input_schema: {
       type: 'object',
       properties: {
@@ -254,6 +254,10 @@ const ALL_TOOLS = [
 
 // ── Base MCP tool executor ────────────────────────────────────────────────────
 const BASE_RPC = 'https://mainnet.base.org';
+
+// DexScreener chains Orlix surfaces in analytics/search (onchain write-actions stay Base-only).
+const SUPPORTED_CHAINS = new Set(['base', 'robinhood', 'arbitrum']);
+const CHAIN_LABELS = { base: 'Base', robinhood: 'Robinhood', arbitrum: 'Arbitrum' };
 
 async function rpc(method, params = []) {
   const r = await fetch(BASE_RPC, {
@@ -398,7 +402,7 @@ async function executeTool(name, input) {
         if (!r.ok) return { error: `DexScreener error: ${r.status}` };
         const data = await r.json();
         const pairs = (data.pairs || [])
-          .filter(p => p.chainId === 'base' || p.chainId === 'robinhood')
+          .filter(p => SUPPORTED_CHAINS.has(p.chainId))
           .slice(0, 8)
           .map(p => ({
             name:             p.baseToken?.name,
@@ -410,9 +414,9 @@ async function executeTool(name, input) {
             price_change_24h: p.priceChange?.h24,
             market_cap:       p.marketCap,
             pair_url:         p.url,
-            chain:            p.chainId === 'robinhood' ? 'Robinhood' : 'Base',
+            chain:            CHAIN_LABELS[p.chainId] || 'Base',
           }));
-        return { query: input.query, results: pairs, chains: ['Base', 'Robinhood'], source: 'DexScreener' };
+        return { query: input.query, results: pairs, chains: ['Base', 'Robinhood', 'Arbitrum'], source: 'DexScreener' };
       }
       case 'dexscreener_token': {
         const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${input.address}`, {
@@ -420,8 +424,8 @@ async function executeTool(name, input) {
         });
         if (!r.ok) return { error: `DexScreener error: ${r.status}` };
         const data = await r.json();
-        const supported = (data.pairs || []).filter(p => p.chainId === 'base' || p.chainId === 'robinhood');
-        if (!supported.length) return { error: 'Token not found on Base or Robinhood Chain', address: input.address };
+        const supported = (data.pairs || []).filter(p => SUPPORTED_CHAINS.has(p.chainId));
+        if (!supported.length) return { error: 'Token not found on Base, Robinhood Chain, or Arbitrum', address: input.address };
         const best = supported.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
         const age  = best.pairCreatedAt ? Math.floor((Date.now() - best.pairCreatedAt) / 86400000) + ' days' : null;
         const buys = best.txns?.h24?.buys || 0;
@@ -446,7 +450,7 @@ async function executeTool(name, input) {
           dex:              best.dexId,
           pair_age:         age,
           pair_url:         best.url,
-          chain:            best.chainId === 'robinhood' ? 'Robinhood' : 'Base'
+          chain:            CHAIN_LABELS[best.chainId] || 'Base'
         };
       }
       case 'flaunch_new_tokens': {

@@ -1,4 +1,4 @@
-// /api/token-search — live DexScreener token search, Base + Robinhood Chain
+// /api/token-search — live DexScreener token search, Base + Robinhood Chain + Arbitrum
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -61,7 +61,8 @@ module.exports = async (req, res) => {
 
     const pairs = (data.pairs || []);
 
-    const chain = req.query.chain === 'robinhood' ? 'robinhood' : 'base';
+    const SUPPORTED = new Set(['base', 'robinhood', 'arbitrum']);
+    const chain = SUPPORTED.has(req.query.chain) ? req.query.chain : 'base';
     // Deduplicate by token address on selected chain, keep highest liquidity pair
     const tokenMap = {};
     for (const p of pairs) {
