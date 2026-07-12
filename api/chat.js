@@ -33,52 +33,70 @@ const ALLOWED_MODELS = new Set([
 const ALL_TOOLS = [
   {
     name: 'base_get_eth_balance',
-    description: 'Get the ETH balance of a wallet address on Base network (L2)',
+    description: 'Get the ETH balance of a wallet address on Base, Arbitrum, or Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
-        address: { type: 'string', description: 'Ethereum wallet address (0x...)' }
+        address: { type: 'string', description: 'Ethereum wallet address (0x...)' },
+        chain:   { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
       },
       required: ['address']
     }
   },
   {
     name: 'base_get_gas_price',
-    description: 'Get the current gas price on Base network in gwei',
-    input_schema: { type: 'object', properties: {} }
-  },
-  {
-    name: 'base_get_transaction',
-    description: 'Get details of a transaction on Base network by its hash',
+    description: 'Get the current gas price in gwei on Base, Arbitrum, or Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
-        tx_hash: { type: 'string', description: 'Transaction hash (0x...)' }
+        chain: { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+      }
+    }
+  },
+  {
+    name: 'base_get_transaction',
+    description: 'Get details of a transaction by its hash on Base, Arbitrum, or Robinhood Chain',
+    input_schema: {
+      type: 'object',
+      properties: {
+        tx_hash: { type: 'string', description: 'Transaction hash (0x...)' },
+        chain:   { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
       },
       required: ['tx_hash']
     }
   },
   {
     name: 'base_get_latest_block',
-    description: 'Get the latest block information on Base network including transaction count and gas usage',
-    input_schema: { type: 'object', properties: {} }
+    description: 'Get the latest block information (tx count, gas usage) on Base, Arbitrum, or Robinhood Chain',
+    input_schema: {
+      type: 'object',
+      properties: {
+        chain: { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+      }
+    }
   },
   {
     name: 'base_get_token_balance',
-    description: 'Get ERC20 token balance for a wallet address on Base network',
+    description: 'Get ERC20 token balance for a wallet address on Base, Arbitrum, or Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
         wallet_address: { type: 'string', description: 'Wallet address to check' },
-        token_address:  { type: 'string', description: 'ERC20 token contract address on Base' }
+        token_address:  { type: 'string', description: 'ERC20 token contract address on the selected chain' },
+        chain:          { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
       },
       required: ['wallet_address', 'token_address']
     }
   },
   {
     name: 'base_get_network_info',
-    description: 'Get general information about the Base network (chain ID, latest block, gas price)',
-    input_schema: { type: 'object', properties: {} }
+    description: 'Get general network info (chain ID, latest block, gas price) for Base, Arbitrum, or Robinhood Chain',
+    input_schema: {
+      type: 'object',
+      properties: {
+        chain: { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+      }
+    }
   },
   {
     name: 'web_search',
@@ -194,12 +212,13 @@ const ALL_TOOLS = [
   },
   {
     name: 'base_erc20_info',
-    description: 'Get ERC20 token details on Base: name, symbol, decimals, total supply. Optionally check a wallet\'s balance of that token.',
+    description: 'Get ERC20 token details on Base, Arbitrum, or Robinhood Chain: name, symbol, decimals, total supply. Optionally check a wallet\'s balance of that token.',
     input_schema: {
       type: 'object',
       properties: {
-        token_address:  { type: 'string', description: 'ERC20 token contract address on Base (0x...)' },
-        wallet_address: { type: 'string', description: 'Optional: wallet address to check token balance for' }
+        token_address:  { type: 'string', description: 'ERC20 token contract address (0x...)' },
+        wallet_address: { type: 'string', description: 'Optional: wallet address to check token balance for' },
+        chain:          { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
       },
       required: ['token_address']
     }
@@ -255,15 +274,24 @@ const ALL_TOOLS = [
 // ── Base MCP tool executor ────────────────────────────────────────────────────
 const BASE_RPC = 'https://mainnet.base.org';
 
-// DexScreener chains Orlix surfaces in analytics/search (onchain write-actions stay Base-only).
+// DexScreener chains Orlix surfaces in analytics/search.
 const SUPPORTED_CHAINS = new Set(['base', 'robinhood', 'arbitrum']);
 const CHAIN_LABELS = { base: 'Base', robinhood: 'Robinhood', arbitrum: 'Arbitrum' };
 
-async function rpc(method, params = []) {
-  const r = await fetch(BASE_RPC, {
+// Onchain read tools (balance/gas/tx/block) can target any of these via a `chain` param.
+const CHAINS = {
+  base:      { id: 8453,  name: 'Base Mainnet',    rpc: BASE_RPC,                                   explorer: 'https://basescan.org',              bridge: 'https://bridge.base.org' },
+  arbitrum:  { id: 42161, name: 'Arbitrum One',    rpc: 'https://arb1.arbitrum.io/rpc',             explorer: 'https://arbiscan.io',               bridge: 'https://bridge.arbitrum.io' },
+  robinhood: { id: 4663,  name: 'Robinhood Chain', rpc: 'https://rpc.mainnet.chain.robinhood.com/', explorer: 'https://robinhoodchain.blockscout.com', bridge: null },
+};
+function chainOf(input) { return CHAINS[(input && input.chain) || 'base'] || CHAINS.base; }
+
+async function rpc(method, params = [], url = BASE_RPC) {
+  const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    signal: AbortSignal.timeout(8000),
   });
   const d = await r.json();
   if (d.error) throw new Error(d.error.message);
@@ -274,19 +302,22 @@ async function executeTool(name, input) {
   try {
     switch (name) {
       case 'base_get_eth_balance': {
-        const hex = await rpc('eth_getBalance', [input.address, 'latest']);
+        const c = chainOf(input);
+        const hex = await rpc('eth_getBalance', [input.address, 'latest'], c.rpc);
         const eth = (parseInt(hex, 16) / 1e18).toFixed(8);
-        return { address: input.address, balance_eth: eth, network: 'Base Mainnet', chain_id: 8453 };
+        return { address: input.address, balance_eth: eth, network: c.name, chain_id: c.id };
       }
       case 'base_get_gas_price': {
-        const hex = await rpc('eth_gasPrice', []);
+        const c = chainOf(input);
+        const hex = await rpc('eth_gasPrice', [], c.rpc);
         const gwei = (parseInt(hex, 16) / 1e9).toFixed(6);
-        return { gas_price_gwei: gwei, network: 'Base Mainnet', chain_id: 8453 };
+        return { gas_price_gwei: gwei, network: c.name, chain_id: c.id };
       }
       case 'base_get_transaction': {
-        const tx = await rpc('eth_getTransactionByHash', [input.tx_hash]);
-        if (!tx) return { error: 'Transaction not found', tx_hash: input.tx_hash };
-        const receipt = await rpc('eth_getTransactionReceipt', [input.tx_hash]).catch(() => null);
+        const c = chainOf(input);
+        const tx = await rpc('eth_getTransactionByHash', [input.tx_hash], c.rpc);
+        if (!tx) return { error: 'Transaction not found', tx_hash: input.tx_hash, network: c.name };
+        const receipt = await rpc('eth_getTransactionReceipt', [input.tx_hash], c.rpc).catch(() => null);
         return {
           hash:           tx.hash,
           from:           tx.from,
@@ -295,12 +326,13 @@ async function executeTool(name, input) {
           gas_price_gwei: (parseInt(tx.gasPrice, 16) / 1e9).toFixed(6),
           block_number:   tx.blockNumber ? parseInt(tx.blockNumber, 16) : null,
           status:         receipt ? (receipt.status === '0x1' ? 'success' : 'failed') : 'pending',
-          network:        'Base Mainnet',
-          chain_id:       8453
+          network:        c.name,
+          chain_id:       c.id
         };
       }
       case 'base_get_latest_block': {
-        const b = await rpc('eth_getBlockByNumber', ['latest', false]);
+        const c = chainOf(input);
+        const b = await rpc('eth_getBlockByNumber', ['latest', false], c.rpc);
         return {
           block_number:      parseInt(b.number, 16),
           hash:              b.hash,
@@ -309,37 +341,39 @@ async function executeTool(name, input) {
           gas_used:          parseInt(b.gasUsed, 16),
           gas_limit:         parseInt(b.gasLimit, 16),
           base_fee_gwei:     b.baseFeePerGas ? (parseInt(b.baseFeePerGas, 16) / 1e9).toFixed(6) : null,
-          network:           'Base Mainnet',
-          chain_id:          8453
+          network:           c.name,
+          chain_id:          c.id
         };
       }
       case 'base_get_token_balance': {
+        const c = chainOf(input);
         const data = '0x70a08231' + input.wallet_address.replace('0x', '').padStart(64, '0');
-        const hex  = await rpc('eth_call', [{ to: input.token_address, data }, 'latest']);
+        const hex  = await rpc('eth_call', [{ to: input.token_address, data }, 'latest'], c.rpc);
         const raw  = parseInt(hex, 16);
         return {
           wallet:      input.wallet_address,
           token:       input.token_address,
           balance_raw: raw.toString(),
-          network:     'Base Mainnet',
-          chain_id:    8453,
+          network:     c.name,
+          chain_id:    c.id,
           note:        'Divide balance_raw by 10^decimals to get human-readable amount'
         };
       }
       case 'base_get_network_info': {
+        const c = chainOf(input);
         const [blockHex, gasPriceHex, chainIdHex] = await Promise.all([
-          rpc('eth_blockNumber', []),
-          rpc('eth_gasPrice', []),
-          rpc('eth_chainId', []),
+          rpc('eth_blockNumber', [], c.rpc),
+          rpc('eth_gasPrice', [], c.rpc),
+          rpc('eth_chainId', [], c.rpc),
         ]);
         return {
           chain_id:       parseInt(chainIdHex, 16),
-          network:        'Base Mainnet',
+          network:        c.name,
           latest_block:   parseInt(blockHex, 16),
           gas_price_gwei: (parseInt(gasPriceHex, 16) / 1e9).toFixed(6),
-          rpc_endpoint:   BASE_RPC,
-          explorer:       'https://basescan.org',
-          bridge:         'https://bridge.base.org',
+          rpc_endpoint:   c.rpc,
+          explorer:       c.explorer,
+          bridge:         c.bridge,
         };
       }
       case 'web_search': {
@@ -589,6 +623,7 @@ async function executeTool(name, input) {
         return { wallet: input.wallet_address, position: data, source: 'Moonwell', chain: 'Base' };
       }
       case 'base_erc20_info': {
+        const c = chainOf(input);
         function decodeStrLocal(hex) {
           try {
             if (!hex || hex === '0x') return '';
@@ -599,10 +634,10 @@ async function executeTool(name, input) {
           } catch { return ''; }
         }
         const [nameHex, symHex, decHex, supHex] = await Promise.allSettled([
-          rpc('eth_call', [{ to: input.token_address, data: '0x06fdde03' }, 'latest']),
-          rpc('eth_call', [{ to: input.token_address, data: '0x95d89b41' }, 'latest']),
-          rpc('eth_call', [{ to: input.token_address, data: '0x313ce567' }, 'latest']),
-          rpc('eth_call', [{ to: input.token_address, data: '0x18160ddd' }, 'latest']),
+          rpc('eth_call', [{ to: input.token_address, data: '0x06fdde03' }, 'latest'], c.rpc),
+          rpc('eth_call', [{ to: input.token_address, data: '0x95d89b41' }, 'latest'], c.rpc),
+          rpc('eth_call', [{ to: input.token_address, data: '0x313ce567' }, 'latest'], c.rpc),
+          rpc('eth_call', [{ to: input.token_address, data: '0x18160ddd' }, 'latest'], c.rpc),
         ]);
         const decimals  = decHex.status === 'fulfilled' ? (parseInt(decHex.value, 16) || 18) : 18;
         const supplyRaw = supHex.status === 'fulfilled' && supHex.value && supHex.value !== '0x' ? BigInt(supHex.value) : 0n;
@@ -612,12 +647,12 @@ async function executeTool(name, input) {
           symbol:       symHex.status  === 'fulfilled' ? decodeStrLocal(symHex.value)  : '?',
           decimals,
           total_supply: supplyRaw > 0n ? (Number(supplyRaw) / Math.pow(10, decimals)).toLocaleString() : 'Unknown',
-          chain:        'Base',
-          chain_id:     8453
+          chain:        c.name,
+          chain_id:     c.id
         };
         if (input.wallet_address) {
           const balData = '0x70a08231' + input.wallet_address.replace('0x', '').padStart(64, '0');
-          const balHex  = await rpc('eth_call', [{ to: input.token_address, data: balData }, 'latest']).catch(() => null);
+          const balHex  = await rpc('eth_call', [{ to: input.token_address, data: balData }, 'latest'], c.rpc).catch(() => null);
           if (balHex) {
             const raw = parseInt(balHex, 16);
             result.wallet_balance     = (raw / Math.pow(10, decimals)).toLocaleString();

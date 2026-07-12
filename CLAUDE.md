@@ -80,15 +80,20 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - NOT supported in B20 files (B20 is Base-only)
 
 ### Arbitrum Integration (added July 2026)
-- DexScreener chain ID: `'arbitrum'` (Arbitrum One, chain 42161) — analytics/search only, same tier as Robinhood
-- Onchain write-actions (balance/gas/tx tools in `chat.js`, `x402.js`) stay **Base-only** — Arbitrum is DexScreener read-only
-- Supported in: `chat.js` (dexscreener_search/token), `_token-search.js`, `x402.js`, `app.html` (quick actions + system prompt)
-- Multi-chain now driven by a set/label map, not chained ternaries:
-  - `chat.js`: `SUPPORTED_CHAINS = new Set(['base','robinhood','arbitrum'])` + `CHAIN_LABELS`
-  - `_token-search.js`: `SUPPORTED` set gates the `?chain=` query param
-  - `x402.js`: `validPair()` allows base/robinhood/arbitrum
-- To add another DexScreener chain later: add its id to those sets + `CHAIN_LABELS`
-- NOTE: `/api/analyze` no longer exists (consolidated out under Vercel's 12-fn limit); the app's live multi-chain path is the AI chat's DexScreener tools. `token.html` stays Base-only.
+- Arbitrum One: chain 42161, RPC `https://arb1.arbitrum.io/rpc`, explorer `https://arbiscan.io`, DexScreener id `'arbitrum'`
+- **Analytics/search** (DexScreener): `chat.js` (dexscreener_search/token), `_token-search.js`, `x402.js`, `app.html`
+  - Multi-chain via set/label map, not chained ternaries:
+    - `chat.js`: `SUPPORTED_CHAINS = new Set(['base','robinhood','arbitrum'])` + `CHAIN_LABELS`
+    - `_token-search.js`: `SUPPORTED` set gates the `?chain=` query param
+    - `x402.js`: `validPair()` allows base/robinhood/arbitrum
+- **Onchain reads** (`chat.js` base_get_*/base_erc20_info tools): now chain-aware via a `chain` input param.
+  - `CHAINS` config (base/arbitrum/robinhood: id, name, rpc, explorer, bridge) + `chainOf(input)` helper
+  - `rpc(method, params, url)` takes an RPC url (defaults BASE_RPC); each tool resolves `chainOf(input)` and uses `c.rpc`/`c.name`/`c.id`
+  - Tool schemas expose `chain: enum['base','arbitrum','robinhood']`; **write-actions (uniswap swap, B20 deploy) stay Base-only**
+- **UI**: `app.html` has `#pgChainSel` dropdown (Base/Arbitrum/Robinhood), persisted in `localStorage['orlix-pg-chain']`, injected into the chat system prompt as the default chain for onchain tool calls
+- Marketing copy updated: `index.html`, `dashboard.html` now say "Base · Robinhood · Arbitrum"
+- To add another chain later: add to `SUPPORTED_CHAINS`/`CHAIN_LABELS`/`CHAINS` + `#pgChainSel` option
+- NOTE: `/api/analyze` no longer exists (consolidated out under Vercel's 12-fn limit); the app's live multi-chain path is the AI chat's DexScreener + onchain tools. `token.html` stays Base-only.
 
 ### Cinematic Homepage (`/index.html`, added July 2026)
 - Awwwards-style scroll film: preloader → hero → manifesto → horizontal "reel" → 3D depth descent → finale → film credits

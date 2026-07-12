@@ -1477,6 +1477,11 @@ select.inp{cursor:pointer}
       </div>
       <div class="chat-controls">
         <select class="inp chat-model-sel" id="pgModelSel"></select>
+        <select class="inp chat-model-sel" id="pgChainSel" title="Default chain for onchain & token queries">
+          <option value="base">⬡ Base</option>
+          <option value="arbitrum">◆ Arbitrum</option>
+          <option value="robinhood">🪶 Robinhood</option>
+        </select>
         <button class="btn-icon" id="searchToggle" title="Web search">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M17 17l-4-4"/></svg>
         </button>
@@ -2463,6 +2468,9 @@ async function sendChat(){
     } catch {}
   }
   if (walletAddr) systemWithMemory += `\n\n## User Wallet\nConnected wallet address: ${walletAddr}\nUse this as wallet_address in all onchain tool calls — do NOT ask the user for their address.`;
+  const pgChain = (document.getElementById('pgChainSel') || {}).value || 'base';
+  const pgChainName = { base: 'Base', arbitrum: 'Arbitrum', robinhood: 'Robinhood Chain' }[pgChain] || 'Base';
+  systemWithMemory += `\n\n## Default Chain\nThe user selected ${pgChainName} as the active chain. For onchain read tools (base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info) pass chain:'${pgChain}' by default. Only override when the user explicitly names a different chain. Note: token deploys (B20) and swaps remain Base-only.`;
   if (userSoul)  systemWithMemory += '\n\n## Your Soul (Identity & Worldview)\n' + userSoul;
   if (userGoals) systemWithMemory += '\n\n## User Goals & Memory\n' + userGoals;
   systemWithMemory += buildSkillContext(text);
@@ -2740,6 +2748,14 @@ renderOvLog();
 renderModels();
 populateModelSel();
 pgModelSel.addEventListener('change', updateBanner);
+// Chain selector — persist the user's active-chain choice for onchain/token queries
+(function(){
+  const cs = document.getElementById('pgChainSel');
+  if(!cs) return;
+  const saved = localStorage.getItem('orlix-pg-chain');
+  if(saved) cs.value = saved;
+  cs.addEventListener('change', ()=>localStorage.setItem('orlix-pg-chain', cs.value));
+})();
 refreshDashboard();
 renderHistoryList();
 // Restore view from URL hash — must run AFTER all vars/functions are initialized
@@ -3370,7 +3386,7 @@ Use these tools proactively — never wait to be asked:
 - web_search: live internet search
 - fetch_webpage: read any public URL
 - github_repo_info: GitHub metadata and stats
-- base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info: Base blockchain tools
+- base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info: onchain read tools — each accepts an optional chain param ('base' default, 'arbitrum', or 'robinhood'); pass chain:'arbitrum' to read Arbitrum wallet balances, gas, tx, blocks
 - dexscreener_search: search any token on Base, Robinhood Chain, or Arbitrum by name/symbol
 - dexscreener_token: full market data (price, liq, vol, txns) for a token address on Base, Robinhood Chain, or Arbitrum
 - flaunch_new_tokens: newest meme token launches on Flaunch/Base
