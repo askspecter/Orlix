@@ -899,13 +899,12 @@ select.inp option{background:var(--s2);color:var(--t1)}
               <div class="acc-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg></div>
               <div class="acc-title">
                 <div class="acc-title-main">Description & Social</div>
-                <div class="acc-title-sub">Telegram, website, X, and Farcaster</div>
+                <div class="acc-title-sub">Website, X, and Farcaster</div>
               </div>
               <div class="acc-arrow">&#x25BC;</div>
             </div>
             <div class="acc-body">
               <div class="field"><textarea class="inp" id="fDesc" rows="3" placeholder="What's this token about?" style="resize:vertical;min-height:60px"></textarea></div>
-              <div class="field"><input class="inp" id="fTelegram" type="url" placeholder="Telegram — https://t.me/..." autocomplete="off"></div>
               <div class="field"><input class="inp" id="fWebsite" type="url" placeholder="Website — https://..." autocomplete="off"></div>
               <div class="field"><input class="inp" id="fTwitter" type="url" placeholder="X (Twitter) — https://x.com/..." autocomplete="off"></div>
               <div class="field" style="margin-bottom:0"><input class="inp" id="fFarcaster" type="url" placeholder="Farcaster — https://warpcast.com/..." autocomplete="off"></div>
@@ -1944,7 +1943,6 @@ function _launchMeta() {
   const desc = g('fDesc');      if (desc) m.description = desc.slice(0, 500);
   const web  = g('fWebsite');   if (web)  m.website     = web.slice(0, 200);
   const tw   = g('fTwitter');   if (tw)   m.twitter     = tw.slice(0, 200);
-  const tg   = g('fTelegram');  if (tg)   m.telegram    = tg.slice(0, 200);
   const fc   = g('fFarcaster'); if (fc)   m.farcaster   = fc.slice(0, 200);
   m.adminless = !!document.getElementById('fAdminless')?.checked;
   m.insiderCount = (_insiderAllocations || []).length;
@@ -2657,7 +2655,6 @@ function renderMeta(item) {
   const socials = [
     ['Website', item && item.website, '🌐'],
     ['X', item && item.twitter, '𝕏'],
-    ['Telegram', item && item.telegram, '✈'],
     ['Farcaster', item && item.farcaster, '⬡'],
   ].filter(s => s[1]);
   if (descEl) { descEl.textContent = desc || ''; descEl.style.display = desc ? '' : 'none'; }

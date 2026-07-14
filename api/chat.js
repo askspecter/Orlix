@@ -250,7 +250,6 @@ const ALL_TOOLS = [
         image_url:      { type: 'string', description: 'Image URL for the token logo' },
         wallet_address: { type: 'string', description: 'Creator wallet address (0x...)' },
         twitter_url:    { type: 'string', description: 'Optional: Twitter/X URL' },
-        telegram_url:   { type: 'string', description: 'Optional: Telegram URL' },
         website_url:    { type: 'string', description: 'Optional: Website URL' }
       },
       required: ['name', 'symbol', 'description', 'image_url', 'wallet_address']
@@ -809,8 +808,7 @@ async function executeTool(name, input) {
           imageIpfs,
           creatorAddress: input.wallet_address,
           ...(input.website_url  ? { websiteUrl:  input.website_url  } : {}),
-          ...(input.twitter_url  ? { twitterUrl:  input.twitter_url  } : {}),
-          ...(input.telegram_url ? { telegramUrl: input.telegram_url } : {})
+          ...(input.twitter_url  ? { twitterUrl:  input.twitter_url  } : {})
         };
         const lr = await fetch('https://mcp.flaunch.gg/v1/base/launch/prepare', {
           method: 'POST',

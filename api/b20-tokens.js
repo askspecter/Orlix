@@ -371,7 +371,6 @@ module.exports = async (req, res) => {
         description: t.description || null,
         website:  t.website  || null,
         twitter:  t.twitter  || null,
-        telegram: t.telegram || null,
         farcaster: t.farcaster || null,
         timestamp: t.ts ? Math.floor(t.ts / 1000) : (t.timestamp || null),
         variant:  t.variant || ((t.decimals === 6) ? 'stablecoin' : 'asset'),

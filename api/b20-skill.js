@@ -1670,7 +1670,6 @@ async function handleRegisterLaunch(body, res) {
     description: body.description ? String(body.description).slice(0, 500) : undefined,
     website:  cleanUrl(body.website),
     twitter:  cleanUrl(body.twitter),
-    telegram: cleanUrl(body.telegram),
     farcaster: cleanUrl(body.farcaster),
     adminless: !!body.adminless,
     hasInsiderAllocations: Number(body.insiderCount) > 0,
