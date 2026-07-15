@@ -4,6 +4,7 @@ module.exports = async function handler(req, res) {
   // Merged endpoints: /api/token-search and /api/bankr-tokens rewrite here.
   if (req.query?.__svc === 'ts')    return require('./_token-search')(req, res);
   if (req.query?.__svc === 'bankr') return require('./_bankr-tokens')(req, res);
+  if (req.query?.__svc === 'kb')    return require('./_keyboard')(req, res);
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin(req));
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');

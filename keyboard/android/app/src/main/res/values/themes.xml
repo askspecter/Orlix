@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.OrlixKeyboard" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/orlix_bg</item>
+        <item name="android:windowBackground">@color/orlix_bg</item>
+        <item name="colorPrimary">@color/orlix_orange</item>
+        <item name="colorAccent">@color/orlix_orange</item>
+    </style>
+</resources>
