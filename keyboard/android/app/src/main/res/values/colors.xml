@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="orlix_orange">#F07830</color>
+    <color name="orlix_orange_soft">#F0A070</color>
+    <color name="orlix_bg">#0A0908</color>
+    <color name="orlix_key">#1A1815</color>
+    <color name="orlix_key_alt">#141210</color>
+    <color name="orlix_key_press">#2A2620</color>
+    <color name="orlix_text">#EDEDED</color>
+    <color name="orlix_muted">#8A857E</color>
+    <color name="orlix_up">#4ADE80</color>
+    <color name="orlix_down">#F87171</color>
+    <color name="orlix_strip">#100E0C</color>
+</resources>

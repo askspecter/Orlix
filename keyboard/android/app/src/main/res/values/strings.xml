@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Orlix Keyboard</string>
+    <string name="subtype_en">Orlix (EN)</string>
+
+    <!-- Setup screen -->
+    <string name="setup_title">Orlix Keyboard</string>
+    <string name="setup_tagline">The onchain keyboard. Type $TICKER anywhere for live price, AI signal, and one-tap B20 launch.</string>
+    <string name="setup_step1">1 · Enable Orlix Keyboard</string>
+    <string name="setup_step1_btn">Open Keyboard Settings</string>
+    <string name="setup_step2">2 · Switch to Orlix</string>
+    <string name="setup_step2_btn">Choose Input Method</string>
+    <string name="setup_hint">Then open any app, type a ticker like $pepe, and tap the chip.</string>
+</resources>
