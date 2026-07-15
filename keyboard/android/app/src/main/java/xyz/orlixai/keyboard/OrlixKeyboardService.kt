@@ -247,6 +247,7 @@ class OrlixKeyboardService : InputMethodService() {
 
     // ---- QWERTY keyboard ----------------------------------------------------
 
+    private val numberRow = "1234567890"
     private val rows = listOf(
         "qwertyuiop",
         "asdfghjkl",
@@ -258,6 +259,14 @@ class OrlixKeyboardService : InputMethodService() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(3), dp(4), dp(3), dp(6))
         }
+
+        // Number row — always visible so digits (and tickers like $B3) are typeable.
+        val numRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(MATCH, WRAP)
+        }
+        for (c in numberRow) numRow.addView(digitKey(c))
+        kb.addView(numRow)
 
         for ((idx, row) in rows.withIndex()) {
             val rl = LinearLayout(this).apply {
@@ -284,6 +293,18 @@ class OrlixKeyboardService : InputMethodService() {
         kb.addView(bottom)
 
         return kb
+    }
+
+    private fun digitKey(c: Char): View = Button(this).apply {
+        text = c.toString()
+        layoutParams = LinearLayout.LayoutParams(0, dp(40), 1f).also { it.setMargins(dp(2), dp(2), dp(2), dp(2)) }
+        setBackgroundColor(Color.parseColor("#141210"))
+        setTextColor(Color.parseColor("#EDEDED"))
+        setTypeface(Typeface.MONOSPACE)
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+        setPadding(0, 0, 0, 0)
+        isAllCaps = false
+        setOnClickListener { commit(c.toString()) }
     }
 
     private fun letterKey(c: Char): View = Button(this).apply {
