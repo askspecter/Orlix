@@ -8,12 +8,13 @@ on:
       - '.github/workflows/build-keyboard.yml'
   workflow_dispatch:
 
+# Needed to publish a GitHub Release (the public APK download link).
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: keyboard/android
 
     steps:
       - uses: actions/checkout@v4
@@ -30,11 +31,38 @@ jobs:
           gradle-version: '8.9'
 
       - name: Build debug APK
+        working-directory: keyboard/android
         run: gradle :app:assembleDebug --stacktrace --no-daemon
 
-      - name: Upload APK
+      # Debug APK is signed with the debug key, so it installs on any device
+      # (no Play Store, no manual signing). Give it a stable asset name.
+      - name: Stage APK
+        run: |
+          mkdir -p dist
+          cp keyboard/android/app/build/outputs/apk/debug/app-debug.apk dist/orlix-keyboard.apk
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: orlix-keyboard-debug
-          path: keyboard/android/app/build/outputs/apk/debug/app-debug.apk
+          name: orlix-keyboard-apk
+          path: dist/orlix-keyboard.apk
           if-no-files-found: error
+
+      # Publish a Release so anyone can install without a GitHub login. The
+      # asset name stays constant, so this URL always serves the newest build:
+      #   .../releases/latest/download/orlix-keyboard.apk
+      - name: Publish Release
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: keyboard-b${{ github.run_number }}
+          name: Orlix Keyboard beta (build ${{ github.run_number }})
+          body: |
+            **Orlix Keyboard** — the onchain Android keyboard. Type `$TICKER` in any
+            app for live price, AI signal, and one-tap B20 launch.
+
+            **Install:** download `orlix-keyboard.apk` below → open it on your phone →
+            allow "install unknown apps" → open Orlix Keyboard → enable it and pick it
+            as your input method. Android only. See `keyboard/README.md` for details.
+          make_latest: true
+          files: dist/orlix-keyboard.apk
