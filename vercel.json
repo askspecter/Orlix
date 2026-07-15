@@ -32,6 +32,8 @@
     "api/aeon.js":         { "maxDuration": 15 }
   },
   "redirects": [
+    { "source": "/download/orlix-keyboard.apk", "destination": "https://github.com/AureliusAI-code/orlix/releases/latest/download/orlix-keyboard.apk", "permanent": false },
+    { "source": "/keyboard.apk",      "destination": "https://github.com/AureliusAI-code/orlix/releases/latest/download/orlix-keyboard.apk", "permanent": false },
     { "source": "/app.html",          "destination": "/app",          "permanent": true },
     { "source": "/docs.html",         "destination": "/docs",         "permanent": true },
     { "source": "/api-docs.html",     "destination": "/docs/api",     "permanent": true },
