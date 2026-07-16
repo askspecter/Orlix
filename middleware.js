@@ -19,7 +19,8 @@ const SPA = {
 };
 // Single-page hosts: only the root is rewritten.
 const ROOT = {
-  'b20.orlixai.xyz': '/b20-studio.html',
+  'b20.orlixai.xyz':    '/b20-studio.html',
+  'bridge.orlixai.xyz': '/bridge.html',
 };
 
 export default function middleware(request) {
