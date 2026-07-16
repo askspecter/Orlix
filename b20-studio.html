@@ -1119,6 +1119,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
               <button class="dc-action-btn dc-action-primary" id="vestingBtn" onclick="createVesting()" style="width:100%;margin-top:10px;display:none">Retry vesting setup</button>
             </div>
             <div class="dc-actions" id="dcActions" style="display:none">
+              <button class="dc-action-btn" id="dcHypeBtn" onclick="openHypeVideo()" style="background:var(--orange);color:#fff;border:none">&#x1F3AC; Make hype video</button>
               <a id="dcBaseScanBtn" href="#" target="_blank" class="dc-action-btn dc-action-outline dc-action-ext">View on BaseScan &#x2197;</a>
               <button class="dc-action-btn dc-action-outline" onclick="deployAnother()">Launch another</button>
             </div>
@@ -2074,6 +2075,19 @@ function copyField(elId, btn) {
     btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = orig, 1500);
   });
+}
+
+// Open the Hype Video Studio pre-seeded with the just-launched token.
+function openHypeVideo() {
+  const name = _deployedTokenName || document.getElementById('fName')?.value || 'Token';
+  const sym  = _deployedTokenSym  || document.getElementById('fSym')?.value || 'TOKEN';
+  const chain = (typeof NET !== 'undefined' && NET[network]?.name) || 'Base';
+  let supply = (document.getElementById('fSupplyCap')?.value || '').replace(/[^0-9]/g, '');
+  supply = supply ? Number(supply).toLocaleString('en-US') : '1,000,000,000';
+  // Stash the (compressed) logo so the studio can draw it without a giant URL.
+  try { if (_logoStore) localStorage.setItem('orlix-hype-logo', _logoStore); else localStorage.removeItem('orlix-hype-logo'); } catch (_) {}
+  const q = new URLSearchParams({ name, symbol: sym, chain, supply, tag: 'LIVE ON ' + chain.toUpperCase(), logo: _logoStore ? 'stash' : '' });
+  window.open('/hype?' + q.toString(), '_blank');
 }
 
 function deployAnother() {
