@@ -18,30 +18,37 @@
           live: true,
           // Canonical $ORLIX on Base (matches app.html / x402.js / _orlix-tier.js).
           address: '0x799c28BAC95B3E0B26534D1e9A586511895EcBA3',
+          // LayerZero OFTAdapter (lock/unlock escrow) that makes $ORLIX omnichain.
+          adapter: '0xA42df44b48857a5fa157e743bEFB5EBE71d1e0Ca',
           explorer: 'https://basescan.org',
           get dexscreener() { return 'https://dexscreener.com/base/' + this.address; },
         },
         robinhood: {
           name: 'Robinhood Chain',
           chainId: 4663,
-          live: false,
-          // ► PLUG THE BRIDGED OFT CONTRACT ADDRESS HERE (then set live:true). ◄
-          address: null,
+          live: true,
+          // Bridged $ORLIX OFT on Robinhood Chain (deployed & wired via LayerZero).
+          address: '0x57a8BD58F4a87eFe70bcC16F139c52320bD6d8cd',
           explorer: 'https://robinhoodchain.blockscout.com',
-          // Set to a real pool URL once liquidity exists on Robinhood.
-          dexscreener: null,
+          // Live ORLIX/WETH pool (1% fee) on Robinhood — $ORLIX is tradable.
+          pool: '0x762dFbEFccba79c142F08abD3718f4476C3559d7',
+          dexscreener: 'https://dexscreener.com/robinhood/0x762dFbEFccba79c142F08abD3718f4476C3559d7',
         },
       },
     },
 
-    // LayerZero OFT wiring — fill from the Bankr deploy output when available.
+    // LayerZero OFT wiring (from the live deployment).
     layerzero: {
       protocol: 'LayerZero OFT V2',
-      // Where users go to bridge $ORLIX between chains. Update to the specific
-      // OFT bridge UI (or leave as LayerZeroScan) once the route is known.
-      bridgeUrl: 'https://layerzeroscan.com',
-      baseEid: null,
-      robinhoodEid: null,
+      // No in-app bridge widget yet — bridging currently happens at the OFT
+      // contract level. Set this once a one-click bridge UI exists.
+      bridgeUrl: null,
+      // Track cross-chain messages / bridge activity for the OFT.
+      trackerUrl: 'https://layerzeroscan.com/address/0x57a8BD58F4a87eFe70bcC16F139c52320bD6d8cd',
+      baseEid: 30184,
+      robinhoodEid: 30416,
+      dvns: ['LayerZero Labs', 'Nethermind'],
+      confirmations: 20,
     },
 
     // True once $ORLIX has a real deployment on the destination chain.
