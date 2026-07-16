@@ -30,8 +30,9 @@
           // Bridged $ORLIX OFT on Robinhood Chain (deployed & wired via LayerZero).
           address: '0x57a8BD58F4a87eFe70bcC16F139c52320bD6d8cd',
           explorer: 'https://robinhoodchain.blockscout.com',
-          // Set to a real pool URL once liquidity exists on Robinhood.
-          dexscreener: null,
+          // Live ORLIX/WETH pool (1% fee) on Robinhood — $ORLIX is tradable.
+          pool: '0x762dFbEFccba79c142F08abD3718f4476C3559d7',
+          dexscreener: 'https://dexscreener.com/robinhood/0x762dFbEFccba79c142F08abD3718f4476C3559d7',
         },
       },
     },
