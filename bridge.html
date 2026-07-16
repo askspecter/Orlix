@@ -128,9 +128,16 @@
   // bridge CTA
   var btn = document.getElementById('bridgeBtn');
   var note = document.getElementById('bridgeNote');
+  var tracker = C.layerzero.trackerUrl;
   if(live && C.layerzero.bridgeUrl){
     btn.className = 'cta'; btn.href = C.layerzero.bridgeUrl;
     note.textContent = 'Opens the LayerZero bridge. Always confirm the destination chain and estimated fees before signing.';
+  } else if(live){
+    // Contracts are live and wired; the one-click in-app widget isn't built yet.
+    btn.className = 'cta dis'; btn.removeAttribute('href'); btn.onclick = function(e){ e.preventDefault(); };
+    btn.textContent = 'Bridge widget — coming soon';
+    note.innerHTML = 'The canonical bridge is <b>live at the contract level</b> — the Base adapter and Robinhood OFT are deployed and wired via LayerZero. A one-click in-app bridge is on the way.'
+      + (tracker ? ' Track cross-chain activity on <a href="'+tracker+'" target="_blank" rel="noopener" style="color:var(--orange)">LayerZeroScan ↗</a>.' : '');
   } else {
     btn.className = 'cta dis'; btn.removeAttribute('href');
     btn.onclick = function(e){ e.preventDefault(); };
