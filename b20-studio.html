@@ -210,6 +210,31 @@ a{text-decoration:none}
 .ai-pill-btn svg{display:block}
 .ai-status{margin-top:8px;font-size:.72rem;color:var(--t3);min-height:14px;padding-left:4px}
 .ai-status.ok{color:#4ade80}.ai-status.err{color:var(--red)}
+/* ── AI "say it, ship it" result panel ── */
+.ai-result{margin-top:12px;display:none}
+.ai-result.show{display:block;animation:aiFade .25s ease}
+@keyframes aiFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.ai-rc{border:1px solid var(--b1);border-radius:12px;background:var(--s2);padding:14px 16px}
+.ai-rc-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.ai-trust{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:56px;height:56px;border-radius:12px;font-family:var(--font);flex-shrink:0}
+.ai-trust b{font-size:1.15rem;font-weight:800;line-height:1}
+.ai-trust span{font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;margin-top:2px;opacity:.85}
+.ai-trust.t-hi{background:rgba(74,222,128,.14);color:#4ade80}
+.ai-trust.t-mid{background:rgba(240,120,48,.14);color:var(--orange)}
+.ai-trust.t-lo{background:rgba(239,68,68,.14);color:var(--red)}
+.ai-sum{font-size:.74rem;color:var(--t2);line-height:1.5}
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.ai-chip{font-size:.62rem;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid var(--b1);color:var(--t2)}
+.ai-chip.on{border-color:rgba(240,120,48,.4);color:var(--orange);background:rgba(240,120,48,.07)}
+.ai-warn{margin-top:10px;font-size:.68rem;color:#fbbf24;line-height:1.5;display:flex;gap:6px}
+.ai-warn:before{content:"⚠";flex-shrink:0}
+.ai-adv{margin-top:8px;font-size:.66rem;color:var(--t3);line-height:1.5;display:flex;gap:6px}
+.ai-adv:before{content:"↗";color:var(--t2);flex-shrink:0}
+.ai-adv b{color:var(--t2);font-weight:700}
+.ai-rc-cta{display:flex;gap:8px;margin-top:12px}
+.ai-rc-cta button{flex:1;padding:9px;border-radius:9px;border:none;font-family:var(--font);font-weight:800;font-size:.72rem;cursor:pointer}
+.ai-rc-deploy{background:var(--orange);color:#fff}
+.ai-rc-edit{background:transparent;border:1px solid var(--b1)!important;color:var(--t2)}
 
 /* ── VARIANT ── */
 .variant-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
@@ -843,11 +868,11 @@ select.inp option{background:var(--s2);color:var(--t1)}
           <div class="ai-pill-wrap" id="aiSection">
             <div class="ai-pill-label">
               <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg>
-              AI Auto-Fill
+              Say it, ship it — AI builds the whole token
             </div>
             <div class="ai-pill">
               <input class="ai-pill-inp" id="aiDesc" type="text"
-                placeholder="Describe your token — e.g. gaming reward token 500M supply burn mechanic"
+                placeholder="e.g. immutable dog coin called WOOF, 1B supply, 5% to me, no mint after"
                 onkeydown="if(event.key==='Enter'){aiAutoFill()}">
               <button class="ai-pill-btn" id="aiFillBtn" onclick="aiAutoFill()" aria-label="Generate">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -856,6 +881,7 @@ select.inp option{background:var(--s2);color:var(--t1)}
               </button>
             </div>
             <div class="ai-status" id="aiStatus"></div>
+            <div class="ai-result" id="aiResult"></div>
           </div>
 
           <div class="sec-label">Token Variant</div>
@@ -2436,39 +2462,102 @@ async function _claimVesting(tx) {
   } catch (_) {}
 }
 
-// ── AI auto-fill ──────────────────────────────────────────────────────────────
+// ── AI "say it, ship it" ────────────────────────────────────────────────────
+// One sentence → full B20 config via the Policy Compiler (mode:policy). Fills
+// every wizard field AND shows the trust score + warnings before you deploy.
+const _AI_BTN_ARROW = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17V3"/><path d="M4 9l6-6 6 6"/></svg>';
+const _AI_BTN_SPIN = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="10" cy="10" r="7" stroke-dasharray="32" stroke-dashoffset="32"><animate attributeName="stroke-dashoffset" from="32" to="0" dur=".6s" fill="freeze"/></circle></svg>';
+
 async function aiAutoFill() {
   const desc = (document.getElementById('aiDesc').value || '').trim();
-  if (!desc) return;
-  const btn = document.getElementById('aiFillBtn');
   const status = document.getElementById('aiStatus');
-  btn.disabled = true;
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="10" cy="10" r="7" stroke-dasharray="32" stroke-dashoffset="32"><animate attributeName="stroke-dashoffset" from="32" to="0" dur=".6s" fill="freeze"/></circle></svg>';
-  status.className = 'ai-status'; status.textContent = 'Asking AI...';
+  const result = document.getElementById('aiResult');
+  if (!desc) { document.getElementById('aiDesc').focus(); return; }
+  const btn = document.getElementById('aiFillBtn');
+  btn.disabled = true; btn.innerHTML = _AI_BTN_SPIN;
+  result.className = 'ai-result';
+  status.className = 'ai-status'; status.textContent = 'Compiling your token…';
   try {
     const r = await fetch(`${location.origin}/api/b20-ai`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ description: desc })
+      body: JSON.stringify({ mode: 'policy', rules: desc })
     });
     if (!r.ok) { const e = await r.json().catch(()=>({error:'Error '+r.status})); throw new Error(e.error||'Error '+r.status); }
     const d = await r.json();
-    if (d.name)   document.getElementById('fName').value = d.name;
-    if (d.symbol) document.getElementById('fSym').value = d.symbol.toUpperCase().slice(0,11);
-    if (d.variant) setVariant(d.variant);
-    if (d.decimals !== undefined) { document.getElementById('fDec').value = d.decimals; onDecChange(); }
-    if (d.allowlist !== undefined) document.getElementById('fAllow').checked = !!d.allowlist;
-    if (d.blocklist !== undefined) document.getElementById('fBlock').checked = !!d.blocklist;
-    if (d.freeze   !== undefined) document.getElementById('fFreeze').checked  = !!d.freeze;
-    onFormChange(); onPolicyChange();
+    if (!d || !d.token) throw new Error('AI returned an unexpected response');
+    _applyCompiledConfig(d);
+    _renderAiResult(d);
     status.className = 'ai-status ok';
-    status.textContent = '✓ Form filled — review and adjust before deploying';
+    status.textContent = '✓ Compiled — every field below is filled. Review, then deploy.';
   } catch(e) {
     status.className = 'ai-status err';
     status.textContent = '✗ ' + (e.message || 'Failed to generate');
   }
-  btn.disabled = false;
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17V3"/><path d="M4 9l6-6 6 6"/></svg>';
+  btn.disabled = false; btn.innerHTML = _AI_BTN_ARROW;
+}
+
+// Map the compiler's config onto the wizard fields.
+function _applyCompiledConfig(d) {
+  const t = d.token || {}, oc = d.onchain || {};
+  if (t.name)   document.getElementById('fName').value = t.name;
+  if (t.symbol) document.getElementById('fSym').value = String(t.symbol).toUpperCase().slice(0,11);
+  if (t.variant) setVariant(t.variant);
+  if (t.decimals !== undefined) { document.getElementById('fDec').value = t.decimals; onDecChange(); }
+  if (oc.supplyCap) { const sc = document.getElementById('fSupplyCap'); if (sc) { sc.value = String(oc.supplyCap); onSupplyCapChange(); } }
+  setPowers(oc.immutable === false ? 'admin' : 'immutable');
+  document.getElementById('fAllow').checked  = !!oc.allowlist;
+  document.getElementById('fBlock').checked  = !!oc.blocklist;
+  document.getElementById('fFreeze').checked = !!oc.freezeSeize;
+  const meta = document.getElementById('fMetaEditable');
+  if (meta && oc.immutable === false) meta.checked = !!oc.metadataEditable;   // setPowers forces it off when immutable
+  onFormChange(); onPolicyChange();
+}
+
+// Render trust score + summary + policy chips + warnings + advisory.
+function _renderAiResult(d) {
+  const el = document.getElementById('aiResult');
+  const trust = d.trust || {}; const score = Number(trust.score) || 0;
+  const cls = score >= 82 ? 't-hi' : score >= 42 ? 't-mid' : 't-lo';
+  const oc = d.onchain || {};
+  const flags = [
+    ['Immutable', oc.immutable], ['Supply cap', oc.supplyCap != null],
+    ['Allowlist', oc.allowlist], ['Blocklist', oc.blocklist],
+    ['Freeze & seize', oc.freezeSeize], ['Pausable', oc.pausable],
+    ['Mintable', oc.keepMintRole], ['Editable metadata', oc.metadataEditable],
+  ];
+  const chips = flags.map(([label, on]) => `<span class="ai-chip${on ? ' on' : ''}">${on ? '' : '○ '}${_esc(label)}</span>`).join('');
+  const warns = (d.warnings || []).map(w => `<div class="ai-warn">${_esc(w)}</div>`).join('');
+  const advs  = (d.advisory || []).map(a => `<div class="ai-adv"><span><b>${_esc(a.rule||'')}</b> — ${_esc(a.why||'')}</span></div>`).join('');
+  el.innerHTML = `
+    <div class="ai-rc">
+      <div class="ai-rc-top">
+        <div class="ai-trust ${cls}"><b>${score}</b><span>${_esc(trust.tier||'')}</span></div>
+        <div class="ai-sum">${_esc(d.summary || 'Configuration compiled from your description.')}</div>
+      </div>
+      <div class="ai-chips">${chips}</div>
+      ${warns}
+      ${advs ? `<div style="margin-top:10px;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)">Needs a Uniswap V4 hook</div>${advs}` : ''}
+      <div class="ai-rc-cta">
+        <button class="ai-rc-deploy" onclick="wizGo(2);window.scrollTo({top:0,behavior:'smooth'})">Continue to review →</button>
+      </div>
+    </div>`;
+  el.className = 'ai-result show';
+}
+
+// Deep-link entry: keyboard 🚀 and elsewhere can open the wizard pre-seeded.
+//   ?prompt=<brief>  → open, fill, and auto-compile
+//   ?launch=<SYM>    → open with a starter brief for that ticker (no auto-run)
+function _handleLaunchIntent() {
+  let p; try { p = new URLSearchParams(location.search); } catch { return; }
+  const prompt = (p.get('prompt') || p.get('describe') || '').trim();
+  const sym = (p.get('launch') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 11);
+  if (!prompt && !sym) return;
+  openCreate('guided');
+  const box = document.getElementById('aiDesc');
+  if (!box) return;
+  if (prompt) { box.value = prompt.slice(0, 200); aiAutoFill(); }
+  else if (sym) { box.value = `Launch a community token called ${sym.toUpperCase()}, immutable, fixed supply`; box.focus(); }
 }
 
 // ── new launched ──────────────────────────────────────────────────────────────
@@ -3221,6 +3310,7 @@ async function onMint() {
   togglePoolEconomics();
   updatePoolPreview();
   loadLaunched();
+  _handleLaunchIntent();
 })();
 </script>
 
