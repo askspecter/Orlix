@@ -75,6 +75,7 @@
     { "source": "/policy",       "destination": "/b20-policy.html" },
     { "source": "/policy-lab",   "destination": "/b20-policy.html" },
     { "source": "/keyboard",     "destination": "/keyboard.html" },
+    { "source": "/hype",         "destination": "/hype.html" },
     { "source": "/montage",      "destination": "/montage.html" },
     { "source": "/base-city",     "destination": "/neural-map.html" },
     { "source": "/zero",          "destination": "/zero.html" },
