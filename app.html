@@ -2773,6 +2773,26 @@ let _codeIdx = 0;
 
 function esc2(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// Some providers stream code with escaped whitespace (\n, \t, \") instead of real
+// newlines — the app preview then shows literal "\n" everywhere. Restore real
+// characters, but ONLY when a block is clearly over-escaped (many \n, few real
+// newlines) so legitimate multi-line code with intentional "\n" is left alone.
+function _fixEscapes(code){
+  if(typeof code !== 'string') return code;
+  const escN  = (code.match(/\\n/g) || []).length;
+  const realN = (code.match(/\n/g)  || []).length;
+  if(escN >= 3 && escN > realN){
+    code = code
+      .replace(/\\r\\n/g, '\n')
+      .replace(/\\r/g, '\n')
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'");
+  }
+  return code;
+}
+
 function renderMd(raw) {
   raw = raw.replace(/\\n/g, '\n');
   function inl(s) {
@@ -3008,7 +3028,7 @@ function renderContent(text){
     last = match.index + match[0].length;
 
     const lang  = match[1] || '';
-    const code  = match[2];
+    const code  = _fixEscapes(match[2]);
     const id    = 'c'+(++_codeIdx);
     _codeStore[id] = code;
 
@@ -3043,7 +3063,7 @@ function renderContent(text){
     const openFence = /`{3,}([\w-]*)[^\S\r\n]*\r?\n([\s\S]+)$/.exec(tail);
     if(openFence){
       const lang2 = openFence[1] || '';
-      const code2 = openFence[2];
+      const code2 = _fixEscapes(openFence[2]);
       const before2 = tail.slice(0, openFence.index);
       if(before2) result += renderMd(before2);
       const id2 = 'c'+(++_codeIdx);
@@ -3070,7 +3090,7 @@ function renderContent(text){
       || (/<(div|style|canvas|section|main|header|body|script)[\s>]/i.test(text) && text.match(/(<(?:div|style|canvas|section|main|header|body)[\s\S]*)/i));
     if(htmlMatch){
       const id = 'c'+(++_codeIdx);
-      _codeStore[id] = htmlMatch[1];
+      _codeStore[id] = _fixEscapes(htmlMatch[1]);
       lastHtmlId = id;
       result = renderMd(text.slice(0, text.indexOf(htmlMatch[1])));
     }
