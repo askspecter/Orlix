@@ -24,7 +24,7 @@ const ALLOWED_MODELS = new Set([
   // DeepSeek (via Bankr)
   'deepseek-v3.2',
   // Moonshot (via Bankr)
-  'kimi-k2.7-code', 'kimi-k2.6',
+  'kimi-k3', 'kimi-k2.7-code',
   // Alibaba (via Bankr)
   'qwen3-coder', 'qwen3.7-plus', 'qwen3.6-flash',
 ]);
