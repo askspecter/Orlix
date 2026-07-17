@@ -1120,18 +1120,32 @@ async function handleAgentDeploy(req, body, res) {
   }
 }
 
+// Advertised action surface (keep in sync with the router below). A B20 token is
+// only tradeable once a pool is seeded, so the manifest MUST expose prepare_pool
+// (and prepare_launch / prepare_swap / pool_status) — otherwise agents deploy a
+// token and stop, leaving it "not tradeable". agent_deploy (allowlist-gated
+// custodial), register_launch and reset_feed are internal and omitted here.
+const SKILL_ACTIONS = {
+  GET:  ['manifest', 'info', 'gas'],
+  POST: ['validate', 'prepare', 'prepare_launch', 'prepare_pool', 'pool_status',
+         'prepare_swap', 'prepare_vesting', 'vesting_status', 'balance', 'token_info', 'receipt'],
+};
+
 function handleManifest(res) {
   return res.end(JSON.stringify({
     schema:      'orlix-skill/3.0',
     id:          'orlix.b20',
     name:        'Orlix B20 Token Skill',
-    version:     '3.0.0',
-    description: 'Full B20 token lifecycle on Base mainnet (Beryl, live): activation check, live chain data, balance checks, config validation, deployment bundles via createB20 precompile, ERC-20 reads, tx receipts.',
+    version:     '3.1.0',
+    description: 'Full B20 token lifecycle on Base mainnet (Beryl, live): activation check, live chain data, balance checks, config validation, deployment bundles via createB20 precompile, ONE-TX launch (token + Uniswap V4 pool + optional dev buy), pool seeding to make a token tradeable, pool status, on-chain swaps (buy/sell), vesting, ERC-20 reads, and tx receipts.',
     endpoint:    'https://orlixai.xyz/api/b20-skill',
     factory:     B20_FACTORY,
     activation:  ACTIVATION_REGISTRY,
     networks:    { mainnet: { chainId: 8453, rpc: 'https://mainnet.base.org' } },
-    actions:     { GET: ['manifest','info','gas'], POST: ['validate','prepare','balance','token_info','receipt'] },
+    actions:     SKILL_ACTIONS,
+    // A freshly deployed B20 is NOT tradeable until it has a pool. To launch a
+    // tradeable token: prepare_launch (one tx), OR prepare -> receipt -> prepare_pool.
+    tradeableFlow: ['prepare_launch (one confirmation)', 'or: prepare → receipt → prepare_pool → receipt'],
     links: {
       studio:     'https://orlixai.xyz/b20-studio.html',
       baseDocs:   'https://docs.base.org/base-chain/specs/upgrades/beryl/b20',
@@ -1754,7 +1768,7 @@ module.exports = async (req, res) => {
 
     return res.end(JSON.stringify({
       ok: false, error: `Unknown action: "${action}"`,
-      valid_actions: { GET: ['manifest','info','gas'], POST: ['validate','prepare','balance','token_info','receipt'] },
+      valid_actions: SKILL_ACTIONS,
     }));
   } catch (e) {
     return res.end(JSON.stringify({ ok: false, error: e.message }));

@@ -125,6 +125,17 @@ Deploy B20 tokens on Base — the native precompile token standard launching wit
 | `validate` | POST | Deep B20 config check + live admin balance vs. gas estimate |
 | `prepare` | POST | Complete EIP-1559 deployment tx with live gas + nonce from Base |
 | `receipt` | POST | Tx status + deployed token address from factory logs |
+| `prepare_launch` | POST | **One-transaction launch** — deploy token + seed a Uniswap V4 pool (+ optional dev buy) in a single confirmation. Tradeable immediately. |
+| `prepare_pool` | POST | Seed a Uniswap V4 TOKEN/WETH pool for an already-deployed B20 — **this is what makes the token tradeable** |
+| `pool_status` | POST | Whether a token has a live pool yet (tradeable or not) |
+| `prepare_swap` | POST | Build a buy/sell swap tx against the token's pool |
+| `prepare_vesting` / `vesting_status` | POST | Set up / read a vesting vault for allocations |
+
+> ⚠️ **A freshly deployed B20 is NOT tradeable until it has a pool.** `prepare`
+> alone only creates the token — bots will show "not tradeable" until a pool
+> exists. To launch a tradeable token, use `prepare_launch` (one tx), or after
+> `prepare` → `receipt`, call `prepare_pool` → `receipt`. Same flow as
+> [b20.orlixai.xyz](https://b20.orlixai.xyz).
 
 #### B20 Usage
 
@@ -149,6 +160,15 @@ bankr prompt "Use Orlix B20 to prepare a B20 stablecoin: name='OrUSD', symbol='O
 
 # Check a deployment receipt
 bankr prompt "Use Orlix B20 to check receipt of 0xabc...123 on Base"
+
+# Launch a TRADEABLE token in one transaction (token + pool)
+bankr prompt "Use Orlix B20 to prepare_launch: name='My Token', symbol='MTK', supply_cap=1000000000, admin=0x1234..., seed a pool with 0.05 ETH so it's tradeable"
+
+# Make an ALREADY-DEPLOYED B20 tradeable (seed its pool)
+bankr prompt "Use Orlix B20 to prepare_pool for token 0xTOKEN... — single-sided, LP the creator's supply so buyers bring the ETH"
+
+# Is a token tradeable yet?
+bankr prompt "Use Orlix B20 to check pool_status for 0xTOKEN... on Base"
 ```
 
 #### B20 REST API
