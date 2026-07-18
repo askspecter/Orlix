@@ -1200,6 +1200,19 @@ select.inp option{background:var(--s2);color:var(--t1)}
     <div class="dash-grid" style="display:grid;grid-template-columns:1fr 340px;gap:0">
       <!-- MAIN -->
       <div style="border-right:1px solid var(--b1);min-width:0">
+        <!-- Livestream (creator broadcasts from browser; viewers watch HLS) -->
+        <div id="dmLiveWrap" style="display:none;border-bottom:1px solid var(--b1);background:#000">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--s1)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="dmLiveBadge" style="display:none;font-size:.58rem;font-weight:800;letter-spacing:.09em;color:#fff;background:#ef4444;border-radius:5px;padding:3px 8px;animation:pulse 2s infinite">&#9679; LIVE</span>
+              <span style="font-size:.78rem;font-weight:800;color:var(--t1)">Livestream</span>
+              <span id="dmLiveViewers" style="font-size:.62rem;color:var(--t3)"></span>
+            </div>
+            <button id="dmGoLiveBtn" onclick="toggleGoLive()" style="display:none;font-size:.66rem;font-weight:800;color:#fff;background:#ef4444;border:none;border-radius:7px;padding:7px 13px;cursor:pointer;font-family:var(--font)">&#128308; Go Live</button>
+          </div>
+          <video id="dmLiveVideo" playsinline autoplay muted style="width:100%;max-height:340px;background:#000;display:none"></video>
+          <div id="dmLiveMsg" style="font-size:.66rem;color:var(--t3);padding:8px 16px;line-height:1.5"></div>
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--b1)">
           <div style="font-size:.78rem;font-weight:800;color:var(--t1);letter-spacing:.02em">CHART</div>
           <a id="dmGecko" href="#" target="_blank" rel="noopener" style="font-size:.64rem;font-weight:700;color:var(--accent);border:1px solid rgba(240,120,48,.3);border-radius:7px;padding:5px 9px;text-decoration:none;white-space:nowrap">GeckoTerminal &#x2197;</a>
@@ -2747,6 +2760,131 @@ function openDashboard(ca, focus) {
   // Live enrich: on-chain token_info + pool + one server call for market/trades/holders
   loadDashLive(ca, sym);
   loadMarket(ca);
+  loadStream(ca);
+}
+
+// ── Livestreaming (Livepeer WebRTC/WHIP broadcast + HLS playback) ──────────────
+let _streamPoll = null, _broadcastPC = null, _broadcastStream = null, _viewerHls = null;
+
+function _liveReset() {
+  if (_streamPoll) { clearInterval(_streamPoll); _streamPoll = null; }
+  if (_viewerHls) { try { _viewerHls.destroy(); } catch (_) {} _viewerHls = null; }
+  stopBroadcast(true);
+  const wrap = document.getElementById('dmLiveWrap');
+  const vid  = document.getElementById('dmLiveVideo');
+  if (vid) { vid.srcObject = null; vid.removeAttribute('src'); vid.style.display = 'none'; vid.muted = true; }
+  if (wrap) wrap.style.display = 'none';
+  _dmSet('dmLiveMsg', ''); _dmSet('dmLiveViewers', '');
+  const badge = document.getElementById('dmLiveBadge'); if (badge) badge.style.display = 'none';
+  const btn = document.getElementById('dmGoLiveBtn'); if (btn) btn.style.display = 'none';
+}
+
+async function loadStream(ca) {
+  _liveReset();
+  const isCreator = _dashCreator && walletAddress && walletAddress.toLowerCase() === _dashCreator;
+  const wrap = document.getElementById('dmLiveWrap');
+  const btn  = document.getElementById('dmGoLiveBtn');
+  // Show the panel to the creator right away (so they can start), and to anyone once live.
+  if (isCreator && wrap && btn) { wrap.style.display = ''; btn.style.display = ''; }
+
+  const apply = async () => {
+    if (_dashCA !== ca) return;
+    let d = null;
+    try {
+      const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stream_status', token: ca }) });
+      d = await r.json();
+    } catch (_) { return; }
+    if (_dashCA !== ca || !d || !d.ok) return;
+    const badge = document.getElementById('dmLiveBadge');
+    if (d.live && d.hlsUrl) {
+      if (wrap) wrap.style.display = '';
+      if (badge) badge.style.display = '';
+      if (!_broadcastPC) startViewer(d.hlsUrl);   // creators watching their own preview don't double-play
+    } else {
+      if (badge) badge.style.display = 'none';
+      if (!isCreator && wrap) wrap.style.display = 'none';
+      if (!_broadcastPC) { const v = document.getElementById('dmLiveVideo'); if (v) v.style.display = 'none'; if (!isCreator) _dmSet('dmLiveMsg', ''); }
+      else _dmSet('dmLiveMsg', 'Broadcasting… viewers can watch live.');
+    }
+  };
+  await apply();
+  _streamPoll = setInterval(apply, 15000);
+}
+
+function startViewer(hlsUrl) {
+  const v = document.getElementById('dmLiveVideo');
+  if (!v) return;
+  v.style.display = ''; v.muted = true; v.controls = true;
+  _dmSet('dmLiveMsg', 'Live now — tap to unmute.');
+  if (v.canPlayType('application/vnd.apple.mpegurl')) {   // Safari native HLS
+    v.src = hlsUrl; v.play().catch(() => {});
+  } else if (window.Hls && window.Hls.isSupported()) {
+    if (_viewerHls) { try { _viewerHls.destroy(); } catch (_) {} }
+    _viewerHls = new window.Hls({ liveSyncDurationCount: 3 });
+    _viewerHls.loadSource(hlsUrl);
+    _viewerHls.attachMedia(v);
+    v.play().catch(() => {});
+  } else {
+    _dmSet('dmLiveMsg', 'Your browser can\'t play this stream.');
+  }
+}
+
+async function toggleGoLive() {
+  if (_broadcastPC) { stopBroadcast(); return; }
+  const ca = _dashCA;
+  if (!walletAddress) { _dmSet('dmLiveMsg', 'Connect your wallet first.'); return; }
+  const btn = document.getElementById('dmGoLiveBtn');
+  _dmSet('dmLiveMsg', 'Requesting camera + mic…');
+  let media;
+  try {
+    media = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: true });
+  } catch (e) { _dmSet('dmLiveMsg', 'Camera/mic permission denied.'); return; }
+  _broadcastStream = media;
+  const v = document.getElementById('dmLiveVideo');
+  if (v) { v.srcObject = media; v.muted = true; v.controls = false; v.style.display = ''; v.play().catch(() => {}); }
+  _dmSet('dmLiveMsg', 'Starting stream…');
+  try {
+    const r = await fetch('/api/b20-skill', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stream_create', token: ca, wallet: walletAddress }) });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'stream_create failed');
+    await whipPublish(d.whipUrl, media);
+    if (btn) { btn.textContent = '⏹ Stop'; btn.style.background = '#333'; }
+    const badge = document.getElementById('dmLiveBadge'); if (badge) badge.style.display = '';
+    _dmSet('dmLiveMsg', 'You\'re live! Viewers on this token page can watch now.');
+  } catch (e) {
+    _dmSet('dmLiveMsg', 'Could not start stream: ' + e.message);
+    stopBroadcast();
+  }
+}
+
+async function whipPublish(whipUrl, stream) {
+  const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+  _broadcastPC = pc;
+  stream.getTracks().forEach(t => pc.addTrack(t, stream));
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  // WHIP is non-trickle: wait for ICE gathering to finish (cap at 2s).
+  await new Promise(resolve => {
+    if (pc.iceGatheringState === 'complete') return resolve();
+    const chk = () => { if (pc.iceGatheringState === 'complete') { pc.removeEventListener('icegatheringstatechange', chk); resolve(); } };
+    pc.addEventListener('icegatheringstatechange', chk);
+    setTimeout(resolve, 2000);
+  });
+  const resp = await fetch(whipUrl, { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp });
+  if (!resp.ok) throw new Error('WHIP ' + resp.status);
+  const answer = await resp.text();
+  await pc.setRemoteDescription({ type: 'answer', sdp: answer });
+  return pc;
+}
+
+function stopBroadcast(silent) {
+  if (_broadcastPC) { try { _broadcastPC.close(); } catch (_) {} _broadcastPC = null; }
+  if (_broadcastStream) { try { _broadcastStream.getTracks().forEach(t => t.stop()); } catch (_) {} _broadcastStream = null; }
+  const btn = document.getElementById('dmGoLiveBtn');
+  if (btn) { btn.textContent = '🔴 Go Live'; btn.style.background = '#ef4444'; }
+  const v = document.getElementById('dmLiveVideo');
+  if (v && v.srcObject) { v.srcObject = null; v.style.display = 'none'; }
+  if (!silent) _dmSet('dmLiveMsg', 'Stream ended.');
 }
 
 function renderMeta(item) {
@@ -2900,6 +3038,7 @@ function dashCopyCA(btn) {
 function closeDashboard() {
   document.getElementById('dashModal').style.display = 'none';
   document.getElementById('dmChart').src = '';
+  _liveReset();
   document.body.style.overflow = '';
 }
 function setBuyAmt(v) { document.getElementById('dmBuyAmt').value = v; }
@@ -3329,6 +3468,7 @@ async function onMint() {
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js" defer></script>
 <script src="/assets/orlix-names.js" defer></script>
 <script src="/wallet-dist/wallet.js" defer></script>
 <script>

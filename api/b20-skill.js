@@ -1735,6 +1735,70 @@ async function handleResetFeed(req, body, res) {
   }
 }
 
+// ── Livepeer livestreaming (token creators go live on their token page) ─────────
+// Browser WebRTC (WHIP) broadcast + HLS playback. Set LIVEPEER_API_KEY to enable;
+// without it the feature is simply off (frontend hides the Go Live UI).
+const LIVEPEER_API = 'https://livepeer.studio/api';
+const LIVEPEER_KEY = (process.env.LIVEPEER_API_KEY || '').trim();
+// WHIP ingest (browser → Livepeer) + HLS playback URL templates. These follow
+// Livepeer's documented hostnames; if Livepeer changes them, adjust here only.
+const _lpWhip = (streamKey) => `https://livepeer.studio/webrtc/${streamKey}`;
+const _lpHls  = (playbackId) => `https://livepeercdn.studio/hls/${playbackId}/index.m3u8`;
+
+async function _lpFetch(path, opts = {}) {
+  const r = await fetch(LIVEPEER_API + path, {
+    ...opts,
+    headers: { Authorization: `Bearer ${LIVEPEER_KEY}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+  });
+  const txt = await r.text();
+  let json; try { json = txt ? JSON.parse(txt) : {}; } catch { json = {}; }
+  if (!r.ok) throw new Error(`livepeer ${r.status}: ${json && json.errors ? json.errors.join(',') : txt.slice(0, 140)}`);
+  return json;
+}
+
+// Creator starts (or resumes) a stream for their token. Binds the first claimant
+// wallet as owner; only that wallet gets the secret stream key. playbackId is public.
+async function handleStreamCreate(body, res) {
+  if (!LIVEPEER_KEY) return res.end(JSON.stringify({ ok: false, error: 'Livestreaming not configured (LIVEPEER_API_KEY missing)' }));
+  const token  = (body.token  || '').trim().toLowerCase();
+  const wallet = (body.wallet || '').trim().toLowerCase();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token))  return res.end(JSON.stringify({ ok: false, error: 'token must be a valid 0x address' }));
+  if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) return res.end(JSON.stringify({ ok: false, error: 'wallet must be a valid 0x address' }));
+  const key = `stream:${token}`;
+  try {
+    let rec = null;
+    try { const raw = await _redis('GET', key); if (raw) rec = JSON.parse(raw); } catch {}
+    if (rec && rec.owner && rec.owner !== wallet)
+      return res.end(JSON.stringify({ ok: false, error: 'Only the token creator can go live on this token' }));
+    if (!rec) {
+      const stream = await _lpFetch('/stream', { method: 'POST', body: JSON.stringify({ name: `orlix-${token.slice(0, 10)}`, record: false }) });
+      rec = { id: stream.id, streamKey: stream.streamKey, playbackId: stream.playbackId, owner: wallet, createdAt: Date.now() };
+      await _redis('SET', key, JSON.stringify(rec));
+    }
+    return res.end(JSON.stringify({
+      ok: true, token,
+      whipUrl:    _lpWhip(rec.streamKey),
+      streamKey:  rec.streamKey,
+      playbackId: rec.playbackId,
+      hlsUrl:     _lpHls(rec.playbackId),
+    }));
+  } catch (e) { return res.end(JSON.stringify({ ok: false, error: e.message })); }
+}
+
+// Public: is this token live right now, and how to watch it.
+async function handleStreamStatus(body, res) {
+  const token = (body.token || '').trim().toLowerCase();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(token)) return res.end(JSON.stringify({ ok: false, error: 'token must be a valid 0x address' }));
+  try {
+    let rec = null;
+    try { const raw = await _redis('GET', `stream:${token}`); if (raw) rec = JSON.parse(raw); } catch {}
+    if (!rec || !LIVEPEER_KEY) return res.end(JSON.stringify({ ok: true, token, live: false }));
+    let live = false;
+    try { const s = await _lpFetch('/stream/' + rec.id); live = !!s.isActive; } catch {}
+    return res.end(JSON.stringify({ ok: true, token, live, playbackId: rec.playbackId, hlsUrl: _lpHls(rec.playbackId) }));
+  } catch (e) { return res.end(JSON.stringify({ ok: false, error: e.message })); }
+}
+
 // ── Router ────────────────────────────────────────────────────────────────────
 
 module.exports = async (req, res) => {
@@ -1765,6 +1829,8 @@ module.exports = async (req, res) => {
     if (action === 'prepare_swap')                     return handlePrepareSwap(body, res);
     if (action === 'register_launch')                  return handleRegisterLaunch(body, res);
     if (action === 'reset_feed')                       return handleResetFeed(req, body, res);
+    if (action === 'stream_create')                    return handleStreamCreate(body, res);
+    if (action === 'stream_status')                    return handleStreamStatus(body, res);
 
     return res.end(JSON.stringify({
       ok: false, error: `Unknown action: "${action}"`,

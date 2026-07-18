@@ -104,6 +104,15 @@ Orlix is an AI-powered multi-chain analytics and token deployment platform built
 - Old dashboard preserved: `dashboard.html`, routed at `/dashboard` via vercel.json
 - Degrades gracefully: prefers-reduced-motion → static layout; missing vendor JS → plain readable page; noscript CSS unwinds pinned scenes
 
+### Token Livestreaming (added July 2026)
+- Token creators can go **live from the browser** on their token dashboard (b20-studio.html); viewers watch inline.
+- Provider: **Livepeer** (`LIVEPEER_API_KEY`). Creator broadcasts via **WebRTC/WHIP** (getUserMedia → SDP offer POST to `https://livepeer.studio/webrtc/{streamKey}`); viewers play **HLS** (`https://livepeercdn.studio/hls/{playbackId}/index.m3u8`) via hls.js (CDN) or Safari-native.
+- Backend: `api/b20-skill.js` actions `stream_create` (creator-only; binds first-claimant wallet as owner in Redis `stream:{tokenLower}`, returns secret streamKey + whipUrl + playbackId) and `stream_status` (public; queries Livepeer `isActive`). No new Vercel function (folded into b20-skill).
+- Frontend: `#dmLiveWrap` section atop the dashboard MAIN column; `loadStream()` polls status every 15s, `toggleGoLive()`/`whipPublish()` broadcast, `startViewer()` plays HLS, `_liveReset()` on close. hls.js loaded via CDN in b20-studio.html.
+- Livepeer endpoint hostnames are constants (`_lpWhip`/`_lpHls`) — verify against current Livepeer docs if they change.
+- **Setup**: (1) create a Livepeer Studio account + API key → set `LIVEPEER_API_KEY` in Vercel; (2) optional subdomain `b20.orlixai.xyz` is a Vercel domain-alias config (points at the same deployment; no code change needed).
+- Not yet built: live chat, viewer counts, recording/VOD, moderation controls.
+
 ### B20 Studio (`/b20-studio.html`)
 - Chain ID comparison must be case-insensitive (MetaMask returns lowercase hex)
 - EIP-1559 gas: always pass `maxFeePerGas` + `maxPriorityFeePerGas` from API
@@ -138,6 +147,9 @@ B20_AGENT_DAILY_LIMIT=    # optional, max deploys per rolling 24h (default 25) �
 # State
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
+
+# Livestreaming (token creators go live on the dashboard) — /api/b20-skill stream_* actions
+LIVEPEER_API_KEY=      # Livepeer Studio API key; without it the Go Live UI stays hidden
 ```
 
 ## Deployment
