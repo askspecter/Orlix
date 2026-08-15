@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#0c0b0a"/>
+  <rect width="512" height="512" rx="112" fill="#CFF605"/>
   <path d="M 115.5290 115.5290 A 198.6560 198.6560 0 1 1 115.5290 396.4710"
-        fill="none" stroke="#ffffff" stroke-width="53.2480"
+        fill="none" stroke="#0a0c07" stroke-width="53.2480"
         stroke-linecap="round"/>
   <polyline points="82.683,99.507 244.736,256.000 82.683,412.493"
-            fill="none" stroke="#de7626" stroke-width="34.8160"
+            fill="none" stroke="#0a0c07" stroke-width="34.8160"
             stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="281.856" y="226.560"
         width="10.752" height="79.360"
-        fill="#ffffff" rx="5.376" ry="5.376"/>
+        fill="#0a0c07" rx="5.376" ry="5.376"/>
   <rect x="293.888" y="286.464"
         width="92.160" height="19.456"
-        fill="#de7626" rx="6.485" ry="6.485"/>
+        fill="#0a0c07" rx="6.485" ry="6.485"/>
 </svg>
