@@ -5,7 +5,7 @@
 import { prefersReducedMotion } from './utils.js';
 
 const BOOT_LINES = [
-  ['mount', '/dev/base', 'ok'],
+  ['mount', '/dev/robinhood', 'ok'],
   ['link', 'robinhood_chain', 'ok'],
   ['load', '19 frontier models', 'ok'],
   ['start', 'orlix-terminal', 'ok'],
