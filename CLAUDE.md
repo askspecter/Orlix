@@ -1,7 +1,17 @@
 # Orlix — CLAUDE.md
 
 ## Project Overview
-Orlix is an AI-powered multi-chain analytics and token deployment platform built on Base and Robinhood Chain. Live at orlix.xyz.
+Orlix is an AI-powered analytics platform for **Robinhood Chain** (chain ID 4663). Live at orlix.xyz.
+
+> **Rebrand (2026-08-15):** Orlix relaunched on **Robinhood Chain only**. Base, B20, Arbitrum,
+> and the `$ORLIX` token were fully removed from the site — pages, backend chain configs, and
+> marketing copy. New brand identity: black terminal-`>_` mark on lime-green `#CFF605`; the site
+> accent flipped from orange (`#F07830`) to that green everywhere. Deleted pages: b20-studio,
+> b20-demo, b20-names, b20-policy, neural-map (Base City), token, bridge, hype, montage,
+> agentic-flow. Deleted backend: `api/b20-*.js`, `contracts/`, `b20-skills/`. The app's token
+> gate is opened (the gating token isn't live on Robinhood yet). Some backend premium plumbing
+> (`api/_orlix-tier.js`, x402 wallet handler) still references the legacy `$ORLIX`-on-Base tier
+> contract — left as-is until the new Robinhood token exists.
 
 ## Repository Structure
 ```
