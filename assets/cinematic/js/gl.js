@@ -50,10 +50,10 @@ void main(){
   st = rot(u_scroll * 0.38 - 0.04) * st;
 
   vec3 base    = vec3(0.012, 0.011, 0.012);
-  vec3 ember   = vec3(0.94, 0.47, 0.19);
-  vec3 emberHot= vec3(1.0, 0.72, 0.38);
-  vec3 viol    = vec3(0.62, 0.50, 0.98);
-  vec3 violHot = vec3(0.82, 0.72, 1.0);
+  vec3 ember   = vec3(0.812, 0.965, 0.020);
+  vec3 emberHot= vec3(0.902, 1.000, 0.353);
+  vec3 viol    = vec3(0.180, 0.620, 0.310);
+  vec3 violHot = vec3(0.400, 0.870, 0.480);
   vec3 tint    = mix(ember, viol, u_grade);
   vec3 tintHot = mix(emberHot, violHot, u_grade);
 
