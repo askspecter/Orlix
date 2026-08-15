@@ -17,8 +17,8 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#000;--bg2:#0a0a0a;--bg3:#111;--fg:#c8c8c8;--dim:#444;--dim2:#222;
-  --green:#4ADE80;--lime:#BFFF00;--orange:#F07830;--cyan:#22D3EE;
-  --red:#F87171;--purple:#A78BFA;--yellow:#FBBF24;--blue:#60A5FA;
+  --green:#4ADE80;--lime:#BFFF00;--orange:#CFF605;--cyan:#22D3EE;
+  --red:#F87171;--purple:#A78BFA;--yellow:#CFF605;--blue:#60A5FA;
   --accent:var(--lime);
 }
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
@@ -124,7 +124,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .tool-card .tc-head{display:flex;align-items:center;gap:6px}
 .tool-card .tc-name{color:var(--accent);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
 .tool-card .tc-status{font-size:9px;padding:1px 6px;border-radius:3px}
-.tool-card .tc-status.running{color:var(--orange);background:rgba(240,120,48,.1)}
+.tool-card .tc-status.running{color:var(--orange);background:rgba(207,246,5,.1)}
 .tool-card .tc-status.done{color:var(--green);background:rgba(74,222,128,.1)}
 .tool-card .tc-path{color:var(--dim);font-size:10px}
 .tool-card .tc-detail{color:var(--dim);font-size:10px}
@@ -301,7 +301,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
 .sp-badges{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .sp-badge{font-size:10px;padding:3px 10px;border-radius:12px;border:1px solid var(--dim2);display:flex;align-items:center;gap:4px}
 .sp-badge.ok{color:var(--green);border-color:rgba(74,222,128,.2)}
-.sp-badge.warn{color:var(--orange);border-color:rgba(240,120,48,.2)}
+.sp-badge.warn{color:var(--orange);border-color:rgba(207,246,5,.2)}
 .sp-path{font-size:11px;color:var(--dim);padding:4px 0 8px;border-bottom:2px solid var(--accent);margin-bottom:12px;display:inline-block}
 .sp-file-search{width:100%;padding:8px 10px 8px 28px;background:var(--bg);border:1px solid var(--dim2);border-radius:6px;color:var(--fg);font-family:inherit;font-size:11px;outline:none;margin-bottom:10px}
 .sp-file-table{width:100%;font-size:10px}
@@ -764,14 +764,14 @@ var MODELS={};PROVIDERS.forEach(function(p){p.models.forEach(function(m){MODELS[
 
 var PERM_MODES=['ask mode','auto-edit mode','full-auto mode','yolo mode'];
 var THEMES=[
-  {id:'dark',n:'Dark',d:1,bg:'#000',bg2:'#0a0a0a',bg3:'#111',fg:'#c8c8c8',dim:'#444',dim2:'#222',accent:'#BFFF00',green:'#4ADE80',red:'#F87171',orange:'#F07830',cyan:'#22D3EE',purple:'#A78BFA',yellow:'#FBBF24',blue:'#60A5FA'},
-  {id:'noir-glass',n:'Noir Glass',bg:'#0c0c0c',bg2:'#141414',bg3:'#1c1c1c',fg:'#d4d4d4',dim:'#525252',dim2:'#262626',accent:'#a3e635',green:'#4ade80',red:'#f87171',orange:'#fb923c',cyan:'#22d3ee',purple:'#c084fc',yellow:'#facc15',blue:'#60a5fa'},
-  {id:'green-crt',n:'Green CRT',bg:'#000',bg2:'#010a01',bg3:'#021202',fg:'#33ff33',dim:'#0a5a0a',dim2:'#0a2a0a',accent:'#33ff33',green:'#33ff33',red:'#ff3333',orange:'#ff8833',cyan:'#33ffcc',purple:'#cc33ff',yellow:'#ffff33',blue:'#3388ff'},
-  {id:'amber-crt',n:'Amber CRT',bg:'#000',bg2:'#0a0600',bg3:'#120c00',fg:'#ffb833',dim:'#5a3a0a',dim2:'#2a1a05',accent:'#ffb833',green:'#ffb833',red:'#ff6633',orange:'#ffcc33',cyan:'#ffdd88',purple:'#ffaa55',yellow:'#ffee00',blue:'#ffcc66'},
-  {id:'dracula',n:'Dracula',bg:'#282a36',bg2:'#21222c',bg3:'#343746',fg:'#f8f8f2',dim:'#6272a4',dim2:'#44475a',accent:'#bd93f9',green:'#50fa7b',red:'#ff5555',orange:'#ffb86c',cyan:'#8be9fd',purple:'#bd93f9',yellow:'#f1fa8c',blue:'#6272a4'},
+  {id:'dark',n:'Dark',d:1,bg:'#000',bg2:'#0a0a0a',bg3:'#111',fg:'#c8c8c8',dim:'#444',dim2:'#222',accent:'#BFFF00',green:'#4ADE80',red:'#F87171',orange:'#CFF605',cyan:'#22D3EE',purple:'#A78BFA',yellow:'#CFF605',blue:'#60A5FA'},
+  {id:'noir-glass',n:'Noir Glass',bg:'#0c0c0c',bg2:'#141414',bg3:'#1c1c1c',fg:'#d4d4d4',dim:'#525252',dim2:'#262626',accent:'#a3e635',green:'#4ade80',red:'#f87171',orange:'#CFF605',cyan:'#22d3ee',purple:'#c084fc',yellow:'#facc15',blue:'#60a5fa'},
+  {id:'green-crt',n:'Green CRT',bg:'#000',bg2:'#010a01',bg3:'#021202',fg:'#33ff33',dim:'#0a5a0a',dim2:'#0a2a0a',accent:'#33ff33',green:'#33ff33',red:'#ff3333',orange:'#CFF605',cyan:'#33ffcc',purple:'#cc33ff',yellow:'#ffff33',blue:'#3388ff'},
+  {id:'amber-crt',n:'Amber CRT',bg:'#000',bg2:'#0a0600',bg3:'#120c00',fg:'#CFF605',dim:'#5a3a0a',dim2:'#2a1a05',accent:'#CFF605',green:'#CFF605',red:'#ff6633',orange:'#ffcc33',cyan:'#ffdd88',purple:'#CFF605',yellow:'#ffee00',blue:'#ffcc66'},
+  {id:'dracula',n:'Dracula',bg:'#282a36',bg2:'#21222c',bg3:'#343746',fg:'#f8f8f2',dim:'#6272a4',dim2:'#44475a',accent:'#bd93f9',green:'#50fa7b',red:'#ff5555',orange:'#CFF605',cyan:'#8be9fd',purple:'#bd93f9',yellow:'#f1fa8c',blue:'#6272a4'},
   {id:'nord',n:'Nord',bg:'#2e3440',bg2:'#3b4252',bg3:'#434c5e',fg:'#d8dee9',dim:'#4c566a',dim2:'#3b4252',accent:'#88c0d0',green:'#a3be8c',red:'#bf616a',orange:'#d08770',cyan:'#88c0d0',purple:'#b48ead',yellow:'#ebcb8b',blue:'#5e81ac'},
   {id:'gruvbox',n:'Gruvbox Dark',bg:'#1d2021',bg2:'#282828',bg3:'#3c3836',fg:'#ebdbb2',dim:'#665c54',dim2:'#3c3836',accent:'#b8bb26',green:'#b8bb26',red:'#fb4934',orange:'#fe8019',cyan:'#8ec07c',purple:'#d3869b',yellow:'#fabd2f',blue:'#83a598'},
-  {id:'tokyo',n:'Tokyo Night',bg:'#1a1b26',bg2:'#24283b',bg3:'#414868',fg:'#c0caf5',dim:'#565f89',dim2:'#3b4261',accent:'#7aa2f7',green:'#9ece6a',red:'#f7768e',orange:'#ff9e64',cyan:'#7dcfff',purple:'#bb9af7',yellow:'#e0af68',blue:'#7aa2f7'},
+  {id:'tokyo',n:'Tokyo Night',bg:'#1a1b26',bg2:'#24283b',bg3:'#414868',fg:'#c0caf5',dim:'#565f89',dim2:'#3b4261',accent:'#7aa2f7',green:'#9ece6a',red:'#f7768e',orange:'#CFF605',cyan:'#7dcfff',purple:'#bb9af7',yellow:'#e0af68',blue:'#7aa2f7'},
   {id:'rose',n:'Rose Pine',bg:'#191724',bg2:'#1f1d2e',bg3:'#26233a',fg:'#e0def4',dim:'#6e6a86',dim2:'#403d52',accent:'#ebbcba',green:'#9ccfd8',red:'#eb6f92',orange:'#f6c177',cyan:'#9ccfd8',purple:'#c4a7e7',yellow:'#f6c177',blue:'#31748f'},
   {id:'catppuccin',n:'Catppuccin Mocha',bg:'#1e1e2e',bg2:'#181825',bg3:'#313244',fg:'#cdd6f4',dim:'#585b70',dim2:'#313244',accent:'#cba6f7',green:'#a6e3a1',red:'#f38ba8',orange:'#fab387',cyan:'#94e2d5',purple:'#cba6f7',yellow:'#f9e2af',blue:'#89b4fa'},
   {id:'one-dark',n:'One Dark',bg:'#282c34',bg2:'#21252b',bg3:'#2c313a',fg:'#abb2bf',dim:'#5c6370',dim2:'#3e4452',accent:'#61afef',green:'#98c379',red:'#e06c75',orange:'#d19a66',cyan:'#56b6c2',purple:'#c678dd',yellow:'#e5c07b',blue:'#61afef'},
@@ -788,22 +788,22 @@ var THEMES=[
   {id:'horizon',n:'Horizon',bg:'#1c1e26',bg2:'#16161c',bg3:'#232530',fg:'#d5d8da',dim:'#6c6f93',dim2:'#232530',accent:'#e95678',green:'#29d398',red:'#e95678',orange:'#fab795',cyan:'#59e3e3',purple:'#b877db',yellow:'#fac29a',blue:'#26bbd9'},
   {id:'github-dark',n:'GitHub Dark',bg:'#0d1117',bg2:'#010409',bg3:'#161b22',fg:'#c9d1d9',dim:'#484f58',dim2:'#161b22',accent:'#58a6ff',green:'#3fb950',red:'#f85149',orange:'#d29922',cyan:'#39d2c0',purple:'#bc8cff',yellow:'#d29922',blue:'#58a6ff'},
   {id:'github-light',n:'GitHub Light',bg:'#ffffff',bg2:'#f6f8fa',bg3:'#f0f0f0',fg:'#24292f',dim:'#8b949e',dim2:'#f0f0f0',accent:'#0969da',green:'#1a7f37',red:'#cf222e',orange:'#bc4c00',cyan:'#0969da',purple:'#8250df',yellow:'#9a6700',blue:'#0969da'},
-  {id:'kanagawa',n:'Kanagawa',bg:'#1f1f28',bg2:'#16161d',bg3:'#2a2a37',fg:'#dcd7ba',dim:'#727169',dim2:'#2a2a37',accent:'#7e9cd8',green:'#98bb6c',red:'#c34043',orange:'#ffa066',cyan:'#7fb4ca',purple:'#957fb8',yellow:'#e6c384',blue:'#7e9cd8'},
-  {id:'panda',n:'Panda',bg:'#292a2b',bg2:'#242526',bg3:'#333435',fg:'#e6e6e6',dim:'#757575',dim2:'#333435',accent:'#19f9d8',green:'#19f9d8',red:'#ff2c6d',orange:'#ffb86c',cyan:'#19f9d8',purple:'#b084eb',yellow:'#ffcc95',blue:'#45a9f9'},
-  {id:'cobalt2',n:'Cobalt2',bg:'#193549',bg2:'#15232d',bg3:'#1f4662',fg:'#ffffff',dim:'#0d3a58',dim2:'#1f4662',accent:'#ffc600',green:'#3ad900',red:'#ff628c',orange:'#ff9d00',cyan:'#80fcff',purple:'#ff9d00',yellow:'#ffc600',blue:'#0088ff'},
-  {id:'moonlight',n:'Moonlight',bg:'#222436',bg2:'#1e2030',bg3:'#2f334d',fg:'#c8d3f5',dim:'#636da6',dim2:'#2f334d',accent:'#82aaff',green:'#c3e88d',red:'#ff757f',orange:'#ff966c',cyan:'#86e1fc',purple:'#c099ff',yellow:'#ffc777',blue:'#82aaff'},
+  {id:'kanagawa',n:'Kanagawa',bg:'#1f1f28',bg2:'#16161d',bg3:'#2a2a37',fg:'#dcd7ba',dim:'#727169',dim2:'#2a2a37',accent:'#7e9cd8',green:'#98bb6c',red:'#c34043',orange:'#CFF605',cyan:'#7fb4ca',purple:'#957fb8',yellow:'#e6c384',blue:'#7e9cd8'},
+  {id:'panda',n:'Panda',bg:'#292a2b',bg2:'#242526',bg3:'#333435',fg:'#e6e6e6',dim:'#757575',dim2:'#333435',accent:'#19f9d8',green:'#19f9d8',red:'#ff2c6d',orange:'#CFF605',cyan:'#19f9d8',purple:'#b084eb',yellow:'#ffcc95',blue:'#45a9f9'},
+  {id:'cobalt2',n:'Cobalt2',bg:'#193549',bg2:'#15232d',bg3:'#1f4662',fg:'#ffffff',dim:'#0d3a58',dim2:'#1f4662',accent:'#ffc600',green:'#3ad900',red:'#ff628c',orange:'#CFF605',cyan:'#80fcff',purple:'#CFF605',yellow:'#ffc600',blue:'#0088ff'},
+  {id:'moonlight',n:'Moonlight',bg:'#222436',bg2:'#1e2030',bg3:'#2f334d',fg:'#c8d3f5',dim:'#636da6',dim2:'#2f334d',accent:'#82aaff',green:'#c3e88d',red:'#ff757f',orange:'#CFF605',cyan:'#86e1fc',purple:'#c099ff',yellow:'#ffc777',blue:'#82aaff'},
   {id:'vitesse-dark',n:'Vitesse Dark',bg:'#121212',bg2:'#1e1e1e',bg3:'#252525',fg:'#dbd7ca',dim:'#6b6b6b',dim2:'#252525',accent:'#4d9375',green:'#4d9375',red:'#cb7676',orange:'#d4976c',cyan:'#5eaab5',purple:'#b07bac',yellow:'#d4b879',blue:'#6394bf'},
   {id:'vitesse-light',n:'Vitesse Light',bg:'#ffffff',bg2:'#f7f7f7',bg3:'#eeeeee',fg:'#393a34',dim:'#aaaaaa',dim2:'#eeeeee',accent:'#1e754f',green:'#1e754f',red:'#ab5959',orange:'#b07d48',cyan:'#2e808f',purple:'#a65bb8',yellow:'#998418',blue:'#296aa3'},
   {id:'vesper',n:'Vesper',bg:'#101010',bg2:'#1a1a1a',bg3:'#232323',fg:'#b3b3b3',dim:'#585858',dim2:'#232323',accent:'#ffc799',green:'#99ffad',red:'#ff6666',orange:'#ffc799',cyan:'#99ffd5',purple:'#d4a0ff',yellow:'#ffe066',blue:'#99ccff'},
-  {id:'oxocarbon',n:'Oxocarbon',bg:'#161616',bg2:'#262626',bg3:'#353535',fg:'#f2f4f8',dim:'#525252',dim2:'#353535',accent:'#78a9ff',green:'#42be65',red:'#ee5396',orange:'#ff832b',cyan:'#3ddbd9',purple:'#be95ff',yellow:'#ffe97b',blue:'#78a9ff'},
-  {id:'fairy-floss',n:'Fairy Floss',bg:'#5a5475',bg2:'#4f4a68',bg3:'#6a6488',fg:'#f8f8f0',dim:'#8077a8',dim2:'#6a6488',accent:'#c5a3ff',green:'#addb67',red:'#ff857f',orange:'#ffb86c',cyan:'#80ffea',purple:'#c5a3ff',yellow:'#ffea00',blue:'#76d6ff'},
-  {id:'shades-purple',n:'Shades of Purple',bg:'#1e1e3f',bg2:'#1a1a37',bg3:'#2d2b55',fg:'#ffffff',dim:'#6943ff',dim2:'#2d2b55',accent:'#fad000',green:'#a5ff90',red:'#ff628c',orange:'#ff9d00',cyan:'#80ffea',purple:'#9effff',yellow:'#fad000',blue:'#a599e9'},
+  {id:'oxocarbon',n:'Oxocarbon',bg:'#161616',bg2:'#262626',bg3:'#353535',fg:'#f2f4f8',dim:'#525252',dim2:'#353535',accent:'#78a9ff',green:'#42be65',red:'#ee5396',orange:'#CFF605',cyan:'#3ddbd9',purple:'#be95ff',yellow:'#ffe97b',blue:'#78a9ff'},
+  {id:'fairy-floss',n:'Fairy Floss',bg:'#5a5475',bg2:'#4f4a68',bg3:'#6a6488',fg:'#f8f8f0',dim:'#8077a8',dim2:'#6a6488',accent:'#c5a3ff',green:'#addb67',red:'#ff857f',orange:'#CFF605',cyan:'#80ffea',purple:'#c5a3ff',yellow:'#ffea00',blue:'#76d6ff'},
+  {id:'shades-purple',n:'Shades of Purple',bg:'#1e1e3f',bg2:'#1a1a37',bg3:'#2d2b55',fg:'#ffffff',dim:'#6943ff',dim2:'#2d2b55',accent:'#fad000',green:'#a5ff90',red:'#ff628c',orange:'#CFF605',cyan:'#80ffea',purple:'#9effff',yellow:'#fad000',blue:'#a599e9'},
   {id:'snazzy',n:'Snazzy',bg:'#282a36',bg2:'#1e1e28',bg3:'#34353e',fg:'#e2e4e5',dim:'#686868',dim2:'#34353e',accent:'#57c7ff',green:'#5af78e',red:'#ff5c57',orange:'#ff6ac1',cyan:'#9aedfe',purple:'#ff6ac1',yellow:'#f3f99d',blue:'#57c7ff'},
   {id:'spacegray',n:'Spacegray',bg:'#2c2c2c',bg2:'#222222',bg3:'#3a3a3a',fg:'#b7b7b7',dim:'#666666',dim2:'#3a3a3a',accent:'#b294bb',green:'#b5bd68',red:'#cc6666',orange:'#de935f',cyan:'#8abeb7',purple:'#b294bb',yellow:'#f0c674',blue:'#81a2be'},
   {id:'zenburn',n:'Zenburn',bg:'#3f3f3f',bg2:'#383838',bg3:'#494949',fg:'#dcdccc',dim:'#7f9f7f',dim2:'#494949',accent:'#f0dfaf',green:'#7f9f7f',red:'#cc9393',orange:'#dfaf8f',cyan:'#8cd0d3',purple:'#dc8cc3',yellow:'#f0dfaf',blue:'#94bff3'},
-  {id:'ayu-dark',n:'Ayu Dark',bg:'#0a0e14',bg2:'#0d1016',bg3:'#131721',fg:'#b3b1ad',dim:'#475367',dim2:'#131721',accent:'#e6b450',green:'#c2d94c',red:'#ff3333',orange:'#ff8f40',cyan:'#95e6cb',purple:'#d2a6ff',yellow:'#e6b450',blue:'#39bae6'},
-  {id:'ayu-light',n:'Ayu Light',bg:'#fafafa',bg2:'#f0f0f0',bg3:'#e8e8e8',fg:'#5c6166',dim:'#abb0b6',dim2:'#e8e8e8',accent:'#ff9940',green:'#86b300',red:'#f07171',orange:'#ff9940',cyan:'#4cbf99',purple:'#a37acc',yellow:'#f2ae49',blue:'#399ee6'},
-  {id:'ayu-mirage',n:'Ayu Mirage',bg:'#1f2430',bg2:'#191e28',bg3:'#272d38',fg:'#cbccc6',dim:'#5c6773',dim2:'#272d38',accent:'#ffcc66',green:'#bae67e',red:'#ff3333',orange:'#ffa759',cyan:'#95e6cb',purple:'#d4bfff',yellow:'#ffcc66',blue:'#73d0ff'},
+  {id:'ayu-dark',n:'Ayu Dark',bg:'#0a0e14',bg2:'#0d1016',bg3:'#131721',fg:'#b3b1ad',dim:'#475367',dim2:'#131721',accent:'#e6b450',green:'#c2d94c',red:'#ff3333',orange:'#CFF605',cyan:'#95e6cb',purple:'#d2a6ff',yellow:'#e6b450',blue:'#39bae6'},
+  {id:'ayu-light',n:'Ayu Light',bg:'#fafafa',bg2:'#f0f0f0',bg3:'#e8e8e8',fg:'#5c6166',dim:'#abb0b6',dim2:'#e8e8e8',accent:'#CFF605',green:'#86b300',red:'#f07171',orange:'#CFF605',cyan:'#4cbf99',purple:'#a37acc',yellow:'#f2ae49',blue:'#399ee6'},
+  {id:'ayu-mirage',n:'Ayu Mirage',bg:'#1f2430',bg2:'#191e28',bg3:'#272d38',fg:'#cbccc6',dim:'#5c6773',dim2:'#272d38',accent:'#ffcc66',green:'#bae67e',red:'#ff3333',orange:'#CFF605',cyan:'#95e6cb',purple:'#d4bfff',yellow:'#ffcc66',blue:'#73d0ff'},
   {id:'andromeda',n:'Andromeda',bg:'#23262e',bg2:'#1e2025',bg3:'#2b2e38',fg:'#d5ced9',dim:'#6e7a8a',dim2:'#2b2e38',accent:'#ffe66d',green:'#96e072',red:'#ee5d43',orange:'#f39c12',cyan:'#00e8c6',purple:'#c74ded',yellow:'#ffe66d',blue:'#7cb7ff'},
   {id:'afterglow',n:'Afterglow',bg:'#212121',bg2:'#1a1a1a',bg3:'#2c2c2c',fg:'#d0d0d0',dim:'#505050',dim2:'#2c2c2c',accent:'#b4b4b4',green:'#b4c973',red:'#ac4142',orange:'#e87d3e',cyan:'#53beaf',purple:'#b07bac',yellow:'#e5b567',blue:'#6c99bb'},
   {id:'3024-night',n:'3024 Night',bg:'#090300',bg2:'#130c06',bg3:'#1e150b',fg:'#a5a2a2',dim:'#5c5855',dim2:'#1e150b',accent:'#db2d20',green:'#01a252',red:'#db2d20',orange:'#e8bbd0',cyan:'#b5e4f4',purple:'#a16a94',yellow:'#fded02',blue:'#01a0e4'},
@@ -811,7 +811,7 @@ var THEMES=[
   {id:'adventure',n:'Adventure',bg:'#1e1e33',bg2:'#151528',bg3:'#272742',fg:'#dec278',dim:'#666b7a',dim2:'#272742',accent:'#7dd88a',green:'#7dd88a',red:'#d0555f',orange:'#dea97d',cyan:'#78b9c4',purple:'#b489dd',yellow:'#eee07d',blue:'#69a3d3'},
   {id:'blueberry',n:'Blueberry',bg:'#1d1e26',bg2:'#171820',bg3:'#262731',fg:'#d1d3de',dim:'#5b5e72',dim2:'#262731',accent:'#7a88cf',green:'#7cc379',red:'#e06e73',orange:'#c9956b',cyan:'#70c0ba',purple:'#ad82cb',yellow:'#d6c67b',blue:'#7a88cf'},
   {id:'atom-light',n:'Atom One Light',bg:'#fafafa',bg2:'#f0f0f0',bg3:'#e5e5e6',fg:'#383a42',dim:'#a0a1a7',dim2:'#e5e5e6',accent:'#4078f2',green:'#50a14f',red:'#e45649',orange:'#c18401',cyan:'#0184bc',purple:'#a626a4',yellow:'#c18401',blue:'#4078f2'},
-  {id:'tokyo-storm',n:'Tokyo Night Storm',bg:'#24283b',bg2:'#1f2335',bg3:'#292e42',fg:'#c0caf5',dim:'#545c7e',dim2:'#292e42',accent:'#7aa2f7',green:'#9ece6a',red:'#f7768e',orange:'#ff9e64',cyan:'#7dcfff',purple:'#bb9af7',yellow:'#e0af68',blue:'#7aa2f7'},
+  {id:'tokyo-storm',n:'Tokyo Night Storm',bg:'#24283b',bg2:'#1f2335',bg3:'#292e42',fg:'#c0caf5',dim:'#545c7e',dim2:'#292e42',accent:'#7aa2f7',green:'#9ece6a',red:'#f7768e',orange:'#CFF605',cyan:'#7dcfff',purple:'#bb9af7',yellow:'#e0af68',blue:'#7aa2f7'},
   {id:'aizen',n:'Aizen Dark',bg:'#151520',bg2:'#0e0e18',bg3:'#1e1e2e',fg:'#c8c8d8',dim:'#4a4a5e',dim2:'#1e1e2e',accent:'#7c7cf0',green:'#76d672',red:'#e06c75',orange:'#d4956b',cyan:'#5ed7d0',purple:'#b78fe0',yellow:'#e5c890',blue:'#6db3f2'},
 ];
 

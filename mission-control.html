@@ -15,7 +15,7 @@
   --bg:#08080a;--bg-2:#131316;--bg-3:#1a1a1e;
   --border:rgba(255,255,255,.07);--border-hover:rgba(255,255,255,.14);
   --text-1:#E6E6E6;--text-2:#8a8a8e;--text-3:#59595e;
-  --orange:#F07830;--orange-dim:rgba(240,120,48,.09);--orange-glow:rgba(240,120,48,.22);
+  --orange:#CFF605;--orange-dim:rgba(207,246,5,.09);--orange-glow:rgba(207,246,5,.22);
   --green:#4ADE80;--green-dim:rgba(74,222,128,.08);
   --red:#F87171;--red-dim:rgba(248,113,113,.08);
   --purple:#A78BFA;--purple-dim:rgba(167,139,250,.08);
@@ -27,9 +27,9 @@
 html,body{min-height:100%;background:var(--bg);color:var(--text-2);font-family:var(--mono);-webkit-font-smoothing:antialiased}
 body{
   background:
-    radial-gradient(1000px 700px at 106% 64%, rgba(240,120,48,.20), transparent 60%),
-    radial-gradient(760px 620px at -6% 108%, rgba(240,120,48,.18), transparent 62%),
-    radial-gradient(560px 460px at 96% -8%, rgba(240,120,48,.10), transparent 60%),
+    radial-gradient(1000px 700px at 106% 64%, rgba(207,246,5,.20), transparent 60%),
+    radial-gradient(760px 620px at -6% 108%, rgba(207,246,5,.18), transparent 62%),
+    radial-gradient(560px 460px at 96% -8%, rgba(207,246,5,.10), transparent 60%),
     var(--bg);
   display:flex;align-items:center;justify-content:center;padding:12px;height:100vh;overflow:hidden}
 .frame{width:100%;max-width:min(980px, 96vw);max-height:100vh;display:flex;flex-direction:column}
@@ -68,7 +68,7 @@ body{
 .acron{font-size:.58rem;color:var(--text-3)}
 .pill{margin-left:auto;font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:100px;border:1px solid}
 .pill.live{color:var(--green);background:var(--green-dim);border-color:rgba(74,222,128,.3)}
-.pill.running{color:var(--orange);background:var(--orange-dim);border-color:rgba(240,120,48,.3)}
+.pill.running{color:var(--orange);background:var(--orange-dim);border-color:rgba(207,246,5,.3)}
 .pill.failing{color:var(--red);background:var(--red-dim);border-color:rgba(248,113,113,.3)}
 .pill.repairing{color:var(--purple);background:var(--purple-dim);border-color:rgba(167,139,250,.3)}
 .abot{display:flex;align-items:center;gap:11px}

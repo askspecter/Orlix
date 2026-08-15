@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--orange:#F07830;--bg:#0A0908;--s2:#141210;--b1:#26221e;--t1:#EDEDED;--t2:#9a938b;--t3:#6b655e;--green:#4ade80;--font:'JetBrains Mono',ui-monospace,monospace}
+  :root{--orange:#CFF605;--bg:#0A0908;--s2:#141210;--b1:#26221e;--t1:#EDEDED;--t2:#9a938b;--t3:#6b655e;--green:#4ade80;--font:'JetBrains Mono',ui-monospace,monospace}
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--bg);color:var(--t1);font-family:var(--font);min-height:100vh}
   a{color:inherit}
@@ -33,7 +33,7 @@
   .logo-thumb{width:46px;height:46px;border-radius:10px;background:var(--bg);border:1px dashed var(--b1);display:flex;align-items:center;justify-content:center;font-size:1.1rem;overflow:hidden;flex-shrink:0}
   .logo-thumb img{width:100%;height:100%;object-fit:cover}
   .logo-drop small{font-size:.68rem;color:var(--t2)}
-  .btn{width:100%;border:none;border-radius:11px;padding:13px;font-family:var(--font);font-weight:800;font-size:.86rem;cursor:pointer;background:var(--orange);color:#fff;margin-top:6px;box-shadow:0 6px 24px rgba(240,120,48,.28)}
+  .btn{width:100%;border:none;border-radius:11px;padding:13px;font-family:var(--font);font-weight:800;font-size:.86rem;cursor:pointer;background:var(--orange);color:#fff;margin-top:6px;box-shadow:0 6px 24px rgba(207,246,5,.28)}
   .btn:disabled{opacity:.55;cursor:wait}
   .btn.sec{background:transparent;border:1px solid var(--b1);color:var(--t2);box-shadow:none;margin-top:9px}
   .status{font-size:.72rem;color:var(--t2);margin-top:11px;min-height:15px;text-align:center;line-height:1.5}
@@ -145,12 +145,12 @@ function bg(now){
   // radial ember glow, breathes over time
   const pulse = 0.5 + 0.5*Math.sin(now/1400);
   const g = ctx.createRadialGradient(W/2, H*0.42, 60, W/2, H*0.42, W*0.75);
-  g.addColorStop(0, `rgba(240,120,48,${0.16 + 0.06*pulse})`);
+  g.addColorStop(0, `rgba(207,246,5,${0.16 + 0.06*pulse})`);
   g.addColorStop(0.5, 'rgba(120,60,24,0.05)');
   g.addColorStop(1, 'rgba(10,9,8,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
   // drifting grid
-  ctx.strokeStyle = 'rgba(240,120,48,0.055)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(207,246,5,0.055)'; ctx.lineWidth = 1;
   const step = 60, off = (now/60) % step;
   ctx.beginPath();
   for(let x=-step+off; x<W; x+=step){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
@@ -161,7 +161,7 @@ function bg(now){
   v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(0,0,0,0.72)');
   ctx.fillStyle = v; ctx.fillRect(0,0,W,H);
   // corner ticks
-  ctx.strokeStyle='rgba(240,120,48,0.5)'; ctx.lineWidth=3; const m=54,l=34;
+  ctx.strokeStyle='rgba(207,246,5,0.5)'; ctx.lineWidth=3; const m=54,l=34;
   const corners=[[m,m,1,1],[W-m,m,-1,1],[m,H-m,1,-1],[W-m,H-m,-1,-1]];
   for(const [cx,cy,sx,sy] of corners){ ctx.beginPath(); ctx.moveTo(cx+sx*l,cy); ctx.lineTo(cx,cy); ctx.lineTo(cx,cy+sy*l); ctx.stroke(); }
 }
@@ -175,12 +175,12 @@ function scanlines(){
 function drawLogoOrMark(cx, cy, r, sym){
   ctx.save();
   ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-  ctx.shadowColor='rgba(240,120,48,0.55)'; ctx.shadowBlur=50;
+  ctx.shadowColor='rgba(207,246,5,0.55)'; ctx.shadowBlur=50;
   if(logoImg){ ctx.clip(); ctx.drawImage(logoImg, cx-r, cy-r, r*2, r*2); }
   else{
     ctx.fillStyle='#141210'; ctx.fill();
-    ctx.lineWidth=4; ctx.strokeStyle='rgba(240,120,48,0.8)'; ctx.stroke();
-    ctx.shadowBlur=0; ctx.fillStyle='#F07830';
+    ctx.lineWidth=4; ctx.strokeStyle='rgba(207,246,5,0.8)'; ctx.stroke();
+    ctx.shadowBlur=0; ctx.fillStyle='#CFF605';
     ctx.font='800 '+Math.round(r*0.9)+'px '+FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText((sym||'?').slice(0,2), cx, cy+2);
   }
@@ -208,7 +208,7 @@ function drawFrame(now){
     const shown = line.slice(0, Math.floor(line.length * easeOut(p1)));
     const fade = now < 2000 ? 1 : 1 - seg(now, 2000, 2600);
     ctx.globalAlpha = fade;
-    ctx.fillStyle = '#F07830'; ctx.font = "500 30px "+FONT; ctx.textAlign='left';
+    ctx.fillStyle = '#CFF605'; ctx.font = "500 30px "+FONT; ctx.textAlign='left';
     ctx.fillText(shown + (Math.floor(now/300)%2 ? '▋' : ''), 90, H*0.5);
     ctx.textAlign='center'; ctx.globalAlpha = 1;
   }
@@ -225,7 +225,7 @@ function drawFrame(now){
     const tRise = easeOut(seg(now, 2500, 3600));
     ctx.globalAlpha = tRise;
     ctx.fillStyle = '#EDEDED'; ctx.font = "800 128px "+FONT;
-    ctx.shadowColor='rgba(240,120,48,0.4)'; ctx.shadowBlur=30;
+    ctx.shadowColor='rgba(207,246,5,0.4)'; ctx.shadowBlur=30;
     ctx.fillText('$'+sym, cx, cy + logoR + 120);
     ctx.shadowBlur=0;
 
@@ -267,7 +267,7 @@ function drawFrame(now){
       const x = startX + i*colW;
       ctx.fillStyle = '#6b655e'; ctx.font = "700 22px "+FONT;
       ctx.fillText(st[0], x, y);
-      ctx.fillStyle = '#F07830'; ctx.font = "800 34px "+FONT;
+      ctx.fillStyle = '#CFF605'; ctx.font = "800 34px "+FONT;
       ctx.fillText(st[1], x, y + 42);
       if(i < stats.length-1){ ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x+colW/2, y-10); ctx.lineTo(x+colW/2, y+52); ctx.stroke(); }
     });
@@ -280,7 +280,7 @@ function drawFrame(now){
     ctx.globalAlpha = s;
     ctx.fillStyle = '#EDEDED'; ctx.font = "800 40px "+FONT;
     ctx.fillText('Launch yours on', W/2, H*0.90);
-    ctx.fillStyle = '#F07830'; ctx.font = "800 46px "+FONT;
+    ctx.fillStyle = '#CFF605'; ctx.font = "800 46px "+FONT;
     ctx.fillText('orlixai.xyz', W/2, H*0.90 + 58);
     ctx.globalAlpha = 1;
   }

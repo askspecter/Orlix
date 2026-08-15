@@ -1,5 +1,5 @@
 /* ORLIX cinematic — WebGL backdrop
-   A single fullscreen quad: fbm smoke, ember/violet grading,
+   A single fullscreen quad: fbm smoke, lime/emerald grading,
    mouse-follow light, scroll-driven drift. No dependencies. */
 
 import { lerp, clamp, isTouch, prefersReducedMotion } from './utils.js';
@@ -15,7 +15,7 @@ uniform vec2  u_res;
 uniform float u_time;
 uniform vec2  u_mouse;   // 0..1, y up
 uniform float u_scroll;  // 0..1 page progress
-uniform float u_grade;   // 0 ember -> 1 violet
+uniform float u_grade;   // 0 lime -> 1 emerald
 uniform float u_intro;   // 0..1 fade-in
 
 mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
@@ -50,10 +50,10 @@ void main(){
   st = rot(u_scroll * 0.38 - 0.04) * st;
 
   vec3 base    = vec3(0.012, 0.011, 0.012);
-  vec3 ember   = vec3(0.94, 0.47, 0.19);
-  vec3 emberHot= vec3(1.0, 0.72, 0.38);
-  vec3 viol    = vec3(0.62, 0.50, 0.98);
-  vec3 violHot = vec3(0.82, 0.72, 1.0);
+  vec3 ember   = vec3(0.81, 0.96, 0.02);
+  vec3 emberHot= vec3(0.89, 1.0, 0.42);
+  vec3 viol    = vec3(0.20, 0.85, 0.45);
+  vec3 violHot = vec3(0.55, 1.0, 0.65);
   vec3 tint    = mix(ember, viol, u_grade);
   vec3 tintHot = mix(emberHot, violHot, u_grade);
 

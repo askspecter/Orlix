@@ -107,7 +107,7 @@
             n.textContent = name;
             n.setAttribute('data-orlix-done', '1');
             n.setAttribute('title', a);
-            n.style.color = 'var(--orange, #F07830)';
+            n.style.color = 'var(--orange, #CFF605)';
           }
         });
       });

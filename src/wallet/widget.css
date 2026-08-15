@@ -28,7 +28,7 @@
 }
 
 .ow-btn:focus-visible {
-  outline: 2px solid #F07830;
+  outline: 2px solid #CFF605;
   outline-offset: 2px;
 }
 
@@ -74,9 +74,9 @@
 
 /* ── Pending (awaiting approval) ── */
 .ow-btn-pending {
-  color: #F07830;
-  border-color: rgba(240, 120, 48, 0.30);
-  background: rgba(240, 120, 48, 0.08);
+  color: #CFF605;
+  border-color: rgba(207,246,5, 0.30);
+  background: rgba(207,246,5, 0.08);
   cursor: wait;
 }
 
@@ -93,7 +93,7 @@
   box-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
 }
 .ow-dot-pending {
-  background: #F07830;
+  background: #CFF605;
   animation: ow-pulse 1.2s ease-in-out infinite;
 }
 @keyframes ow-pulse {
