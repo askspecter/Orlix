@@ -75,7 +75,7 @@ const marketHandler = async (req, res) => {
       try {
         const top3 = tokens.slice(0, 3);
         const totalVol = tokens.reduce((s, t) => s + t.volume24h, 0);
-        const prompt = `${tokens.length} active tokens on Base. Total 24h volume: $${(totalVol / 1e6).toFixed(1)}M. Top: ${top3.map(t => `$${t.symbol} (${t.priceChange24h != null ? (t.priceChange24h >= 0 ? '+' : '') + t.priceChange24h.toFixed(1) + '%' : '?'} 24h)`).join(', ')}. Write 2-3 sentences of live market commentary. Be specific. No emojis.`;
+        const prompt = `${tokens.length} active tokens on Robinhood Chain. Total 24h volume: $${(totalVol / 1e6).toFixed(1)}M. Top: ${top3.map(t => `$${t.symbol} (${t.priceChange24h != null ? (t.priceChange24h >= 0 ? '+' : '') + t.priceChange24h.toFixed(1) + '%' : '?'} 24h)`).join(', ')}. Write 2-3 sentences of live market commentary. Be specific. No emojis.`;
         const r = await fetch('https://llm.bankr.bot/v1/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-API-Key': key, 'anthropic-version': '2023-06-01' },
@@ -143,7 +143,7 @@ const walletHandler = async (req, res) => {
     const llmKey = process.env.BANKR_LLM_KEY || '';
     if (tier.tier !== 'NONE' && llmKey) {
       try {
-        const prompt = `Wallet ${target} on Base: ${(Number(ethWei) / 1e18).toFixed(6)} ETH, ${orlixBalance} ORLIX (${walletTier.label}). Write a 2-sentence wallet profile. No emojis.`;
+        const prompt = `Wallet ${target} on Robinhood Chain: ${(Number(ethWei) / 1e18).toFixed(6)} ETH, ${orlixBalance} ORLIX (${walletTier.label}). Write a 2-sentence wallet profile. No emojis.`;
         const r = await fetch('https://llm.bankr.bot/v1/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-API-Key': llmKey, 'anthropic-version': '2023-06-01' },
@@ -162,7 +162,7 @@ const walletHandler = async (req, res) => {
         orlix: { formatted: orlixBalance + ' ORLIX', tier: walletTier.label },
       },
       aiSummary:   aiSummary || (tier.tier === 'NONE' ? 'Hold $ORLIX to unlock AI wallet analysis' : ''),
-      basescan:    `https://basescan.org/address/${target}`,
+      blockscout:   `https://robinhoodchain.blockscout.com/address/`,
       timestamp:   new Date().toISOString(),
       poweredBy:   'Orlix AI — orlixai.xyz',
     }, tier));

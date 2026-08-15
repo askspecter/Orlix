@@ -4,7 +4,6 @@
 //
 //   app.orlixai.xyz/*  → /app.html      (path-based views: /overview, /playground, …)
 //   docs.orlixai.xyz/* → /docs.html     (path-based pages: /overview, /policies, …)
-//   b20.orlixai.xyz/   → /b20-studio.html
 //
 // The matcher excludes /api, /assets, and any path with a file extension so
 // real assets and functions are served untouched.
@@ -17,20 +16,11 @@ const SPA = {
   'app.orlixai.xyz':  '/app.html',
   'docs.orlixai.xyz': '/docs.html',
 };
-// Single-page hosts: only the root is rewritten.
-const ROOT = {
-  'b20.orlixai.xyz':    '/b20-studio.html',
-  'bridge.orlixai.xyz': '/bridge.html',
-};
 
 export default function middleware(request) {
   const host = (request.headers.get('host') || '').toLowerCase();
-  const path = new URL(request.url).pathname;
 
   if (SPA[host]) return rewrite(new URL(SPA[host], request.url));
-
-  const dest = ROOT[host];
-  if (dest && path === '/') return rewrite(new URL(dest, request.url));
 
   return next();
 }
