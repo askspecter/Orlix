@@ -890,10 +890,10 @@ select.inp{cursor:pointer}
     <div class="gate-brand">Orlix <span>AI</span></div>
     <div class="gate-tagline">Personal AI Operating System</div>
     <div class="gate-req">
-      <div class="gate-req-ico">🔐</div>
+      <div class="gate-req-ico">🚀</div>
       <div class="gate-req-text">
-        <strong>10,000,000 $ORLIX required</strong>
-        Hold $ORLIX on Base to unlock full platform access
+        <strong>Open access</strong>
+        Relaunching on Robinhood Chain — full platform access is open
       </div>
     </div>
 
@@ -904,28 +904,21 @@ select.inp{cursor:pointer}
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         Connect Wallet
       </button>
-      <div style="margin-top:14px;font-size:.72rem;color:var(--text-3)">
-        Don't have $ORLIX?
-        <a href="https://app.uniswap.org/swap?outputCurrency=0x799c28BAC95B3E0B26534D1e9A586511895EcBA3&chain=base" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:none">Buy on Uniswap ↗</a>
-      </div>
     </div>
 
     <!-- State: checking -->
     <div id="gateChecking" style="display:none">
       <div class="gate-spinner"></div>
-      <div style="font-size:.82rem;color:var(--text-2)">Checking your $ORLIX balance…</div>
+      <div style="font-size:.82rem;color:var(--text-2)">Connecting…</div>
     </div>
 
     <!-- State: denied -->
     <div id="gateDenied" style="display:none">
-      <div class="gate-denied-ico">🚫</div>
-      <div class="gate-denied-title">Insufficient $ORLIX</div>
-      <div class="gate-denied-sub">You need <strong>10,000,000 $ORLIX</strong> to access Orlix AI</div>
-      <div class="gate-denied-balance" id="gateDeniedBalance">Your balance: 0 ORLIX</div>
-      <div class="gate-buy-links">
-        <a href="https://app.uniswap.org/swap?outputCurrency=0x799c28BAC95B3E0B26534D1e9A586511895EcBA3&chain=base" target="_blank" rel="noopener" class="gate-buy-btn">🦄 Uniswap</a>
-        <a href="https://dexscreener.com/base/0x799c28BAC95B3E0B26534D1e9A586511895EcBA3" target="_blank" rel="noopener" class="gate-buy-btn">📊 DexScreener</a>
-      </div>
+      <div class="gate-denied-ico">🚀</div>
+      <div class="gate-denied-title">Welcome</div>
+      <div class="gate-denied-sub">Orlix AI is open on Robinhood Chain</div>
+      <div class="gate-denied-balance" id="gateDeniedBalance"></div>
+      <div class="gate-buy-links"></div>
       <button class="gate-retry" onclick="gateRetry()">← Use a different wallet</button>
     </div>
 
@@ -1011,7 +1004,7 @@ select.inp{cursor:pointer}
 <span class="r4">██║   ██║██╔══██╗██║     ██║</span><span class="ax"> ██╔██╗ </span>
 <span class="r5">╚██████╔╝██║  ██║███████╗██║</span><span class="ax">██╔╝ ██╗</span>
 <span class="r6"> ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝</span><span class="ax">╚═╝  ╚═╝</span></pre>
-        <div class="ab-sub">Base Chain Intelligence <span class="dot">●</span> orlix.xyz</div>
+        <div class="ab-sub">Robinhood Chain Intelligence <span class="dot">●</span> orlix.xyz</div>
       </div>
       <div class="page-hd">
         <div class="file">$ orlix status --full</div>
@@ -1275,18 +1268,18 @@ select.inp{cursor:pointer}
       </div>
       <div class="panel" style="border-color:rgba(0,82,255,.28);background:linear-gradient(135deg,var(--bg-panel) 0%,rgba(0,82,255,.05) 100%)">
         <div class="panel-hd" style="border-color:rgba(0,82,255,.2)">
-          <span class="ttl" style="color:#5b9aff">⬡ Base MCP — Onchain Actions</span>
+          <span class="ttl" style="color:#5b9aff">⬡ Robinhood Chain — Onchain Tools</span>
           <span style="color:#5b9aff;font-size:.65rem;font-weight:700;background:rgba(0,82,255,.12);border:1px solid rgba(0,82,255,.3);padding:2px 9px;border-radius:4px;letter-spacing:.04em">LIVE</span>
         </div>
         <div class="panel-body" style="padding-bottom:0">
-          <p style="color:var(--text-2);font-size:.78rem;line-height:1.65;margin-bottom:16px">Agent prepares transactions across top Base apps — swaps, lending, token launches, and more. <strong style="color:#5b9aff">Every transaction approved by you</strong> before execution.</p>
+          <p style="color:var(--text-2);font-size:.78rem;line-height:1.65;margin-bottom:16px">Agent reads Robinhood Chain live — balances, tokens, contracts, transactions, and blocks. <strong style="color:#5b9aff">Every transaction approved by you</strong> before execution.</p>
 
           <!-- capability chips -->
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">
             <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">↗ Transfers</span>
-            <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">⇄ Uniswap Swaps</span>
-            <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">⬆ Moonwell Lending</span>
-            <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">🚀 Flaunch Token Launch</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">💠 Balances &amp; Tokens</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">🔎 Tx Inspector</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">🧱 Block Reads</span>
             <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">📊 DexScreener Data</span>
             <span style="display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:#5b9aff;background:rgba(0,82,255,.08);border:1px solid rgba(0,82,255,.2);border-radius:5px;padding:4px 10px">⛽ Gas Tracker</span>
           </div>
@@ -1302,15 +1295,6 @@ select.inp{cursor:pointer}
         <div class="panel-hd"><span class="ttl">Productivity</span></div>
         <div class="panel-body">
           <div class="skill-grid" id="skillGrid-prod"></div>
-        </div>
-      </div>
-      <div class="panel" style="border-color:rgba(96,165,250,.22);background:linear-gradient(135deg,var(--bg-panel) 0%,rgba(96,165,250,.04) 100%)">
-        <div class="panel-hd" style="border-color:rgba(96,165,250,.18)">
-          <span class="ttl">⬡ B20 Token Standard</span>
-          <span style="font-size:.68rem;color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);padding:2px 7px;border-radius:3px;margin-left:8px">Base Beryl · Live</span>
-        </div>
-        <div class="panel-body">
-          <div class="skill-grid" id="skillGrid-b20"></div>
         </div>
       </div>
     </div>
@@ -1407,7 +1391,7 @@ select.inp{cursor:pointer}
 
           <div style="border-top:1px solid rgba(255,255,255,.06);padding-top:18px;margin-top:4px">
             <div class="setting-label" style="margin-bottom:6px">Connection Diagnostic</div>
-            <button class="btn" id="testPingBtn" style="font-size:.78rem">Test /api/b20</button>
+            <button class="btn" id="testPingBtn" style="font-size:.78rem">Test /api/ping</button>
             <button class="btn" id="testChatBtn" style="font-size:.78rem;margin-left:8px">Test /api/chat</button>
             <div id="diagResult" style="margin-top:10px;font-size:.74rem;font-family:'JetBrains Mono',monospace;line-height:1.6;white-space:pre-wrap;color:var(--dim)"></div>
           </div>
@@ -1474,10 +1458,8 @@ select.inp{cursor:pointer}
       </div>
       <div class="chat-controls">
         <select class="inp chat-model-sel" id="pgModelSel"></select>
-        <select class="inp chat-model-sel" id="pgChainSel" title="Default chain for onchain & token queries">
-          <option value="base">⬡ Base</option>
-          <option value="arbitrum">◆ Arbitrum</option>
-          <option value="robinhood">🪶 Robinhood</option>
+        <select class="inp chat-model-sel" id="pgChainSel" title="Active chain for onchain & token queries">
+          <option value="robinhood">🪶 Robinhood Chain</option>
         </select>
         <button class="btn-icon" id="searchToggle" title="Web search">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M17 17l-4-4"/></svg>
@@ -1493,7 +1475,7 @@ select.inp{cursor:pointer}
             <div class="chat-empty-title">Orlix Playground</div>
             <div class="chat-empty-sub">Select a model above and start chatting — or try one of these:</div>
             <div class="chat-starters">
-              <button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">⛓</span>What is the B20 token standard on Base?</button>
+              <button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">⛓</span>What can I do onchain on Robinhood Chain?</button>
               <button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">📝</span>Write a simple ERC-20 contract in Solidity</button>
               <button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">🤖</span>What can Orlix AI do for my project?</button>
             </div>
@@ -2047,30 +2029,22 @@ const AEON_SKILLS = {
     { icon:'', name:'Code Review', desc:'Review code for bugs, security, improvements', tag:'code', prompt:'Review this code for bugs, security issues, and improvements:\n\n```\n[PASTE CODE HERE]\n```' },
   ],
   crypto: [
-    { icon:'', name:'Token Search', desc:'Search tokens on Base, Robinhood & Arbitrum', tag:'dexscreener_search', prompt:'Search for this token on Base, Robinhood Chain, and Arbitrum and show me price, liquidity, volume, and market cap:\n\n[TOKEN NAME OR SYMBOL]' },
-    { icon:'', name:'Market Data', desc:'Full market data for any token address', tag:'dexscreener_token', prompt:'Get full market data for this token — price, liquidity, 24h volume, buy/sell ratio:\n\n[TOKEN ADDRESS 0x...]' },
-    { icon:'', name:'Swap Tokens', desc:'Swap any token pair on Uniswap Base', tag:'uniswap_quote + uniswap_prepare_swap', prompt:'I want to swap [AMOUNT] ETH to USDC on Uniswap Base. Get me a quote and prepare the swap transaction.' },
-    { icon:'', name:'New Launches', desc:'Latest meme token launches on Flaunch', tag:'flaunch_new_tokens', prompt:'Show me the 10 newest token launches on Flaunch Base with price and market cap.' },
-    { icon:'', name:'Top Tokens', desc:'Top tokens by market cap on Flaunch', tag:'flaunch_top_tokens', prompt:'Show me the top 10 tokens by market cap on Flaunch Base.' },
-    { icon:'', name:'Lending Rates', desc:'Supply & borrow APY on Moonwell Base', tag:'moonwell_markets', prompt:'What are the current lending and borrowing rates on Moonwell Base? Show all assets with APY.' },
-    { icon:'', name:'Supply to Moonwell', desc:'Lend assets and earn yield on Moonwell', tag:'moonwell_prepare_supply', prompt:'I want to supply [AMOUNT] [USDC/WETH/ETH] to Moonwell on Base to earn yield. Show me the APY and prepare the supply transaction.' },
-    { icon:'', name:'Launch Token', desc:'Launch a new token on Flaunch (Base)', tag:'flaunch_prepare_launch', prompt:'Launch a new token on Flaunch Base:\n\nName: [TOKEN NAME]\nSymbol: [SYMBOL max 8 chars]\nDescription: [SHORT DESC]\nImage URL: [IMAGE URL]\n\nPrepare the launch transaction.' },
-    { icon:'', name:'Wallet Balance', desc:'Check ETH balance of any wallet on Base', tag:'base_get_eth_balance', prompt:'Check the ETH balance for this wallet on Base:\n\n[WALLET ADDRESS]' },
-    { icon:'', name:'Gas Tracker', desc:'Current gas price and network status', tag:'base_get_gas_price', prompt:'What is the current gas price on Base? Show me latest block info too.' },
-    { icon:'', name:'Tx Inspector', desc:'Look up any transaction on Base by hash', tag:'base_get_transaction', prompt:'Look up this transaction on Base and explain what happened:\n\n[TX HASH 0x...]' },
-    { icon:'', name:'Token Info', desc:'Name, symbol, decimals, supply of any ERC20', tag:'base_erc20_info', prompt:'Get token info for this ERC20 on Base — name, symbol, decimals, total supply:\n\n[TOKEN ADDRESS 0x...]' },
+    { icon:'', name:'Token Search', desc:'Search tokens on Robinhood Chain', tag:'dexscreener_search', prompt:'Search for this token on Robinhood Chain and show me price, liquidity, volume, and market cap:\n\n[TOKEN NAME OR SYMBOL]' },
+    { icon:'', name:'Market Data', desc:'Full market data for any token address', tag:'dexscreener_token', prompt:'Get full market data for this token on Robinhood Chain — price, liquidity, 24h volume, buy/sell ratio:\n\n[TOKEN ADDRESS 0x...]' },
+    { icon:'', name:'Wallet Balance', desc:'Check ETH balance of any wallet on Robinhood Chain', tag:'base_get_eth_balance', prompt:'Check the ETH balance for this wallet on Robinhood Chain:\n\n[WALLET ADDRESS]' },
+    { icon:'', name:'Token Balance', desc:'Check any ERC-20 balance for a wallet', tag:'base_get_token_balance', prompt:'Check the token balance of this ERC-20 for this wallet on Robinhood Chain:\n\nToken: [TOKEN ADDRESS 0x...]\nWallet: [WALLET ADDRESS 0x...]' },
+    { icon:'', name:'Gas Tracker', desc:'Current gas price and network status', tag:'base_get_gas_price', prompt:'What is the current gas price on Robinhood Chain? Show me latest block info too.' },
+    { icon:'', name:'Latest Block', desc:'Height, hash, and timestamp of the latest block', tag:'base_get_latest_block', prompt:'Show me the latest block on Robinhood Chain — height, hash, timestamp, and tx count.' },
+    { icon:'', name:'Tx Inspector', desc:'Look up any transaction on Robinhood Chain by hash', tag:'base_get_transaction', prompt:'Look up this transaction on Robinhood Chain and explain what happened:\n\n[TX HASH 0x...]' },
+    { icon:'', name:'Token Info', desc:'Name, symbol, decimals, supply of any ERC20', tag:'base_erc20_info', prompt:'Get token info for this ERC20 on Robinhood Chain — name, symbol, decimals, total supply:\n\n[TOKEN ADDRESS 0x...]' },
+    { icon:'', name:'Network Info', desc:'Chain ID, RPC, and status for Robinhood Chain', tag:'base_get_network_info', prompt:'Give me the network info for Robinhood Chain — chain ID, native currency, RPC, and current status.' },
+    { icon:'', name:'Wallet Watch', desc:'Summarize recent activity for a wallet', tag:'base_get_eth_balance + base_get_transaction', prompt:'Watch this wallet on Robinhood Chain and summarize its recent activity, balances, and notable token flows:\n\n[WALLET ADDRESS 0x...]' },
   ],
   prod: [
     { icon:'', name:'Content Writer', desc:'Write polished content on any topic', tag:'web_search', prompt:'Write high-quality content about:\n\n[TOPIC]\n\nTone: [professional/casual/technical]\nLength: [short/medium/long]' },
     { icon:'', name:'Summarizer', desc:'Summarize any URL or pasted text', tag:'fetch_webpage', prompt:'Summarize this in bullet points, highlighting the key takeaways:\n\n[URL or paste text here]' },
     { icon:'', name:'Goal Planner', desc:'Break down a goal into actionable steps', tag:'reasoning', prompt:'I want to achieve this goal. Create a detailed action plan with milestones:\n\nGoal: [YOUR GOAL]' },
     { icon:'', name:'Translate & Adapt', desc:'Translate and culturally adapt content', tag:'reasoning', prompt:'Translate this to [TARGET LANGUAGE] and culturally adapt it for that audience:\n\n[TEXT TO TRANSLATE]' },
-  ],
-  b20: [
-    { icon:'', name:'Deploy B20 Token', desc:'Step-by-step guide to deploy a B20 token on Base', tag:'b20 + web_search', prompt:'I want to deploy a B20 token on Base (Beryl upgrade). Guide me step by step:\n\nToken name: [NAME]\nSymbol: [SYMBOL]\nVariant: [Asset or Stablecoin]\nSupply cap: [AMOUNT or none]\nDecimals: [NUMBER]\n\nInclude: deployment steps, role setup, and how to verify on Basescan.' },
-    { icon:'', name:'B20 vs ERC-20', desc:'Compare B20 and ERC-20 — when to use which', tag:'web_search + fetch', prompt:'Compare B20 (Base native token standard) vs standard ERC-20. Search for the latest docs and explain: key differences, performance, compliance features, and when I should choose B20 over ERC-20.' },
-    { icon:'', name:'B20 Stablecoin Setup', desc:'Deploy a compliant fiat-backed stablecoin with B20', tag:'b20', prompt:'Walk me through deploying a B20 Stablecoin variant on Base:\n\nCurrency: [USD/EUR/etc]\nIssuer name: [NAME]\n\nInclude: freeze/seize setup, transfer policies, role assignments, and compliance checklist.' },
-    { icon:'', name:'Audit B20 Roles', desc:'Check role assignments and policies for a B20 token', tag:'base_call_contract + web_search', prompt:'Audit the roles and transfer policies for this B20 token on Base:\n\nToken address: [ADDRESS]\n\nCheck: who has mint/burn/pause roles, what transfer policies are active, and flag any security concerns.' },
   ],
 };
 
@@ -2277,7 +2251,7 @@ function newChat(){
   chatHistory = [];
   localStorage.removeItem('orlix_active_chat');
   const cm = document.getElementById('chatMessages');
-  cm.innerHTML = '<div class="chat-empty" id="chatEmpty"><div class="chat-empty-ico"><svg width="36" height="36" viewBox="0 0 20 20" fill="currentColor" style="color:var(--orange);opacity:.7"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg></div><div class="chat-empty-title">Orlix Playground</div><div class="chat-empty-sub">Select a model above and start chatting — or try one of these:</div><div class="chat-starters"><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">⛓</span>What is the B20 token standard on Base?</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">📝</span>Write a simple ERC-20 contract in Solidity</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">🤖</span>What can Orlix AI do for my project?</button></div></div>';
+  cm.innerHTML = '<div class="chat-empty" id="chatEmpty"><div class="chat-empty-ico"><svg width="36" height="36" viewBox="0 0 20 20" fill="currentColor" style="color:var(--orange);opacity:.7"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg></div><div class="chat-empty-title">Orlix Playground</div><div class="chat-empty-sub">Select a model above and start chatting — or try one of these:</div><div class="chat-starters"><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">⛓</span>What can I do onchain on Robinhood Chain?</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">📝</span>Write a simple ERC-20 contract in Solidity</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">🤖</span>What can Orlix AI do for my project?</button></div></div>';
   renderHistoryList();
   showView('playground');
 }
@@ -2465,9 +2439,9 @@ async function sendChat(){
     } catch {}
   }
   if (walletAddr) systemWithMemory += `\n\n## User Wallet\nConnected wallet address: ${walletAddr}\nUse this as wallet_address in all onchain tool calls — do NOT ask the user for their address.`;
-  const pgChain = (document.getElementById('pgChainSel') || {}).value || 'base';
-  const pgChainName = { base: 'Base', arbitrum: 'Arbitrum', robinhood: 'Robinhood Chain' }[pgChain] || 'Base';
-  systemWithMemory += `\n\n## Default Chain\nThe user selected ${pgChainName} as the active chain. For onchain read tools (base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info) pass chain:'${pgChain}' by default. Only override when the user explicitly names a different chain. Note: token deploys (B20) and swaps remain Base-only.`;
+  const pgChain = (document.getElementById('pgChainSel') || {}).value || 'robinhood';
+  const pgChainName = { robinhood: 'Robinhood Chain' }[pgChain] || 'Robinhood Chain';
+  systemWithMemory += `\n\n## Active Chain\nOrlix runs on ${pgChainName}. For onchain read tools (base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info) pass chain:'robinhood' by default.`;
   if (userSoul)  systemWithMemory += '\n\n## Your Soul (Identity & Worldview)\n' + userSoul;
   if (userGoals) systemWithMemory += '\n\n## User Goals & Memory\n' + userGoals;
   systemWithMemory += buildSkillContext(text);
@@ -2607,7 +2581,7 @@ chatInput.addEventListener('keydown',e=>{
 document.getElementById('pgClearBtn').addEventListener('click',()=>{
   chatHistory=[];totalTokens=0;
   pendingImages=[];renderImgPreview();
-  chatMessages.innerHTML='<div class="chat-empty" id="chatEmpty"><div class="chat-empty-ico"><svg width="36" height="36" viewBox="0 0 20 20" fill="currentColor" style="color:var(--orange);opacity:.7"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg></div><div class="chat-empty-title">Orlix Playground</div><div class="chat-empty-sub">Select a model above and start chatting — or try one of these:</div><div class="chat-starters"><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">⛓</span>What is the B20 token standard on Base?</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">📝</span>Write a simple ERC-20 contract in Solidity</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">🤖</span>What can Orlix AI do for my project?</button></div></div>';
+  chatMessages.innerHTML='<div class="chat-empty" id="chatEmpty"><div class="chat-empty-ico"><svg width="36" height="36" viewBox="0 0 20 20" fill="currentColor" style="color:var(--orange);opacity:.7"><path d="M10 2c-.35 3-1.6 5.5-4 6.8 2.4 1.3 3.65 3.8 4 6.8.35-3 1.6-5.5 4-6.8-2.4-1.3-3.65-3.8-4-6.8z"/></svg></div><div class="chat-empty-title">Orlix Playground</div><div class="chat-empty-sub">Select a model above and start chatting — or try one of these:</div><div class="chat-starters"><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">⛓</span>What can I do onchain on Robinhood Chain?</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">📝</span>Write a simple ERC-20 contract in Solidity</button><button class="chat-starter" onclick="sendStarter(this)"><span class="chat-starter-ico">🤖</span>What can Orlix AI do for my project?</button></div></div>';
 });
 
 // ── IMAGE UPLOAD ─────────
@@ -2701,13 +2675,13 @@ document.getElementById('bkSaveProxy').addEventListener('click',()=>{
 document.getElementById('testPingBtn').addEventListener('click', async()=>{
   const el = document.getElementById('diagResult');
   el.style.color='var(--dim)';
-  el.textContent = 'Testing /api/b20...';
+  el.textContent = 'Testing /api/ping...';
   try{
-    const r = await fetch('/api/b20?action=info');
-    const data = await r.json();
-    if(r.ok){ el.style.color='var(--green)'; el.textContent='✓ /api/b20 OK ('+r.status+')\nstandard: '+data.standard+', network: '+data.network+'\n\nVercel functions are deployed and working!'; }
-    else{ el.style.color='var(--amber)'; el.textContent='✗ /api/b20 returned '+r.status; }
-  }catch(e){ el.style.color='#ff6b6b'; el.textContent='✗ /api/b20 failed: '+e.message+'\n\nVercel function not deployed. Redeploy on Vercel dashboard.'; }
+    const r = await fetch('/api/ping');
+    const data = await r.json().catch(()=>({}));
+    if(r.ok){ el.style.color='var(--green)'; el.textContent='✓ /api/ping OK ('+r.status+')\n\nVercel functions are deployed and working!'; }
+    else{ el.style.color='var(--amber)'; el.textContent='✗ /api/ping returned '+r.status; }
+  }catch(e){ el.style.color='#ff6b6b'; el.textContent='✗ /api/ping failed: '+e.message+'\n\nVercel function not deployed. Redeploy on Vercel dashboard.'; }
 });
 
 document.getElementById('testChatBtn').addEventListener('click', async()=>{
@@ -2884,8 +2858,8 @@ function renderTxCard(id, tx) {
   const typeMap = { transfer:'Send', swap:'Swap', lend:'Supply', borrow:'Borrow', repay:'Repay', withdraw:'Withdraw', approve:'Approve' };
   const typeLabel = typeMap[tx.type] || tx.type || 'Transaction';
   const protocol = tx.protocol || tx.type || '';
-  const desc = tx.description || `${typeLabel} on Base`;
-  const chainId = tx.chainId || tx.chain_id || 8453;
+  const desc = tx.description || `${typeLabel} on Robinhood Chain`;
+  const chainId = tx.chainId || tx.chain_id || 4663;
   const wallet = tx.wallet || '';
 
   let rows = '';
@@ -2900,7 +2874,7 @@ function renderTxCard(id, tx) {
   if (tx.to) rows += `<div class="tx-card-row"><span class="tx-card-label">To</span><span class="tx-card-val">${esc(tx.to)}</span></div>`;
   if (tx.gas_fee_eth) rows += `<div class="tx-card-row"><span class="tx-card-label">Gas fee</span><span class="tx-card-val">~${esc(String(tx.gas_fee_eth))} ETH</span></div>`;
   else if (tx.gas_fee_usd) rows += `<div class="tx-card-row"><span class="tx-card-label">Gas fee</span><span class="tx-card-val">~$${esc(String(tx.gas_fee_usd))}</span></div>`;
-  rows += `<div class="tx-card-row"><span class="tx-card-label">Network</span><span class="tx-card-val">Base Mainnet (${chainId})</span></div>`;
+  rows += `<div class="tx-card-row"><span class="tx-card-label">Network</span><span class="tx-card-val">Robinhood Chain (${chainId})</span></div>`;
   const stepCount = txList.length > 1 ? ` · ${txList.length} txns` : '';
 
   return `<div class="tx-card" id="card-${txId}">
@@ -2911,7 +2885,7 @@ function renderTxCard(id, tx) {
     </div>
     <div class="tx-card-body">${rows}</div>
     <div style="font-size:.67rem;color:var(--text-3);padding:6px 16px 0;display:flex;align-items:center;gap:6px"><span style="color:rgba(0,82,255,.7)">⚠</span> Review all details. Blockchain transactions are irreversible.</div>
-    <button class="tx-sign-btn" id="sign-${txId}" onclick="signTx('${txId}')">⬡ Sign &amp; Execute on Base</button>
+    <button class="tx-sign-btn" id="sign-${txId}" onclick="signTx('${txId}')">⬡ Sign &amp; Execute on Robinhood Chain</button>
   </div>`;
 }
 
@@ -2942,26 +2916,26 @@ async function signTx(txId) {
       return;
     }
 
-    // Switch to Base Mainnet (chainId 8453 = 0x2105)
-    btn.textContent = 'Switching to Base…';
+    // Switch to Robinhood Chain (chainId 4663 = 0x1237)
+    btn.textContent = 'Switching to Robinhood Chain…';
     try {
-      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2105' }] });
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1237' }] });
     } catch (swErr) {
       if (swErr.code === 4902) {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
-          params: [{ chainId: '0x2105', chainName: 'Base', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://mainnet.base.org'], blockExplorerUrls: ['https://basescan.org'] }]
+          params: [{ chainId: '0x1237', chainName: 'Robinhood Chain', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://rpc.mainnet.chain.robinhood.com/'], blockExplorerUrls: ['https://robinhoodchain.blockscout.com'] }]
         });
       } else {
-        throw new Error('Please manually switch your wallet to Base network, then try again.');
+        throw new Error('Please manually switch your wallet to Robinhood Chain, then try again.');
       }
     }
 
-    // Verify we are actually on Base before sending
+    // Verify we are actually on Robinhood Chain before sending
     const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
-    if (currentChain !== '0x2105') {
+    if (currentChain !== '0x1237') {
       btn.disabled = false;
-      btn.textContent = `Wrong network (${currentChain}) — please switch to Base in your wallet, then click again`;
+      btn.textContent = `Wrong network (${currentChain}) — please switch to Robinhood Chain in your wallet, then click again`;
       btn.classList.add('error');
       return;
     }
@@ -2984,8 +2958,8 @@ async function signTx(txId) {
     }
 
     btn.classList.add('success');
-    btn.textContent = `Submitted ✓ — ${lastHash ? lastHash.slice(0, 12) + '…' : 'view on BaseScan'}`;
-    btn.onclick = () => window.open(`https://basescan.org/tx/${lastHash}`, '_blank');
+    btn.textContent = `Submitted ✓ — ${lastHash ? lastHash.slice(0, 12) + '…' : 'view on Blockscout'}`;
+    btn.onclick = () => window.open(`https://robinhoodchain.blockscout.com/tx/${lastHash}`, '_blank');
     btn.disabled = false;
   } catch (e) {
     btn.disabled = false;
@@ -3403,17 +3377,9 @@ Use these tools proactively — never wait to be asked:
 - web_search: live internet search
 - fetch_webpage: read any public URL
 - github_repo_info: GitHub metadata and stats
-- base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info: onchain read tools — each accepts an optional chain param ('base' default, 'arbitrum', or 'robinhood'); pass chain:'arbitrum' to read Arbitrum wallet balances, gas, tx, blocks
-- dexscreener_search: search any token on Base, Robinhood Chain, or Arbitrum by name/symbol
-- dexscreener_token: full market data (price, liq, vol, txns) for a token address on Base, Robinhood Chain, or Arbitrum
-- flaunch_new_tokens: newest meme token launches on Flaunch/Base
-- flaunch_top_tokens: top tokens by market cap on Flaunch
-- uniswap_quote: get best swap price on Base via Odos (works for any token pair)
-- uniswap_prepare_swap: prepare complete swap transaction(s) via Odos — returns approve+swap for ERC20 inputs, single tx for ETH input
-- flaunch_prepare_launch: prepare unsigned tx to launch a new token on Flaunch
-- moonwell_markets: lending/borrow APY for all assets on Moonwell Base
-- moonwell_user_position: user's supply/borrow positions + health factor on Moonwell
-- moonwell_prepare_supply: prepare unsigned supply tx for Moonwell lending
+- base_get_eth_balance / base_get_gas_price / base_get_transaction / base_get_latest_block / base_get_token_balance / base_get_network_info / base_erc20_info: onchain read tools for Robinhood Chain (chain:'robinhood' — chain ID 4663) — wallet balances, gas, transactions, blocks, ERC-20 info
+- dexscreener_search: search any token on Robinhood Chain by name/symbol
+- dexscreener_token: full market data (price, liq, vol, txns) for a token address on Robinhood Chain
 
 Never say "I can't browse" or "I don't have real-time data." Use the tools.
 
@@ -3430,38 +3396,18 @@ When asked to build/make/create any app, website, game, tool, or UI:
 - Do not truncate. Do not say "here's a start" or "partial code". Full code only.
 - After the code block you may add 1-2 lines of explanation max.
 
-## Base Onchain Transactions
-When the user wants to transfer, swap, lend, borrow, launch a token, or any onchain action on Base:
+## Robinhood Chain Onchain Transactions
+When the user wants to transfer ETH or make an onchain action on Robinhood Chain (chain ID 4663):
 
-**IMPORTANT: Always use the user's connected wallet address (from ## User Wallet above). NEVER call get_wallets from Base MCP — that returns a different server-managed wallet, not the user's browser wallet.**
+**IMPORTANT: Always use the user's connected wallet address (from ## User Wallet above).**
 
-**Swap flow:**
-1. If token addresses are unknown, use dexscreener_search to find them first.
-2. ALWAYS check token_in_decimals: ETH/WETH/most tokens=18, USDC/USDT=6. Use base_erc20_info if unsure. Wrong decimals = wrong amount.
-3. Call uniswap_quote to show the user the expected output.
-4. Call uniswap_prepare_swap with token_in_decimals explicitly set.
-5. Output the full tool result:
-\`\`\`transaction
-{PASTE_FULL_TOOL_RESULT_HERE}
-\`\`\`
-For ERC20 inputs (non-ETH): result has 2 transactions — approve then swap. Tell user to sign BOTH in order when the card shows "2 txns".
-Common Base addresses: ETH=0x0000000000000000000000000000000000000000, USDC=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913, WETH=0x4200000000000000000000000000000000000006
-
-**Supply/Lend flow:**
-1. Call moonwell_prepare_supply with the user's wallet address.
-2. Output the full tool result as a transaction block.
-
-**Launch token flow:**
-1. Call flaunch_prepare_launch with the user's wallet address.
-2. Output the full tool result as a transaction block.
-
-**ETH Transfer (no DeFi protocol):**
+**ETH Transfer:**
 1. Check balance with base_get_eth_balance. Check gas with base_get_gas_price.
 2. Output in this EXACT format:
 \`\`\`transaction
-{"type":"transfer","description":"Send 0.01 ETH to 0x1234\u2026","to":"0xRECIPIENT","value":"10000000000000000","data":"0x","gasLimit":"21000","chainId":8453}
+{"type":"transfer","description":"Send 0.01 ETH to 0x1234\u2026","to":"0xRECIPIENT","value":"10000000000000000","data":"0x","gasLimit":"21000","chainId":4663}
 \`\`\`
-NEVER make up addresses. value must be in wei. NEVER invent calldata.`;
+NEVER make up addresses. value must be in wei. NEVER invent calldata. Token swaps and DeFi write-actions are not available yet on Robinhood Chain — use the read tools for balances, tokens, and market data.`;
 
 // ── TOKEN ANALYZER ─────────
 async function runAnalysis() {
@@ -3480,7 +3426,7 @@ async function runAnalysis() {
   result.innerHTML = '<div class="analyzing-spinner"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span><span style="margin-left:6px">Fetching on-chain data + AI analysis…</span></div>';
 
   try {
-    const chain = document.getElementById('analyzerChain')?.value || 'base';
+    const chain = document.getElementById('analyzerChain')?.value || 'robinhood';
     const r = await fetch('/api/analyze?address=' + address + '&chain=' + chain);
     const data = await r.json();
     if (data.error) throw new Error(data.error);
@@ -3640,7 +3586,7 @@ function renderAnalysisResult(data) {
       <div class="ta-ai-content">${aiHtml}</div>
     </div>
 
-    <div style="font-size:.6rem;color:var(--dim-2);text-align:right">${new Date(data.timestamp).toLocaleString()} · Base Mainnet</div>
+    <div style="font-size:.6rem;color:var(--dim-2);text-align:right">${new Date(data.timestamp).toLocaleString()} · Robinhood Chain</div>
   </div>`;
 }
 
@@ -3768,7 +3714,7 @@ async function addWatcherTx(tx, block) {
       ${isIn ? 'From: ' + esc(tx.from?.slice(0,10) + '...' + tx.from?.slice(-6)) : ''}
       ${isOut ? 'To: ' + esc((tx.to || 'Contract')?.slice(0,10) + '...' + (tx.to || '')?.slice(-6)) : ''}
     </div>
-    <a class="tx-hash-link" href="https://basescan.org/tx/${tx.hash}" target="_blank" rel="noopener">
+    <a class="tx-hash-link" href="https://robinhoodchain.blockscout.com/tx/" target="_blank" rel="noopener">
       ${tx.hash?.slice(0,16)}... ↗
     </a>
     <div class="tx-ai-explain" id="explain-${tx.hash?.slice(2,10)}">Generating AI explanation…</div>
@@ -3797,7 +3743,7 @@ async function addWatcherTx(tx, block) {
 
 async function getAITxExplanation(tx, ethVal, typeLabel, isIn, isOut) {
   try {
-    const prompt = `In one sentence, explain this Base network transaction in plain English:
+    const prompt = `In one sentence, explain this Robinhood Chain transaction in plain English:
 - Type: ${typeLabel}
 - Value: ${ethVal} ETH
 - From: ${tx.from}
@@ -3818,7 +3764,7 @@ async function getAITxExplanation(tx, ethVal, typeLabel, isIn, isOut) {
     const text = data.content?.[0]?.text || data.choices?.[0]?.message?.content || '';
     return text.trim() || 'Transaction detected.';
   } catch {
-    return 'Transaction detected on Base network.';
+    return 'Transaction detected on Robinhood Chain.';
   }
 }
 
@@ -3863,7 +3809,7 @@ function songFmtChg(n){if(n==null)return null;return(n>=0?'+':'')+n.toFixed(1)+'
 function songRenderTokenChip(token){
   if(!token?.symbol) return;
   const [clr,bg] = songLogoColor(token.symbol);
-  const logoUrl = `https://dd.dexscreener.com/ds-data/tokens/base/${(token.address||'').toLowerCase()}.png`;
+  const logoUrl = `https://dd.dexscreener.com/ds-data/tokens/robinhood/${(token.address||'').toLowerCase()}.png`;
   const chg = songFmtChg(token.priceChange24h);
   const chgCls = token.priceChange24h>0?'s-pos':token.priceChange24h<0?'s-neg':'';
   const chip = document.getElementById('songTokenChip');
@@ -3884,7 +3830,7 @@ function songRenderLyrics(text){
 }
 
 function songShowLoading(query){
-  const msgs=['Fetching on-chain data…',`Analyzing $${query.toUpperCase().replace('$','')} on Base…`,'Writing bars…','Cooking the beat…'];
+  const msgs=['Fetching on-chain data…',`Analyzing $${query.toUpperCase().replace('$','')} on Robinhood Chain…`,'Writing bars…','Cooking the beat…'];
   let i=0;
   const el=document.getElementById('songLyricsBodyWrap');
   el.innerHTML=`<div class="s-loading-state"><div class="s-loading-rings"><div class="s-ring s-ring1"></div><div class="s-ring s-ring2"></div><div class="s-ring s-ring3"></div></div><div class="s-loading-label" id="songLoadMsg">${msgs[0]}</div><div class="s-loading-sub">powered by Orlix AI</div></div>`;
@@ -4077,7 +4023,7 @@ function shareSongOnX(){
   if(!songCurrentLyrics)return;
   const sym=songCurrentToken?.symbol||'TOKEN';
   const lines=songCurrentLyrics.split('\n').filter(l=>l.trim()&&!/^\[/.test(l.trim())).slice(0,4).join('\n');
-  const tweet=`🎵 AI just wrote a ${songSelectedGenre.toUpperCase()} song for $${sym} on Base\n\n${lines}\n\n(fr tho check the chart)\n\norlixai.xyz/app#song`;
+  const tweet=`🎵 AI just wrote a ${songSelectedGenre.toUpperCase()} song for $ on Robinhood Chain\n\n${lines}\n\n(fr tho check the chart)\n\norlixai.xyz/app#song`;
   window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(tweet),'_blank','noopener');
 }
 function copySongLyrics(){
@@ -4291,19 +4237,11 @@ document.getElementById('previewCloseBtn').addEventListener('click', closePrevie
     gateShow('connect');
   };
 
-  // On load: skip gate if already verified, else auto-check connected wallets
-  (async function init() {
-    if (sessionStorage.getItem(SESS_KEY) === '1') {
-      document.getElementById('accessGate').remove();
-      return;
-    }
-    if (window.ethereum) {
-      try {
-        const accts = await window.ethereum.request({ method: 'eth_accounts' });
-        if (accts && accts[0]) { await gateCheckBalance(accts[0]); return; }
-      } catch {}
-    }
-    gateShow('connect');
+  // Relaunch on Robinhood Chain: token gating is paused until the new token
+  // goes live, so access is open. Remove the gate on load.
+  (function init() {
+    const gate = document.getElementById('accessGate');
+    if (gate) gate.remove();
   })();
 })();
 

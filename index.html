@@ -3,27 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="base:app_id" content="6a3a2afd1f81a7e95b2326fb">
-<title>Orlix AI — Agentic AI Playground on Base</title>
-<meta name="description" content="Orlix AI is an agentic playground on Base. Search the web, fetch URLs, analyze GitHub repos, query Base blockchain live — all from one interface. Powered by Aeon Framework.">
+<title>Orlix AI — Agentic AI on Robinhood Chain</title>
+<meta name="description" content="Orlix AI is an agentic playground on Robinhood Chain. Search the web, fetch URLs, analyze GitHub repos, query Robinhood Chain live — all from one interface. Powered by Aeon Framework.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orlixai.xyz/">
-<meta property="og:title" content="Orlix AI — Agentic AI Playground on Base">
-<meta property="og:description" content="Search the web, fetch URLs, analyze GitHub repos, query Base blockchain live. 16 skill shortcuts. Powered by Aeon Framework.">
+<meta property="og:title" content="Orlix AI — Agentic AI on Robinhood Chain">
+<meta property="og:description" content="Search the web, fetch URLs, analyze GitHub repos, query Robinhood Chain live. Powered by Aeon Framework.">
 <meta property="og:image" content="https://orlixai.xyz/og-image.png">
 <meta property="og:image:secure_url" content="https://orlixai.xyz/og-image.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Orlix AI — Agentic AI Playground on Base">
+<meta property="og:image:alt" content="Orlix AI — Agentic AI on Robinhood Chain">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Orlix AI — Agentic AI Playground on Base">
-<meta name="twitter:description" content="Search the web, fetch URLs, analyze GitHub repos, query Base blockchain live. 16 skill shortcuts. Powered by Aeon Framework.">
+<meta name="twitter:title" content="Orlix AI — Agentic AI on Robinhood Chain">
+<meta name="twitter:description" content="Search the web, fetch URLs, analyze GitHub repos, query Robinhood Chain live. Powered by Aeon Framework.">
 <meta name="twitter:image" content="https://orlixai.xyz/og-image.png">
-<meta name="twitter:image:alt" content="Orlix AI — Agentic AI Playground on Base">
+<meta name="twitter:image:alt" content="Orlix AI — Agentic AI on Robinhood Chain">
 <meta name="theme-color" content="#050505">
 
 <link rel="preload" href="/assets/cinematic/fonts/JetBrainsMono-600.woff2" as="font" type="font/woff2" crossorigin>
@@ -46,7 +45,7 @@
     <div class="loader-meta">
       <span class="loader-count" id="loaderCount">000</span>
       <span class="loader-bar"><span class="loader-bar-fill" id="loaderBar"></span></span>
-      <span class="loader-note">MULTI-CHAIN AI TERMINAL</span>
+      <span class="loader-note">ROBINHOOD AI TERMINAL</span>
     </div>
   </div>
   <div class="loader-curtain lc-top"></div>
@@ -65,7 +64,7 @@
 
 <!-- ══ Header ══ -->
 <header class="head">
-  <a class="head-brand" href="/" data-hover>ORLIX<sup>®</sup></a>
+  <a class="head-brand" href="/" data-hover><img src="/icon-192.png" alt="" class="head-mark" width="26" height="26">ORLIX<sup>®</sup></a>
   <div class="head-chapter" id="chapterTag"><span class="hc-num" id="chapterNum">[00]</span><span class="hc-name" id="chapterName">TERMINAL</span></div>
   <button class="head-menu" id="menuBtn" data-hover aria-label="Open menu" aria-expanded="false">
     <span class="hm-txt">MENU</span>
@@ -79,14 +78,11 @@
   <div class="menu-inner">
     <ol class="menu-list">
       <li><a href="https://app.orlixai.xyz"        data-hover data-cursor="RUN"><em>01</em><span class="ml-word">./launch-app</span><small>AI chat · onchain analytics</small></a></li>
-      <li><a href="https://b20.orlixai.xyz"        data-hover data-cursor="RUN"><em>02</em><span class="ml-word">./b20-studio</span><small>One-click token deployment</small></a></li>
-      <li><a href="/base-city"  data-hover data-cursor="FLY"><em>03</em><span class="ml-word">./base-city</span><small>Interactive 3D city</small></a></li>
-      <li><a href="/token"      data-hover data-cursor="VIEW"><em>04</em><span class="ml-word">./$orlix</span><small>The Orlix token</small></a></li>
-      <li><a href="https://docs.orlixai.xyz"       data-hover data-cursor="READ"><em>05</em><span class="ml-word">./docs</span><small>Documentation</small></a></li>
-      <li><a href="/dashboard"  data-hover data-cursor="OPEN"><em>06</em><span class="ml-word">./dashboard</span><small>Classic overview</small></a></li>
+      <li><a href="https://docs.orlixai.xyz"       data-hover data-cursor="READ"><em>02</em><span class="ml-word">./docs</span><small>Documentation</small></a></li>
+      <li><a href="/dashboard"  data-hover data-cursor="OPEN"><em>03</em><span class="ml-word">./dashboard</span><small>Classic overview</small></a></li>
     </ol>
     <div class="menu-foot">
-      <span>BASE · ROBINHOOD · ARBITRUM</span>
+      <span>ROBINHOOD CHAIN</span>
       <span>ORLIXAI.XYZ — MMXXVI</span>
     </div>
   </div>
@@ -96,15 +92,15 @@
 
   <!-- ══ CH 00 · Terminal ══ -->
   <section class="scene scene-hero" id="hero" data-chapter="[00]" data-chapter-name="TERMINAL">
-    <p class="hero-kicker" data-intro><span class="hk-prompt">agent@base:~/orlix$</span>&nbsp;<span class="hk-cmd" id="heroCmd" data-type="./orlix --terminal --chains=base,robinhood,arbitrum"></span><span class="caret"></span></p>
+    <p class="hero-kicker" data-intro><span class="hk-prompt">agent@robinhood:~/orlix$</span>&nbsp;<span class="hk-cmd" id="heroCmd" data-type="./orlix --terminal --chain=robinhood"></span><span class="caret"></span></p>
     <h1 class="hero-title" id="heroTitle" aria-label="ORLIX">
       <span class="ht-char">O</span><span class="ht-char">R</span><span class="ht-char">L</span><span class="ht-char">I</span><span class="ht-char">X</span><span class="ht-caret" aria-hidden="true"></span>
     </h1>
     <div class="hero-sub" data-intro>
-      <p><b>19 frontier models. 2 chains.</b><br>One interface for onchain intelligence, token analysis, and contract deployment.</p>
+      <p><b>19 frontier models. Robinhood Chain.</b><br>One interface for onchain intelligence, token analysis, and live blockchain data.</p>
     </div>
     <div class="hero-meta" data-intro>
-      <span>19 MODELS</span><i></i><span>2 CHAINS</span><i></i><span>&lt;1S LATENCY</span><i></i><span>24/7 UPTIME</span>
+      <span>19 MODELS</span><i></i><span>ROBINHOOD CHAIN</span><i></i><span>&lt;1S LATENCY</span><i></i><span>24/7 UPTIME</span>
     </div>
     <div class="hero-cue" data-intro>
       <span class="cue-line"></span>
@@ -116,7 +112,7 @@
   <section class="scene scene-manifesto" id="manifesto" data-chapter="[01]" data-chapter-name="MANIFESTO">
     <div class="mani-pin">
       <p class="mani-line" data-mani><span class="mani-prompt">&gt;</span>19 frontier models.</p>
-      <p class="mani-line" data-mani><span class="mani-prompt">&gt;</span>2 chains.<br>One interface.</p>
+      <p class="mani-line" data-mani><span class="mani-prompt">&gt;</span>Robinhood Chain.<br>One interface.</p>
       <p class="mani-line mani-accent" data-mani><span class="mani-prompt">&gt;</span>Your personal AI<br>operating system.</p>
     </div>
   </section>
@@ -138,7 +134,7 @@
                   <span class="pv-bar" style="--h:38%"></span><span class="pv-bar" style="--h:72%"></span><span class="pv-bar" style="--h:54%"></span><span class="pv-bar" style="--h:91%"></span><span class="pv-bar" style="--h:63%"></span><span class="pv-bar" style="--h:82%"></span><span class="pv-bar" style="--h:47%"></span>
                   <span class="pv-line"></span>
                 </div>
-                <p>AI chat, onchain analytics, wallet monitoring, and deployment tools in one terminal. Native tools for Base, Robinhood Chain, and Arbitrum.</p>
+                <p>AI chat, onchain analytics, and wallet monitoring in one terminal. Native live tools for Robinhood Chain.</p>
                 <a class="pc-link" href="https://app.orlixai.xyz" data-hover data-cursor="RUN">LAUNCH TERMINAL <b>→</b></a>
               </div>
             </div>
@@ -151,18 +147,18 @@
           <div class="panel-card" data-tilt>
             <div class="pc-glare"></div>
             <div class="pc-body">
-              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — deploy.sh</span></div>
+              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — onchain.sh</span></div>
               <div class="pc-main">
-                <span class="pc-tag">B20 STUDIO</span>
+                <span class="pc-tag">ONCHAIN READS</span>
                 <div class="pc-visual pv-create" aria-hidden="true">
-                  <code>&gt; b20 deploy --name MyToken --symbol MTK<br>&gt; supply 1,000,000 --standard B20<br>&gt; deployed to Base <b>✓</b></code>
+                  <code>&gt; orlix balance 0xabc… --chain robinhood<br>&gt; token RHOOD --holders --supply<br>&gt; block 1,284,993 · finalized <b>✓</b></code>
                 </div>
-                <p>One-click token deployment. Deploy B20-standard tokens on Base. Built-in AI config, gas estimation, and verification.</p>
-                <a class="pc-link" href="https://b20.orlixai.xyz" data-hover data-cursor="RUN">DEPLOY TO BASE <b>→</b></a>
+                <p>Live Robinhood Chain reads. Query balances, tokens, contracts, and blocks in natural language — the AI calls the RPC for you.</p>
+                <a class="pc-link" href="https://app.orlixai.xyz" data-hover data-cursor="RUN">QUERY THE CHAIN <b>→</b></a>
               </div>
             </div>
           </div>
-          <h2 class="panel-title"><span data-pt>CRE</span><span data-pt>ATE</span></h2>
+          <h2 class="panel-title"><span data-pt>ONC</span><span data-pt>HAIN</span></h2>
         </article>
 
         <article class="panel" data-grade="0.65">
@@ -170,19 +166,19 @@
           <div class="panel-card" data-tilt>
             <div class="pc-glare"></div>
             <div class="pc-body">
-              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — base-city.gl</span></div>
+              <div class="pc-bar"><i></i><i></i><i></i><span>orlix — wallet.log</span></div>
               <div class="pc-main">
-                <span class="pc-tag">BASE CITY</span>
-                <div class="pc-visual pv-city" aria-hidden="true">
-                  <span class="pv-tower" style="--h:52%;--d:0s"></span><span class="pv-tower" style="--h:78%;--d:.3s"></span><span class="pv-tower" style="--h:40%;--d:.6s"></span><span class="pv-tower" style="--h:92%;--d:.15s"></span><span class="pv-tower" style="--h:64%;--d:.45s"></span>
-                  <span class="pv-moon"></span>
+                <span class="pc-tag">WALLET MONITOR</span>
+                <div class="pc-visual pv-analyze" aria-hidden="true">
+                  <span class="pv-bar" style="--h:44%"></span><span class="pv-bar" style="--h:68%"></span><span class="pv-bar" style="--h:52%"></span><span class="pv-bar" style="--h:88%"></span><span class="pv-bar" style="--h:60%"></span><span class="pv-bar" style="--h:79%"></span><span class="pv-bar" style="--h:41%"></span>
+                  <span class="pv-line"></span>
                 </div>
-                <p>3D network visualization. Explore Base ecosystem as an interactive 3D city. Every building is a live protocol. 15×15 grid · 225 blocks · 60fps.</p>
-                <a class="pc-link" href="/base-city" data-hover data-cursor="FLY">ENTER THE CITY <b>→</b></a>
+                <p>Track any wallet on Robinhood Chain. Positions, PnL, and token flows — surfaced and explained by the AI in real time.</p>
+                <a class="pc-link" href="https://app.orlixai.xyz" data-hover data-cursor="RUN">TRACK A WALLET <b>→</b></a>
               </div>
             </div>
           </div>
-          <h2 class="panel-title"><span data-pt>EXP</span><span data-pt>LORE</span></h2>
+          <h2 class="panel-title"><span data-pt>WAL</span><span data-pt>LET</span></h2>
         </article>
 
         <article class="panel" data-grade="0.9">
@@ -218,9 +214,9 @@
           <p class="dl-sub">frontier AI models</p>
         </div>
         <div class="depth-layer" data-z="2">
-          <p class="dl-label"><b>[LAYER 02]</b> CHAINS</p>
-          <p class="dl-stat"><span class="count" data-count="2">0</span></p>
-          <p class="dl-sub">Base · Robinhood · Arbitrum</p>
+          <p class="dl-label"><b>[LAYER 02]</b> CHAIN</p>
+          <p class="dl-stat"><span class="count" data-count="1">0</span></p>
+          <p class="dl-sub">Robinhood Chain</p>
         </div>
         <div class="depth-layer" data-z="3">
           <p class="dl-label"><b>[LAYER 03]</b> LATENCY</p>
@@ -259,14 +255,13 @@
   <div class="cr-roll">
     <div class="cr-row"><span>PLATFORM</span><b>ORLIX AI</b></div>
     <div class="cr-row"><span>POWERED BY</span><b>AEON FRAMEWORK</b></div>
-    <div class="cr-row"><span>CHAINS</span><b>BASE + ROBINHOOD + ARBITRUM</b></div>
+    <div class="cr-row"><span>CHAIN</span><b>ROBINHOOD CHAIN</b></div>
     <div class="cr-row"><span>MODELS</span><b>19 FRONTIER MODELS</b></div>
     <div class="cr-row"><span>PROVIDERS</span><b>10 PROVIDERS</b></div>
-    <div class="cr-row"><span>TOKEN</span><b>$ORLIX</b></div>
     <div class="cr-row"><span>STATUS</span><b>ALL SYSTEMS OPERATIONAL</b></div>
   </div>
   <div class="cr-nav">
-    <a href="https://app.orlixai.xyz" data-hover>Launch App</a><a href="https://b20.orlixai.xyz" data-hover>B20</a><a href="/base-city" data-hover>Base City</a><a href="/token" data-hover>$ORLIX</a><a href="https://docs.orlixai.xyz" data-hover>Documentation</a><a href="/changelog" data-hover>Changelog</a><a href="/privacy" data-hover>Privacy Policy</a><a href="/terms" data-hover>Terms of Service</a>
+    <a href="https://app.orlixai.xyz" data-hover>Launch App</a><a href="/dashboard" data-hover>Dashboard</a><a href="https://docs.orlixai.xyz" data-hover>Documentation</a><a href="/changelog" data-hover>Changelog</a><a href="/privacy" data-hover>Privacy Policy</a><a href="/terms" data-hover>Terms of Service</a>
   </div>
   <div class="cr-social">
     <a href="https://x.com/orlixai" target="_blank" rel="noopener" data-hover data-cursor="OPEN">[ X ]</a>

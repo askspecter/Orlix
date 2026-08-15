@@ -93,7 +93,8 @@ body.has-cursor,body.has-cursor a,body.has-cursor button{cursor:none}
 /* ═══ Header ═══ */
 .head{position:fixed;top:0;left:0;right:0;z-index:120;display:flex;align-items:center;justify-content:space-between;
   padding:20px clamp(20px,4vw,48px);mix-blend-mode:difference}
-.head-brand{font-weight:600;font-size:.95rem;letter-spacing:.1em;color:#fff}
+.head-brand{display:inline-flex;align-items:center;gap:.5em;font-weight:600;font-size:.95rem;letter-spacing:.1em;color:#fff}
+.head-brand .head-mark{width:1.5em;height:1.5em;border-radius:.4em;display:block}
 .head-brand sup{font-size:.5em;font-weight:400;opacity:.6}
 .head-chapter{display:flex;gap:8px;font-size:.62rem;letter-spacing:.28em;color:#fff;opacity:.8}
 .hc-num{color:var(--ember-hot)}
