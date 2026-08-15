@@ -49,7 +49,7 @@ header.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
   background:linear-gradient(#050505f2,#05050599);border-bottom:1px solid var(--line-soft)}
 .top-in{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.14em;color:var(--ink)}
-.brand svg{width:30px;height:30px;border-radius:8px;flex:none}
+.brand svg,.brand img{width:30px;height:30px;border-radius:8px;flex:none;object-fit:cover}
 .brand b{font-size:.98rem}
 .brand sup{font-size:.5em;font-weight:400;color:var(--ink-3)}
 .top-nav{display:flex;align-items:center;gap:8px}
@@ -150,7 +150,7 @@ section.block{margin:52px 0}
 .chart-ph.hide{opacity:0;pointer-events:none}
 .chart-ph p{color:var(--ink-2);font-size:.85rem;max-width:40ch}
 .chart-ph .ph-mark{width:60px;height:60px;opacity:.9;animation:bob 2.4s var(--ease) infinite}
-.chart-ph .ph-mark svg{width:100%;height:100%;border-radius:14px}
+.chart-ph .ph-mark svg,.chart-ph .ph-mark img{width:100%;height:100%;border-radius:14px;object-fit:cover}
 @keyframes bob{50%{transform:translateY(-8px)}}
 
 /* token details */
@@ -189,7 +189,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 <header class="top">
   <div class="top-in">
     <a class="brand" href="/">
-      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#CFF605"/><path d="M115.53 115.53A198.66 198.66 0 1 1 115.53 396.47" fill="none" stroke="#0a0c07" stroke-width="53.25" stroke-linecap="round"/><polyline points="82.68,99.51 244.74,256 82.68,412.49" fill="none" stroke="#0a0c07" stroke-width="34.82" stroke-linecap="round" stroke-linejoin="round"/><rect x="281.86" y="226.56" width="10.75" height="79.36" fill="#0a0c07" rx="5.38"/><rect x="293.89" y="286.46" width="92.16" height="19.46" fill="#0a0c07" rx="6.49"/></svg>
+      <img src="/orlix-logo.png" alt="ORLIX" width="30" height="30">
       <b>ORLIX<sup>®</sup></b>
     </a>
     <div class="top-nav">
@@ -259,7 +259,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     <div class="chart-shell">
       <div class="chart-ph" id="chartPh">
         <div class="ph-mark" aria-hidden="true">
-          <svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#CFF605"/><path d="M115.53 115.53A198.66 198.66 0 1 1 115.53 396.47" fill="none" stroke="#0a0c07" stroke-width="53.25" stroke-linecap="round"/><polyline points="82.68,99.51 244.74,256 82.68,412.49" fill="none" stroke="#0a0c07" stroke-width="34.82" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <img src="/orlix-logo.png" alt="ORLIX">
         </div>
         <p>Live $ORLIX price, depth &amp; trades on Robinhood Chain — powered by Defined.fi.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
