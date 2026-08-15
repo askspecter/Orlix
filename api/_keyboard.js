@@ -18,7 +18,7 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
-const CHAINS = new Set(['base', 'robinhood', 'arbitrum']);
+const CHAINS = new Set(['robinhood']);
 
 function fmtUsd(n) {
   n = Number(n) || 0;
@@ -68,7 +68,7 @@ function compact(p) {
     liq:    fmtUsd(p.liquidity?.usd || 0),
     signal: sig.tag,
     note:   sig.note,
-    url:    `https://orlixai.xyz/b20`,
+    url:    `https://orlixai.xyz/app`,
     dex:    p.url || `https://dexscreener.com/${p.chainId}/${p.baseToken.address}`,
     // Ready-to-insert chat text — one tap on the keyboard commits this string.
     insert: `$${p.baseToken.symbol} ${fmtPrice(p.priceUsd)} (${ch != null ? (ch >= 0 ? '+' : '') + Number(ch).toFixed(1) + '%' : '—'} 24h) · via Orlix`,

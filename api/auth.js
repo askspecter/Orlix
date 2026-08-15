@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
       const r    = await fetch(`${BASE}/siwe/authenticate`, {
         method:  'POST',
         headers: clientHeaders(),
-        body:    JSON.stringify({ message, signature, chainId: chainId || 8453 }),
+        body:    JSON.stringify({ message, signature, chainId: chainId || 4663 }),
       });
       const data = await r.json();
       if (!r.ok) return res.status(r.status).json({ error: data.error || 'siwe-authenticate failed', raw: data });

@@ -1,5 +1,5 @@
 // x402 unified router — all paid endpoints in one serverless function
-// Route: GET|POST /api/x402?service=analyze|chat|song|b20|market|wallet
+// Route: GET|POST /api/x402?service=chat|market
 // Builder Code: bc_cxvityc7
 
 const { withX402 }           = require('./_x402guard');
@@ -7,7 +7,6 @@ const { getOrlixTier, withTier } = require('./_orlix-tier');
 
 // ── Existing core handlers ───────────────────────────────────────────────────
 const chatHandler    = require('./chat');
-const b20Handler     = require('./_b20-info');
 
 // ── Market handler ───────────────────────────────────────────────────────────
 const EXCLUDE = new Set(['USDT','USDC','DAI','WETH','WBTC','CBETH','USDBC','USDB','EURC','RETH','STETH','WSTETH','ETH','FRAX']);
@@ -21,7 +20,7 @@ const BASE_SEARCHES = [
 ];
 
 function validPair(p) {
-  return (p.chainId === 'base' || p.chainId === 'robinhood' || p.chainId === 'arbitrum') && !!p.baseToken?.address
+  return (p.chainId === 'robinhood') && !!p.baseToken?.address
     && !EXCLUDE.has((p.baseToken.symbol || '').toUpperCase())
     && (p.liquidity?.usd || 0) >= 5000;
 }
@@ -175,8 +174,7 @@ const walletHandler = async (req, res) => {
 // ── Service registry ─────────────────────────────────────────────────────────
 const SERVICES = {
   chat:    { amountUsdc: 0.002, description: 'Orlix AI chat — 19 frontier models',                 handler: chatHandler   },
-  b20:     { amountUsdc: 0.01,  description: 'B20 token standard info on Base + deployment guide',  handler: b20Handler    },
-  market:  { amountUsdc: 0.01,  description: 'Live Base market data — top tokens by volume',        handler: marketHandler },
+  market:  { amountUsdc: 0.01,  description: 'Live Robinhood Chain market data — top tokens by volume', handler: marketHandler },
 };
 
 // Pre-wrap each service with its x402 guard

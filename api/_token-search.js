@@ -1,4 +1,4 @@
-// /api/token-search — live DexScreener token search, Base + Robinhood Chain + Arbitrum
+// /api/token-search — live DexScreener token search, Robinhood Chain
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -32,7 +32,7 @@ function mapPair(p) {
     buys24h: p.txns?.h24?.buys || 0,
     sells24h: p.txns?.h24?.sells || 0,
     pairCreatedAt: p.pairCreatedAt || null,
-    pairUrl: p.url || `https://dexscreener.com/${p.chainId || 'base'}/${p.baseToken?.address}`,
+    pairUrl: p.url || `https://dexscreener.com/${p.chainId || 'robinhood'}/${p.baseToken?.address}`,
     dexId: p.dexId || 'unknown',
     pairName: `${p.baseToken?.symbol}/${p.quoteToken?.symbol || '?'}`,
   };
@@ -61,8 +61,8 @@ module.exports = async (req, res) => {
 
     const pairs = (data.pairs || []);
 
-    const SUPPORTED = new Set(['base', 'robinhood', 'arbitrum']);
-    const chain = SUPPORTED.has(req.query.chain) ? req.query.chain : 'base';
+    const SUPPORTED = new Set(['robinhood']);
+    const chain = SUPPORTED.has(req.query.chain) ? req.query.chain : 'robinhood';
     // Deduplicate by token address on selected chain, keep highest liquidity pair
     const tokenMap = {};
     for (const p of pairs) {

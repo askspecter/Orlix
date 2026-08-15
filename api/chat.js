@@ -2,7 +2,7 @@
 // Routes to providers:
 //   mimo-*   → api.xiaomimimo.com   (MIMO_API_KEY)
 //   venice-* → api.venice.ai        (VENICE_API_KEY) — OpenAI-compatible, uncensored, no data retention
-//   claude-* → llm.bankr.bot/v1/messages  (BANKR_LLM_KEY) — Anthropic format + Base MCP tools
+//   claude-* → llm.bankr.bot/v1/messages  (BANKR_LLM_KEY) — Anthropic format
 //   all else → llm.bankr.bot/v1/chat/completions (BANKR_LLM_KEY) — OpenAI-compatible
 
 const { checkLimits, allowedOrigin } = require('./_guard');
@@ -29,72 +29,72 @@ const ALLOWED_MODELS = new Set([
   'qwen3-coder', 'qwen3.7-plus', 'qwen3.6-flash',
 ]);
 
-// ── Tool definitions (Base MCP tools for Claude) ──────────────────────────────
+// ── Tool definitions (Robinhood Chain onchain read tools) ───────────────────────────────
 const ALL_TOOLS = [
   {
     name: 'base_get_eth_balance',
-    description: 'Get the ETH balance of a wallet address on Base, Arbitrum, or Robinhood Chain',
+    description: 'Get the ETH balance of a wallet address on Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
         address: { type: 'string', description: 'Ethereum wallet address (0x...)' },
-        chain:   { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+        chain:   { type: 'string', enum: ['robinhood'], description: 'Which chain to query — Robinhood Chain (chain ID 4663)' }
       },
       required: ['address']
     }
   },
   {
     name: 'base_get_gas_price',
-    description: 'Get the current gas price in gwei on Base, Arbitrum, or Robinhood Chain',
+    description: 'Get the current gas price in gwei on Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
-        chain: { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+        chain: { type: 'string', enum: ['robinhood'], description: 'Which chain to query — Robinhood Chain (chain ID 4663)' }
       }
     }
   },
   {
     name: 'base_get_transaction',
-    description: 'Get details of a transaction by its hash on Base, Arbitrum, or Robinhood Chain',
+    description: 'Get details of a transaction by its hash on Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
         tx_hash: { type: 'string', description: 'Transaction hash (0x...)' },
-        chain:   { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+        chain:   { type: 'string', enum: ['robinhood'], description: 'Which chain to query — Robinhood Chain (chain ID 4663)' }
       },
       required: ['tx_hash']
     }
   },
   {
     name: 'base_get_latest_block',
-    description: 'Get the latest block information (tx count, gas usage) on Base, Arbitrum, or Robinhood Chain',
+    description: 'Get the latest block information (tx count, gas usage) on Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
-        chain: { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+        chain: { type: 'string', enum: ['robinhood'], description: 'Which chain to query — Robinhood Chain (chain ID 4663)' }
       }
     }
   },
   {
     name: 'base_get_token_balance',
-    description: 'Get ERC20 token balance for a wallet address on Base, Arbitrum, or Robinhood Chain',
+    description: 'Get ERC20 token balance for a wallet address on Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
         wallet_address: { type: 'string', description: 'Wallet address to check' },
         token_address:  { type: 'string', description: 'ERC20 token contract address on the selected chain' },
-        chain:          { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+        chain:          { type: 'string', enum: ['robinhood'], description: 'Which chain to query — Robinhood Chain (chain ID 4663)' }
       },
       required: ['wallet_address', 'token_address']
     }
   },
   {
     name: 'base_get_network_info',
-    description: 'Get general network info (chain ID, latest block, gas price) for Base, Arbitrum, or Robinhood Chain',
+    description: 'Get general network info (chain ID, latest block, gas price) for Robinhood Chain',
     input_schema: {
       type: 'object',
       properties: {
-        chain: { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+        chain: { type: 'string', enum: ['robinhood'], description: 'Which chain to query — Robinhood Chain (chain ID 4663)' }
       }
     }
   },
@@ -135,7 +135,7 @@ const ALL_TOOLS = [
   },
   {
     name: 'dexscreener_search',
-    description: 'Search for tokens on DexScreener by name or symbol. Returns price, liquidity, volume, and market data for Base, Robinhood Chain, and Arbitrum tokens.',
+    description: 'Search for tokens on DexScreener by name or symbol. Returns price, liquidity, volume, and market data on Robinhood Chain.',
     input_schema: {
       type: 'object',
       properties: {
@@ -146,7 +146,7 @@ const ALL_TOOLS = [
   },
   {
     name: 'dexscreener_token',
-    description: 'Get full market data for a specific token on Base, Robinhood Chain, or Arbitrum: price, liquidity, volume, price changes 1h/6h/24h, buy/sell txns, market cap, FDV',
+    description: 'Get full market data for a specific token on Robinhood Chain: price, liquidity, volume, price changes 1h/6h/24h, buy/sell txns, market cap, FDV',
     input_schema: {
       type: 'object',
       properties: {
@@ -212,13 +212,13 @@ const ALL_TOOLS = [
   },
   {
     name: 'base_erc20_info',
-    description: 'Get ERC20 token details on Base, Arbitrum, or Robinhood Chain: name, symbol, decimals, total supply. Optionally check a wallet\'s balance of that token.',
+    description: 'Get ERC20 token details on Robinhood Chain: name, symbol, decimals, total supply. Optionally check a wallet\'s balance of that token.',
     input_schema: {
       type: 'object',
       properties: {
         token_address:  { type: 'string', description: 'ERC20 token contract address (0x...)' },
         wallet_address: { type: 'string', description: 'Optional: wallet address to check token balance for' },
-        chain:          { type: 'string', enum: ['base', 'arbitrum', 'robinhood'], description: 'Which chain to query — base (default), arbitrum, or robinhood' }
+        chain:          { type: 'string', enum: ['robinhood'], description: 'Which chain to query — Robinhood Chain (chain ID 4663)' }
       },
       required: ['token_address']
     }
@@ -271,21 +271,19 @@ const ALL_TOOLS = [
 ];
 
 // ── Base MCP tool executor ────────────────────────────────────────────────────
-const BASE_RPC = 'https://mainnet.base.org';
+const ROBINHOOD_RPC = 'https://rpc.mainnet.chain.robinhood.com/';
 
 // DexScreener chains Orlix surfaces in analytics/search.
-const SUPPORTED_CHAINS = new Set(['base', 'robinhood', 'arbitrum']);
-const CHAIN_LABELS = { base: 'Base', robinhood: 'Robinhood', arbitrum: 'Arbitrum' };
+const SUPPORTED_CHAINS = new Set(['robinhood']);
+const CHAIN_LABELS = { robinhood: 'Robinhood Chain' };
 
-// Onchain read tools (balance/gas/tx/block) can target any of these via a `chain` param.
+// Onchain read tools (balance/gas/tx/block) target Robinhood Chain.
 const CHAINS = {
-  base:      { id: 8453,  name: 'Base Mainnet',    rpc: BASE_RPC,                                   explorer: 'https://basescan.org',              bridge: 'https://bridge.base.org' },
-  arbitrum:  { id: 42161, name: 'Arbitrum One',    rpc: 'https://arb1.arbitrum.io/rpc',             explorer: 'https://arbiscan.io',               bridge: 'https://bridge.arbitrum.io' },
-  robinhood: { id: 4663,  name: 'Robinhood Chain', rpc: 'https://rpc.mainnet.chain.robinhood.com/', explorer: 'https://robinhoodchain.blockscout.com', bridge: null },
+  robinhood: { id: 4663,  name: 'Robinhood Chain', rpc: ROBINHOOD_RPC, explorer: 'https://robinhoodchain.blockscout.com', bridge: null },
 };
-function chainOf(input) { return CHAINS[(input && input.chain) || 'base'] || CHAINS.base; }
+function chainOf(input) { return CHAINS[(input && input.chain) || 'robinhood'] || CHAINS.robinhood; }
 
-async function rpc(method, params = [], url = BASE_RPC) {
+async function rpc(method, params = [], url = ROBINHOOD_RPC) {
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -447,9 +445,9 @@ async function executeTool(name, input) {
             price_change_24h: p.priceChange?.h24,
             market_cap:       p.marketCap,
             pair_url:         p.url,
-            chain:            CHAIN_LABELS[p.chainId] || 'Base',
+            chain:            CHAIN_LABELS[p.chainId] || 'Robinhood Chain',
           }));
-        return { query: input.query, results: pairs, chains: ['Base', 'Robinhood', 'Arbitrum'], source: 'DexScreener' };
+        return { query: input.query, results: pairs, chains: ['Robinhood Chain'], source: 'DexScreener' };
       }
       case 'dexscreener_token': {
         const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${input.address}`, {
@@ -458,7 +456,7 @@ async function executeTool(name, input) {
         if (!r.ok) return { error: `DexScreener error: ${r.status}` };
         const data = await r.json();
         const supported = (data.pairs || []).filter(p => SUPPORTED_CHAINS.has(p.chainId));
-        if (!supported.length) return { error: 'Token not found on Base, Robinhood Chain, or Arbitrum', address: input.address };
+        if (!supported.length) return { error: 'Token not found on Robinhood Chain', address: input.address };
         const best = supported.sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
         const age  = best.pairCreatedAt ? Math.floor((Date.now() - best.pairCreatedAt) / 86400000) + ' days' : null;
         const buys = best.txns?.h24?.buys || 0;
@@ -483,7 +481,7 @@ async function executeTool(name, input) {
           dex:              best.dexId,
           pair_age:         age,
           pair_url:         best.url,
-          chain:            CHAIN_LABELS[best.chainId] || 'Base'
+          chain:            CHAIN_LABELS[best.chainId] || 'Robinhood Chain'
         };
       }
       case 'flaunch_new_tokens': {
@@ -758,7 +756,7 @@ async function executeTool(name, input) {
             data:    '0x095ea7b3' + ROUTER.replace('0x','').toLowerCase().padStart(64,'0') + 'f'.repeat(64),
             value:   '0',
             gas:     '100000',
-            chainId: 8453
+            chainId: 4663
           });
         }
         transactions.push({
@@ -766,7 +764,7 @@ async function executeTool(name, input) {
           data:    calldata,
           value:   isEthIn ? amountIn : '0',
           gas:     useHop ? '350000' : '250000',
-          chainId: 8453
+          chainId: 4663
         });
 
         const tokenInLabel = isEthIn ? 'ETH' : input.token_in;
@@ -777,7 +775,7 @@ async function executeTool(name, input) {
           description:    `Swap ${input.amount_in} ${tokenInLabel} via Uniswap V3 (Base)${txCount}`,
           transactions,
           amount_out_raw: bestOut,
-          chain_id:       8453,
+          chain_id:       4663,
           wallet:         input.wallet_address
         };
       }
@@ -825,7 +823,7 @@ async function executeTool(name, input) {
           transactions: Array.isArray(launchData) ? launchData : [launchData],
           token_name:   input.name,
           token_symbol: input.symbol,
-          chain_id:     8453,
+          chain_id:     4663,
           wallet:       input.wallet_address
         };
       }
@@ -842,7 +840,7 @@ async function executeTool(name, input) {
           transactions: txs,
           asset:        input.asset,
           amount:       input.amount,
-          chain_id:     8453,
+          chain_id:     4663,
           wallet:       input.wallet_address
         };
       }
@@ -1012,13 +1010,9 @@ module.exports = async function handler(req, res) {
         model:      bodyObj.model,
         messages:   toAnthropicMessages(bodyObj.messages || []),
         max_tokens: bodyObj.max_tokens || 4096,
-        tools:      ALL_TOOLS,
-        // Base MCP remote server — gives Claude a Base Account wallet with
-        // send_calls, swap, get_wallets, and 20+ DeFi plugin tools.
-        // User approves via Base Account approval link (no MetaMask needed).
-        mcp_servers: [
-          { type: 'url', url: 'https://mcp.base.org/sse', name: 'base' }
-        ],
+        // Base-only DeFi write-actions (Flaunch/Uniswap/Moonwell) are not offered
+        // on Robinhood Chain — only web, GitHub, DexScreener, and onchain read tools.
+        tools:      ALL_TOOLS.filter(t => !/^(flaunch_|uniswap_|moonwell_)/.test(t.name)),
       };
       if (bodyObj.system)      body.system      = bodyObj.system;
       if (bodyObj.temperature) body.temperature = bodyObj.temperature;

@@ -58,8 +58,6 @@
     { "source": "/privacy",      "destination": "/privacy.html" },
     { "source": "/terms",        "destination": "/terms.html" },
     { "source": "/keyboard",     "destination": "/keyboard.html" },
-    { "source": "/hype",         "destination": "/hype.html" },
-    { "source": "/montage",      "destination": "/montage.html" },
     { "source": "/zero",          "destination": "/zero.html" },
     { "source": "/mission-control", "destination": "/mission-control.html" },
     { "source": "/dashboard",       "destination": "/dashboard.html" },
