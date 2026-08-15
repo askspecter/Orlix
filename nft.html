@@ -81,6 +81,8 @@ h1 em{font-style:normal;color:var(--green)}
 .mt-chip{font-size:.68rem;letter-spacing:.16em;color:var(--ink-2);border:1px solid var(--line);border-radius:100px;padding:9px 15px;background:rgba(207,246,5,.04)}
 .mt-chip b{color:var(--green);font-weight:700}
 .mt-chip.solid{background:var(--green);color:#0a0c07;border-color:var(--green);font-weight:700;letter-spacing:.2em}
+.mint-cta{display:inline-block;margin:26px auto 0;font-size:.9rem;letter-spacing:.16em;padding:16px 30px;border-radius:12px}
+.mint-cta:hover{transform:translateY(-1px)}
 
 /* marquee */
 .reel{margin:44px 0 8px;position:relative;overflow:hidden;
@@ -198,7 +200,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     </a>
     <div class="top-nav">
       <a class="ghost" href="/">HOME</a>
-      <button class="btn" id="connectTop">CONNECT WALLET</button>
+      <a class="btn" href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener">MINT ↗</a>
     </div>
   </div>
 </header>
@@ -207,7 +209,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- HERO -->
   <section class="hero">
-    <span class="kicker"><span class="dot"></span>ORLIX GENESIS · MINT SOON</span>
+    <span class="kicker"><span class="dot"></span>ORLIX GENESIS · MINT LIVE</span>
     <h1>1,111 NFTs.<br><em>1,111 autonomous agents.</em></h1>
     <p class="lead">Every ORLIX Genesis NFT ships with its own agent wallet on Robinhood Chain. Reserved for the community — hold <b style="color:var(--green)">1,000,000 $ORLIX</b> to be eligible. Check your wallet below.</p>
     <div class="stats">
@@ -220,8 +222,9 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
       <span class="mt-chip"><b>#1</b> FREE MINT</span>
       <span class="mt-chip"><b>+4</b> @ 0.001 ETH</span>
       <span class="mt-chip"><b>5</b> MAX / WALLET</span>
-      <span class="mt-chip solid">MINT SOON</span>
+      <span class="mt-chip solid">MINT LIVE</span>
     </div>
+    <a class="btn mint-cta" href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener" data-cursor="MINT">▸ MINT ON OPENSEA ↗</a>
   </section>
 
   <!-- MARQUEE -->
@@ -295,7 +298,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     <div class="steps">
       <div class="step"><div class="s-n">01</div><h3>Hold $ORLIX</h3><p>Keep at least 1,000,000 $ORLIX in your wallet on Robinhood Chain to qualify for the Genesis allowlist.</p></div>
       <div class="step"><div class="s-n">02</div><h3>Check eligibility</h3><p>Verify your wallet above. Eligibility is snapshotted from live on-chain balance — no sign-up needed.</p></div>
-      <div class="step"><div class="s-n">03</div><h3>Mint soon</h3><p>Up to <b style="color:var(--green)">5 per wallet</b> — your <b style="color:var(--green)">first mint is free</b>, the next 4 are 0.001 ETH each. Follow <a href="https://x.com/orlixai" target="_blank" rel="noopener" style="color:var(--green)">@OrlixAI</a> for the go-live.</p></div>
+      <div class="step"><div class="s-n">03</div><h3>Mint now</h3><p>Up to <b style="color:var(--green)">5 per wallet</b> — your <b style="color:var(--green)">first mint is free</b>, the next 4 are 0.001 ETH each. <a href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener" style="color:var(--green)">Mint on OpenSea ↗</a></p></div>
     </div>
   </section>
 
@@ -322,6 +325,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   <div class="foot-in">
     <div class="fl">
       <a href="/">Home</a>
+      <a href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener">Mint / OpenSea</a>
       <a href="https://app.orlixai.xyz">App</a>
       <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener">Chart</a>
       <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
@@ -480,7 +484,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
       check(accs[0]);
     }catch(e){ toast("Connection rejected"); }
   }
-  $("#connectTop").addEventListener("click",connect);
+  const _ct=document.getElementById("connectTop"); if(_ct) _ct.addEventListener("click",connect);
   $("#connectInline").addEventListener("click",connect);
 
   // ---- chart: click-to-load embed (avoids a broken frame on page load) ----
