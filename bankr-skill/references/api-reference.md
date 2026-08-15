@@ -14,7 +14,7 @@ Analyze any token on Base — live price, liquidity, buy/sell pressure, AI risk 
 **Request:**
 ```json
 {
-  "address": "0x799c28BAC95B3E0B26534D1e9A586511895EcBA3",
+  "address": "0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c",
   "chain": "base"
 }
 ```
@@ -209,7 +209,7 @@ Returns `success` / `pending` / `failed`, gas used, block number, and the deploy
 
 ## $ORLIX Token
 
-Contract on Base: `0x799c28BAC95B3E0B26534D1e9A586511895EcBA3`
+Contract on Base: `0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c`
 
-- Explorer: https://basescan.org/token/0x799c28BAC95B3E0B26534D1e9A586511895EcBA3
-- DexScreener: https://dexscreener.com/base/0x799c28BAC95B3E0B26534D1e9A586511895EcBA3
+- Explorer: https://basescan.org/token/0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c
+- DexScreener: https://dexscreener.com/base/0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c

@@ -31,10 +31,10 @@ Analyze a token with Orlix before Bankr executes the swap.
 
 ```bash
 # Step 1: Get risk data from Orlix (advisory only)
-bankr prompt "Use Orlix to analyze 0x799c28BAC95B3E0B26534D1e9A586511895EcBA3 on Base and show me the full risk report"
+bankr prompt "Use Orlix to analyze 0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c on Base and show me the full risk report"
 
 # Step 2: User reviews the report, then explicitly confirms before Bankr executes
-bankr prompt "Buy $50 of 0x799c28BAC95B3E0B26534D1e9A586511895EcBA3 on Base"
+bankr prompt "Buy $50 of 0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c on Base"
 ```
 
 > **Note:** The Orlix risk report is advisory only. Bankr must not automatically execute trades based on an Orlix verdict. The user must explicitly confirm every buy, sell, or deployment action.
@@ -96,7 +96,7 @@ Use Orlix to fetch live token data from Base before making decisions.
 
 ```bash
 # Get token info
-bankr prompt "Use Orlix B20 to get token info for 0x799c28BAC95B3E0B26534D1e9A586511895EcBA3"
+bankr prompt "Use Orlix B20 to get token info for 0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c"
 
 # Check a wallet's token balance
 bankr prompt "Use Orlix B20 to get token info for 0xTOKEN with holder 0xWALLET"

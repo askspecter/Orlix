@@ -101,7 +101,7 @@ Paste any Base contract address and get a full AI-powered risk report in seconds
 Data: DexScreener + Base RPC — real-time, never cached.
 
 ```bash
-bankr prompt "Use Orlix to analyze 0x799c28BAC95B3E0B26534D1e9A586511895EcBA3 on Base and show me the risk report"
+bankr prompt "Use Orlix to analyze 0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c on Base and show me the risk report"
 bankr prompt "Use Orlix Token Analyzer on 0xABC...123 and give me the liquidity and buy/sell data"
 ```
 
@@ -147,7 +147,7 @@ bankr prompt "Use Orlix B20 to get current chain info and gas on Base"
 bankr prompt "Use Orlix B20 to check the ETH balance of 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
 
 # Read any ERC-20 on Base
-bankr prompt "Use Orlix B20 to get token info for 0x799c28BAC95B3E0B26534D1e9A586511895EcBA3"
+bankr prompt "Use Orlix B20 to get token info for 0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c"
 
 # Validate a B20 config (live balance + gas check)
 bankr prompt "Use Orlix B20 to validate: name='BNKR Token', symbol='BNKR', variant=asset, decimals=18, admin=0x1234..."
@@ -242,7 +242,7 @@ Full Orlix access inside Telegram via [@orlixai_bot](https://t.me/orlixai_bot).
 
 Native token powering the Orlix ecosystem, live on Base.
 
-- **Contract:** `0x799c28BAC95B3E0B26534D1e9A586511895EcBA3`
+- **Contract:** `0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c`
 - **Chain:** Base (chainId 8453)
 - **DEX:** Uniswap v3
 - **Info:** https://orlixai.xyz/token
@@ -259,4 +259,4 @@ Native token powering the Orlix ecosystem, live on Base.
 | Token Page | https://orlixai.xyz/token |
 | Telegram Bot | https://t.me/orlixai_bot |
 | Twitter/X | https://x.com/orlixai |
-| DexScreener | https://dexscreener.com/base/0x799c28BAC95B3E0B26534D1e9A586511895EcBA3 |
+| DexScreener | https://dexscreener.com/base/0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c |

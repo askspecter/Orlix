@@ -1,6 +1,6 @@
 // Shared $ORLIX holder tier check — JS port of x402/_shared/holder.ts
-const ORLIX_CONTRACT = '0x799c28BAC95B3E0B26534D1e9A586511895EcBA3';
-const BASE_RPC       = 'https://mainnet.base.org';
+const ORLIX_CONTRACT = '0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c';
+const ROBINHOOD_RPC       = 'https://rpc.mainnet.chain.robinhood.com/';
 
 const TIERS = {
   NONE:    { discount: 0,   maxTokens: 2048, results: 5,   label: 'Standard',       minHold: '0' },
@@ -22,7 +22,7 @@ async function getOrlixTier(wallet) {
   if (!wallet || !/^0x[0-9a-f]{40}$/i.test(wallet)) return none;
   try {
     const data = '0x70a08231' + wallet.replace('0x', '').toLowerCase().padStart(64, '0');
-    const r = await fetch(BASE_RPC, {
+    const r = await fetch(ROBINHOOD_RPC, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to: ORLIX_CONTRACT, data }, 'latest'] }),

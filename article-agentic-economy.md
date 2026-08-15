@@ -150,7 +150,7 @@ Orlix AI is the stack that makes it possible.
 
 ---
 
-*Orlix AI is live at orlixai.xyz. The x402 API endpoints are accessible today. $ORLIX is deployed on Base at `0x799c28BAC95B3E0B26534D1e9A586511895EcBA3`.*
+*Orlix AI is live at orlixai.xyz. The x402 API endpoints are accessible today. $ORLIX is deployed on Base at `0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c`.*
 
 *OrlixJobBoard and $WORK token will deploy on Base mainnet when Base Beryl activates.*
 

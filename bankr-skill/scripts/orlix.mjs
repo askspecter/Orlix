@@ -359,8 +359,8 @@ Examples:
   node orlix.mjs info
   node orlix.mjs gas
   node orlix.mjs balance 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-  node orlix.mjs token-info 0x799c28BAC95B3E0B26534D1e9A586511895EcBA3
-  node orlix.mjs analyze 0x799c28BAC95B3E0B26534D1e9A586511895EcBA3
+  node orlix.mjs token-info 0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c
+  node orlix.mjs analyze 0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c
   node orlix.mjs validate --name "My Token" --symbol MTK --admin 0xYOUR_WALLET
   node orlix.mjs prepare --name "My Token" --symbol MTK --decimals 18 --supply 10000000 --admin 0xYOUR_WALLET --blocklist
   node orlix.mjs prepare --name "OrUSD" --symbol OUSD --variant stablecoin --supply 100000000 --admin 0xYOUR_WALLET --allowlist --submit

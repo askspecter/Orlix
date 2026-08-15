@@ -3,11 +3,11 @@
 
 import { getOrlixTier, withTier } from '../_shared/holder';
 
-const BASE_RPC       = 'https://mainnet.base.org';
-const ORLIX_CONTRACT = '0x799c28BAC95B3E0B26534D1e9A586511895EcBA3';
+const ROBINHOOD_RPC       = 'https://rpc.mainnet.chain.robinhood.com/';
+const ORLIX_CONTRACT = '0x1eFdD871f052900D88E4DC2D49BcD32Bf77e333c';
 
 async function rpc(method: string, params: unknown[] = []) {
-  const r = await fetch(BASE_RPC, {
+  const r = await fetch(ROBINHOOD_RPC, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
