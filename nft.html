@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ORLIX Genesis — NFT Eligibility · $ORLIX Holders</title>
+<meta name="description" content="1,111 ORLIX Genesis NFTs. Every NFT is its own autonomous agent wallet. Hold 1,000,000 $ORLIX on Robinhood Chain to be eligible. Check your eligibility — mint soon.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orlixai.xyz/nft">
+<meta property="og:title" content="ORLIX Genesis — 1,111 Agent NFTs">
+<meta property="og:description" content="Hold 1,000,000 $ORLIX on Robinhood Chain to be eligible. Check eligibility — mint soon.">
+<meta property="og:image" content="https://orlixai.xyz/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ORLIX Genesis — 1,111 Agent NFTs">
+<meta name="twitter:image" content="https://orlixai.xyz/og-image.png">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<style>
+:root{
+  --bg:#050505; --panel:#0b0d09; --panel-2:#0f120b;
+  --ink:#E9ECE2; --ink-2:#9aa08d; --ink-3:#5a5f50;
+  --green:#CFF605; --green-hot:#E4FF54; --green-deep:#7c9403;
+  --ok:#CFF605; --bad:#5a5f50;
+  --line:rgba(207,246,5,.14); --line-soft:rgba(233,236,226,.08);
+  --mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink-2);font-family:var(--mono);
+  font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 50% -10%,rgba(207,246,5,.10),transparent 60%),
+    radial-gradient(900px 500px at 100% 110%,rgba(207,246,5,.06),transparent 55%);
+}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+::selection{background:var(--green);color:#0a0c07}
+.scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,#000 2px 3px)}
+.wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* header */
+header.top{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
+  background:linear-gradient(#050505f2,#05050599);border-bottom:1px solid var(--line-soft)}
+.top-in{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.14em;color:var(--ink)}
+.brand svg{width:30px;height:30px;border-radius:8px;flex:none}
+.brand b{font-size:.98rem}
+.brand sup{font-size:.5em;font-weight:400;color:var(--ink-3)}
+.top-nav{display:flex;align-items:center;gap:8px}
+.top-nav a.ghost{font-size:.7rem;letter-spacing:.16em;color:var(--ink-2);padding:9px 12px;border:1px solid var(--line-soft);border-radius:9px}
+.top-nav a.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;cursor:pointer;
+  border-radius:9px;padding:10px 15px;border:1px solid var(--green);
+  background:var(--green);color:#0a0c07;font-weight:600;transition:.25s var(--ease);white-space:nowrap}
+.btn:hover{background:var(--green-hot);border-color:var(--green-hot);box-shadow:0 0 24px rgba(207,246,5,.35)}
+.btn.outline{background:transparent;color:var(--green);}
+.btn.outline:hover{background:rgba(207,246,5,.08);box-shadow:none}
+.btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+
+/* hero */
+.hero{padding:64px 0 30px;text-align:center}
+.kicker{display:inline-flex;align-items:center;gap:9px;font-size:.64rem;letter-spacing:.34em;color:var(--green);
+  border:1px solid var(--line);border-radius:100px;padding:7px 15px;background:rgba(207,246,5,.05)}
+.kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 1.8s infinite}
+@keyframes pulse{50%{opacity:.35}}
+h1{margin:22px auto 0;color:var(--ink);font-weight:600;letter-spacing:-.02em;line-height:1.05;
+  font-size:clamp(2.3rem,7vw,4.4rem);max-width:14ch}
+h1 em{font-style:normal;color:var(--green)}
+.hero p.lead{margin:18px auto 0;max-width:56ch;color:var(--ink-2);font-size:clamp(.9rem,2.4vw,1.02rem)}
+.stats{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:30px auto 0;max-width:760px}
+.stat{flex:1 1 150px;min-width:140px;border:1px solid var(--line-soft);border-radius:13px;background:var(--panel);padding:16px 14px}
+.stat b{display:block;color:var(--green);font-size:1.5rem;font-weight:600;letter-spacing:-.01em}
+.stat span{display:block;margin-top:4px;font-size:.6rem;letter-spacing:.24em;color:var(--ink-3)}
+
+/* marquee */
+.reel{margin:44px 0 8px;position:relative;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+          mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.reel-track{display:flex;gap:14px;width:max-content;animation:slide 34s linear infinite}
+.reel:hover .reel-track{animation-play-state:paused}
+@keyframes slide{to{transform:translateX(-50%)}}
+.reel-track img{width:160px;height:160px;border-radius:14px;border:1px solid var(--line-soft);
+  image-rendering:pixelated}
+@media(max-width:640px){.reel-track img{width:120px;height:120px}}
+
+/* section shell */
+section.block{margin:52px 0}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.sec-head .n{font-size:.62rem;letter-spacing:.3em;color:var(--green)}
+.sec-head h2{color:var(--ink);font-size:1.15rem;font-weight:600;letter-spacing:.01em}
+.sec-head .n::after{content:'';display:inline-block;width:34px;height:1px;background:var(--line);margin-left:12px;vertical-align:middle;opacity:.6}
+
+/* terminal card */
+.term{border:1px solid var(--line);border-radius:16px;background:
+  linear-gradient(180deg,var(--panel-2),var(--panel));overflow:hidden;
+  box-shadow:0 30px 80px -40px rgba(207,246,5,.25)}
+.term-bar{display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--line-soft);
+  background:rgba(255,255,255,.015)}
+.term-bar i{width:10px;height:10px;border-radius:50%;background:#2a2d24;display:inline-block}
+.term-bar i:first-child{background:var(--green)}
+.term-bar span{margin-left:8px;font-size:.66rem;letter-spacing:.14em;color:var(--ink-3)}
+.term-body{padding:24px}
+@media(min-width:640px){.term-body{padding:30px}}
+
+/* checker */
+.check-row{display:flex;gap:10px;flex-wrap:wrap}
+.field{flex:1 1 260px;display:flex;align-items:center;gap:10px;border:1px solid var(--line-soft);
+  border-radius:11px;background:#0a0c07;padding:0 14px;transition:.2s}
+.field:focus-within{border-color:var(--green)}
+.field .pr{color:var(--green);font-size:.85rem}
+.field input{flex:1;background:none;border:0;outline:0;color:var(--ink);font-family:var(--mono);
+  font-size:.86rem;padding:15px 0;letter-spacing:.01em;min-width:0}
+.field input::placeholder{color:var(--ink-3)}
+.check-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.check-actions .btn{flex:1 1 auto}
+.hint{margin-top:12px;font-size:.68rem;color:var(--ink-3);letter-spacing:.02em}
+.hint b{color:var(--ink-2);font-weight:400}
+
+/* result */
+.result{margin-top:20px;border-radius:13px;border:1px solid var(--line-soft);overflow:hidden;display:none}
+.result.show{display:block;animation:rise .4s var(--ease)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.result .r-top{display:flex;align-items:center;gap:14px;padding:20px;border-bottom:1px solid var(--line-soft)}
+.r-badge{width:52px;height:52px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:1.5rem;font-weight:700}
+.r-badge.ok{background:var(--green);color:#0a0c07;box-shadow:0 0 30px rgba(207,246,5,.4)}
+.r-badge.bad{background:#171a12;color:var(--ink-3);border:1px solid var(--line-soft)}
+.r-badge.load{background:#171a12;color:var(--green)}
+.r-txt strong{display:block;color:var(--ink);font-size:1.05rem;font-weight:600;letter-spacing:.01em}
+.r-txt span{display:block;font-size:.74rem;color:var(--ink-2);margin-top:3px}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line-soft)}
+.r-cell{background:var(--panel);padding:15px 18px}
+.r-cell u{display:block;text-decoration:none;font-size:.58rem;letter-spacing:.24em;color:var(--ink-3)}
+.r-cell b{display:block;color:var(--ink);font-size:1.05rem;font-weight:600;margin-top:5px;word-break:break-word}
+.r-cell b.green{color:var(--green)}
+.progress{height:6px;border-radius:100px;background:#141710;overflow:hidden;margin:14px 20px 20px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--green-deep),var(--green));border-radius:100px;width:0;transition:width .8s var(--ease)}
+
+/* chart */
+.chart-shell{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--panel);min-height:520px}
+.chart-shell iframe{width:100%;height:520px;border:0;display:block;background:#0a0c07;position:relative;z-index:1}
+.chart-ph{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:30px;
+  background:radial-gradient(600px 300px at 50% 40%,rgba(207,246,5,.08),transparent 70%),linear-gradient(180deg,var(--panel-2),var(--panel));
+  transition:opacity .5s var(--ease)}
+.chart-ph.hide{opacity:0;pointer-events:none}
+.chart-ph p{color:var(--ink-2);font-size:.85rem;max-width:40ch}
+.chart-ph .ph-mark{width:60px;height:60px;opacity:.9;animation:bob 2.4s var(--ease) infinite}
+.chart-ph .ph-mark svg{width:100%;height:100%;border-radius:14px}
+@keyframes bob{50%{transform:translateY(-8px)}}
+
+/* token details */
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:14px;overflow:hidden}
+.meta{background:var(--panel);padding:18px}
+.meta u{display:block;text-decoration:none;font-size:.58rem;letter-spacing:.26em;color:var(--ink-3)}
+.meta b{display:block;color:var(--ink);margin-top:6px;font-weight:600;font-size:.92rem}
+.ca-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.ca-row code{color:var(--green);font-size:.74rem;word-break:break-all;line-height:1.4}
+.copy{flex:none;cursor:pointer;border:1px solid var(--line-soft);background:none;color:var(--ink-2);
+  border-radius:7px;padding:5px 8px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;transition:.2s}
+.copy:hover{color:var(--green);border-color:var(--line)}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.step{border:1px solid var(--line-soft);border-radius:14px;background:var(--panel);padding:20px}
+.step .s-n{font-size:.62rem;letter-spacing:.2em;color:var(--green)}
+.step h3{color:var(--ink);font-size:.98rem;margin:10px 0 6px;font-weight:600}
+.step p{font-size:.78rem;color:var(--ink-2)}
+
+/* footer */
+footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px}
+.foot-in{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+.foot-in .fl{display:flex;gap:16px;flex-wrap:wrap}
+.foot-in a:hover{color:var(--green)}
+.foot-in small{color:var(--ink-3);font-size:.68rem;letter-spacing:.06em}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:60;
+  background:var(--green);color:#0a0c07;font-weight:600;font-size:.74rem;letter-spacing:.1em;
+  padding:11px 18px;border-radius:100px;opacity:0;pointer-events:none;transition:.35s var(--ease)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#CFF605"/><path d="M115.53 115.53A198.66 198.66 0 1 1 115.53 396.47" fill="none" stroke="#0a0c07" stroke-width="53.25" stroke-linecap="round"/><polyline points="82.68,99.51 244.74,256 82.68,412.49" fill="none" stroke="#0a0c07" stroke-width="34.82" stroke-linecap="round" stroke-linejoin="round"/><rect x="281.86" y="226.56" width="10.75" height="79.36" fill="#0a0c07" rx="5.38"/><rect x="293.89" y="286.46" width="92.16" height="19.46" fill="#0a0c07" rx="6.49"/></svg>
+      <b>ORLIX<sup>®</sup></b>
+    </a>
+    <div class="top-nav">
+      <a class="ghost" href="/">HOME</a>
+      <button class="btn" id="connectTop">CONNECT WALLET</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <span class="kicker"><span class="dot"></span>ORLIX GENESIS · MINT SOON</span>
+    <h1>1,111 NFTs.<br><em>1,111 autonomous agents.</em></h1>
+    <p class="lead">Every ORLIX Genesis NFT ships with its own agent wallet on Robinhood Chain. Reserved for the community — hold <b style="color:var(--green)">1,000,000 $ORLIX</b> to be eligible. Check your wallet below.</p>
+    <div class="stats">
+      <div class="stat"><b>1,111</b><span>TOTAL SUPPLY</span></div>
+      <div class="stat"><b>1,000,000</b><span>$ORLIX MIN HOLD</span></div>
+      <div class="stat"><b>ROBINHOOD</b><span>CHAIN · 4663</span></div>
+      <div class="stat"><b>SOON</b><span>MINT STATUS</span></div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="reel" aria-label="ORLIX Genesis preview">
+    <div class="reel-track" id="reelTrack"></div>
+  </div>
+
+  <!-- ELIGIBILITY CHECKER -->
+  <section class="block" id="check">
+    <div class="sec-head"><span class="n">[01]</span><h2>Eligibility Checker</h2></div>
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — check-eligibility.sh</span></div>
+      <div class="term-body">
+        <div class="check-row">
+          <label class="field">
+            <span class="pr">&gt;</span>
+            <input id="addrInput" type="text" spellcheck="false" autocomplete="off"
+                   placeholder="paste wallet address (0x…) or connect wallet">
+          </label>
+        </div>
+        <div class="check-actions">
+          <button class="btn" id="checkBtn">CHECK ELIGIBILITY</button>
+          <button class="btn outline" id="connectInline">CONNECT WALLET</button>
+        </div>
+        <p class="hint">Read-only. We call <b>balanceOf</b> on the $ORLIX contract via a public Robinhood Chain RPC — no signature, no approval, nothing leaves your wallet.</p>
+
+        <div class="result" id="result">
+          <div class="r-top">
+            <div class="r-badge load" id="rBadge">…</div>
+            <div class="r-txt"><strong id="rTitle">Checking…</strong><span id="rSub">Querying Robinhood Chain</span></div>
+          </div>
+          <div class="r-grid">
+            <div class="r-cell"><u>YOUR $ORLIX BALANCE</u><b id="rBal">—</b></div>
+            <div class="r-cell"><u>REQUIRED</u><b id="rReq">1,000,000</b></div>
+          </div>
+          <div class="progress"><i id="rProg"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHART -->
+  <section class="block" id="chart">
+    <div class="sec-head"><span class="n">[02]</span><h2>$ORLIX Live Chart</h2></div>
+    <div class="chart-shell">
+      <div class="chart-ph" id="chartPh">
+        <div class="ph-mark" aria-hidden="true">
+          <svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#CFF605"/><path d="M115.53 115.53A198.66 198.66 0 1 1 115.53 396.47" fill="none" stroke="#0a0c07" stroke-width="53.25" stroke-linecap="round"/><polyline points="82.68,99.51 244.74,256 82.68,412.49" fill="none" stroke="#0a0c07" stroke-width="34.82" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p>Live $ORLIX price, depth &amp; trades on Robinhood Chain — powered by Defined.fi.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+          <button class="btn" id="loadChart">▸ LOAD LIVE CHART</button>
+          <a class="btn outline" target="_blank" rel="noopener"
+             href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c">OPEN ON DEFINED.FI ↗</a>
+        </div>
+      </div>
+      <iframe id="chartFrame" title="$ORLIX chart on Defined.fi"
+        data-src="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c?embedded=1&hideTxTable=1&hideSidebar=1&embedTheme=dark&chartSmoothing=1"
+        loading="lazy"></iframe>
+    </div>
+    <p class="hint" style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+      Powered by <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener" style="color:var(--green)">Defined.fi ↗</a>
+      <span style="color:var(--ink-3)">·</span>
+      <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener" style="color:var(--green)">Open full chart in new tab ↗</a>
+    </p>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="block">
+    <div class="sec-head"><span class="n">[03]</span><h2>How Minting Works</h2></div>
+    <div class="steps">
+      <div class="step"><div class="s-n">01</div><h3>Hold $ORLIX</h3><p>Keep at least 1,000,000 $ORLIX in your wallet on Robinhood Chain to qualify for the Genesis allowlist.</p></div>
+      <div class="step"><div class="s-n">02</div><h3>Check eligibility</h3><p>Verify your wallet above. Eligibility is snapshotted from live on-chain balance — no sign-up needed.</p></div>
+      <div class="step"><div class="s-n">03</div><h3>Mint soon</h3><p>Minting opens shortly. Eligible holders claim from the 1,111 supply. Follow <a href="https://x.com/orlixai" target="_blank" rel="noopener" style="color:var(--green)">@OrlixAI</a> for the go-live.</p></div>
+    </div>
+  </section>
+
+  <!-- TOKEN DETAILS -->
+  <section class="block">
+    <div class="sec-head"><span class="n">[04]</span><h2>Collection &amp; Token</h2></div>
+    <div class="meta-grid">
+      <div class="meta">
+        <u>$ORLIX CONTRACT</u>
+        <div class="ca-row">
+          <code id="caText">0x1efdd871f052900d88e4dc2d49bcd32bf77e333c</code>
+          <button class="copy" id="copyCa">COPY</button>
+        </div>
+      </div>
+      <div class="meta"><u>CHAIN</u><b>Robinhood Chain · 4663</b></div>
+      <div class="meta"><u>COLLECTION SUPPLY</u><b>1,111 NFTs</b></div>
+      <div class="meta"><u>ELIGIBILITY</u><b>1,000,000 $ORLIX</b></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="fl">
+      <a href="/">Home</a>
+      <a href="https://app.orlixai.xyz">App</a>
+      <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener">Chart</a>
+      <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
+    </div>
+    <small>© 2026 ORLIX · Robinhood Chain · not financial advice</small>
+  </div>
+</footer>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+(function(){
+  "use strict";
+  const CFG = {
+    token: "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",
+    min: 1000000,
+    chainIdDec: 4663,
+    chainIdHex: "0x1237",
+    rpcs: ["https://rpc.mainnet.chain.robinhood.com/"],
+    chainParams: {
+      chainId: "0x1237",
+      chainName: "Robinhood Chain",
+      nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+      rpcUrls: ["https://rpc.mainnet.chain.robinhood.com/"],
+      blockExplorerUrls: ["https://robinhoodchain.blockscout.com"]
+    }
+  };
+
+  const $ = s => document.querySelector(s);
+  const reelTrack = $("#reelTrack");
+  const addrInput = $("#addrInput");
+  const result = $("#result");
+  const rBadge = $("#rBadge"), rTitle = $("#rTitle"), rSub = $("#rSub");
+  const rBal = $("#rBal"), rProg = $("#rProg");
+
+  // ---- marquee (duplicated for seamless loop) ----
+  const imgs = [];
+  for (let i=1;i<=9;i++){ imgs.push(`/assets/nft/orlix-${i}.png`); }
+  const seq = imgs.concat(imgs);
+  reelTrack.innerHTML = seq.map(s=>`<img src="${s}" alt="ORLIX Genesis NFT" loading="lazy">`).join("");
+
+  // ---- toast ----
+  let toastT;
+  function toast(msg){
+    const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+    clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1600);
+  }
+
+  // ---- copy CA ----
+  $("#copyCa").addEventListener("click",()=>{
+    navigator.clipboard.writeText(CFG.token).then(()=>toast("Contract copied")).catch(()=>toast("Copy failed"));
+  });
+
+  // ---- helpers ----
+  const isAddr = a => /^0x[0-9a-fA-F]{40}$/.test((a||"").trim());
+  const fmt = n => n.toLocaleString("en-US",{maximumFractionDigits: n<1?4:0});
+
+  async function rpcCall(to, data){
+    let lastErr;
+    for (const url of CFG.rpcs){
+      try{
+        const r = await fetch(url,{method:"POST",headers:{"content-type":"application/json"},
+          body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_call",params:[{to,data},"latest"]})});
+        const j = await r.json();
+        if (j && j.result && j.result !== "0x") return j.result;
+        if (j && j.error) lastErr = new Error(j.error.message||"rpc error");
+      }catch(e){ lastErr = e; }
+    }
+    throw (lastErr || new Error("no rpc response"));
+  }
+
+  // bigint hex -> Number of whole tokens (safe for display)
+  function toTokens(hex, decimals){
+    try{
+      const bi = BigInt(hex);
+      const d = BigInt(10) ** BigInt(decimals);
+      const whole = bi / d;
+      const frac = Number(bi % d) / Number(d);
+      return Number(whole) + frac;
+    }catch(_){ return 0; }
+  }
+
+  async function getDecimals(){
+    try{
+      const r = await rpcCall(CFG.token, "0x313ce567"); // decimals()
+      const d = parseInt(r,16);
+      return (Number.isFinite(d) && d>=0 && d<=36) ? d : 18;
+    }catch(_){ return 18; }
+  }
+
+  function setResult(state, bal){
+    result.classList.add("show");
+    if (state==="loading"){
+      rBadge.className="r-badge load"; rBadge.textContent="…";
+      rTitle.textContent="Checking…"; rSub.textContent="Querying Robinhood Chain";
+      rBal.textContent="—"; rProg.style.width="0";
+      return;
+    }
+    if (state==="error"){
+      rBadge.className="r-badge bad"; rBadge.textContent="!";
+      rTitle.textContent="Couldn't read balance";
+      rSub.textContent="RPC unavailable — try again, or open the chart to verify holdings.";
+      rBal.textContent="—"; rProg.style.width="0";
+      return;
+    }
+    rBal.textContent = fmt(bal) + " $ORLIX";
+    const pct = Math.max(0, Math.min(100, (bal / CFG.min) * 100));
+    rProg.style.width = pct + "%";
+    if (bal >= CFG.min){
+      rBadge.className="r-badge ok"; rBadge.textContent="✓";
+      rTitle.textContent="You're eligible ✓";
+      rSub.textContent="Your wallet qualifies for the ORLIX Genesis mint. Stay tuned — mint soon.";
+    } else {
+      rBadge.className="r-badge bad"; rBadge.textContent="✗";
+      rTitle.textContent="Not eligible yet";
+      const need = CFG.min - bal;
+      rSub.textContent = `Need ${fmt(need)} more $ORLIX to reach the 1,000,000 threshold.`;
+    }
+  }
+
+  async function check(addr){
+    addr = (addr||"").trim();
+    if (!isAddr(addr)){ toast("Enter a valid 0x… address"); addrInput.focus(); return; }
+    setResult("loading");
+    result.scrollIntoView({behavior:"smooth",block:"nearest"});
+    try{
+      const decimals = await getDecimals();
+      const data = "0x70a08231" + addr.toLowerCase().replace(/^0x/,"").padStart(64,"0"); // balanceOf(address)
+      const res = await rpcCall(CFG.token, data);
+      const bal = toTokens(res, decimals);
+      setResult("done", bal);
+    }catch(e){
+      console.error(e); setResult("error");
+    }
+  }
+
+  $("#checkBtn").addEventListener("click",()=>check(addrInput.value));
+  addrInput.addEventListener("keydown",e=>{ if(e.key==="Enter") check(addrInput.value); });
+
+  // ---- wallet connect ----
+  async function connect(){
+    if (!window.ethereum){ toast("No wallet found — paste your address instead"); addrInput.focus(); return; }
+    try{
+      const accs = await window.ethereum.request({method:"eth_requestAccounts"});
+      if (!accs || !accs.length){ toast("No account"); return; }
+      // try to switch to Robinhood Chain (non-blocking for the read)
+      try{
+        await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]});
+      }catch(sw){
+        if (sw && sw.code === 4902){
+          try{ await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]}); }catch(_){}
+        }
+      }
+      addrInput.value = accs[0];
+      toast("Wallet connected");
+      check(accs[0]);
+    }catch(e){ toast("Connection rejected"); }
+  }
+  $("#connectTop").addEventListener("click",connect);
+  $("#connectInline").addEventListener("click",connect);
+
+  // ---- chart: click-to-load embed (avoids a broken frame on page load) ----
+  const frame = $("#chartFrame");
+  const ph = $("#chartPh");
+  $("#loadChart").addEventListener("click",()=>{
+    if (!frame.src) frame.src = frame.getAttribute("data-src");
+    ph.classList.add("hide");
+  });
+})();
+</script>
+</body>
+</html>

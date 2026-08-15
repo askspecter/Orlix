@@ -52,7 +52,8 @@
     { "source": "/neural-map",        "destination": "/base-city",     "permanent": true },
     { "source": "/zero.html",         "destination": "/zero",          "permanent": true },
     { "source": "/dashboard.html",    "destination": "/dashboard",     "permanent": true },
-    { "source": "/cotty.html",        "destination": "/cotty",         "permanent": true }
+    { "source": "/cotty.html",        "destination": "/cotty",         "permanent": true },
+    { "source": "/nft.html",          "destination": "/nft",           "permanent": true }
   ],
   "rewrites": [
     { "source": "/api/x402-chat",    "destination": "/api/x402?service=chat" },
@@ -81,6 +82,8 @@
     { "source": "/zero",          "destination": "/zero.html" },
     { "source": "/mission-control", "destination": "/mission-control.html" },
     { "source": "/dashboard",       "destination": "/dashboard.html" },
-    { "source": "/cotty",           "destination": "/cotty.html" }
+    { "source": "/cotty",           "destination": "/cotty.html" },
+    { "source": "/nft",             "destination": "/nft.html" },
+    { "source": "/mint",            "destination": "/nft.html" }
   ]
 }
