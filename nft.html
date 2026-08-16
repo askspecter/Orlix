@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ORLIX Agent — NFT Eligibility · $ORLIX Holders</title>
-<meta name="description" content="1,111 ORLIX Agent NFTs. Every NFT is its own autonomous agent wallet. Hold 1,000,000 $ORLIX on Robinhood Chain to be eligible. Check your eligibility — mint soon.">
+<title>ORLIX Agent — Mint · 1,111 NFTs on Robinhood Chain</title>
+<meta name="description" content="1,111 ORLIX Agent NFTs — each its own autonomous agent wallet. Burn 300,000 $ORLIX to mint on Robinhood Chain. Mint is live — up to 5 per wallet.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orlixai.xyz/nft">
-<meta property="og:title" content="ORLIX Agent — 1,111 NFTs">
-<meta property="og:description" content="Hold 1,000,000 $ORLIX on Robinhood Chain to be eligible. Check eligibility — mint soon.">
-<meta property="og:image" content="https://orlixai.xyz/og-image.png">
+<meta property="og:title" content="ORLIX Agent — 1,111 NFTs · Mint Live">
+<meta property="og:description" content="Burn 300,000 $ORLIX to mint an Agent on Robinhood Chain. Up to 5 per wallet. Live now.">
+<meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ORLIX Agent — 1,111 NFTs">
-<meta name="twitter:image" content="https://orlixai.xyz/og-image.png">
+<meta name="twitter:image" content="https://orlixai.xyz/og-image.png?v=2">
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <style>
@@ -213,7 +213,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     </a>
     <div class="top-nav">
       <a class="ghost" href="/">HOME</a>
-      <a class="btn" href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener">MINT ↗</a>
+      <a class="btn" href="#mint">MINT</a>
     </div>
   </div>
 </header>
@@ -224,20 +224,20 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   <section class="hero">
     <span class="kicker"><span class="dot"></span>ORLIX AGENT · MINT LIVE</span>
     <h1>1,111 NFTs.<br><em>1,111 autonomous agents.</em></h1>
-    <p class="lead">Every ORLIX Agent NFT ships with its own agent wallet on Robinhood Chain. Reserved for the community — hold <b style="color:var(--green)">1,000,000 $ORLIX</b> to be eligible. Check your wallet below.</p>
+    <p class="lead">Every ORLIX Agent NFT ships with its own agent wallet on Robinhood Chain. Mint is a <b style="color:var(--green)">burn</b> — <b style="color:var(--green)">300,000 $ORLIX</b> per Agent, up to 5 per wallet. Deflationary by design.</p>
     <div class="stats">
       <div class="stat"><b>1,111</b><span>TOTAL SUPPLY</span></div>
-      <div class="stat"><b>1,000,000</b><span>$ORLIX MIN HOLD</span></div>
+      <div class="stat"><b>300,000</b><span>$ORLIX / MINT · BURNED</span></div>
       <div class="stat"><b>ROBINHOOD</b><span>CHAIN · 4663</span></div>
       <div class="stat"><b>5</b><span>MAX / WALLET</span></div>
     </div>
     <div class="mint-terms">
-      <span class="mt-chip"><b>#1</b> FREE MINT</span>
-      <span class="mt-chip"><b>+4</b> @ 0.001 ETH</span>
+      <span class="mt-chip"><b>300K</b> $ORLIX / MINT</span>
+      <span class="mt-chip"><b>🔥</b> BURN TO MINT</span>
       <span class="mt-chip"><b>5</b> MAX / WALLET</span>
       <span class="mt-chip solid">MINT LIVE</span>
     </div>
-    <a class="btn mint-cta" href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener" data-cursor="MINT">▸ MINT ON OPENSEA ↗</a>
+    <a class="btn mint-cta" href="#mint" data-cursor="MINT">▸ MINT NOW</a>
   </section>
 
   <!-- MARQUEE -->
@@ -245,13 +245,47 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     <div class="reel-track" id="reelTrack"></div>
   </div>
 
+  <!-- MINT -->
+  <section class="block" id="mint">
+    <div class="sec-head"><span class="n">[01]</span><h2>Mint an ORLIX Agent</h2></div>
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — mint.sh</span></div>
+      <div class="term-body">
+        <div class="r-grid" style="margin:0 0 4px">
+          <div class="r-cell"><u>MINTED</u><b id="mMinted">—</b></div>
+          <div class="r-cell"><u>REMAINING</u><b id="mRemain">—</b></div>
+          <div class="r-cell"><u>YOU MINTED</u><b id="mYours">—</b></div>
+          <div class="r-cell"><u>STATUS</u><b id="mStatus">—</b></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 0 4px">
+          <span style="font-size:.7rem;letter-spacing:.12em;color:var(--ink-3)">QUANTITY</span>
+          <div style="display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden">
+            <button class="qbtn" id="qMinus" aria-label="minus" style="width:44px;height:44px;background:transparent;border:none;color:var(--ink-1);font-size:1.3rem;cursor:pointer">−</button>
+            <b id="qVal" style="min-width:44px;text-align:center;font-size:1.1rem">1</b>
+            <button class="qbtn" id="qPlus" aria-label="plus" style="width:44px;height:44px;background:transparent;border:none;color:var(--ink-1);font-size:1.3rem;cursor:pointer">+</button>
+          </div>
+          <span class="hint" style="margin:0">max 5 / wallet</span>
+        </div>
+
+        <div class="r-grid" style="margin:12px 0">
+          <div class="r-cell"><u>COST · BURNED</u><b id="mCost" class="green">300,000 $ORLIX</b></div>
+          <div class="r-cell"><u>YOUR $ORLIX</u><b id="mBal">—</b></div>
+        </div>
+
+        <button class="btn mint-cta" id="mintBtn" style="width:100%;justify-content:center">CONNECT WALLET TO MINT</button>
+        <p class="hint" id="mMsg" style="margin-top:12px">Burn <b style="color:var(--green)">300,000 $ORLIX</b> to mint 1 Agent — up to 5 per wallet. Two signatures: approve, then mint. Contract: <a id="mCaLink" href="https://robinhoodchain.blockscout.com/address/0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c" target="_blank" rel="noopener" style="color:var(--green)">0x2056…1C47c ↗</a></p>
+      </div>
+    </div>
+  </section>
+
   <!-- HOLDER REWARD -->
   <section class="block" id="reward">
     <div class="hr">
       <div class="hr-top">
         <span class="hr-kick"><span class="dot"></span>HOLDER REWARD · NFT HOLDERS ONLY</span>
         <h2 class="hr-amt">500,000 <em>$ORLIX</em></h2>
-        <p class="hr-sub">Exclusive to <b>ORLIX Agent</b> holders. Hold your NFT and claim <b>500,000 $ORLIX</b> per NFT — a thank-you to the collective. Not a holder yet? <a href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener">Mint on OpenSea ↗</a></p>
+        <p class="hr-sub">Exclusive to <b>ORLIX Agent</b> holders. Hold your NFT and claim <b>500,000 $ORLIX</b> per NFT — a thank-you to the collective. Not a holder yet? <a href="#mint">Mint an Agent ↑</a></p>
       </div>
       <div class="hr-check">
         <label class="field">
@@ -283,7 +317,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- ELIGIBILITY CHECKER -->
   <section class="block" id="check">
-    <div class="sec-head"><span class="n">[01]</span><h2>Mint Eligibility Checker</h2></div>
+    <div class="sec-head"><span class="n">[02]</span><h2>Mint Eligibility Checker</h2></div>
     <div class="term">
       <div class="term-bar"><i></i><i></i><i></i><span>orlix — check-eligibility.sh</span></div>
       <div class="term-body">
@@ -317,7 +351,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- CHART -->
   <section class="block" id="chart">
-    <div class="sec-head"><span class="n">[02]</span><h2>$ORLIX Live Chart</h2></div>
+    <div class="sec-head"><span class="n">[03]</span><h2>$ORLIX Live Chart</h2></div>
     <div class="chart-shell">
       <div class="chart-ph" id="chartPh">
         <div class="ph-mark" aria-hidden="true">
@@ -343,17 +377,17 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- HOW IT WORKS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[03]</span><h2>How Minting Works</h2></div>
+    <div class="sec-head"><span class="n">[04]</span><h2>How Minting Works</h2></div>
     <div class="steps">
-      <div class="step"><div class="s-n">01</div><h3>Hold $ORLIX</h3><p>Keep at least 1,000,000 $ORLIX in your wallet on Robinhood Chain to qualify for the Agent allowlist.</p></div>
-      <div class="step"><div class="s-n">02</div><h3>Check eligibility</h3><p>Verify your wallet above. Eligibility is snapshotted from live on-chain balance — no sign-up needed.</p></div>
-      <div class="step"><div class="s-n">03</div><h3>Mint now</h3><p>Up to <b style="color:var(--green)">5 per wallet</b> — your <b style="color:var(--green)">first mint is free</b>, the next 4 are 0.001 ETH each. <a href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener" style="color:var(--green)">Mint on OpenSea ↗</a></p></div>
+      <div class="step"><div class="s-n">01</div><h3>Hold $ORLIX</h3><p>Keep at least <b style="color:var(--green)">300,000 $ORLIX</b> per mint in your wallet on Robinhood Chain — that's what gets burned.</p></div>
+      <div class="step"><div class="s-n">02</div><h3>Approve</h3><p>Sign an <b>approve</b> so the Agent contract can burn your $ORLIX. One-time per mint amount — nothing leaves until you mint.</p></div>
+      <div class="step"><div class="s-n">03</div><h3>Mint &amp; burn</h3><p>Confirm the mint — <b style="color:var(--green)">300,000 $ORLIX</b> is burned per Agent, up to <b style="color:var(--green)">5 per wallet</b>. <a href="#mint" style="color:var(--green)">Mint an Agent ↑</a></p></div>
     </div>
   </section>
 
   <!-- TOKEN DETAILS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[04]</span><h2>Collection &amp; Token</h2></div>
+    <div class="sec-head"><span class="n">[05]</span><h2>Collection &amp; Token</h2></div>
     <div class="meta-grid">
       <div class="meta">
         <u>$ORLIX CONTRACT</u>
@@ -374,7 +408,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   <div class="foot-in">
     <div class="fl">
       <a href="/">Home</a>
-      <a href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener">Mint / OpenSea</a>
+      <a href="#mint">Mint</a>
       <a href="https://app.orlixai.xyz">App</a>
       <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener">Chart</a>
       <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
@@ -391,6 +425,10 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   const CFG = {
     token: "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",
     min: 1000000,
+    mintContract: "0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c", // OrlixAgentPhase2 — burn-to-mint (Robinhood Chain)
+    burnPerMint: 300000,                     // $ORLIX burned per mint
+    maxPerWallet: 5,
+    supply: 1111,
     nftContract: "0x45bf9d8cdbd7d80bb44e5f9e131c7878ac11a11e",   // ORLIX Agent NFT contract (Robinhood Chain)
     holderReward: 500000,                    // $ORLIX per NFT held
     claimContract: "0x2740F7Fb5481EB6d85E2aC90026dBb52EA1EB75e", // OrlixAgentClaim (Robinhood Chain)
@@ -491,7 +529,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     if (bal >= CFG.min){
       rBadge.className="r-badge ok"; rBadge.textContent="✓";
       rTitle.textContent="You're eligible ✓";
-      rSub.textContent="Your wallet qualifies for the ORLIX Agent mint. Stay tuned — mint soon.";
+      rSub.textContent="Your wallet qualifies — scroll up to Mint and burn to mint your Agent.";
     } else {
       rBadge.className="r-badge bad"; rBadge.textContent="✗";
       rTitle.textContent="Not eligible yet";
@@ -625,6 +663,113 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     if (!frame.src) frame.src = frame.getAttribute("data-src");
     ph.classList.add("hide");
   });
+
+  // ---- MINT (OrlixAgentPhase2 — burn 300,000 $ORLIX per Agent) ----
+  const MINT_SET = /^0x[0-9a-fA-F]{40}$/.test(CFG.mintContract);
+  const mintBtn=$("#mintBtn"), mMsg=$("#mMsg"), qVal=$("#qVal");
+  const mMinted=$("#mMinted"), mRemain=$("#mRemain"), mYours=$("#mYours"), mStatus=$("#mStatus"), mCost=$("#mCost"), mBal=$("#mBal");
+  let mQty=1, mAddr=null, mDec=18, mAllow=0n, mCostWei=0n, mOpen=false;
+  const argAddr = a => a.toLowerCase().replace(/^0x/,"").padStart(64,"0");
+  const argUint = v => BigInt(v).toString(16).padStart(64,"0");
+  const bi = h => { try{ return BigInt(h); }catch(_){ return 0n; } };
+  const costWei = q => BigInt(CFG.burnPerMint) * (10n ** BigInt(mDec)) * BigInt(q);
+
+  function renderMintBtn(){
+    if(!MINT_SET){ mintBtn.disabled=true; mintBtn.textContent="MINT CONTRACT PENDING"; return; }
+    if(!mAddr){ mintBtn.disabled=false; mintBtn.textContent="CONNECT WALLET TO MINT"; return; }
+    if(!mOpen){ mintBtn.disabled=true; mintBtn.textContent="MINT OPENS SOON"; return; }
+    mintBtn.disabled=false;
+    const plural = mQty>1 ? "S" : "";
+    mintBtn.textContent = (mAllow >= mCostWei) ? ("MINT "+mQty+" AGENT"+plural) : ("APPROVE & MINT "+mQty);
+  }
+  function updateCost(){ mCostWei = costWei(mQty); mCost.textContent = fmt(CFG.burnPerMint*mQty)+" $ORLIX"; renderMintBtn(); }
+
+  async function loadMintState(){
+    if(!MINT_SET) return;
+    try{
+      const [o,r,t] = await Promise.all([
+        rpcCall(CFG.mintContract,"0x24bbd049").catch(()=>null), // mintOpen()
+        rpcCall(CFG.mintContract,"0x55234ec0").catch(()=>null), // remaining()
+        rpcCall(CFG.mintContract,"0xa2309ff8").catch(()=>null), // totalMinted()
+      ]);
+      mOpen = o!=null && bi(o)===1n;
+      mStatus.textContent = mOpen ? "LIVE" : "SOON";
+      mStatus.className = mOpen ? "green" : "";
+      if(r!=null) mRemain.textContent = fmt(Number(bi(r)));
+      if(t!=null) mMinted.textContent = fmt(Number(bi(t)))+" / "+fmt(CFG.supply);
+      renderMintBtn();
+    }catch(_){}
+  }
+  async function refreshYou(){
+    if(!mAddr || !MINT_SET) return;
+    try{
+      mDec = await getDecimals();
+      const [b,m,a] = await Promise.all([
+        rpcCall(CFG.token,"0x70a08231"+argAddr(mAddr)).catch(()=>"0x0"),                       // balanceOf(you)
+        rpcCall(CFG.mintContract,"0x3cef28d2"+argAddr(mAddr)).catch(()=>"0x0"),                 // mintedBy(you)
+        rpcCall(CFG.token,"0xdd62ed3e"+argAddr(mAddr)+argAddr(CFG.mintContract)).catch(()=>"0x0") // allowance(you,mint)
+      ]);
+      mBal.textContent = fmt(toTokens(b,mDec))+" $ORLIX";
+      mYours.textContent = Number(bi(m)) + " / " + CFG.maxPerWallet;
+      mAllow = bi(a);
+      updateCost();
+    }catch(e){ console.error(e); }
+  }
+
+  $("#qPlus").addEventListener("click",()=>{ if(mQty<CFG.maxPerWallet){ mQty++; qVal.textContent=mQty; updateCost(); } });
+  $("#qMinus").addEventListener("click",()=>{ if(mQty>1){ mQty--; qVal.textContent=mQty; updateCost(); } });
+
+  async function waitReceipt(hash){
+    for(let i=0;i<80;i++){
+      try{
+        const r=await window.ethereum.request({method:"eth_getTransactionReceipt",params:[hash]});
+        if(r){ if(r.status && bi(r.status)===0n) throw new Error("transaction reverted"); return r; }
+      }catch(e){ if(String(e&&e.message||"").includes("reverted")) throw e; }
+      await new Promise(res=>setTimeout(res,2500));
+    }
+    return null; // timed out — assume pending
+  }
+
+  async function doMint(){
+    if(!window.ethereum){ toast("Open in a wallet browser to mint"); return; }
+    if(!mAddr){ connect(a=>{ mAddr=a; refreshYou(); }, mintBtn); return; }
+    if(!mOpen){ toast("Mint opens soon"); return; }
+    try{
+      try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }
+      catch(sw){ if(sw&&sw.code===4902){ try{ await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]}); }catch(_){}} }
+      mintBtn.disabled=true;
+      const from = mAddr;
+      const need = costWei(mQty);
+      // refresh live allowance
+      const aHex = await rpcCall(CFG.token,"0xdd62ed3e"+argAddr(from)+argAddr(CFG.mintContract)).catch(()=>"0x0");
+      mAllow = bi(aHex);
+      if(mAllow < need){
+        mintBtn.textContent="APPROVE IN WALLET…"; mMsg.textContent="Step 1 of 2 — approve $ORLIX so the contract can burn it.";
+        const approveData="0x095ea7b3"+argAddr(CFG.mintContract)+argUint(need);
+        const atx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:CFG.token,data:approveData}]});
+        mintBtn.textContent="CONFIRMING APPROVAL…";
+        await waitReceipt(atx);
+        mAllow = need;
+      }
+      mintBtn.textContent="CONFIRM MINT IN WALLET…"; mMsg.innerHTML="Step 2 of 2 — confirm the mint. <b style=\"color:var(--green)\">"+fmt(CFG.burnPerMint*mQty)+" $ORLIX</b> is burned.";
+      const mintData="0xa0712d68"+argUint(mQty);
+      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:CFG.mintContract,data:mintData}]});
+      mintBtn.textContent="MINT SUBMITTED ✓";
+      mMsg.innerHTML='Minted '+mQty+' Agent'+(mQty>1?'s':'')+'! <a href="'+CFG.explorer+'/tx/'+tx+'" target="_blank" rel="noopener" style="color:var(--green)">view transaction ↗</a>';
+      setTimeout(()=>{ loadMintState(); refreshYou(); }, 4000);
+    }catch(e){
+      console.error(e); mintBtn.disabled=false; renderMintBtn();
+      const msg=(e&&e.message)||""; toast(msg?("Mint failed: "+msg.slice(0,60)):"Mint failed");
+    }
+  }
+  mintBtn.addEventListener("click",doMint);
+
+  // init mint state + auto-detect an already-connected wallet
+  loadMintState();
+  if(window.ethereum){
+    window.ethereum.request({method:"eth_accounts"}).then(a=>{ if(a&&a[0]){ mAddr=a[0]; refreshYou(); } }).catch(()=>{});
+    if(window.ethereum.on){ window.ethereum.on("accountsChanged",a=>{ mAddr=(a&&a[0])||null; if(mAddr) refreshYou(); else renderMintBtn(); }); }
+  }
 })();
 </script>
 </body>
