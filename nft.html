@@ -279,79 +279,9 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     </div>
   </section>
 
-  <!-- HOLDER REWARD -->
-  <section class="block" id="reward">
-    <div class="hr">
-      <div class="hr-top">
-        <span class="hr-kick"><span class="dot"></span>HOLDER REWARD · NFT HOLDERS ONLY</span>
-        <h2 class="hr-amt">500,000 <em>$ORLIX</em></h2>
-        <p class="hr-sub">Exclusive to <b>ORLIX Agent</b> holders. Hold your NFT and claim <b>500,000 $ORLIX</b> per NFT — a thank-you to the collective. Not a holder yet? <a href="#mint">Mint an Agent ↑</a></p>
-      </div>
-      <div class="hr-check">
-        <label class="field">
-          <span class="pr">&gt;</span>
-          <input id="hrInput" type="text" spellcheck="false" autocomplete="off" placeholder="paste wallet address (0x…) or connect wallet">
-        </label>
-        <div class="check-actions">
-          <button class="btn" id="hrCheck">CHECK HOLDER REWARD</button>
-          <button class="btn outline" id="hrConnect">CONNECT WALLET</button>
-        </div>
-        <div class="result" id="hrResult">
-          <div class="r-top">
-            <div class="r-badge load" id="hrBadge">…</div>
-            <div class="r-txt"><strong id="hrTitle">Checking…</strong><span id="hrSub2">Reading your ORLIX Agent balance</span></div>
-          </div>
-          <div class="r-grid">
-            <div class="r-cell"><u>SNAPSHOT · ORLIX AGENT</u><b id="hrHeld">—</b></div>
-            <div class="r-cell"><u>$ORLIX REWARD</u><b id="hrAmt" class="green">—</b></div>
-          </div>
-          <div id="hrClaimWrap" style="display:none;padding:16px 20px;border-top:1px solid var(--line-soft)">
-            <button class="btn" id="hrClaimBtn" style="width:100%;font-size:.86rem">CLAIM $ORLIX</button>
-            <p class="hint" id="hrClaimMsg" style="margin-top:10px;text-align:center"></p>
-          </div>
-        </div>
-        <p class="hint">Snapshot-based. Connect the eligible wallet and press claim — you sign one transaction to receive your $ORLIX. No approvals.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ELIGIBILITY CHECKER -->
-  <section class="block" id="check">
-    <div class="sec-head"><span class="n">[02]</span><h2>Mint Eligibility Checker</h2></div>
-    <div class="term">
-      <div class="term-bar"><i></i><i></i><i></i><span>orlix — check-eligibility.sh</span></div>
-      <div class="term-body">
-        <div class="check-row">
-          <label class="field">
-            <span class="pr">&gt;</span>
-            <input id="addrInput" type="text" spellcheck="false" autocomplete="off"
-                   placeholder="paste wallet address (0x…) or connect wallet">
-          </label>
-        </div>
-        <div class="check-actions">
-          <button class="btn" id="checkBtn">CHECK ELIGIBILITY</button>
-          <button class="btn outline" id="connectInline">CONNECT WALLET</button>
-        </div>
-        <p class="hint">Read-only. We call <b>balanceOf</b> on the $ORLIX contract via a public Robinhood Chain RPC — no signature, no approval, nothing leaves your wallet.</p>
-
-        <div class="result" id="result">
-          <div class="r-top">
-            <div class="r-badge load" id="rBadge">…</div>
-            <div class="r-txt"><strong id="rTitle">Checking…</strong><span id="rSub">Querying Robinhood Chain</span></div>
-          </div>
-          <div class="r-grid">
-            <div class="r-cell"><u>YOUR $ORLIX BALANCE</u><b id="rBal">—</b></div>
-            <div class="r-cell"><u>REQUIRED</u><b id="rReq">300,000</b></div>
-          </div>
-          <div class="progress"><i id="rProg"></i></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- CHART -->
   <section class="block" id="chart">
-    <div class="sec-head"><span class="n">[03]</span><h2>$ORLIX Live Chart</h2></div>
+    <div class="sec-head"><span class="n">[02]</span><h2>$ORLIX Live Chart</h2></div>
     <div class="chart-shell">
       <div class="chart-ph" id="chartPh">
         <div class="ph-mark" aria-hidden="true">
@@ -377,7 +307,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- HOW IT WORKS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[04]</span><h2>How Minting Works</h2></div>
+    <div class="sec-head"><span class="n">[03]</span><h2>How Minting Works</h2></div>
     <div class="steps">
       <div class="step"><div class="s-n">01</div><h3>Hold $ORLIX</h3><p>Keep at least <b style="color:var(--green)">300,000 $ORLIX</b> per mint in your wallet on Robinhood Chain — that's what gets burned.</p></div>
       <div class="step"><div class="s-n">02</div><h3>Approve</h3><p>Sign an <b>approve</b> so the Agent contract can burn your $ORLIX. One-time per mint amount — nothing leaves until you mint.</p></div>
@@ -387,7 +317,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- TOKEN DETAILS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[05]</span><h2>Collection &amp; Token</h2></div>
+    <div class="sec-head"><span class="n">[04]</span><h2>Collection &amp; Token</h2></div>
     <div class="meta-grid">
       <div class="meta">
         <u>$ORLIX CONTRACT</u>
@@ -448,10 +378,6 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   const $ = s => document.querySelector(s);
   const reelTrack = $("#reelTrack");
-  const addrInput = $("#addrInput");
-  const result = $("#result");
-  const rBadge = $("#rBadge"), rTitle = $("#rTitle"), rSub = $("#rSub");
-  const rBal = $("#rBal"), rProg = $("#rProg");
 
   // ---- marquee (duplicated for seamless loop) ----
   const imgs = [];
@@ -508,58 +434,9 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     }catch(_){ return 18; }
   }
 
-  function setResult(state, bal){
-    result.classList.add("show");
-    if (state==="loading"){
-      rBadge.className="r-badge load"; rBadge.textContent="…";
-      rTitle.textContent="Checking…"; rSub.textContent="Querying Robinhood Chain";
-      rBal.textContent="—"; rProg.style.width="0";
-      return;
-    }
-    if (state==="error"){
-      rBadge.className="r-badge bad"; rBadge.textContent="!";
-      rTitle.textContent="Couldn't read balance";
-      rSub.textContent="RPC unavailable — try again, or open the chart to verify holdings.";
-      rBal.textContent="—"; rProg.style.width="0";
-      return;
-    }
-    rBal.textContent = fmt(bal) + " $ORLIX";
-    const pct = Math.max(0, Math.min(100, (bal / CFG.min) * 100));
-    rProg.style.width = pct + "%";
-    if (bal >= CFG.min){
-      rBadge.className="r-badge ok"; rBadge.textContent="✓";
-      rTitle.textContent="You're eligible ✓";
-      rSub.textContent="Your wallet qualifies — scroll up to Mint and burn to mint your Agent.";
-    } else {
-      rBadge.className="r-badge bad"; rBadge.textContent="✗";
-      rTitle.textContent="Not eligible yet";
-      const need = CFG.min - bal;
-      rSub.textContent = `Need ${fmt(need)} more $ORLIX to reach the 300,000 needed to mint.`;
-    }
-  }
-
-  async function check(addr){
-    addr = (addr||"").trim();
-    if (!isAddr(addr)){ toast("Enter a valid 0x… address"); addrInput.focus(); return; }
-    setResult("loading");
-    result.scrollIntoView({behavior:"smooth",block:"nearest"});
-    try{
-      const decimals = await getDecimals();
-      const data = "0x70a08231" + addr.toLowerCase().replace(/^0x/,"").padStart(64,"0"); // balanceOf(address)
-      const res = await rpcCall(CFG.token, data);
-      const bal = toTokens(res, decimals);
-      setResult("done", bal);
-    }catch(e){
-      console.error(e); setResult("error");
-    }
-  }
-
-  $("#checkBtn").addEventListener("click",()=>check(addrInput.value));
-  addrInput.addEventListener("keydown",e=>{ if(e.key==="Enter") check(addrInput.value); });
-
   // ---- wallet connect (reusable) ----
   async function connect(onAddr, focusEl){
-    if (!window.ethereum){ toast("No wallet found — paste your address instead"); (focusEl||addrInput).focus(); return; }
+    if (!window.ethereum){ toast("No wallet found — open in a wallet browser"); if(focusEl&&focusEl.focus) focusEl.focus(); return; }
     try{
       const accs = await window.ethereum.request({method:"eth_requestAccounts"});
       if (!accs || !accs.length){ toast("No account"); return; }
@@ -574,87 +451,6 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
       onAddr(accs[0]);
     }catch(e){ toast("Connection rejected"); }
   }
-  const connectElig = a => { addrInput.value = a; check(a); };
-  const _ct=document.getElementById("connectTop"); if(_ct) _ct.addEventListener("click",()=>connect(connectElig,addrInput));
-  $("#connectInline").addEventListener("click",()=>connect(connectElig,addrInput));
-
-  // ---- holder reward: snapshot Merkle claim (ORLIX Agent holders → 500,000 $ORLIX / NFT) ----
-  const hrInput=$("#hrInput"), hrResult=$("#hrResult");
-  const hrBadge=$("#hrBadge"),hrTitle=$("#hrTitle"),hrSub=$("#hrSub2"),hrHeld=$("#hrHeld"),hrAmt=$("#hrAmt");
-  const hrClaimWrap=$("#hrClaimWrap"), hrClaimBtn=$("#hrClaimBtn"), hrClaimMsg=$("#hrClaimMsg");
-  const CLAIM_SET = /^0x[0-9a-fA-F]{40}$/.test(CFG.claimContract);
-  let PROOFS=null, currentClaim=null;
-  fetch(CFG.proofsUrl).then(r=>r.json()).then(j=>{PROOFS=j;}).catch(()=>{});
-
-  const to32 = v => BigInt(v).toString(16).padStart(64,"0");
-  function encodeClaim(amount, proof){
-    let d="0x2f52ebb7";                 // claim(uint256,bytes32[])
-    d+=to32(amount);                     // amount
-    d+=to32(64);                         // offset to array
-    d+=to32(proof.length);               // array length
-    for(const p of proof) d+=p.replace(/^0x/,"").padStart(64,"0");
-    return d;
-  }
-  async function alreadyClaimed(addr){
-    if(!CLAIM_SET) return false;
-    try{
-      const data="0xc884ef83"+addr.toLowerCase().replace(/^0x/,"").padStart(64,"0"); // claimed(address)
-      const r=await rpcCall(CFG.claimContract,data);
-      return BigInt(r||"0")===1n;
-    }catch(_){ return false; }
-  }
-  function showClaimState(){
-    hrClaimWrap.style.display="block"; hrClaimMsg.textContent="";
-    hrClaimBtn.disabled=false; hrClaimBtn.textContent="CLAIM "+fmt(Number(currentClaim.amountHuman))+" $ORLIX";
-    if(!CLAIM_SET){ hrClaimBtn.disabled=true; hrClaimBtn.textContent="CLAIM OPENS SOON"; hrClaimMsg.textContent="Claim goes live once the reward pool is deployed & funded."; }
-  }
-  async function checkHolder(addr){
-    addr=(addr||"").trim();
-    if(!isAddr(addr)){ toast("Enter a valid 0x… address"); hrInput.focus(); return; }
-    hrResult.classList.add("show"); hrResult.scrollIntoView({behavior:"smooth",block:"nearest"});
-    hrClaimWrap.style.display="none"; currentClaim=null;
-    if(!PROOFS){ try{ PROOFS=await fetch(CFG.proofsUrl).then(r=>r.json()); }catch(_){ } }
-    const c = PROOFS && PROOFS.claims[addr.toLowerCase()];
-    if(!c){
-      hrBadge.className="r-badge bad";hrBadge.textContent="✗";
-      hrTitle.textContent="Not in the snapshot";
-      hrSub.textContent="This wallet didn't hold an ORLIX Agent at snapshot. Reward is for the 12 holders of the 32 minted.";
-      hrHeld.textContent="0 NFT"; hrAmt.textContent="—";
-      return;
-    }
-    currentClaim=c;
-    hrHeld.textContent = c.nft + (c.nft===1?" NFT":" NFTs");
-    hrAmt.textContent = "+"+fmt(Number(c.amountHuman))+" $ORLIX";
-    hrBadge.className="r-badge ok";hrBadge.textContent="✓";
-    hrTitle.textContent="You're eligible ✓";
-    hrSub.textContent=`${fmt(Number(c.amountHuman))} $ORLIX — ${fmt(CFG.holderReward)} × ${c.nft} NFT.`;
-    showClaimState();
-    if(await alreadyClaimed(addr)){
-      hrClaimBtn.disabled=true; hrClaimBtn.textContent="ALREADY CLAIMED ✓";
-      hrClaimMsg.textContent="This wallet has already claimed its reward."; hrTitle.textContent="Reward claimed ✓";
-    }
-  }
-  async function doClaim(){
-    if(!currentClaim){ toast("Check your wallet first"); return; }
-    if(!CLAIM_SET){ toast("Claim opens soon"); return; }
-    if(!window.ethereum){ toast("Open in a wallet browser to claim"); return; }
-    try{
-      const accs=await window.ethereum.request({method:"eth_requestAccounts"});
-      const from=(accs&&accs[0]||"").toLowerCase();
-      if(from!==currentClaim.address.toLowerCase()){ toast("Connect the eligible wallet ("+currentClaim.address.slice(0,6)+"…) to claim"); return; }
-      try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }
-      catch(sw){ if(sw&&sw.code===4902){ try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]});}catch(_){}} }
-      hrClaimBtn.disabled=true; hrClaimBtn.textContent="CONFIRM IN WALLET…";
-      const data=encodeClaim(currentClaim.amount, currentClaim.proof);
-      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from, to:CFG.claimContract, data}]});
-      hrClaimBtn.textContent="CLAIM SUBMITTED ✓";
-      hrClaimMsg.innerHTML=`Sent! <a href="${CFG.explorer}/tx/${tx}" target="_blank" rel="noopener" style="color:var(--green)">view transaction ↗</a>`;
-    }catch(e){ console.error(e); hrClaimBtn.disabled=false; hrClaimBtn.textContent="CLAIM "+fmt(Number(currentClaim.amountHuman))+" $ORLIX"; toast(e&&e.message?"Claim failed: "+e.message.slice(0,50):"Claim failed"); }
-  }
-  hrClaimBtn.addEventListener("click",doClaim);
-  $("#hrCheck").addEventListener("click",()=>checkHolder(hrInput.value));
-  hrInput.addEventListener("keydown",e=>{ if(e.key==="Enter") checkHolder(hrInput.value); });
-  $("#hrConnect").addEventListener("click",()=>connect(a=>{hrInput.value=a;checkHolder(a);},hrInput));
 
   // ---- chart: click-to-load embed (avoids a broken frame on page load) ----
   const frame = $("#chartFrame");
