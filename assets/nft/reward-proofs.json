@@ -1,0 +1,152 @@
+{
+  "root": "0x2152c9b251659f11d77b9ee5fc6a50443d79c6f4ebd6bb60d173d9184641920c",
+  "token": "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",
+  "nft": "0x45bf9d8cdbd7d80bb44e5f9e131c7878ac11a11e",
+  "rewardPerNft": "500000",
+  "decimals": 18,
+  "totalHolders": 12,
+  "totalNft": 32,
+  "totalReward": "16000000",
+  "claims": {
+    "0xb61abbc6e4d22b0184e2f2251119529cc1cc6b38": {
+      "address": "0xB61AbBC6E4D22B0184e2f2251119529cc1cc6B38",
+      "amount": "2500000000000000000000000",
+      "amountHuman": "2500000",
+      "nft": 5,
+      "proof": [
+        "0x90d066f0dfd3e0826654a814488d15b57bb9582e95a4b8174e9a4c71e6a4ab23",
+        "0x2006f49cca1142bc92d96958e157107e94c38027d07b2963f981ea640acd3cad",
+        "0x62e3a7857902764e16f82464321bf44e5de8041c4ddad4b1b0a23bb6a3c4427b",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    },
+    "0x697e1211a1ba19abdd817a68f8de104d1b801acc": {
+      "address": "0x697E1211A1bA19ABDD817a68F8de104d1B801Acc",
+      "amount": "2500000000000000000000000",
+      "amountHuman": "2500000",
+      "nft": 5,
+      "proof": [
+        "0x230932d092472d16806fcea436a2b93bc1ebe8f4169c99f49720162fe0f3b20a",
+        "0xa1d6441d23e69c981cd964e5a7ecaa978def2c55f7637a035e154721e184083a",
+        "0x12c69b95a5c801d7a60333c831730280e3b4f0b630a00ac2f5e42148a9efa59a",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    },
+    "0x99d155c422610899c90579c0fded0b38e5054fa6": {
+      "address": "0x99d155c422610899C90579C0FdeD0b38e5054fa6",
+      "amount": "2000000000000000000000000",
+      "amountHuman": "2000000",
+      "nft": 4,
+      "proof": [
+        "0xa8a5df39acef53c91edd342823fa2a07b4f174add3bebc36fb1661f232022dd2",
+        "0x75a715f988de82f2652e3dea8d2abdf12bbedcd3c6e2b01599a8f786b198f2c0",
+        "0xd051dc4135dc2982c06408ef6557ac68a0802db52a13ca42af1a1589c21cc09e"
+      ]
+    },
+    "0x25dab770143f09b64b06f7de54225f22d7c86ec8": {
+      "address": "0x25dab770143f09B64b06f7DE54225F22D7c86eC8",
+      "amount": "2000000000000000000000000",
+      "amountHuman": "2000000",
+      "nft": 4,
+      "proof": [
+        "0x1cde7bde765b42d6c6a73ae483bfad25309b58d774212a2e9702a40f16ae4bd0",
+        "0xa1d6441d23e69c981cd964e5a7ecaa978def2c55f7637a035e154721e184083a",
+        "0x12c69b95a5c801d7a60333c831730280e3b4f0b630a00ac2f5e42148a9efa59a",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    },
+    "0xd69bd6cef0f36b9baa2d5d0d5d4b85b203f11279": {
+      "address": "0xD69BD6cef0F36B9BaA2d5D0d5D4b85B203f11279",
+      "amount": "1500000000000000000000000",
+      "amountHuman": "1500000",
+      "nft": 3,
+      "proof": [
+        "0x6faa048d55096fc6d75e992ab20d08e161dc06dccf07574404f355c01b876b02",
+        "0x6eb7b03fc3d140edd73fa5d14331cb4c297e3a3183b6ecd21195479a6a7a93d9",
+        "0x62e3a7857902764e16f82464321bf44e5de8041c4ddad4b1b0a23bb6a3c4427b",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    },
+    "0x98bee3983410b6a5c9c1ce0758e90c5fedd72f93": {
+      "address": "0x98Bee3983410b6a5c9c1ce0758e90C5feDD72F93",
+      "amount": "1500000000000000000000000",
+      "amountHuman": "1500000",
+      "nft": 3,
+      "proof": [
+        "0x7120d1cfa0c8e7178d4a0243638ae9ca90f64132505337947f28e1d997514388",
+        "0x2006f49cca1142bc92d96958e157107e94c38027d07b2963f981ea640acd3cad",
+        "0x62e3a7857902764e16f82464321bf44e5de8041c4ddad4b1b0a23bb6a3c4427b",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    },
+    "0xde9169a709177902f4afc7ba04ff1fb2859efd72": {
+      "address": "0xdE9169a709177902F4AFc7Ba04FF1fb2859eFd72",
+      "amount": "1000000000000000000000000",
+      "amountHuman": "1000000",
+      "nft": 2,
+      "proof": [
+        "0x45bd2206c27b43b502a08c239bf89a4c8c59a055578b0cea711896dcadc122f4",
+        "0x197b3254d5084092f5d8ff44fe793352b5a650e7ad770ec9226c94cc0caea779",
+        "0x12c69b95a5c801d7a60333c831730280e3b4f0b630a00ac2f5e42148a9efa59a",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    },
+    "0xbe07825f6fbe3fadf69a6eeb581b1c207a943c76": {
+      "address": "0xbE07825f6fbe3fADf69a6eEB581b1C207A943C76",
+      "amount": "1000000000000000000000000",
+      "amountHuman": "1000000",
+      "nft": 2,
+      "proof": [
+        "0xe3bbab10c53fd72d293b7fc8af107c358279ad39bed3682b6e766c75bf13cd92",
+        "0xb955f81ffcc3d9b6bc56ae20e52f421c7602c60f544f6254f2968cadd859b7e3",
+        "0xd051dc4135dc2982c06408ef6557ac68a0802db52a13ca42af1a1589c21cc09e"
+      ]
+    },
+    "0xdf2b985c61b3923461f888e359da8a8fb871bd07": {
+      "address": "0xdF2B985c61B3923461F888e359dA8A8fB871BD07",
+      "amount": "500000000000000000000000",
+      "amountHuman": "500000",
+      "nft": 1,
+      "proof": [
+        "0xae76c75184ab030ce648406b1bad99fceeb414c2335656a4024d719c7c5bdcd7",
+        "0xb955f81ffcc3d9b6bc56ae20e52f421c7602c60f544f6254f2968cadd859b7e3",
+        "0xd051dc4135dc2982c06408ef6557ac68a0802db52a13ca42af1a1589c21cc09e"
+      ]
+    },
+    "0xc2ab58c4793724a934cd18667c648b422c37fffc": {
+      "address": "0xC2Ab58c4793724A934Cd18667C648B422c37FFFc",
+      "amount": "500000000000000000000000",
+      "amountHuman": "500000",
+      "nft": 1,
+      "proof": [
+        "0x3008254ec487a8304f198d01c774128d4eed43418d50aaa1755590310f76af40",
+        "0x197b3254d5084092f5d8ff44fe793352b5a650e7ad770ec9226c94cc0caea779",
+        "0x12c69b95a5c801d7a60333c831730280e3b4f0b630a00ac2f5e42148a9efa59a",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    },
+    "0x76888254587a74e8b0e0c2d4f3d7ade57d5aebdf": {
+      "address": "0x76888254587a74E8B0e0C2d4F3d7adE57D5aEBdf",
+      "amount": "500000000000000000000000",
+      "amountHuman": "500000",
+      "nft": 1,
+      "proof": [
+        "0x9555909ec0c2c0c950913ad4ccc82f95d77cd5226f3dd8b1ec87695977c8404c",
+        "0x75a715f988de82f2652e3dea8d2abdf12bbedcd3c6e2b01599a8f786b198f2c0",
+        "0xd051dc4135dc2982c06408ef6557ac68a0802db52a13ca42af1a1589c21cc09e"
+      ]
+    },
+    "0x7069aa6072db19e7b932eae49c7e7c61c68acf74": {
+      "address": "0x7069aA6072db19e7B932eAe49c7E7C61C68aCf74",
+      "amount": "500000000000000000000000",
+      "amountHuman": "500000",
+      "nft": 1,
+      "proof": [
+        "0x4b39317bc8301202c14fe4afa3fe2c514895a74b4414ddff656e54430e373a4f",
+        "0x6eb7b03fc3d140edd73fa5d14331cb4c297e3a3183b6ecd21195479a6a7a93d9",
+        "0x62e3a7857902764e16f82464321bf44e5de8041c4ddad4b1b0a23bb6a3c4427b",
+        "0xcc22d37a02bdce154cb705c5d981b8685efebb99e3ff88b7767e211d160ab01e"
+      ]
+    }
+  }
+}

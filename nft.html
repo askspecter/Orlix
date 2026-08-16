@@ -268,11 +268,15 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
             <div class="r-txt"><strong id="hrTitle">Checking…</strong><span id="hrSub2">Reading your ORLIX Agent balance</span></div>
           </div>
           <div class="r-grid">
-            <div class="r-cell"><u>ORLIX AGENT HELD</u><b id="hrHeld">—</b></div>
+            <div class="r-cell"><u>SNAPSHOT · ORLIX AGENT</u><b id="hrHeld">—</b></div>
             <div class="r-cell"><u>$ORLIX REWARD</u><b id="hrAmt" class="green">—</b></div>
           </div>
+          <div id="hrClaimWrap" style="display:none;padding:16px 20px;border-top:1px solid var(--line-soft)">
+            <button class="btn" id="hrClaimBtn" style="width:100%;font-size:.86rem">CLAIM $ORLIX</button>
+            <p class="hint" id="hrClaimMsg" style="margin-top:10px;text-align:center"></p>
+          </div>
         </div>
-        <p class="hint">Read-only. We read <b>balanceOf</b> on the ORLIX Agent NFT contract — no signature, nothing leaves your wallet.</p>
+        <p class="hint">Snapshot-based. Connect the eligible wallet and press claim — you sign one transaction to receive your $ORLIX. No approvals.</p>
       </div>
     </div>
   </section>
@@ -389,6 +393,9 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     min: 1000000,
     nftContract: "0x45bf9d8cdbd7d80bb44e5f9e131c7878ac11a11e",   // ORLIX Agent NFT contract (Robinhood Chain)
     holderReward: 500000,                    // $ORLIX per NFT held
+    claimContract: "__SET_CLAIM_CONTRACT__", // OrlixAgentClaim address (set after deploy)
+    proofsUrl: "/assets/nft/reward-proofs.json",
+    explorer: "https://robinhoodchain.blockscout.com",
     chainIdDec: 4663,
     chainIdHex: "0x1237",
     rpcs: ["https://rpc.mainnet.chain.robinhood.com/"],
@@ -533,33 +540,80 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   const _ct=document.getElementById("connectTop"); if(_ct) _ct.addEventListener("click",()=>connect(connectElig,addrInput));
   $("#connectInline").addEventListener("click",()=>connect(connectElig,addrInput));
 
-  // ---- holder reward check (ORLIX Agent NFT holders → 500,000 $ORLIX) ----
-  const hrInput = $("#hrInput"), hrResult = $("#hrResult");
-  const NFT_SET = /^0x[0-9a-fA-F]{40}$/.test(CFG.nftContract);
-  function setHolder(state, held){
-    hrResult.classList.add("show");
-    const badge=$("#hrBadge"),title=$("#hrTitle"),sub=$("#hrSub2"),h=$("#hrHeld"),amt=$("#hrAmt");
-    if(state==="soon"){ badge.className="r-badge load";badge.textContent="…";title.textContent="Reward checker opening soon";sub.textContent="Hold your ORLIX Agent NFT to qualify.";h.textContent="—";amt.textContent="—";return;}
-    if(state==="loading"){ badge.className="r-badge load";badge.textContent="…";title.textContent="Checking…";sub.textContent="Reading your ORLIX Agent balance";h.textContent="—";amt.textContent="—";return;}
-    if(state==="error"){ badge.className="r-badge bad";badge.textContent="!";title.textContent="Couldn't read balance";sub.textContent="RPC unavailable — try again in a moment.";h.textContent="—";amt.textContent="—";return;}
-    h.textContent = held + (held===1?" NFT":" NFTs");
-    const reward = held*CFG.holderReward;
-    amt.textContent = (reward>0?"+":"") + fmt(reward) + " $ORLIX";
-    if(held>0){ badge.className="r-badge ok";badge.textContent="✓";title.textContent="You're a holder ✓";sub.textContent=`Eligible for ${fmt(reward)} $ORLIX — ${fmt(CFG.holderReward)} × ${held}.`; }
-    else { badge.className="r-badge bad";badge.textContent="✗";title.textContent="No ORLIX Agent found";sub.textContent="Mint one to unlock the 500,000 $ORLIX holder reward."; }
+  // ---- holder reward: snapshot Merkle claim (ORLIX Agent holders → 500,000 $ORLIX / NFT) ----
+  const hrInput=$("#hrInput"), hrResult=$("#hrResult");
+  const hrBadge=$("#hrBadge"),hrTitle=$("#hrTitle"),hrSub=$("#hrSub2"),hrHeld=$("#hrHeld"),hrAmt=$("#hrAmt");
+  const hrClaimWrap=$("#hrClaimWrap"), hrClaimBtn=$("#hrClaimBtn"), hrClaimMsg=$("#hrClaimMsg");
+  const CLAIM_SET = /^0x[0-9a-fA-F]{40}$/.test(CFG.claimContract);
+  let PROOFS=null, currentClaim=null;
+  fetch(CFG.proofsUrl).then(r=>r.json()).then(j=>{PROOFS=j;}).catch(()=>{});
+
+  const to32 = v => BigInt(v).toString(16).padStart(64,"0");
+  function encodeClaim(amount, proof){
+    let d="0x2f52ebb7";                 // claim(uint256,bytes32[])
+    d+=to32(amount);                     // amount
+    d+=to32(64);                         // offset to array
+    d+=to32(proof.length);               // array length
+    for(const p of proof) d+=p.replace(/^0x/,"").padStart(64,"0");
+    return d;
+  }
+  async function alreadyClaimed(addr){
+    if(!CLAIM_SET) return false;
+    try{
+      const data="0xc884ef83"+addr.toLowerCase().replace(/^0x/,"").padStart(64,"0"); // claimed(address)
+      const r=await rpcCall(CFG.claimContract,data);
+      return BigInt(r||"0")===1n;
+    }catch(_){ return false; }
+  }
+  function showClaimState(){
+    hrClaimWrap.style.display="block"; hrClaimMsg.textContent="";
+    hrClaimBtn.disabled=false; hrClaimBtn.textContent="CLAIM "+fmt(Number(currentClaim.amountHuman))+" $ORLIX";
+    if(!CLAIM_SET){ hrClaimBtn.disabled=true; hrClaimBtn.textContent="CLAIM OPENS SOON"; hrClaimMsg.textContent="Claim goes live once the reward pool is deployed & funded."; }
   }
   async function checkHolder(addr){
     addr=(addr||"").trim();
     if(!isAddr(addr)){ toast("Enter a valid 0x… address"); hrInput.focus(); return; }
-    if(!NFT_SET){ setHolder("soon"); hrResult.scrollIntoView({behavior:"smooth",block:"nearest"}); return; }
-    setHolder("loading"); hrResult.scrollIntoView({behavior:"smooth",block:"nearest"});
-    try{
-      const data="0x70a08231"+addr.toLowerCase().replace(/^0x/,"").padStart(64,"0"); // balanceOf(address)
-      const res=await rpcCall(CFG.nftContract,data);
-      const held=Number(BigInt(res)); // ERC-721 balanceOf = whole count
-      setHolder("done", held);
-    }catch(e){ console.error(e); setHolder("error"); }
+    hrResult.classList.add("show"); hrResult.scrollIntoView({behavior:"smooth",block:"nearest"});
+    hrClaimWrap.style.display="none"; currentClaim=null;
+    if(!PROOFS){ try{ PROOFS=await fetch(CFG.proofsUrl).then(r=>r.json()); }catch(_){ } }
+    const c = PROOFS && PROOFS.claims[addr.toLowerCase()];
+    if(!c){
+      hrBadge.className="r-badge bad";hrBadge.textContent="✗";
+      hrTitle.textContent="Not in the snapshot";
+      hrSub.textContent="This wallet didn't hold an ORLIX Agent at snapshot. Reward is for the 12 holders of the 32 minted.";
+      hrHeld.textContent="0 NFT"; hrAmt.textContent="—";
+      return;
+    }
+    currentClaim=c;
+    hrHeld.textContent = c.nft + (c.nft===1?" NFT":" NFTs");
+    hrAmt.textContent = "+"+fmt(Number(c.amountHuman))+" $ORLIX";
+    hrBadge.className="r-badge ok";hrBadge.textContent="✓";
+    hrTitle.textContent="You're eligible ✓";
+    hrSub.textContent=`${fmt(Number(c.amountHuman))} $ORLIX — ${fmt(CFG.holderReward)} × ${c.nft} NFT.`;
+    showClaimState();
+    if(await alreadyClaimed(addr)){
+      hrClaimBtn.disabled=true; hrClaimBtn.textContent="ALREADY CLAIMED ✓";
+      hrClaimMsg.textContent="This wallet has already claimed its reward."; hrTitle.textContent="Reward claimed ✓";
+    }
   }
+  async function doClaim(){
+    if(!currentClaim){ toast("Check your wallet first"); return; }
+    if(!CLAIM_SET){ toast("Claim opens soon"); return; }
+    if(!window.ethereum){ toast("Open in a wallet browser to claim"); return; }
+    try{
+      const accs=await window.ethereum.request({method:"eth_requestAccounts"});
+      const from=(accs&&accs[0]||"").toLowerCase();
+      if(from!==currentClaim.address.toLowerCase()){ toast("Connect the eligible wallet ("+currentClaim.address.slice(0,6)+"…) to claim"); return; }
+      try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }
+      catch(sw){ if(sw&&sw.code===4902){ try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]});}catch(_){}} }
+      hrClaimBtn.disabled=true; hrClaimBtn.textContent="CONFIRM IN WALLET…";
+      const data=encodeClaim(currentClaim.amount, currentClaim.proof);
+      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from, to:CFG.claimContract, data}]});
+      hrClaimBtn.textContent="CLAIM SUBMITTED ✓";
+      hrClaimMsg.innerHTML=`Sent! <a href="${CFG.explorer}/tx/${tx}" target="_blank" rel="noopener" style="color:var(--green)">view transaction ↗</a>`;
+    }catch(e){ console.error(e); hrClaimBtn.disabled=false; hrClaimBtn.textContent="CLAIM "+fmt(Number(currentClaim.amountHuman))+" $ORLIX"; toast(e&&e.message?"Claim failed: "+e.message.slice(0,50):"Claim failed"); }
+  }
+  hrClaimBtn.addEventListener("click",doClaim);
   $("#hrCheck").addEventListener("click",()=>checkHolder(hrInput.value));
   hrInput.addEventListener("keydown",e=>{ if(e.key==="Enter") checkHolder(hrInput.value); });
   $("#hrConnect").addEventListener("click",()=>connect(a=>{hrInput.value=a;checkHolder(a);},hrInput));
