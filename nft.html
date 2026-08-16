@@ -469,20 +469,35 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   const mintBtn=$("#mintBtn"), mMsg=$("#mMsg"), qVal=$("#qVal");
   const mMinted=$("#mMinted"), mRemain=$("#mRemain"), mYours=$("#mYours"), mStatus=$("#mStatus"), mCost=$("#mCost"), mBal=$("#mBal");
   let mQty=1, mAddr=null, mDec=18, mAllow=0n, mCostWei=0n, mOpen=false;
+  let mMintedYou=0, mRemainSupply=Infinity, mBalTok=0;
+  const qMinusEl=$("#qMinus"), qPlusEl=$("#qPlus");
   const argAddr = a => a.toLowerCase().replace(/^0x/,"").padStart(64,"0");
   const argUint = v => BigInt(v).toString(16).padStart(64,"0");
   const bi = h => { try{ return BigInt(h); }catch(_){ return 0n; } };
   const costWei = q => BigInt(CFG.burnPerMint) * (10n ** BigInt(mDec)) * BigInt(q);
+  const allowedMax = () => Math.max(0, Math.min(CFG.maxPerWallet - mMintedYou, mRemainSupply));
+
+  function clampQty(){
+    const cap = allowedMax();
+    if(mQty > cap) mQty = cap;
+    if(mQty < 1)   mQty = 1;
+    qVal.textContent = mQty;
+    if(qMinusEl){ qMinusEl.disabled = (mQty<=1 || cap<=0); qMinusEl.style.opacity = qMinusEl.disabled?.35:1; }
+    if(qPlusEl){  qPlusEl.disabled  = (mQty>=cap || cap<=0); qPlusEl.style.opacity  = qPlusEl.disabled?.35:1; }
+  }
 
   function renderMintBtn(){
     if(!MINT_SET){ mintBtn.disabled=true; mintBtn.textContent="MINT CONTRACT PENDING"; return; }
     if(!mAddr){ mintBtn.disabled=false; mintBtn.textContent="CONNECT WALLET TO MINT"; return; }
     if(!mOpen){ mintBtn.disabled=true; mintBtn.textContent="MINT OPENS SOON"; return; }
+    if(mRemainSupply<=0){ mintBtn.disabled=true; mintBtn.textContent="SOLD OUT"; return; }
+    if(mMintedYou>=CFG.maxPerWallet){ mintBtn.disabled=true; mintBtn.textContent="MAX MINTED ("+mMintedYou+"/"+CFG.maxPerWallet+")"; return; }
+    if(mBalTok < CFG.burnPerMint*mQty){ mintBtn.disabled=true; mintBtn.textContent="NOT ENOUGH $ORLIX"; return; }
     mintBtn.disabled=false;
     const plural = mQty>1 ? "S" : "";
     mintBtn.textContent = (mAllow >= mCostWei) ? ("MINT "+mQty+" AGENT"+plural) : ("APPROVE & MINT "+mQty);
   }
-  function updateCost(){ mCostWei = costWei(mQty); mCost.textContent = fmt(CFG.burnPerMint*mQty)+" $ORLIX"; renderMintBtn(); }
+  function updateCost(){ clampQty(); mCostWei = costWei(mQty); mCost.textContent = fmt(CFG.burnPerMint*mQty)+" $ORLIX"; renderMintBtn(); }
 
   async function loadMintState(){
     if(!MINT_SET) return;
@@ -495,9 +510,9 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
       mOpen = o!=null && bi(o)===1n;
       mStatus.textContent = mOpen ? "LIVE" : "SOON";
       mStatus.className = mOpen ? "green" : "";
-      if(r!=null) mRemain.textContent = fmt(Number(bi(r)));
+      if(r!=null){ mRemainSupply = Number(bi(r)); mRemain.textContent = fmt(mRemainSupply); }
       if(t!=null) mMinted.textContent = fmt(Number(bi(t)))+" / "+fmt(CFG.supply);
-      renderMintBtn();
+      updateCost();
     }catch(_){}
   }
   async function refreshYou(){
@@ -509,15 +524,17 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
         rpcCall(CFG.mintContract,"0x3cef28d2"+argAddr(mAddr)).catch(()=>"0x0"),                 // mintedBy(you)
         rpcCall(CFG.token,"0xdd62ed3e"+argAddr(mAddr)+argAddr(CFG.mintContract)).catch(()=>"0x0") // allowance(you,mint)
       ]);
-      mBal.textContent = fmt(toTokens(b,mDec))+" $ORLIX";
-      mYours.textContent = Number(bi(m)) + " / " + CFG.maxPerWallet;
+      mBalTok = toTokens(b,mDec);
+      mBal.textContent = fmt(mBalTok)+" $ORLIX";
+      mMintedYou = Number(bi(m));
+      mYours.textContent = mMintedYou + " / " + CFG.maxPerWallet;
       mAllow = bi(a);
       updateCost();
     }catch(e){ console.error(e); }
   }
 
-  $("#qPlus").addEventListener("click",()=>{ if(mQty<CFG.maxPerWallet){ mQty++; qVal.textContent=mQty; updateCost(); } });
-  $("#qMinus").addEventListener("click",()=>{ if(mQty>1){ mQty--; qVal.textContent=mQty; updateCost(); } });
+  $("#qPlus").addEventListener("click",()=>{ if(mQty<allowedMax()){ mQty++; updateCost(); } });
+  $("#qMinus").addEventListener("click",()=>{ if(mQty>1){ mQty--; updateCost(); } });
 
   async function waitReceipt(hash){
     for(let i=0;i<80;i++){
@@ -534,6 +551,10 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     if(!window.ethereum){ toast("Open in a wallet browser to mint"); return; }
     if(!mAddr){ connect(a=>{ mAddr=a; refreshYou(); }, mintBtn); return; }
     if(!mOpen){ toast("Mint opens soon"); return; }
+    if(mRemainSupply<=0){ toast("Sold out"); renderMintBtn(); return; }
+    if(mMintedYou>=CFG.maxPerWallet){ toast("You've minted the max ("+CFG.maxPerWallet+"/"+CFG.maxPerWallet+")"); renderMintBtn(); return; }
+    if(mQty>allowedMax()){ mQty=Math.max(1,allowedMax()); updateCost(); }
+    if(mBalTok < CFG.burnPerMint*mQty){ toast("Not enough $ORLIX to mint"); renderMintBtn(); return; }
     try{
       try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }
       catch(sw){ if(sw&&sw.code===4902){ try{ await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]}); }catch(_){}} }
