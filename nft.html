@@ -84,6 +84,20 @@ h1 em{font-style:normal;color:var(--green)}
 .mint-cta{display:inline-block;margin:26px auto 0;font-size:.9rem;letter-spacing:.16em;padding:16px 30px;border-radius:12px}
 .mint-cta:hover{transform:translateY(-1px)}
 
+/* live burn counter */
+.burn-banner{margin:34px 0;border:1px solid var(--line);border-radius:16px;padding:22px 26px;
+  background:radial-gradient(620px 220px at 8% 0%,rgba(207,246,5,.13),transparent 70%),linear-gradient(180deg,var(--panel-2),var(--panel));
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 26px 70px -50px rgba(207,246,5,.4)}
+.bb-flame{font-size:2.1rem;line-height:1;filter:drop-shadow(0 0 14px rgba(207,246,5,.45))}
+.bb-main{display:flex;flex-direction:column;line-height:1.05}
+.bb-main b{color:var(--green);font-size:clamp(1.7rem,5.4vw,2.6rem);font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.bb-main span{font-size:.64rem;letter-spacing:.26em;color:var(--ink-3);text-transform:uppercase;margin-top:5px}
+.bb-sub{margin-left:auto;font-size:.72rem;color:var(--ink-2);max-width:32ch;text-align:right}
+.bb-sub a{color:var(--green)}
+.burn-banner.bump{animation:bbBump .9s var(--ease)}
+@keyframes bbBump{0%{box-shadow:0 0 0 rgba(207,246,5,0)}28%{box-shadow:0 0 46px rgba(207,246,5,.4)}100%{box-shadow:0 0 0 rgba(207,246,5,0)}}
+@media(max-width:640px){.bb-sub{margin-left:0;text-align:left;width:100%}}
+
 /* holder reward */
 .hr{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;border:1px solid var(--line);border-radius:18px;padding:28px;
   background:radial-gradient(700px 320px at 12% 0%,rgba(207,246,5,.10),transparent 70%),linear-gradient(180deg,var(--panel-2),var(--panel));
@@ -244,6 +258,16 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   <!-- MARQUEE -->
   <div class="reel" aria-label="ORLIX Agent preview">
     <div class="reel-track" id="reelTrack"></div>
+  </div>
+
+  <!-- LIVE BURN COUNTER -->
+  <div class="burn-banner" id="burnBanner">
+    <div class="bb-flame">🔥</div>
+    <div class="bb-main">
+      <b id="burnTotal">—</b>
+      <span>$ORLIX burned forever</span>
+    </div>
+    <div class="bb-sub">Deflationary — every mint burns 300,000 $ORLIX.<br><a href="https://robinhoodchain.blockscout.com/address/0x000000000000000000000000000000000000dEaD?tab=tokens" target="_blank" rel="noopener">Verify on Blockscout ↗</a></div>
   </div>
 
   <!-- MINT -->
@@ -577,13 +601,33 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
       const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:CFG.mintContract,data:mintData}]});
       mintBtn.textContent="MINT SUBMITTED ✓";
       mMsg.innerHTML='Minted '+mQty+' Agent'+(mQty>1?'s':'')+'! <a href="'+CFG.explorer+'/tx/'+tx+'" target="_blank" rel="noopener" style="color:var(--green)">view transaction ↗</a>';
-      setTimeout(()=>{ loadMintState(); refreshYou(); }, 4000);
+      setTimeout(()=>{ loadMintState(); refreshYou(); loadBurned(); }, 4000);
     }catch(e){
       console.error(e); mintBtn.disabled=false; renderMintBtn();
       const msg=(e&&e.message)||""; toast(msg?("Mint failed: "+msg.slice(0,60)):"Mint failed");
     }
   }
   mintBtn.addEventListener("click",doMint);
+
+  // ---- live TOTAL BURNED ($ORLIX in the burn address, all-time) ----
+  const burnEl = $("#burnTotal"), burnBanner = $("#burnBanner");
+  // balanceOf(0x…dEaD) — data already left-padded to 32 bytes
+  const BURN_DATA = "0x70a08231000000000000000000000000000000000000000000000000000000000000dEaD";
+  let lastBurn = 0;
+  async function loadBurned(){
+    try{
+      const dec = await getDecimals();
+      const r = await rpcCall(CFG.token, BURN_DATA);
+      const v = toTokens(r, dec);
+      if(v>0){
+        burnEl.textContent = fmt(v);
+        if(lastBurn>0 && v>lastBurn && burnBanner){ burnBanner.classList.remove("bump"); void burnBanner.offsetWidth; burnBanner.classList.add("bump"); }
+        lastBurn = v;
+      }
+    }catch(_){}
+  }
+  loadBurned();
+  setInterval(loadBurned, 25000);
 
   // init mint state + auto-detect an already-connected wallet
   loadMintState();
