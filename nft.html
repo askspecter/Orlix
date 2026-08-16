@@ -84,6 +84,19 @@ h1 em{font-style:normal;color:var(--green)}
 .mint-cta{display:inline-block;margin:26px auto 0;font-size:.9rem;letter-spacing:.16em;padding:16px 30px;border-radius:12px}
 .mint-cta:hover{transform:translateY(-1px)}
 
+/* holder reward */
+.hr{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;border:1px solid var(--line);border-radius:18px;padding:28px;
+  background:radial-gradient(700px 320px at 12% 0%,rgba(207,246,5,.10),transparent 70%),linear-gradient(180deg,var(--panel-2),var(--panel));
+  box-shadow:0 30px 80px -46px rgba(207,246,5,.35)}
+@media(max-width:760px){.hr{grid-template-columns:1fr;padding:22px}}
+.hr-kick{display:inline-flex;align-items:center;gap:9px;font-size:.62rem;letter-spacing:.28em;color:var(--green);border:1px solid var(--line);border-radius:100px;padding:7px 14px;background:rgba(207,246,5,.05)}
+.hr-kick .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 1.8s infinite}
+.hr-amt{margin:16px 0 0;color:var(--ink);font-weight:600;letter-spacing:-.02em;font-size:clamp(2.4rem,6vw,3.6rem);line-height:1}
+.hr-amt em{font-style:normal;color:var(--green)}
+.hr-sub{margin:12px 0 0;color:var(--ink-2);font-size:.9rem;max-width:44ch}
+.hr-sub a{color:var(--green)}
+.hr-check .field{margin-bottom:0}
+
 /* marquee */
 .reel{margin:44px 0 8px;position:relative;overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
@@ -232,9 +245,41 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     <div class="reel-track" id="reelTrack"></div>
   </div>
 
+  <!-- HOLDER REWARD -->
+  <section class="block" id="reward">
+    <div class="hr">
+      <div class="hr-top">
+        <span class="hr-kick"><span class="dot"></span>HOLDER REWARD · NFT HOLDERS ONLY</span>
+        <h2 class="hr-amt">500,000 <em>$ORLIX</em></h2>
+        <p class="hr-sub">Exclusive to <b>ORLIX Genesis</b> holders. Hold your NFT and claim <b>500,000 $ORLIX</b> per NFT — a thank-you to the collective. Not a holder yet? <a href="https://opensea.io/collection/orlix-603224813" target="_blank" rel="noopener">Mint on OpenSea ↗</a></p>
+      </div>
+      <div class="hr-check">
+        <label class="field">
+          <span class="pr">&gt;</span>
+          <input id="hrInput" type="text" spellcheck="false" autocomplete="off" placeholder="paste wallet address (0x…) or connect wallet">
+        </label>
+        <div class="check-actions">
+          <button class="btn" id="hrCheck">CHECK HOLDER REWARD</button>
+          <button class="btn outline" id="hrConnect">CONNECT WALLET</button>
+        </div>
+        <div class="result" id="hrResult">
+          <div class="r-top">
+            <div class="r-badge load" id="hrBadge">…</div>
+            <div class="r-txt"><strong id="hrTitle">Checking…</strong><span id="hrSub2">Reading your ORLIX Genesis balance</span></div>
+          </div>
+          <div class="r-grid">
+            <div class="r-cell"><u>ORLIX GENESIS HELD</u><b id="hrHeld">—</b></div>
+            <div class="r-cell"><u>$ORLIX REWARD</u><b id="hrAmt" class="green">—</b></div>
+          </div>
+        </div>
+        <p class="hint">Read-only. We read <b>balanceOf</b> on the ORLIX Genesis NFT contract — no signature, nothing leaves your wallet.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ELIGIBILITY CHECKER -->
   <section class="block" id="check">
-    <div class="sec-head"><span class="n">[01]</span><h2>Eligibility Checker</h2></div>
+    <div class="sec-head"><span class="n">[01]</span><h2>Mint Eligibility Checker</h2></div>
     <div class="term">
       <div class="term-bar"><i></i><i></i><i></i><span>orlix — check-eligibility.sh</span></div>
       <div class="term-body">
@@ -342,6 +387,8 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   const CFG = {
     token: "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",
     min: 1000000,
+    nftContract: "__SET_NFT_CONTRACT__",   // ORLIX Genesis NFT contract (Robinhood Chain)
+    holderReward: 500000,                    // $ORLIX per NFT held
     chainIdDec: 4663,
     chainIdHex: "0x1237",
     rpcs: ["https://rpc.mainnet.chain.robinhood.com/"],
@@ -465,13 +512,12 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   $("#checkBtn").addEventListener("click",()=>check(addrInput.value));
   addrInput.addEventListener("keydown",e=>{ if(e.key==="Enter") check(addrInput.value); });
 
-  // ---- wallet connect ----
-  async function connect(){
-    if (!window.ethereum){ toast("No wallet found — paste your address instead"); addrInput.focus(); return; }
+  // ---- wallet connect (reusable) ----
+  async function connect(onAddr, focusEl){
+    if (!window.ethereum){ toast("No wallet found — paste your address instead"); (focusEl||addrInput).focus(); return; }
     try{
       const accs = await window.ethereum.request({method:"eth_requestAccounts"});
       if (!accs || !accs.length){ toast("No account"); return; }
-      // try to switch to Robinhood Chain (non-blocking for the read)
       try{
         await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]});
       }catch(sw){
@@ -479,13 +525,44 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
           try{ await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]}); }catch(_){}
         }
       }
-      addrInput.value = accs[0];
       toast("Wallet connected");
-      check(accs[0]);
+      onAddr(accs[0]);
     }catch(e){ toast("Connection rejected"); }
   }
-  const _ct=document.getElementById("connectTop"); if(_ct) _ct.addEventListener("click",connect);
-  $("#connectInline").addEventListener("click",connect);
+  const connectElig = a => { addrInput.value = a; check(a); };
+  const _ct=document.getElementById("connectTop"); if(_ct) _ct.addEventListener("click",()=>connect(connectElig,addrInput));
+  $("#connectInline").addEventListener("click",()=>connect(connectElig,addrInput));
+
+  // ---- holder reward check (ORLIX Genesis NFT holders → 500,000 $ORLIX) ----
+  const hrInput = $("#hrInput"), hrResult = $("#hrResult");
+  const NFT_SET = /^0x[0-9a-fA-F]{40}$/.test(CFG.nftContract);
+  function setHolder(state, held){
+    hrResult.classList.add("show");
+    const badge=$("#hrBadge"),title=$("#hrTitle"),sub=$("#hrSub2"),h=$("#hrHeld"),amt=$("#hrAmt");
+    if(state==="soon"){ badge.className="r-badge load";badge.textContent="…";title.textContent="Reward checker opening soon";sub.textContent="Hold your ORLIX Genesis NFT to qualify.";h.textContent="—";amt.textContent="—";return;}
+    if(state==="loading"){ badge.className="r-badge load";badge.textContent="…";title.textContent="Checking…";sub.textContent="Reading your ORLIX Genesis balance";h.textContent="—";amt.textContent="—";return;}
+    if(state==="error"){ badge.className="r-badge bad";badge.textContent="!";title.textContent="Couldn't read balance";sub.textContent="RPC unavailable — try again in a moment.";h.textContent="—";amt.textContent="—";return;}
+    h.textContent = held + (held===1?" NFT":" NFTs");
+    const reward = held*CFG.holderReward;
+    amt.textContent = (reward>0?"+":"") + fmt(reward) + " $ORLIX";
+    if(held>0){ badge.className="r-badge ok";badge.textContent="✓";title.textContent="You're a holder ✓";sub.textContent=`Eligible for ${fmt(reward)} $ORLIX — ${fmt(CFG.holderReward)} × ${held}.`; }
+    else { badge.className="r-badge bad";badge.textContent="✗";title.textContent="No ORLIX Genesis found";sub.textContent="Mint one to unlock the 500,000 $ORLIX holder reward."; }
+  }
+  async function checkHolder(addr){
+    addr=(addr||"").trim();
+    if(!isAddr(addr)){ toast("Enter a valid 0x… address"); hrInput.focus(); return; }
+    if(!NFT_SET){ setHolder("soon"); hrResult.scrollIntoView({behavior:"smooth",block:"nearest"}); return; }
+    setHolder("loading"); hrResult.scrollIntoView({behavior:"smooth",block:"nearest"});
+    try{
+      const data="0x70a08231"+addr.toLowerCase().replace(/^0x/,"").padStart(64,"0"); // balanceOf(address)
+      const res=await rpcCall(CFG.nftContract,data);
+      const held=Number(BigInt(res)); // ERC-721 balanceOf = whole count
+      setHolder("done", held);
+    }catch(e){ console.error(e); setHolder("error"); }
+  }
+  $("#hrCheck").addEventListener("click",()=>checkHolder(hrInput.value));
+  hrInput.addEventListener("keydown",e=>{ if(e.key==="Enter") checkHolder(hrInput.value); });
+  $("#hrConnect").addEventListener("click",()=>connect(a=>{hrInput.value=a;checkHolder(a);},hrInput));
 
   // ---- chart: click-to-load embed (avoids a broken frame on page load) ----
   const frame = $("#chartFrame");
