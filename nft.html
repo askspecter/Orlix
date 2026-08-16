@@ -341,7 +341,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
           </div>
           <div class="r-grid">
             <div class="r-cell"><u>YOUR $ORLIX BALANCE</u><b id="rBal">—</b></div>
-            <div class="r-cell"><u>REQUIRED</u><b id="rReq">1,000,000</b></div>
+            <div class="r-cell"><u>REQUIRED</u><b id="rReq">300,000</b></div>
           </div>
           <div class="progress"><i id="rProg"></i></div>
         </div>
@@ -398,7 +398,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
       </div>
       <div class="meta"><u>CHAIN</u><b>Robinhood Chain · 4663</b></div>
       <div class="meta"><u>COLLECTION SUPPLY</u><b>1,111 NFTs</b></div>
-      <div class="meta"><u>ELIGIBILITY</u><b>1,000,000 $ORLIX</b></div>
+      <div class="meta"><u>MINT COST</u><b>300,000 $ORLIX · burned</b></div>
     </div>
   </section>
 
@@ -424,7 +424,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   "use strict";
   const CFG = {
     token: "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",
-    min: 1000000,
+    min: 300000,
     mintContract: "0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c", // OrlixAgentPhase2 — burn-to-mint (Robinhood Chain)
     burnPerMint: 300000,                     // $ORLIX burned per mint
     maxPerWallet: 5,
@@ -534,7 +534,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
       rBadge.className="r-badge bad"; rBadge.textContent="✗";
       rTitle.textContent="Not eligible yet";
       const need = CFG.min - bal;
-      rSub.textContent = `Need ${fmt(need)} more $ORLIX to reach the 1,000,000 threshold.`;
+      rSub.textContent = `Need ${fmt(need)} more $ORLIX to reach the 300,000 needed to mint.`;
     }
   }
 
