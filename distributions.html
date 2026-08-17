@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Distributions — ORLIX Agent · Robinhood Chain</title>
+<meta name="description" content="Coming soon: NFT-AMM trade fees streamed back to activated ORLIX Agents on Robinhood Chain.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orlixai.xyz/distributions">
+<meta property="og:title" content="Distributions — ORLIX Agent (coming soon)">
+<meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/nft/app.css">
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/">
+      <img src="/assets/nft/orlix-mark.png" alt="ORLIX" width="30" height="30">
+      <b>ORLIX<sup>®</sup></b>
+    </a>
+    <div class="top-nav">
+      <a class="ghost hide-sm" href="/amm">NFT AMM</a>
+      <a class="btn" href="/nft">MINT</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
+    </div>
+  </div>
+  <nav class="menu-panel" id="menuPanel" aria-label="Menu">
+    <a href="/">Home</a>
+    <a href="/nft">Mint</a>
+    <a href="/amm">NFT AMM</a>
+    <a href="/agents">Agent Wallets</a>
+    <a href="/distributions" class="on">Distributions <span class="tag">SOON</span></a>
+    <a href="/launcher">Agent Launcher <span class="tag">SOON</span></a>
+    <a href="/box">Agent Box <span class="tag">SOON</span></a>
+    <a href="https://app.orlixai.xyz">App</a>
+    <a href="https://docs.orlixai.xyz">Docs</a>
+    <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding:56px 0 22px">
+    <span class="cs-badge"><span class="dot"></span>Coming Soon</span>
+    <h1><em>Distributions</em>.</h1>
+    <p class="lead">Trading powers rewards. Fees from the <a href="/amm" style="color:var(--green)">NFT AMM</a> get routed back into the ecosystem and streamed to <b>activated Agents</b> — hold, activate, earn.</p>
+  </section>
+
+  <section class="block" style="margin-top:18px">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — distributions.sh</span></div>
+      <div class="term-body">
+        <div style="font-size:.9rem;line-height:1.9"><span style="color:var(--green)">&gt;</span> <span class="cs-typed" id="typed"></span><span class="cs-caret"></span></div>
+        <div style="margin-top:22px">
+          <div class="cs-progrow"><span>BUILD STATUS</span><b id="pct">IN PROGRESS · 40%</b></div>
+          <div class="cs-bar"><i style="width:40%"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="sec-head"><span class="n">HOW IT WILL WORK</span></div>
+    <div class="steps">
+      <div class="cs-feat"><div class="s-n">◍</div><h3>Fees in</h3><p>Every buy &amp; sell on the NFT AMM charges a small fee. That flow accumulates in the protocol instead of leaving to a third-party marketplace.</p></div>
+      <div class="cs-feat"><div class="s-n">◈</div><h3>Activate your Agent</h3><p>“Clock in” an Agent to make it eligible. Only activated Agents share in the stream — skin in the game, on-chain.</p></div>
+      <div class="cs-feat"><div class="s-n">✦</div><h3>Rewards out</h3><p>Distributions are paid to your Agents’ wallets — $ORLIX and reward tokens, airdropped directly. The more the pool trades, the more flows back.</p></div>
+    </div>
+  </section>
+
+  <section class="hero" style="padding:10px 0 46px">
+    <p class="cs-note">The NFT AMM that powers these fees is <b style="color:var(--green)">live today</b>. Distributions land next.</p>
+    <div class="cs-cta">
+      <a class="btn mint-cta" href="/amm">TRADE ON THE AMM →</a>
+      <a class="btn outline mint-cta" href="https://x.com/orlixai" target="_blank" rel="noopener">FOLLOW FOR UPDATES</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="fl"><a href="/">Home</a><a href="/nft">Mint</a><a href="/amm">NFT AMM</a><a href="/agents">Agent Wallets</a></div>
+    <small>© 2026 ORLIX · Robinhood Chain · roadmap · not financial advice</small>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var b=document.getElementById('menuBtn'),p=document.getElementById('menuPanel');
+  if(b&&p){b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
+  var txt="fee → swap → airdrop to activated Agents … building the reward engine.";
+  var el=document.getElementById('typed'),i=0;
+  (function tick(){if(!el)return;if(i<=txt.length){el.textContent=txt.slice(0,i++);setTimeout(tick,34)}})();
+})();
+</script>
+</body>
+</html>

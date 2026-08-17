@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Box — ORLIX · Robinhood Chain</title>
+<meta name="description" content="Coming soon: an on-chain gacha for ORLIX holders — open a Box for token certificates & rewards on Robinhood Chain.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orlixai.xyz/box">
+<meta property="og:title" content="Agent Box — ORLIX (coming soon)">
+<meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/nft/app.css">
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/">
+      <img src="/assets/nft/orlix-mark.png" alt="ORLIX" width="30" height="30">
+      <b>ORLIX<sup>®</sup></b>
+    </a>
+    <div class="top-nav">
+      <a class="ghost hide-sm" href="/amm">NFT AMM</a>
+      <a class="btn" href="/nft">MINT</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
+    </div>
+  </div>
+  <nav class="menu-panel" id="menuPanel" aria-label="Menu">
+    <a href="/">Home</a>
+    <a href="/nft">Mint</a>
+    <a href="/amm">NFT AMM</a>
+    <a href="/agents">Agent Wallets</a>
+    <a href="/distributions">Distributions <span class="tag">SOON</span></a>
+    <a href="/launcher">Agent Launcher <span class="tag">SOON</span></a>
+    <a href="/box" class="on">Agent Box <span class="tag">SOON</span></a>
+    <a href="https://app.orlixai.xyz">App</a>
+    <a href="https://docs.orlixai.xyz">Docs</a>
+    <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding:56px 0 22px">
+    <span class="cs-badge"><span class="dot"></span>Coming Soon</span>
+    <h1>Agent <em>Box</em>.</h1>
+    <p class="lead">An <b>on-chain gacha</b> for ORLIX holders. Open a Box, pull token certificates and rewards — provably random, settled on Robinhood Chain.</p>
+  </section>
+
+  <section class="block" style="margin-top:18px">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — box.sh</span></div>
+      <div class="term-body">
+        <div style="font-size:.9rem;line-height:1.9"><span style="color:var(--green)">&gt;</span> <span class="cs-typed" id="typed"></span><span class="cs-caret"></span></div>
+        <div style="margin-top:22px">
+          <div class="cs-progrow"><span>BUILD STATUS</span><b>IN PROGRESS · 15%</b></div>
+          <div class="cs-bar"><i style="width:15%"></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="sec-head"><span class="n">INSIDE THE BOX</span></div>
+    <div class="steps">
+      <div class="cs-feat"><div class="s-n">◍</div><h3>Open with $ORLIX</h3><p>Spend $ORLIX to open a Box. Each pull is settled on-chain — no hidden server, no house edge you can’t see.</p></div>
+      <div class="cs-feat"><div class="s-n">◈</div><h3>Provably random</h3><p>Outcomes are verifiable on Robinhood Chain. What you pull is what the contract rolled — transparent by design.</p></div>
+      <div class="cs-feat"><div class="s-n">✦</div><h3>Real rewards</h3><p>Token certificates, reward drops, and rare pulls flow straight to your Agent’s wallet. Collect, hold, or trade.</p></div>
+    </div>
+  </section>
+
+  <section class="hero" style="padding:10px 0 46px">
+    <p class="cs-note">Hold an Agent to be first in line when the Box opens. Mint is live now.</p>
+    <div class="cs-cta">
+      <a class="btn mint-cta" href="/nft">MINT AN AGENT →</a>
+      <a class="btn outline mint-cta" href="https://x.com/orlixai" target="_blank" rel="noopener">FOLLOW FOR UPDATES</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="fl"><a href="/">Home</a><a href="/nft">Mint</a><a href="/amm">NFT AMM</a><a href="/agents">Agent Wallets</a></div>
+    <small>© 2026 ORLIX · Robinhood Chain · roadmap · not financial advice</small>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var b=document.getElementById('menuBtn'),p=document.getElementById('menuPanel');
+  if(b&&p){b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
+  var txt="open --box --random=onchain … loading the gacha engine.";
+  var el=document.getElementById('typed'),i=0;
+  (function tick(){if(!el)return;if(i<=txt.length){el.textContent=txt.slice(0,i++);setTimeout(tick,34)}})();
+})();
+</script>
+</body>
+</html>

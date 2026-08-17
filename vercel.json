@@ -151,6 +151,21 @@
       "source": "/seed.html",
       "destination": "/seed",
       "permanent": true
+    },
+    {
+      "source": "/distributions.html",
+      "destination": "/distributions",
+      "permanent": true
+    },
+    {
+      "source": "/launcher.html",
+      "destination": "/launcher",
+      "permanent": true
+    },
+    {
+      "source": "/box.html",
+      "destination": "/box",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -241,6 +256,18 @@
     {
       "source": "/seed",
       "destination": "/seed.html"
+    },
+    {
+      "source": "/distributions",
+      "destination": "/distributions.html"
+    },
+    {
+      "source": "/launcher",
+      "destination": "/launcher.html"
+    },
+    {
+      "source": "/box",
+      "destination": "/box.html"
     }
   ]
 }
