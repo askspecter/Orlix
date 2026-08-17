@@ -98,6 +98,14 @@ h1 em{font-style:normal;color:var(--green)}
 @keyframes bbBump{0%{box-shadow:0 0 0 rgba(207,246,5,0)}28%{box-shadow:0 0 46px rgba(207,246,5,.4)}100%{box-shadow:0 0 0 rgba(207,246,5,0)}}
 @media(max-width:640px){.bb-sub{margin-left:0;text-align:left;width:100%}}
 
+/* my agents grid */
+.agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:12px;margin:4px 0}
+.agent-card{border:1px solid var(--line-soft);border-radius:12px;overflow:hidden;background:var(--panel);transition:.2s var(--ease)}
+.agent-card:hover{border-color:var(--line);transform:translateY(-2px);box-shadow:0 14px 30px -20px rgba(207,246,5,.4)}
+.agent-card img{width:100%;aspect-ratio:1/1;object-fit:cover;image-rendering:pixelated;display:block}
+.agent-card .ac-id{padding:8px 10px;font-size:.72rem;color:var(--ink);letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center}
+.agent-card .ac-id a{color:var(--green)}
+
 /* holder reward */
 .hr{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;border:1px solid var(--line);border-radius:18px;padding:28px;
   background:radial-gradient(700px 320px at 12% 0%,rgba(207,246,5,.10),transparent 70%),linear-gradient(180deg,var(--panel-2),var(--panel));
@@ -305,9 +313,40 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     </div>
   </section>
 
+  <!-- MY AGENTS -->
+  <section class="block" id="agents">
+    <div class="sec-head"><span class="n">[02]</span><h2>My Agents</h2></div>
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — my-agents.sh</span></div>
+      <div class="term-body">
+        <div class="check-actions" style="margin-bottom:10px;align-items:center">
+          <button class="btn" id="agentsConnect">CONNECT WALLET</button>
+          <span class="hint" id="agentsCount" style="margin:0"></span>
+        </div>
+        <div class="agent-grid" id="agentGrid"></div>
+        <p class="hint" id="agentsMsg">Connect your wallet to see the ORLIX Agents you own.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRADE · NFT-AMM -->
+  <section class="block" id="trade">
+    <div class="sec-head"><span class="n">[03]</span><h2>Trade — NFT AMM</h2></div>
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — swap.sh</span></div>
+      <div class="term-body" id="ammBody">
+        <p class="hint" id="ammMsg" style="margin-top:0">Instant NFT liquidity is launching soon — swap <b style="color:var(--green)">$ORLIX ⇄ ORLIX Agent</b> against a live pool, no counterparty needed. Buy an Agent in one click, or sell yours back to the pool anytime.</p>
+        <div class="r-grid" style="margin-top:14px">
+          <div class="r-cell"><u>SWAP</u><b class="green">$ORLIX ⇄ AGENT</b></div>
+          <div class="r-cell"><u>STATUS</u><b id="ammStatus">LAUNCHING SOON</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CHART -->
   <section class="block" id="chart">
-    <div class="sec-head"><span class="n">[02]</span><h2>$ORLIX Live Chart</h2></div>
+    <div class="sec-head"><span class="n">[04]</span><h2>$ORLIX Live Chart</h2></div>
     <div class="chart-shell">
       <div class="chart-ph" id="chartPh">
         <div class="ph-mark" aria-hidden="true">
@@ -333,7 +372,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- HOW IT WORKS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[03]</span><h2>How Minting Works</h2></div>
+    <div class="sec-head"><span class="n">[05]</span><h2>How Minting Works</h2></div>
     <div class="steps">
       <div class="step"><div class="s-n">01</div><h3>Hold $ORLIX</h3><p>Keep at least <b style="color:var(--green)">300,000 $ORLIX</b> per mint in your wallet on Robinhood Chain — that's what gets burned.</p></div>
       <div class="step"><div class="s-n">02</div><h3>Approve</h3><p>Sign an <b>approve</b> so the Agent contract can burn your $ORLIX. One-time per mint amount — nothing leaves until you mint.</p></div>
@@ -343,7 +382,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   <!-- TOKEN DETAILS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[04]</span><h2>Collection &amp; Token</h2></div>
+    <div class="sec-head"><span class="n">[06]</span><h2>Collection &amp; Token</h2></div>
     <div class="meta-grid">
       <div class="meta">
         <u>$ORLIX CONTRACT</u>
@@ -629,11 +668,53 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   loadBurned();
   setInterval(loadBurned, 25000);
 
+  // ---- MY AGENTS (NFTs owned by the connected wallet) ----
+  const agentGrid=$("#agentGrid"), agentsMsg=$("#agentsMsg"), agentsCount=$("#agentsCount");
+  async function ownedViaApi(addr){
+    try{
+      const r=await fetch("https://robinhoodchain.blockscout.com/api/v2/addresses/"+addr+"/nft?type=ERC-721");
+      if(!r.ok) return null;
+      const j=await r.json();
+      const mc=CFG.mintContract.toLowerCase();
+      return (j.items||[]).filter(it=>((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc)
+        .map(it=>parseInt(it.id||it.token_id)).filter(n=>!isNaN(n));
+    }catch(_){ return null; }
+  }
+  async function ownedViaScan(addr){
+    try{
+      const next=Number(bi(await rpcCall(CFG.mintContract,"0x61b8ce8c"))); // nextId()
+      const ids=[]; for(let id=33; id<next && id<=1111; id++) ids.push(id);
+      const owners=await Promise.all(ids.map(id=>rpcCall(CFG.mintContract,"0x6352211e"+id.toString(16).padStart(64,"0")).catch(()=>null))); // ownerOf(id)
+      const me=addr.toLowerCase();
+      return ids.filter((id,i)=>owners[i] && ("0x"+owners[i].slice(-40)).toLowerCase()===me);
+    }catch(_){ return []; }
+  }
+  let agentsBusy=false, agentsAddr=null;
+  async function loadMyAgents(addr){
+    if(!addr || agentsBusy) return; agentsBusy=true; agentsAddr=addr;
+    agentsMsg.textContent="Reading your Agents…"; agentsCount.textContent="";
+    let ids=await ownedViaApi(addr);
+    if(ids==null || !ids.length){ const scan=await ownedViaScan(addr); if(scan.length) ids=scan; else if(ids==null) ids=[]; }
+    ids=(ids||[]).sort((a,b)=>a-b);
+    if(!ids.length){
+      agentGrid.innerHTML=""; agentsCount.textContent="0 Agents";
+      agentsMsg.innerHTML='No ORLIX Agents in this wallet yet. <a href="#mint" style="color:var(--green)">Mint one ↑</a>';
+      agentsBusy=false; return;
+    }
+    agentsCount.textContent=ids.length+(ids.length===1?" Agent":" Agents")+" held";
+    agentGrid.innerHTML=ids.map(id=>
+      '<div class="agent-card"><img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"><div class="ac-id"><span>#'+id+'</span><a href="'+CFG.explorer+'/token/'+CFG.mintContract+'/instance/'+id+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div></div>'
+    ).join("");
+    agentsMsg.textContent="";
+    agentsBusy=false;
+  }
+  $("#agentsConnect").addEventListener("click",()=>connect(a=>loadMyAgents(a),$("#agentsConnect")));
+
   // init mint state + auto-detect an already-connected wallet
   loadMintState();
   if(window.ethereum){
-    window.ethereum.request({method:"eth_accounts"}).then(a=>{ if(a&&a[0]){ mAddr=a[0]; refreshYou(); } }).catch(()=>{});
-    if(window.ethereum.on){ window.ethereum.on("accountsChanged",a=>{ mAddr=(a&&a[0])||null; if(mAddr) refreshYou(); else renderMintBtn(); }); }
+    window.ethereum.request({method:"eth_accounts"}).then(a=>{ if(a&&a[0]){ mAddr=a[0]; refreshYou(); loadMyAgents(a[0]); } }).catch(()=>{});
+    if(window.ethereum.on){ window.ethereum.on("accountsChanged",a=>{ mAddr=(a&&a[0])||null; if(mAddr){ refreshYou(); loadMyAgents(mAddr); } else renderMintBtn(); }); }
   }
 })();
 </script>
