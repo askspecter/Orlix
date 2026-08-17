@@ -335,10 +335,30 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     <div class="term">
       <div class="term-bar"><i></i><i></i><i></i><span>orlix — swap.sh</span></div>
       <div class="term-body" id="ammBody">
-        <p class="hint" id="ammMsg" style="margin-top:0">Instant NFT liquidity is launching soon — swap <b style="color:var(--green)">$ORLIX ⇄ ORLIX Agent</b> against a live pool, no counterparty needed. Buy an Agent in one click, or sell yours back to the pool anytime.</p>
+        <p class="hint" id="ammMsg" style="margin-top:0">Swap <b style="color:var(--green)">$ORLIX ⇄ ORLIX Agent</b> against a live pool — no counterparty, price set by the pool. <span style="color:var(--ink-3)">(beta · unaudited)</span></p>
         <div class="r-grid" style="margin-top:14px">
-          <div class="r-cell"><u>SWAP</u><b class="green">$ORLIX ⇄ AGENT</b></div>
+          <div class="r-cell"><u>POOL · AGENTS</u><b id="ammNft">—</b></div>
+          <div class="r-cell"><u>POOL · $ORLIX</u><b id="ammTok">—</b></div>
+          <div class="r-cell"><u>BUY 1 ≈</u><b id="ammBuy1" class="green">—</b></div>
           <div class="r-cell"><u>STATUS</u><b id="ammStatus">LAUNCHING SOON</b></div>
+        </div>
+
+        <div id="ammWidget" style="display:none">
+          <div style="display:flex;gap:8px;margin:18px 0 12px">
+            <button class="btn outline" id="ammTabBuy">BUY</button>
+            <button class="btn outline" id="ammTabSell">SELL</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <span style="font-size:.7rem;letter-spacing:.12em;color:var(--ink-3)">QTY</span>
+            <div style="display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:12px;overflow:hidden">
+              <button class="qbtn" id="ammMinus" style="width:44px;height:44px;background:transparent;border:none;color:var(--ink);font-size:1.3rem;cursor:pointer">−</button>
+              <b id="ammQty" style="min-width:44px;text-align:center;font-size:1.1rem">1</b>
+              <button class="qbtn" id="ammPlus" style="width:44px;height:44px;background:transparent;border:none;color:var(--ink);font-size:1.3rem;cursor:pointer">+</button>
+            </div>
+            <div style="margin-left:auto;text-align:right"><u style="font-size:.58rem;letter-spacing:.22em;color:var(--ink-3);display:block" id="ammQuoteLbl">YOU PAY</u><b id="ammQuote" class="green" style="font-size:1.1rem">—</b></div>
+          </div>
+          <button class="btn mint-cta" id="ammAction" style="width:100%;justify-content:center;margin-top:14px">CONNECT WALLET</button>
+          <p class="hint" id="ammActionMsg" style="margin-top:10px">Buy pulls an Agent from the pool for $ORLIX. Sell pushes yours back for $ORLIX. 3% slippage guard.</p>
         </div>
       </div>
     </div>
@@ -423,6 +443,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     token: "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",
     min: 300000,
     mintContract: "0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c", // OrlixAgentPhase2 — burn-to-mint (Robinhood Chain)
+    ammContract: "",                         // OrlixAgentAMM — set after deploy to activate Trade
     burnPerMint: 300000,                     // $ORLIX burned per mint
     maxPerWallet: 5,
     supply: 1111,
@@ -670,6 +691,7 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 
   // ---- MY AGENTS (NFTs owned by the connected wallet) ----
   const agentGrid=$("#agentGrid"), agentsMsg=$("#agentsMsg"), agentsCount=$("#agentsCount");
+  let agentOwnedIds=[];
   async function ownedViaApi(addr){
     try{
       const r=await fetch("https://robinhoodchain.blockscout.com/api/v2/addresses/"+addr+"/nft?type=ERC-721");
@@ -696,6 +718,8 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     let ids=await ownedViaApi(addr);
     if(ids==null || !ids.length){ const scan=await ownedViaScan(addr); if(scan.length) ids=scan; else if(ids==null) ids=[]; }
     ids=(ids||[]).sort((a,b)=>a-b);
+    agentOwnedIds=ids;
+    if(typeof refreshAmmAction==="function") refreshAmmAction();
     if(!ids.length){
       agentGrid.innerHTML=""; agentsCount.textContent="0 Agents";
       agentsMsg.innerHTML='No ORLIX Agents in this wallet yet. <a href="#mint" style="color:var(--green)">Mint one ↑</a>';
@@ -709,6 +733,99 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
     agentsBusy=false;
   }
   $("#agentsConnect").addEventListener("click",()=>connect(a=>loadMyAgents(a),$("#agentsConnect")));
+
+  // ---- TRADE · NFT-AMM (OrlixAgentAMM) — activates once CFG.ammContract is set ----
+  const AMM_SET = /^0x[0-9a-fA-F]{40}$/.test(CFG.ammContract||"");
+  const ammNftEl=$("#ammNft"), ammTokEl=$("#ammTok"), ammBuy1El=$("#ammBuy1"), ammStatusEl=$("#ammStatus");
+  const ammWidget=$("#ammWidget"), ammQtyEl=$("#ammQty"), ammQuoteEl=$("#ammQuote"), ammQuoteLbl=$("#ammQuoteLbl");
+  const ammActionBtn=$("#ammAction"), ammActionMsg=$("#ammActionMsg"), ammTabBuy=$("#ammTabBuy"), ammTabSell=$("#ammTabSell");
+  let ammMode="buy", ammQty=1, ammNft=0;
+
+  function refreshAmmAction(){
+    if(!AMM_SET || !ammActionBtn) return;
+    if(!mAddr){ ammActionBtn.disabled=false; ammActionBtn.textContent="CONNECT WALLET"; return; }
+    if(ammMode==="buy"){ const ok=ammNft>ammQty; ammActionBtn.disabled=!ok; ammActionBtn.textContent=ok?("BUY "+ammQty+" AGENT"+(ammQty>1?"S":"")):"NOT ENOUGH IN POOL"; }
+    else { const ok=agentOwnedIds.length>=ammQty; ammActionBtn.disabled=!ok; ammActionBtn.textContent=ok?("SELL "+ammQty+" AGENT"+(ammQty>1?"S":"")):"YOU DON'T OWN ENOUGH"; }
+  }
+  async function quoteAmm(){
+    if(!AMM_SET) return;
+    try{
+      const sel = ammMode==="buy" ? "0x08d4db14" : "0xba730e53"; // getBuyPrice / getSellPrice
+      const r = await rpcCall(CFG.ammContract, sel+argUint(ammQty)).catch(()=>null);
+      ammQuoteEl.textContent = r ? (fmt(toTokens(r, await getDecimals()))+" $ORLIX") : "—";
+    }catch(_){ ammQuoteEl.textContent="—"; }
+    refreshAmmAction();
+  }
+  function ammTab(mode){
+    ammMode=mode; ammQty=1; if(ammQtyEl) ammQtyEl.textContent="1";
+    if(ammTabBuy)  ammTabBuy.style.background  = mode==="buy" ?"rgba(207,246,5,.12)":"transparent";
+    if(ammTabSell) ammTabSell.style.background = mode==="sell"?"rgba(207,246,5,.12)":"transparent";
+    if(ammQuoteLbl) ammQuoteLbl.textContent = mode==="buy"?"YOU PAY":"YOU RECEIVE";
+    quoteAmm();
+  }
+  async function loadAmmState(){
+    if(!AMM_SET){ if(ammStatusEl) ammStatusEl.textContent="LAUNCHING SOON"; return; }
+    try{
+      const [nr,tr] = await Promise.all([
+        rpcCall(CFG.ammContract,"0x475489d3").catch(()=>null), // nftReserve()
+        rpcCall(CFG.ammContract,"0xcbcb3171").catch(()=>null), // tokenReserve()
+      ]);
+      const dec = await getDecimals();
+      ammNft = nr!=null ? Number(bi(nr)) : 0;
+      if(ammNftEl) ammNftEl.textContent = fmt(ammNft);
+      if(tr!=null && ammTokEl) ammTokEl.textContent = fmt(toTokens(tr,dec));
+      const live = ammNft>0;
+      if(ammStatusEl){ ammStatusEl.textContent = live?"LIVE":"NO LIQUIDITY"; ammStatusEl.className = live?"green":""; }
+      if(ammNft>1){ const b1=await rpcCall(CFG.ammContract,"0x08d4db14"+argUint(1)).catch(()=>null); if(b1&&ammBuy1El) ammBuy1El.textContent=fmt(toTokens(b1,dec))+" $ORLIX"; }
+      if(ammWidget) ammWidget.style.display="block";
+      ammTab("buy");
+    }catch(_){}
+  }
+  if($("#ammPlus")) $("#ammPlus").addEventListener("click",()=>{ const cap = ammMode==="buy" ? Math.max(1,ammNft-1) : Math.max(1,agentOwnedIds.length); if(ammQty<Math.min(cap,10)){ ammQty++; ammQtyEl.textContent=ammQty; quoteAmm(); } });
+  if($("#ammMinus")) $("#ammMinus").addEventListener("click",()=>{ if(ammQty>1){ ammQty--; ammQtyEl.textContent=ammQty; quoteAmm(); } });
+  if(ammTabBuy) ammTabBuy.addEventListener("click",()=>ammTab("buy"));
+  if(ammTabSell) ammTabSell.addEventListener("click",()=>ammTab("sell"));
+
+  async function doAmm(){
+    if(!AMM_SET){ toast("AMM launching soon"); return; }
+    if(!window.ethereum){ toast("Open in a wallet browser"); return; }
+    if(!mAddr){ connect(a=>{ mAddr=a; refreshYou(); loadMyAgents(a); refreshAmmAction(); }, ammActionBtn); return; }
+    try{
+      try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }
+      catch(sw){ if(sw&&sw.code===4902){ try{ await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]}); }catch(_){}} }
+      ammActionBtn.disabled=true; const from=mAddr;
+      if(ammMode==="buy"){
+        const cost=bi(await rpcCall(CFG.ammContract,"0x08d4db14"+argUint(ammQty)));
+        const maxCost=cost*103n/100n; // 3% slippage
+        const allow=bi(await rpcCall(CFG.token,"0xdd62ed3e"+argAddr(from)+argAddr(CFG.ammContract)).catch(()=>"0x0"));
+        if(allow<maxCost){
+          ammActionBtn.textContent="APPROVE $ORLIX…"; ammActionMsg.textContent="Step 1/2 — approve $ORLIX.";
+          const atx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:CFG.token,data:"0x095ea7b3"+argAddr(CFG.ammContract)+argUint(maxCost)}]});
+          ammActionBtn.textContent="CONFIRMING…"; await waitReceipt(atx);
+        }
+        ammActionBtn.textContent="BUYING…"; ammActionMsg.textContent="Step 2/2 — confirm buy.";
+        const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:CFG.ammContract,data:"0xd6febde8"+argUint(ammQty)+argUint(maxCost)}]});
+        ammActionBtn.textContent="BOUGHT ✓"; ammActionMsg.innerHTML='Done! <a href="'+CFG.explorer+'/tx/'+tx+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a>';
+      } else {
+        const ids=agentOwnedIds.slice(0,ammQty);
+        if(!ids.length){ toast("You don't own any Agents"); ammActionBtn.disabled=false; return; }
+        const approved=bi(await rpcCall(CFG.mintContract,"0xe985e9c5"+argAddr(from)+argAddr(CFG.ammContract)).catch(()=>"0x0"));
+        if(approved!==1n){
+          ammActionBtn.textContent="APPROVE AGENTS…"; ammActionMsg.textContent="Step 1/2 — approve the pool to move your Agents.";
+          const atx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:CFG.mintContract,data:"0xa22cb465"+argAddr(CFG.ammContract)+argUint(1)}]});
+          ammActionBtn.textContent="CONFIRMING…"; await waitReceipt(atx);
+        }
+        const minOut=bi(await rpcCall(CFG.ammContract,"0xba730e53"+argUint(ids.length)))*97n/100n;
+        let data="0xf03a8150"+argUint(64)+argUint(minOut)+argUint(ids.length); for(const id of ids) data+=argUint(id);
+        ammActionBtn.textContent="SELLING…"; ammActionMsg.textContent="Step 2/2 — confirm sell.";
+        const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:CFG.ammContract,data}]});
+        ammActionBtn.textContent="SOLD ✓"; ammActionMsg.innerHTML='Done! <a href="'+CFG.explorer+'/tx/'+tx+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a>';
+      }
+      setTimeout(()=>{ loadAmmState(); refreshYou(); loadBurned(); loadMyAgents(mAddr); }, 4500);
+    }catch(e){ console.error(e); ammActionBtn.disabled=false; refreshAmmAction(); toast(e&&e.message?("Trade failed: "+e.message.slice(0,60)):"Trade failed"); }
+  }
+  if(ammActionBtn) ammActionBtn.addEventListener("click",doAmm);
+  loadAmmState();
 
   // init mint state + auto-detect an already-connected wallet
   loadMintState();
