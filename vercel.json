@@ -146,6 +146,11 @@
       "source": "/amm.html",
       "destination": "/amm",
       "permanent": true
+    },
+    {
+      "source": "/seed.html",
+      "destination": "/seed",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -232,6 +237,10 @@
     {
       "source": "/trade",
       "destination": "/amm.html"
+    },
+    {
+      "source": "/seed",
+      "destination": "/seed.html"
     }
   ]
 }

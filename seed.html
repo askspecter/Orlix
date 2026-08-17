@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seed Liquidity — ORLIX Agent AMM · Robinhood Chain</title>
+<meta name="description" content="Owner-only: seed the ORLIX Agent NFT-AMM pool with $ORLIX and Agents.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/nft/app.css">
+<style>
+  .seed-in{width:100%;background:#0b0d09;border:1px solid var(--line);border-radius:12px;color:var(--ink);
+    font:inherit;font-size:.95rem;padding:13px 14px;letter-spacing:.02em}
+  .seed-in:focus{outline:none;border-color:var(--green)}
+  .seed-lbl{display:block;font-size:.62rem;letter-spacing:.2em;color:var(--ink-3);margin:0 0 7px 2px}
+  .seed-row{margin:0 0 16px}
+  .seed-step{border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 12px;background:rgba(255,255,255,.012)}
+  .seed-step h3{margin:0 0 4px;font-size:.92rem}
+  .seed-step p{margin:0 0 12px;font-size:.78rem;color:var(--ink-3);line-height:1.5}
+  .seed-step .btn{width:100%;justify-content:center}
+  .sn{display:inline-flex;width:22px;height:22px;border-radius:50%;border:1px solid var(--green);color:var(--green);
+    align-items:center;justify-content:center;font-size:.7rem;margin-right:8px;vertical-align:middle}
+  .st-done{color:var(--green)}
+  .owner-warn{display:none;border:1px solid #F5C51833;background:#F5C51810;color:#F5C518;
+    border-radius:12px;padding:12px 14px;font-size:.8rem;margin:0 0 16px}
+  .picked{font-size:.72rem;color:var(--ink-3);margin:8px 0 0 2px}
+  .idchip{display:inline-block;border:1px solid var(--line);border-radius:8px;padding:3px 8px;margin:3px 4px 0 0;
+    font-size:.72rem;cursor:pointer;color:var(--ink-2)}
+  .idchip.on{border-color:var(--green);color:var(--green);background:rgba(207,246,5,.08)}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/">
+      <img src="/assets/nft/orlix-mark.png" alt="ORLIX" width="30" height="30">
+      <b>ORLIX<sup>®</sup></b>
+    </a>
+    <div class="top-nav">
+      <a class="ghost hide-sm" href="/amm">NFT AMM</a>
+      <a class="btn" href="/nft">MINT</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding:52px 0 18px">
+    <span class="kicker"><span class="dot"></span>OWNER · ADMIN</span>
+    <h1>Seed <em>Liquidity</em>.</h1>
+    <p class="lead">Fund the NFT-AMM pool so <code>/amm</code> goes <b style="color:var(--green)">LIVE</b>. Connect the owner wallet, set the amounts, then run the three steps in order. Everything happens right here — no Remix.</p>
+  </section>
+
+  <section class="block" style="margin-top:14px">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — seed-liquidity.sh</span></div>
+      <div class="term-body">
+
+        <div class="agents-bar" style="margin-bottom:16px">
+          <button class="btn" id="connectBtn">CONNECT WALLET</button>
+          <span class="wallet-chip" id="walletChip" style="display:none"><span class="dot"></span><span id="walletAddr"></span></span>
+        </div>
+
+        <div class="owner-warn" id="ownerWarn">⚠️ This wallet is <b>not the pool owner</b>. Only the owner can add liquidity — <code>addLiquidity</code> will revert. Connect the wallet that deployed the AMM.</div>
+
+        <div class="seed-row">
+          <label class="seed-lbl" for="ammAddr">AMM CONTRACT ADDRESS</label>
+          <input class="seed-in" id="ammAddr" placeholder="0x… (paste the deployed OrlixAgentAMM address)" spellcheck="false" autocomplete="off">
+          <p class="picked" id="poolState">Paste the AMM address from Remix to begin.</p>
+        </div>
+
+        <div class="seed-row">
+          <label class="seed-lbl" for="tokAmt">$ORLIX TO ADD</label>
+          <input class="seed-in" id="tokAmt" inputmode="decimal" placeholder="e.g. 9000000" spellcheck="false" autocomplete="off">
+          <p class="picked" id="tokHint">Human amount — converted to wei automatically. Wallet balance: <b id="balShow">—</b></p>
+        </div>
+
+        <div class="seed-row">
+          <label class="seed-lbl">AGENT IDs TO ADD</label>
+          <input class="seed-in" id="idsInput" placeholder="e.g. 33,34,35,36" spellcheck="false" autocomplete="off">
+          <div id="ownedWrap" class="picked" style="display:none">Owned by this wallet — click to toggle:<br><span id="ownedChips"></span></div>
+        </div>
+
+        <div style="height:1px;background:var(--line);margin:18px 0"></div>
+
+        <div class="seed-step" id="step1">
+          <h3><span class="sn" id="sn1">1</span>Approve $ORLIX</h3>
+          <p>Let the AMM pull your $ORLIX. Approves exactly the amount above.</p>
+          <button class="btn outline" id="btn1" disabled>APPROVE $ORLIX</button>
+        </div>
+
+        <div class="seed-step" id="step2">
+          <h3><span class="sn" id="sn2">2</span>Approve Agents</h3>
+          <p>Let the AMM pull your Agent NFTs (<code>setApprovalForAll</code>). One-time, covers all IDs.</p>
+          <button class="btn outline" id="btn2" disabled>APPROVE AGENTS</button>
+        </div>
+
+        <div class="seed-step" id="step3">
+          <h3><span class="sn" id="sn3">3</span>Add Liquidity</h3>
+          <p>Deposit the $ORLIX + the Agent IDs into the pool. After this succeeds, <code>/amm</code> is LIVE.</p>
+          <button class="btn mint-cta" id="btn3" disabled>ADD LIQUIDITY</button>
+        </div>
+
+        <p class="hint" id="msg" style="margin-top:14px">Connect the owner wallet to start.</p>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:14px">After seeding: check the pool on <a href="/amm" style="color:var(--green)">/amm ↗</a> — status should read <b style="color:var(--green)">LIVE</b>.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="fl"><a href="/">Home</a><a href="/amm">NFT AMM</a><a href="/nft">Mint</a><a href="/agents">My Agents</a></div>
+    <small>© 2026 ORLIX · Robinhood Chain · owner admin · not financial advice</small>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
+  const $=s=>document.querySelector(s);
+  const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
+  const argAddr=a=>a.toLowerCase().replace(/^0x/,"").padStart(64,"0");
+  const argUint=v=>BigInt(v).toString(16).padStart(64,"0");
+  const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||"");
+  const short=a=>a.slice(0,6)+"…"+a.slice(-4);
+  async function rpcCall(to,data){let e;for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_call",params:[{to,data},"latest"]})});const j=await r.json();if(j&&j.result&&j.result!=="0x")return j.result;if(j&&j.error)e=new Error(j.error.message)}catch(x){e=x}}throw e||new Error("rpc")}
+  let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800)}
+  async function waitReceipt(h){for(let i=0;i<80;i++){try{const r=await window.ethereum.request({method:"eth_getTransactionReceipt",params:[h]});if(r){if(r.status&&bi(r.status)===0n)throw new Error("reverted");return r}}catch(e){if(String(e&&e.message||"").includes("reverted"))throw e}await new Promise(r=>setTimeout(r,2500))}return null}
+
+  let mAddr=null, decimals=18, isOwner=false;
+  const connectBtn=$("#connectBtn"),walletChip=$("#walletChip"),walletAddr=$("#walletAddr");
+  const ammAddrEl=$("#ammAddr"),tokAmtEl=$("#tokAmt"),idsEl=$("#idsInput"),msg=$("#msg");
+  const btn1=$("#btn1"),btn2=$("#btn2"),btn3=$("#btn3"),sn1=$("#sn1"),sn2=$("#sn2"),sn3=$("#sn3");
+  const ownerWarn=$("#ownerWarn"),poolState=$("#poolState"),balShow=$("#balShow"),ownedWrap=$("#ownedWrap"),ownedChips=$("#ownedChips");
+
+  const amm=()=>ammAddrEl.value.trim();
+  function parseIds(){return idsEl.value.split(/[^0-9]+/).map(s=>s.trim()).filter(Boolean).map(Number).filter(n=>!isNaN(n)&&n>0)}
+  function toWei(v){const s=String(v).trim();if(!s)return 0n;const[i,f=""]=s.split(".");const fr=(f+"0".repeat(decimals)).slice(0,decimals);return BigInt((i||"0")+fr)}
+  function fmtTok(wei){const p=10n**BigInt(decimals);const w=bi(wei);return (Number(w/p)).toLocaleString("en-US")}
+
+  function refresh(){
+    const ready=!!mAddr&&isAddr(amm());
+    btn1.disabled=!(ready&&toWei(tokAmtEl.value)>0n);
+    btn2.disabled=!(ready&&parseIds().length>0);
+    btn3.disabled=!ready;
+  }
+
+  async function loadPool(){
+    const a=amm();poolState.style.color="";
+    if(!isAddr(a)){poolState.textContent="Paste the AMM address from Remix to begin.";refresh();return}
+    localStorage.setItem("orlix-amm-addr",a);
+    try{
+      const [nr,tr,ow]=await Promise.all([
+        rpcCall(a,"0x475489d3").catch(()=>null),   // nftReserve()
+        rpcCall(a,"0xcbcb3171").catch(()=>null),   // tokenReserve()
+        rpcCall(a,"0x8da5cb5b").catch(()=>null)    // owner()
+      ]);
+      const nRes=nr!=null?Number(bi(nr)):0;
+      poolState.innerHTML='Pool now: <b style="color:var(--green)">'+nRes+' Agents</b> · <b style="color:var(--green)">'+(tr!=null?fmtTok(tr):"0")+' $ORLIX</b>'+(nRes>0?' — already LIVE':'');
+      if(ow&&mAddr){isOwner=("0x"+ow.slice(-40)).toLowerCase()===mAddr.toLowerCase();ownerWarn.style.display=isOwner?"none":"block"}
+    }catch(_){poolState.textContent="Couldn't read the pool — check the address & network.";poolState.style.color="#F5C518"}
+    refresh();
+  }
+
+  async function loadWalletData(){
+    if(!mAddr)return;
+    try{const d=await rpcCall(CFG.token,"0x313ce567");const dd=parseInt(d,16);decimals=(dd>=0&&dd<=36)?dd:18}catch(_){decimals=18}
+    try{const b=await rpcCall(CFG.token,"0x70a08231"+argAddr(mAddr));balShow.textContent=fmtTok(b)+" $ORLIX"}catch(_){balShow.textContent="—"}
+    // owned agents to help pick ids
+    try{
+      const r=await fetch(CFG.explorer+"/api/v2/addresses/"+mAddr+"/nft?type=ERC-721");
+      if(r.ok){const j=await r.json();const mc=CFG.mintContract.toLowerCase();
+        const ids=(j.items||[]).filter(it=>((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc).map(it=>parseInt(it.id||it.token_id)).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+        if(ids.length){renderChips(ids);}}
+    }catch(_){}
+  }
+  const selectedIds=new Set();
+  function syncIdsInput(){idsEl.value=[...selectedIds].sort((a,b)=>a-b).join(",");refresh();renderChipState()}
+  function renderChips(ids){
+    ownedWrap.style.display="block";
+    ownedChips.innerHTML=ids.map(id=>'<span class="idchip" data-id="'+id+'">#'+id+'</span>').join("");
+    ownedChips.querySelectorAll(".idchip").forEach(el=>el.addEventListener("click",()=>{const id=Number(el.dataset.id);selectedIds.has(id)?selectedIds.delete(id):selectedIds.add(id);syncIdsInput()}));
+  }
+  function renderChipState(){ownedChips.querySelectorAll(".idchip").forEach(el=>{el.classList.toggle("on",selectedIds.has(Number(el.dataset.id)))})}
+
+  function setConnected(a){mAddr=a;connectBtn.style.display="none";walletChip.style.display="inline-flex";walletAddr.textContent=short(a);loadWalletData();loadPool()}
+  async function connect(){
+    if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
+    try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}
+      try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}
+      toast("Wallet connected");setConnected(a[0]);
+    }catch(_){toast("Connection rejected")}
+  }
+
+  async function ensureChain(){try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}}
+
+  async function tx(to,data){await ensureChain();return window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to,data}]})}
+
+  // step 1 — approve $ORLIX
+  btn1.addEventListener("click",async()=>{
+    const wei=toWei(tokAmtEl.value);if(wei<=0n){toast("Enter a $ORLIX amount");return}
+    try{btn1.disabled=true;btn1.textContent="APPROVING…";msg.textContent="Confirm the $ORLIX approval in your wallet…";
+      const h=await tx(CFG.token,"0x095ea7b3"+argAddr(amm())+argUint(wei));
+      msg.textContent="Approval sent, waiting for confirmation…";await waitReceipt(h);
+      btn1.textContent="APPROVED ✓";btn1.classList.add("st-done");sn1.textContent="✓";sn1.classList.add("st-done");
+      msg.innerHTML='Step 1 done. <a href="'+CFG.explorer+'/tx/'+h+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a>';
+    }catch(e){btn1.disabled=false;btn1.textContent="APPROVE $ORLIX";toast(e&&e.message?("Failed: "+e.message.slice(0,60)):"Approve failed")}
+  });
+
+  // step 2 — setApprovalForAll on the NFT
+  btn2.addEventListener("click",async()=>{
+    try{btn2.disabled=true;btn2.textContent="APPROVING…";msg.textContent="Confirm the Agent approval in your wallet…";
+      const h=await tx(CFG.mintContract,"0xa22cb465"+argAddr(amm())+argUint(1));
+      msg.textContent="Approval sent, waiting for confirmation…";await waitReceipt(h);
+      btn2.textContent="APPROVED ✓";btn2.classList.add("st-done");sn2.textContent="✓";sn2.classList.add("st-done");
+      msg.innerHTML='Step 2 done. <a href="'+CFG.explorer+'/tx/'+h+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a>';
+    }catch(e){btn2.disabled=false;btn2.textContent="APPROVE AGENTS";toast(e&&e.message?("Failed: "+e.message.slice(0,60)):"Approve failed")}
+  });
+
+  // step 3 — addLiquidity(uint256,uint256[])
+  btn3.addEventListener("click",async()=>{
+    const wei=toWei(tokAmtEl.value),ids=parseIds();
+    if(wei<=0n&&!ids.length){toast("Enter $ORLIX and/or Agent IDs");return}
+    if(!isOwner){toast("This wallet is not the pool owner");return}
+    try{btn3.disabled=true;btn3.textContent="ADDING…";msg.textContent="Confirm addLiquidity in your wallet…";
+      let data="0xa50118bf"+argUint(wei)+argUint(64)+argUint(ids.length);for(const id of ids)data+=argUint(id);
+      const h=await tx(amm(),data);
+      msg.textContent="Transaction sent, waiting for confirmation…";await waitReceipt(h);
+      btn3.textContent="POOL LIVE ✓";btn3.classList.add("st-done");sn3.textContent="✓";sn3.classList.add("st-done");
+      msg.innerHTML='🎉 Liquidity added — the pool is LIVE. <a href="'+CFG.explorer+'/tx/'+h+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a> · <a href="/amm" style="color:var(--green)">open /amm ↗</a>';
+      loadPool();
+    }catch(e){btn3.disabled=false;btn3.textContent="ADD LIQUIDITY";toast(e&&e.message?("Failed: "+e.message.slice(0,70)):"addLiquidity failed")}
+  });
+
+  connectBtn.addEventListener("click",connect);
+  ammAddrEl.addEventListener("input",loadPool);
+  tokAmtEl.addEventListener("input",refresh);
+  idsEl.addEventListener("input",()=>{selectedIds.clear();parseIds().forEach(n=>selectedIds.add(n));renderChipState();refresh()});
+
+  // restore last AMM address
+  const saved=localStorage.getItem("orlix-amm-addr");if(saved){ammAddrEl.value=saved}
+  if(window.ethereum){
+    window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])setConnected(a[0]);else loadPool()}).catch(()=>loadPool());
+    if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0]){setConnected(a[0])}else{location.reload()}});
+  }else{loadPool()}
+})();
+</script>
+</body>
+</html>
