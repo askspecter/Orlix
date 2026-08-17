@@ -7,63 +7,231 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options",  "value": "nosniff" },
-        { "key": "X-Frame-Options",          "value": "DENY" },
-        { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy",       "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Strict-Transport-Security","value": "max-age=63072000; includeSubDomains" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains"
+        }
       ]
     },
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
       ]
     }
   ],
   "functions": {
-    "api/auth.js":         { "maxDuration": 15 },
-    "api/chat.js":         { "maxDuration": 60 },
-    "api/gallery.js":      { "maxDuration": 10 },
-    "api/x402.js":         { "maxDuration": 60 },
-    "api/aeon.js":         { "maxDuration": 15 }
+    "api/auth.js": {
+      "maxDuration": 15
+    },
+    "api/chat.js": {
+      "maxDuration": 60
+    },
+    "api/gallery.js": {
+      "maxDuration": 10
+    },
+    "api/x402.js": {
+      "maxDuration": 60
+    },
+    "api/aeon.js": {
+      "maxDuration": 15
+    }
   },
   "redirects": [
-    { "source": "/download/orlix-keyboard.apk", "destination": "https://github.com/AureliusAI-code/orlix/releases/latest/download/orlix-keyboard.apk", "permanent": false },
-    { "source": "/keyboard.apk",      "destination": "https://github.com/AureliusAI-code/orlix/releases/latest/download/orlix-keyboard.apk", "permanent": false },
-    { "source": "/app.html",          "destination": "/app",          "permanent": true },
-    { "source": "/docs.html",         "destination": "/docs",         "permanent": true },
-    { "source": "/api-docs.html",     "destination": "/docs/api",     "permanent": true },
-    { "source": "/changelog.html",    "destination": "/changelog",    "permanent": true },
-    { "source": "/privacy.html",      "destination": "/privacy",      "permanent": true },
-    { "source": "/terms.html",        "destination": "/terms",        "permanent": true },
-    { "source": "/song",               "destination": "/app#song",     "permanent": false },
-    { "source": "/gallery",           "destination": "/app#gallery",  "permanent": false },
-    { "source": "/gallery.html",      "destination": "/app#gallery",  "permanent": true },
-    { "source": "/song.html",         "destination": "/app#song",     "permanent": true },
-    { "source": "/zero.html",         "destination": "/zero",          "permanent": true },
-    { "source": "/dashboard.html",    "destination": "/dashboard",     "permanent": true },
-    { "source": "/cotty.html",        "destination": "/cotty",         "permanent": true },
-    { "source": "/nft.html",          "destination": "/nft",           "permanent": true }
+    {
+      "source": "/download/orlix-keyboard.apk",
+      "destination": "https://github.com/AureliusAI-code/orlix/releases/latest/download/orlix-keyboard.apk",
+      "permanent": false
+    },
+    {
+      "source": "/keyboard.apk",
+      "destination": "https://github.com/AureliusAI-code/orlix/releases/latest/download/orlix-keyboard.apk",
+      "permanent": false
+    },
+    {
+      "source": "/app.html",
+      "destination": "/app",
+      "permanent": true
+    },
+    {
+      "source": "/docs.html",
+      "destination": "/docs",
+      "permanent": true
+    },
+    {
+      "source": "/api-docs.html",
+      "destination": "/docs/api",
+      "permanent": true
+    },
+    {
+      "source": "/changelog.html",
+      "destination": "/changelog",
+      "permanent": true
+    },
+    {
+      "source": "/privacy.html",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/terms.html",
+      "destination": "/terms",
+      "permanent": true
+    },
+    {
+      "source": "/song",
+      "destination": "/app#song",
+      "permanent": false
+    },
+    {
+      "source": "/gallery",
+      "destination": "/app#gallery",
+      "permanent": false
+    },
+    {
+      "source": "/gallery.html",
+      "destination": "/app#gallery",
+      "permanent": true
+    },
+    {
+      "source": "/song.html",
+      "destination": "/app#song",
+      "permanent": true
+    },
+    {
+      "source": "/zero.html",
+      "destination": "/zero",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard.html",
+      "destination": "/dashboard",
+      "permanent": true
+    },
+    {
+      "source": "/cotty.html",
+      "destination": "/cotty",
+      "permanent": true
+    },
+    {
+      "source": "/nft.html",
+      "destination": "/nft",
+      "permanent": true
+    },
+    {
+      "source": "/agents.html",
+      "destination": "/agents",
+      "permanent": true
+    },
+    {
+      "source": "/amm.html",
+      "destination": "/amm",
+      "permanent": true
+    }
   ],
   "rewrites": [
-    { "source": "/api/x402-chat",    "destination": "/api/x402?service=chat" },
-    { "source": "/api/x402-market",  "destination": "/api/x402?service=market" },
-    { "source": "/api/token-search", "destination": "/api/search?__svc=ts" },
-    { "source": "/api/bankr-tokens", "destination": "/api/search?__svc=bankr" },
-    { "source": "/api/keyboard",     "destination": "/api/search?__svc=kb" },
-    { "source": "/app",          "destination": "/app.html" },
-    { "source": "/docs",         "destination": "/docs.html" },
-    { "source": "/docs/api",     "destination": "/api-docs.html" },
-    { "source": "/changelog",    "destination": "/changelog.html" },
-    { "source": "/privacy",      "destination": "/privacy.html" },
-    { "source": "/terms",        "destination": "/terms.html" },
-    { "source": "/keyboard",     "destination": "/keyboard.html" },
-    { "source": "/zero",          "destination": "/zero.html" },
-    { "source": "/mission-control", "destination": "/mission-control.html" },
-    { "source": "/dashboard",       "destination": "/dashboard.html" },
-    { "source": "/cotty",           "destination": "/cotty.html" },
-    { "source": "/nft",             "destination": "/nft.html" },
-    { "source": "/mint",            "destination": "/nft.html" }
+    {
+      "source": "/api/x402-chat",
+      "destination": "/api/x402?service=chat"
+    },
+    {
+      "source": "/api/x402-market",
+      "destination": "/api/x402?service=market"
+    },
+    {
+      "source": "/api/token-search",
+      "destination": "/api/search?__svc=ts"
+    },
+    {
+      "source": "/api/bankr-tokens",
+      "destination": "/api/search?__svc=bankr"
+    },
+    {
+      "source": "/api/keyboard",
+      "destination": "/api/search?__svc=kb"
+    },
+    {
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/docs",
+      "destination": "/docs.html"
+    },
+    {
+      "source": "/docs/api",
+      "destination": "/api-docs.html"
+    },
+    {
+      "source": "/changelog",
+      "destination": "/changelog.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/keyboard",
+      "destination": "/keyboard.html"
+    },
+    {
+      "source": "/zero",
+      "destination": "/zero.html"
+    },
+    {
+      "source": "/mission-control",
+      "destination": "/mission-control.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/cotty",
+      "destination": "/cotty.html"
+    },
+    {
+      "source": "/nft",
+      "destination": "/nft.html"
+    },
+    {
+      "source": "/mint",
+      "destination": "/nft.html"
+    },
+    {
+      "source": "/agents",
+      "destination": "/agents.html"
+    },
+    {
+      "source": "/amm",
+      "destination": "/amm.html"
+    },
+    {
+      "source": "/trade",
+      "destination": "/amm.html"
+    }
   ]
 }

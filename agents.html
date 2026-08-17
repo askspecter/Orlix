@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Agents — ORLIX Agent · Robinhood Chain</title>
+<meta name="description" content="View the ORLIX Agent NFTs in your wallet on Robinhood Chain.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orlixai.xyz/agents">
+<meta property="og:title" content="My Agents — ORLIX Agent">
+<meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/nft/app.css">
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/">
+      <img src="/assets/nft/orlix-mark.png" alt="ORLIX" width="30" height="30">
+      <b>ORLIX<sup>®</sup></b>
+    </a>
+    <div class="top-nav">
+      <a class="ghost hide-sm" href="/nft">MINT</a>
+      <a class="btn" href="/amm">TRADE</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
+    </div>
+  </div>
+  <nav class="menu-panel" id="menuPanel" aria-label="Menu">
+    <a href="/">Home</a>
+    <a href="/nft">Mint</a>
+    <a href="/amm">NFT AMM</a>
+    <a href="/agents" class="on">My Agents</a>
+    <a href="/nft#chart">Chart</a>
+    <a href="https://opensea.io/collection/orlix-agent" target="_blank" rel="noopener">OpenSea ↗</a>
+    <a href="https://app.orlixai.xyz">App</a>
+    <a href="https://docs.orlixai.xyz">Docs</a>
+    <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding:52px 0 20px">
+    <span class="kicker"><span class="dot"></span>YOUR COLLECTION</span>
+    <h1>My <em>Agents</em>.</h1>
+    <p class="lead">Every ORLIX Agent you hold on Robinhood Chain — with its own agent wallet. Connect to view your collective.</p>
+  </section>
+
+  <section class="block" id="agents" style="margin-top:20px">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — my-agents.sh</span></div>
+      <div class="term-body">
+        <div class="check-actions" style="margin-bottom:12px;align-items:center">
+          <button class="btn" id="agentsConnect">CONNECT WALLET</button>
+          <span class="hint" id="agentsCount" style="margin:0"></span>
+        </div>
+        <div class="agent-grid" id="agentGrid"></div>
+        <p class="hint" id="agentsMsg">Connect your wallet to see the ORLIX Agents you own.</p>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:14px">Don't have one yet? <a href="/nft#mint" style="color:var(--green)">Mint an Agent ↗</a> · or <a href="/amm" style="color:var(--green)">buy on the NFT AMM ↗</a></p>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="fl">
+      <a href="/">Home</a><a href="/nft">Mint</a><a href="/amm">NFT AMM</a>
+      <a href="https://opensea.io/collection/orlix-agent" target="_blank" rel="noopener">OpenSea</a>
+      <a href="https://app.orlixai.xyz">App</a>
+    </div>
+    <small>© 2026 ORLIX · Robinhood Chain · not financial advice</small>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
+  const $=s=>document.querySelector(s);
+  const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
+  const fmt=n=>n.toLocaleString("en-US",{maximumFractionDigits:0});
+  async function rpcCall(to,data){let e;for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_call",params:[{to,data},"latest"]})});const j=await r.json();if(j&&j.result&&j.result!=="0x")return j.result;if(j&&j.error)e=new Error(j.error.message)}catch(x){e=x}}throw e||new Error("rpc")}
+  let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600)}
+  async function connect(cb,fe){if(!window.ethereum){toast("No wallet found — open in a wallet browser");if(fe&&fe.focus)fe.focus();return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}toast("Wallet connected");cb(a[0])}catch(_){toast("Connection rejected")}}
+  function menuInit(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',e=>{e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',e=>{if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
+
+  const agentGrid=$("#agentGrid"),agentsMsg=$("#agentsMsg"),agentsCount=$("#agentsCount");
+  async function ownedViaApi(addr){
+    try{const r=await fetch("https://robinhoodchain.blockscout.com/api/v2/addresses/"+addr+"/nft?type=ERC-721");if(!r.ok)return null;const j=await r.json();const mc=CFG.mintContract.toLowerCase();
+      return (j.items||[]).filter(it=>((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc).map(it=>parseInt(it.id||it.token_id)).filter(n=>!isNaN(n));}catch(_){return null}}
+  async function ownedViaScan(addr){
+    try{const next=Number(bi(await rpcCall(CFG.mintContract,"0x61b8ce8c")));const ids=[];for(let id=33;id<next&&id<=1111;id++)ids.push(id);
+      const owners=await Promise.all(ids.map(id=>rpcCall(CFG.mintContract,"0x6352211e"+id.toString(16).padStart(64,"0")).catch(()=>null)));const me=addr.toLowerCase();
+      return ids.filter((id,i)=>owners[i]&&("0x"+owners[i].slice(-40)).toLowerCase()===me);}catch(_){return[]}}
+  let busy=false;
+  async function loadMyAgents(addr){
+    if(!addr||busy)return;busy=true;agentsMsg.textContent="Reading your Agents…";agentsCount.textContent="";
+    let ids=await ownedViaApi(addr);if(ids==null||!ids.length){const s=await ownedViaScan(addr);if(s.length)ids=s;else if(ids==null)ids=[]}
+    ids=(ids||[]).sort((a,b)=>a-b);
+    if(!ids.length){agentGrid.innerHTML="";agentsCount.textContent="0 Agents";agentsMsg.innerHTML='No ORLIX Agents in this wallet yet. <a href="/nft#mint" style="color:var(--green)">Mint one ↗</a>';busy=false;return}
+    agentsCount.textContent=ids.length+(ids.length===1?" Agent":" Agents")+" held";
+    agentGrid.innerHTML=ids.map(id=>'<div class="agent-card"><img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"><div class="ac-id"><span>#'+id+'</span><a href="'+CFG.explorer+'/token/'+CFG.mintContract+'/instance/'+id+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div></div>').join("");
+    agentsMsg.textContent="";busy=false;
+  }
+  $("#agentsConnect").addEventListener("click",()=>connect(a=>loadMyAgents(a),$("#agentsConnect")));
+  menuInit();
+  if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])loadMyAgents(a[0])}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0])loadMyAgents(a[0])})}
+})();
+</script>
+</body>
+</html>
