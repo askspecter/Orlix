@@ -55,10 +55,13 @@
     <div class="term">
       <div class="term-bar"><i></i><i></i><i></i><span>orlix — my-agents.sh</span></div>
       <div class="term-body">
-        <div class="check-actions" style="margin-bottom:12px;align-items:center">
+        <div class="agents-bar" id="agentsBar">
           <button class="btn" id="agentsConnect">CONNECT WALLET</button>
+          <span class="wallet-chip" id="walletChip" style="display:none"><span class="dot"></span><span id="walletAddr"></span></span>
+          <button class="btn outline" id="agentsRefresh" style="display:none">↻ REFRESH</button>
           <span class="hint" id="agentsCount" style="margin:0"></span>
         </div>
+        <div class="agents-summary" id="agentsSummary"></div>
         <div class="agent-grid" id="agentGrid"></div>
         <p class="hint" id="agentsMsg">Connect your wallet to see the ORLIX Agents you own.</p>
       </div>
@@ -92,6 +95,13 @@
   function menuInit(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',e=>{e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',e=>{if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
 
   const agentGrid=$("#agentGrid"),agentsMsg=$("#agentsMsg"),agentsCount=$("#agentsCount");
+  const connectBtn=$("#agentsConnect"),walletChip=$("#walletChip"),walletAddr=$("#walletAddr"),refreshBtn=$("#agentsRefresh"),summaryEl=$("#agentsSummary");
+  let mAddr=null;
+  const short=a=>a.slice(0,6)+"…"+a.slice(-4);
+  const tierColor=t=>{t=(t||"").toLowerCase();return t.indexOf("legend")>=0?"#F5C518":t.indexOf("epic")>=0?"#A78BFA":t.indexOf("rare")>=0?"#60A5FA":t.indexOf("uncommon")>=0?"#4ADE80":"#9aa08d"};
+  function setConnected(addr){mAddr=addr;connectBtn.style.display="none";walletChip.style.display="inline-flex";walletAddr.textContent=short(addr);refreshBtn.style.display="inline-flex"}
+  function setDisconnected(){mAddr=null;connectBtn.style.display="";walletChip.style.display="none";refreshBtn.style.display="none";agentGrid.innerHTML="";summaryEl.innerHTML="";agentsCount.textContent="";agentsMsg.textContent="Connect your wallet to see the ORLIX Agents you own."}
+
   async function ownedViaApi(addr){
     try{const r=await fetch("https://robinhoodchain.blockscout.com/api/v2/addresses/"+addr+"/nft?type=ERC-721");if(!r.ok)return null;const j=await r.json();const mc=CFG.mintContract.toLowerCase();
       return (j.items||[]).filter(it=>((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc).map(it=>parseInt(it.id||it.token_id)).filter(n=>!isNaN(n));}catch(_){return null}}
@@ -101,17 +111,35 @@
       return ids.filter((id,i)=>owners[i]&&("0x"+owners[i].slice(-40)).toLowerCase()===me);}catch(_){return[]}}
   let busy=false;
   async function loadMyAgents(addr){
-    if(!addr||busy)return;busy=true;agentsMsg.textContent="Reading your Agents…";agentsCount.textContent="";
+    if(!addr||busy)return;busy=true;setConnected(addr);
+    agentsMsg.textContent="Reading your Agents…";agentsCount.textContent="";
+    agentGrid.innerHTML='<div class="agent-skel"></div><div class="agent-skel"></div><div class="agent-skel"></div>';
     let ids=await ownedViaApi(addr);if(ids==null||!ids.length){const s=await ownedViaScan(addr);if(s.length)ids=s;else if(ids==null)ids=[]}
     ids=(ids||[]).sort((a,b)=>a-b);
-    if(!ids.length){agentGrid.innerHTML="";agentsCount.textContent="0 Agents";agentsMsg.innerHTML='No ORLIX Agents in this wallet yet. <a href="/nft#mint" style="color:var(--green)">Mint one ↗</a>';busy=false;return}
+    if(!ids.length){agentGrid.innerHTML="";summaryEl.innerHTML="";agentsCount.textContent="0 Agents";agentsMsg.innerHTML='No ORLIX Agents in this wallet yet. <a href="/nft#mint" style="color:var(--green)">Mint one ↗</a>';busy=false;return}
+    // pull metadata (name + tier) for nicer cards
+    const metas=await Promise.all(ids.map(id=>fetch("/assets/nft/phase2/meta/"+id+".json").then(r=>r.ok?r.json():null).catch(()=>null)));
     agentsCount.textContent=ids.length+(ids.length===1?" Agent":" Agents")+" held";
-    agentGrid.innerHTML=ids.map(id=>'<div class="agent-card"><img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"><div class="ac-id"><span>#'+id+'</span><a href="'+CFG.explorer+'/token/'+CFG.mintContract+'/instance/'+id+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div></div>').join("");
+    const counts={};
+    agentGrid.innerHTML=ids.map((id,i)=>{
+      const m=metas[i]||{}; let tier=""; if(m.attributes){const t=m.attributes.find(a=>String(a.trait_type).toLowerCase()==="tier"); if(t)tier=t.value;}
+      const key=tier||"Common"; counts[key]=(counts[key]||0)+1; const col=tierColor(tier);
+      const url=CFG.explorer+"/token/"+CFG.mintContract+"/instance/"+id;
+      return '<div class="agent-card"><a class="ac-media" href="'+url+'" target="_blank" rel="noopener">'
+        +(tier?'<span class="ac-tier" style="color:'+col+'">'+tier+'</span>':'')
+        +'<img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"></a>'
+        +'<div class="ac-meta"><span class="ac-name">#'+id+'</span><a href="'+url+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div></div>';
+    }).join("");
+    summaryEl.innerHTML=Object.keys(counts).sort().map(t=>'<span class="sm" style="color:'+tierColor(t)+'">'+counts[t]+' '+t+'</span>').join("");
     agentsMsg.textContent="";busy=false;
   }
-  $("#agentsConnect").addEventListener("click",()=>connect(a=>loadMyAgents(a),$("#agentsConnect")));
+  connectBtn.addEventListener("click",()=>connect(a=>loadMyAgents(a),connectBtn));
+  refreshBtn.addEventListener("click",()=>{ if(mAddr){ busy=false; loadMyAgents(mAddr); } });
   menuInit();
-  if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])loadMyAgents(a[0])}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0])loadMyAgents(a[0])})}
+  if(window.ethereum){
+    window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])loadMyAgents(a[0])}).catch(()=>{});
+    if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{ if(a&&a[0]){ busy=false; loadMyAgents(a[0]); } else setDisconnected(); });
+  }
 })();
 </script>
 </body>
