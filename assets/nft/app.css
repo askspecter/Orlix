@@ -231,6 +231,10 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 .ach-tok{display:inline-flex;align-items:center;gap:5px;color:var(--ink);border:1px solid var(--line-soft);border-radius:8px;padding:3px 8px 3px 4px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .ach-tok:first-of-type{border-color:var(--line);color:var(--green)}
 .ach-empty{color:var(--ink-3)}
+.ach-val{margin-left:auto;color:var(--green);font-weight:600;font-variant-numeric:tabular-nums}
+.pf-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:rgba(207,246,5,.06);border-radius:100px;padding:8px 15px}
+.pf-chip u{font-size:.55rem;letter-spacing:.2em;color:var(--ink-3);text-decoration:none}
+.pf-chip b{color:var(--green);font-weight:600;font-size:.9rem;font-variant-numeric:tabular-nums}
 /* distributions */
 .dist-pill{font-size:.5rem;letter-spacing:.16em;color:var(--ink-3);border:1px solid var(--line-soft);border-radius:100px;padding:3px 9px}
 .dist-pill.on{color:var(--green);border-color:var(--green);background:rgba(207,246,5,.08)}

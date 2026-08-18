@@ -72,6 +72,7 @@
           <span class="wallet-chip" id="walletChip" style="display:none"><span class="dot"></span><span id="walletAddr"></span></span>
           <button class="btn outline" id="agentsRefresh" style="display:none">↻ REFRESH</button>
           <span class="hint" id="agentsCount" style="margin:0"></span>
+          <span class="pf-chip" id="pfChip" style="display:none"><u>PORTFOLIO</u><b id="pfTotal">—</b></span>
         </div>
         <div class="agents-summary" id="agentsSummary"></div>
         <div class="agent-grid" id="agentGrid"></div>
@@ -99,7 +100,7 @@
 (function(){
   "use strict";
   const ic=(window.tokenIcon||function(){return""});
-  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06",chainIdDec:4663,explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
+  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06",chainIdDec:4663,quoter:"0x8dc178efb8111bb0973dd9d722ebeff267c98f94",usdg:"0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",fee:3000,tick:60,explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
   const $=s=>document.querySelector(s);
   const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
   const fmt=n=>n.toLocaleString("en-US",{maximumFractionDigits:0});
@@ -108,6 +109,20 @@
   const argUint=v=>BigInt(v).toString(16).padStart(64,"0");
   const TBA_ON=isAddr(CFG.registry)&&isAddr(CFG.accountImpl);
   function fmtTok(wei){const p=10n**18n;const w=bi(wei);const whole=w/p;const frac=Number((w%p)*10000n/p)/10000;return (Number(whole)+frac).toLocaleString("en-US",{maximumFractionDigits:2})}
+  // ---- portfolio valuation (stock -> USDG via Uniswap v4 quoter) ----
+  const STOCKSET=new Set(["0xaf3d76f1834a1d425780943c99ea8a608f8a93f9","0xe93237c50d904957cf27e7b1133b510c669c2e74","0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec","0x12f190a9f9d7d37a250758b26824b97ce941bf54","0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3","0xc0d6457c16cc70d6790dd43521c899c87ce02f35","0x322f0929c4625ed5bad873c95208d54e1c003b2d","0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a","0x86923f96303d656e4aa86d9d42d1e57ad2023fdc","0x1b0e319c6a659f002271b69db8a7df2f911c153e","0x4a0e65a3eccec6dbe60ae065f2e7bb85fae35eea"]);
+  const USDGL=CFG.usdg.toLowerCase();
+  const fmtUsd=v6=>{const p=10n**6n,w=bi(v6);return (Number(w/p)+Number(w%p)/1e6).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})};
+  async function quoteToUsdg(tokenAddr,amtWei){
+    if(amtWei<=0n)return 0n;
+    const [c0,c1]=[CFG.usdg,tokenAddr].sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
+    const z=(c0.toLowerCase()===tokenAddr.toLowerCase());
+    const tuple=argAddr(c0)+argAddr(c1)+argUint(CFG.fee)+argUint(CFG.tick)+argAddr("0x0000000000000000000000000000000000000000")+argUint(z?1:0)+argUint(amtWei)+argUint(0x100)+argUint(0);
+    const r=await rpcCall(CFG.quoter,"0xaa9d21cb"+argUint(0x20)+tuple).catch(()=>null);
+    return r?bi("0x"+r.slice(2,66)):0n;
+  }
+  let pfTotal6=0n;
+  function updatePf(){const el=$("#pfChip"),b=$("#pfTotal");if(!el)return;if(pfTotal6>0n){el.style.display="inline-flex";b.textContent="$"+fmtUsd(pfTotal6)}}
   async function getCode(addr){for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_getCode",params:[addr,"latest"]})});const j=await r.json();if(j&&typeof j.result==="string")return j.result}catch(_){}}return "0x"}
   // ERC-6551 token-bound account address for Agent `id` (salt 0)
   const tbaCall=id=>"0x246a0021"+argAddr(CFG.accountImpl)+argUint(0)+argUint(CFG.chainIdDec)+argAddr(CFG.mintContract)+argUint(id);
@@ -138,7 +153,11 @@
         .filter(t=>t.type.indexOf("ERC-20")>=0&&t.val>0n);
       if(!toks.length){el.innerHTML='<span class="acw-lbl">HOLDS</span><span class="ach-empty">— empty</span>';return}
       const imgFn=window.tokenImg||ic;
-      el.innerHTML='<span class="acw-lbl">HOLDS</span>'+toks.slice(0,6).map(t=>'<span class="ach-tok">'+imgFn(t.sym,15,t.addr)+' '+esc(fmtAmt(t.val,t.dec))+' '+esc(t.sym)+'</span>').join('');
+      el.innerHTML='<span class="acw-lbl">HOLDS</span>'+toks.slice(0,6).map(t=>'<span class="ach-tok">'+imgFn(t.sym,15,t.addr)+' '+esc(fmtAmt(t.val,t.dec))+' '+esc(t.sym)+'</span>').join('')+'<span class="ach-val" data-id="'+id+'"></span>';
+      // value the holdings in USDG (stocks quoted, USDG direct)
+      const vals=await Promise.all(toks.map(async t=>{const a=(t.addr||"").toLowerCase();if(a===USDGL)return t.val;if(STOCKSET.has(a))return await quoteToUsdg(t.addr,t.val);return 0n}));
+      let val6=0n;for(const v of vals)val6+=v;
+      if(val6>0n){const ve=el.querySelector('.ach-val');if(ve)ve.textContent="≈ $"+fmtUsd(val6);pfTotal6+=val6;updatePf()}
     }catch(_){el.innerHTML='';}
   }
   async function createWallet(id,btn){
@@ -176,6 +195,7 @@
   let busy=false;
   async function loadMyAgents(addr){
     if(!addr||busy)return;busy=true;setConnected(addr);
+    pfTotal6=0n;var pfc=$("#pfChip");if(pfc)pfc.style.display="none";
     agentsMsg.textContent="Reading your Agents…";agentsCount.textContent="";
     agentGrid.innerHTML='<div class="agent-skel"></div><div class="agent-skel"></div><div class="agent-skel"></div>';
     let ids=await ownedViaApi(addr);if(ids==null||!ids.length){const s=await ownedViaScan(addr);if(s.length)ids=s;else if(ids==null)ids=[]}
