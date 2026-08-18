@@ -172,8 +172,8 @@
 
   async function doTrade(){
     if(!AMM_SET){toast("AMM launching soon");return}
-    if(!window.ethereum){toast("Open in a wallet browser");return}
     if(!mAddr){connect(a=>{mAddr=a;loadOwned(a);refreshAction()},actBtn);return}
+    if(!window.ethereum){toast("Open in a wallet browser");return}
     try{
       try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}
       actBtn.disabled=true;const from=mAddr;

@@ -354,8 +354,8 @@
   }
 
   async function doMint(){
-    if(!window.ethereum){ toast("Open in a wallet browser to mint"); return; }
     if(!mAddr){ connect(a=>{ mAddr=a; refreshYou(); }, mintBtn); return; }
+    if(!window.ethereum){ toast("Open in a wallet browser to mint"); return; }
     if(!mOpen){ toast("Mint opens soon"); return; }
     if(mRemainSupply<=0){ toast("Sold out"); renderMintBtn(); return; }
     if(mMintedYou>=CFG.maxPerWallet){ toast("You've minted the max ("+CFG.maxPerWallet+"/"+CFG.maxPerWallet+")"); renderMintBtn(); return; }
