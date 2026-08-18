@@ -109,6 +109,37 @@
     </div>
   </section>
 
+  <!-- STOCK REWARDS (fee-funded) -->
+  <section class="block" id="srBlock" style="display:none">
+    <div class="sec-head"><span class="n">STOCK REWARDS · FEE-FUNDED</span></div>
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — stock-rewards.sh</span></div>
+      <div class="term-body">
+        <p class="hint" style="margin-top:0">Fee revenue buys <b id="srSym" style="color:var(--green)">stock</b> and splits it across activated Agents — paid straight into each Agent's wallet. Trading builds your portfolio.</p>
+        <div class="r-grid" style="margin:12px 0 6px">
+          <div class="r-cell"><u>DISTRIBUTED</u><b id="srTotal" class="green">—</b></div>
+          <div class="r-cell"><u>ACTIVE AGENTS</u><b id="srActive">—</b></div>
+          <div class="r-cell"><u>YOUR CLAIMABLE</u><b id="srClaim" class="green">—</b></div>
+        </div>
+        <div id="srOwner" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:rgba(207,246,5,.03)">
+          <div style="font-size:.58rem;letter-spacing:.22em;color:var(--green);margin-bottom:9px">OWNER · DISTRIBUTE STOCK</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input id="srAmt" inputmode="decimal" placeholder="stock amount to distribute" spellcheck="false" autocomplete="off" style="flex:1;min-width:150px;background:#0b0d09;border:1px solid var(--line);border-radius:10px;color:var(--ink);font:inherit;font-size:.9rem;padding:11px 13px">
+            <button class="btn" id="srDeposit">DEPOSIT</button>
+          </div>
+          <p class="hint" id="srOwnerMsg" style="margin-top:8px">Splits evenly across activated Agents. Your <b id="srBalSym">stock</b>: <b id="srBal">—</b></p>
+        </div>
+        <div class="agents-bar" style="margin-top:12px">
+          <button class="btn" id="srConnect">CONNECT WALLET</button>
+          <span class="wallet-chip" id="srChip" style="display:none"><span class="dot"></span><span id="srAddr"></span></span>
+          <button class="btn outline" id="srActivateAll" style="display:none">ACTIVATE ALL</button>
+          <button class="btn" id="srClaimAll" style="display:none">CLAIM ALL</button>
+        </div>
+        <p class="hint" id="srMsg">Activate your Agents to earn stock from fees. Claims land in your Agent's wallet.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="hero" style="padding:10px 0 46px">
     <div class="cs-cta">
       <a class="btn mint-cta" href="/amm">TRADE ON THE AMM →</a>
@@ -251,6 +282,74 @@
 
   loadPool();
   if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])load(a[0])}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0]){busy=false;load(a[0])}});}
+})();
+</script>
+
+<script src="/assets/nft/tokens.js"></script>
+<script>
+/* Stock Rewards (fee-funded) — independent, gated on CFG.stockRewards */
+(function(){
+  "use strict";
+  const CFG={stockRewards:"",token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
+  const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||"");
+  if(!isAddr(CFG.stockRewards))return; // stays hidden until deployed & configured
+  const $=s=>document.querySelector(s);
+  const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
+  const wU=v=>BigInt(v).toString(16).padStart(64,"0");
+  const wA=a=>a.toLowerCase().replace(/^0x/,"").padStart(64,"0");
+  const argArr=ids=>wU(0x20)+wU(ids.length)+ids.map(wU).join("");
+  const short=a=>a.slice(0,6)+"…"+a.slice(-4);
+  async function rc(to,data){for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_call",params:[{to,data},"latest"]})});const j=await r.json();if(j&&j.result&&j.result!=="0x")return j.result}catch(_){}}return null}
+  async function waitR(h){for(let i=0;i<60;i++){try{const r=await window.ethereum.request({method:"eth_getTransactionReceipt",params:[h]});if(r){if(r.status&&bi(r.status)===0n)throw new Error("reverted");return r}}catch(e){if(String(e&&e.message||"").includes("reverted"))throw e}await new Promise(r=>setTimeout(r,2500))}return null}
+  let toastT;function toast(m){const t=$("#toast");if(!t)return;t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800)}
+  const D=$("#srBlock");D.style.display="block";
+  const symEl=$("#srSym"),totalEl=$("#srTotal"),activeEl=$("#srActive"),claimEl=$("#srClaim");
+  const connectBtn=$("#srConnect"),chip=$("#srChip"),addrEl=$("#srAddr"),actAll=$("#srActivateAll"),claimAll=$("#srClaimAll"),msg=$("#srMsg");
+  const ownerBox=$("#srOwner"),amtEl=$("#srAmt"),depBtn=$("#srDeposit"),balEl=$("#srBal"),balSym=$("#srBalSym"),ownerSymEl=$("#srBalSym");
+  let mAddr=null,rToken=null,rDec=18,rSym="stock",rOwner=null,myIds=[],st={};
+  const fmtT=wei=>{const p=10n**BigInt(rDec),w=bi(wei);return (Number(w/p)+Number(w%p)/Number(p)).toLocaleString("en-US",{maximumFractionDigits:4})};
+  const img=(window.tokenImg||function(){return""});
+  async function meta(){
+    rToken="0x"+(await rc(CFG.stockRewards,"0xf7c618c1")).slice(-40);
+    try{rDec=parseInt(await rc(rToken,"0x313ce567"),16)||18}catch(_){rDec=18}
+    try{const s=await rc(rToken,"0x95d89b41");if(s){const len=parseInt(s.slice(66,130),16);rSym=decodeURIComponent(s.slice(130,130+len*2).replace(/(..)/g,"%$1"))||rSym}}catch(_){}
+    symEl.innerHTML=img(rSym,16,rToken)+" "+rSym;balSym.textContent=rSym;
+    try{rOwner=("0x"+(await rc(CFG.stockRewards,"0x8da5cb5b")).slice(-40)).toLowerCase()}catch(_){}
+  }
+  async function pool(){const td=await rc(CFG.stockRewards,"0xefca2eed"),ac=await rc(CFG.stockRewards,"0x06f9e52c");if(td)totalEl.innerHTML=fmtT(bi(td))+" "+rSym;if(ac)activeEl.textContent=Number(bi(ac)).toLocaleString("en-US")}
+  async function ownedIds(a){try{const r=await fetch(CFG.explorer+"/api/v2/addresses/"+a+"/nft?type=ERC-721");if(r.ok){const j=await r.json();const mc=CFG.mintContract.toLowerCase();const ids=(j.items||[]).filter(it=>((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc).map(it=>parseInt(it.id||it.token_id)).filter(n=>!isNaN(n));return ids.sort((x,y)=>x-y)}}catch(_){}return[]}
+  async function load(a){
+    mAddr=a;connectBtn.style.display="none";chip.style.display="inline-flex";addrEl.textContent=short(a);
+    if(rOwner&&a.toLowerCase()===rOwner){ownerBox.style.display="block";rc(rToken,"0x70a08231"+wA(a)).then(b=>{if(b)balEl.textContent=fmtT(bi(b))})}
+    myIds=await ownedIds(a);
+    if(!myIds.length){msg.innerHTML='No Agents. <a href="/nft#mint" style="color:var(--green)">Mint one ↗</a>';return}
+    const [acts,cls]=await Promise.all([Promise.all(myIds.map(id=>rc(CFG.stockRewards,"0x32fad9d8"+wU(id)))),Promise.all(myIds.map(id=>rc(CFG.stockRewards,"0xd1d58b25"+wU(id))))]);
+    st={};let yc=0n;myIds.forEach((id,i)=>{const active=bi(acts[i])===1n;const cl=bi(cls[i]);st[id]={active,cl};if(active)yc+=cl});
+    claimEl.innerHTML=fmtT(yc)+" "+rSym;
+    const anyOff=myIds.some(id=>!st[id].active),anyCl=myIds.some(id=>st[id].active&&st[id].cl>0n);
+    actAll.style.display=anyOff?"inline-flex":"none";claimAll.style.display=anyCl?"inline-flex":"none";
+    msg.textContent=anyOff?"Activate your Agents to start earning stock from fees.":"You're activated — claims land in each Agent's wallet.";
+  }
+  async function ensureChain(){try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}}
+  async function tx(to,data){return window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to,data}]})}
+  async function send(data,label,btn){if(!mAddr){toast("Connect wallet");return}try{if(btn){btn.disabled=true;btn.dataset.t=btn.textContent;btn.textContent="…"}await ensureChain();const h=await tx(CFG.stockRewards,data);toast(label+" — confirming…");await waitR(h);toast(label+" ✓");load(mAddr);pool()}catch(e){if(btn){btn.disabled=false;btn.textContent=btn.dataset.t||"—"}toast("Failed: "+((e&&e.message)||"").slice(0,50))}}
+  async function connect(){if(!window.ethereum){toast("No wallet found");return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a[0])return;await ensureChain();load(a[0])}catch(_){toast("Connection rejected")}}
+  connectBtn.addEventListener("click",connect);
+  actAll.addEventListener("click",()=>{const ids=myIds.filter(id=>!st[id].active);if(ids.length)send("0x43e788cf"+argArr(ids),"Activated all",actAll)});
+  claimAll.addEventListener("click",()=>{const ids=myIds.filter(id=>st[id].active&&st[id].cl>0n);if(ids.length)send("0x925489a8"+argArr(ids),"Claimed all",claimAll)});
+  depBtn.addEventListener("click",async()=>{
+    const s=(amtEl.value||"").trim();if(!s){toast("Enter amount");return}
+    const[i,f=""]=s.split(".");const wei=BigInt((i||"0")+(f+"0".repeat(rDec)).slice(0,rDec));
+    if(wei<=0n)return;
+    const ac=bi(await rc(CFG.stockRewards,"0x06f9e52c"));if(ac===0n){toast("Activate at least 1 Agent first");return}
+    try{depBtn.disabled=true;const t0=depBtn.textContent;await ensureChain();
+      const al=bi(await rc(rToken,"0xdd62ed3e"+wA(mAddr)+wA(CFG.stockRewards)));
+      if(al<wei){depBtn.textContent="APPROVE…";const at=await tx(rToken,"0x095ea7b3"+wA(CFG.stockRewards)+wU(wei));await waitR(at)}
+      depBtn.textContent="DEPOSITING…";const h=await tx(CFG.stockRewards,"0xb6b55f25"+wU(wei));await waitR(h);
+      toast("Distributed ✓");amtEl.value="";depBtn.disabled=false;depBtn.textContent=t0;load(mAddr);pool()
+    }catch(e){depBtn.disabled=false;depBtn.textContent="DEPOSIT";toast("Failed: "+((e&&e.message)||"").slice(0,50))}
+  });
+  (async()=>{await meta();pool();if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])load(a[0])}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0])load(a[0])})}})();
 })();
 </script>
 </body>
