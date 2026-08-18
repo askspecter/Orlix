@@ -2,10 +2,10 @@
  * window.tokenIcon(symbol, size) -> SVG string. window.ORLIX_TOKEN_MAP for names/colors. */
 (function(){
   var MAP={
-    AAPL:{n:"Apple",c:"#B4B8BC"}, MSFT:{n:"Microsoft",c:"#00A4EF"}, NVDA:{n:"NVIDIA",c:"#76B900"},
-    AMZN:{n:"Amazon",c:"#FF9900"}, GOOGL:{n:"Alphabet",c:"#4285F4"}, META:{n:"Meta",c:"#0866FF"},
-    TSLA:{n:"Tesla",c:"#E82127"}, PLTR:{n:"Palantir",c:"#7A8794"}, AMD:{n:"AMD",c:"#ED1C24"},
-    GME:{n:"GameStop",c:"#E31837"}, SPCX:{n:"SpaceX",c:"#4B7BEC"},
+    AAPL:{n:"Apple",c:"#B4B8BC",t:"AAPL"}, MSFT:{n:"Microsoft",c:"#00A4EF",t:"MSFT"}, NVDA:{n:"NVIDIA",c:"#76B900",t:"NVDA"},
+    AMZN:{n:"Amazon",c:"#FF9900",t:"AMZN"}, GOOGL:{n:"Alphabet",c:"#4285F4",t:"GOOGL"}, META:{n:"Meta",c:"#0866FF",t:"META"},
+    TSLA:{n:"Tesla",c:"#E82127",t:"TSLA"}, PLTR:{n:"Palantir",c:"#7A8794",t:"PLTR"}, AMD:{n:"AMD",c:"#ED1C24",t:"AMD"},
+    GME:{n:"GameStop",c:"#E31837",t:"GME"}, SPCX:{n:"SpaceX",c:"#4B7BEC",t:"SPCX"},
     USDG:{n:"USDG",c:"#2775CA"}, ORLIX:{n:"ORLIX",c:"#CFF605"}, PONS:{n:"Pons",c:"#A78BFA"},
     HMM:{n:"HMM",c:"#F5C518"}, YOLO:{n:"YOLO",c:"#FF6B6B"}, WETH:{n:"WETH",c:"#8A92B2"}, ETH:{n:"Ether",c:"#8A92B2"}
   };
@@ -31,13 +31,16 @@
     "0x5fc5360d0400a0fd4f2af552add042d716f1d168":"https://assets.coingecko.com/coins/images/51281/standard/GDN_USDG_Token_200x200.png?1730484111", // USDG
     "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c":"/assets/nft/orlix-mark.png" // $ORLIX
   };
-  window.tokenLogoUrl=function(addr){if(!addr)return null;var a=String(addr).toLowerCase();return SPECIAL[a]||("https://cdn.robinhood.com/ncw_assets/logos/"+a+".png")};
-  // real logo <img> by address, with monogram fallback on error
+  // real logo <img> with monogram fallback. Stocks -> FMP company logos by
+  // ticker (on a white chip so dark marks show); USDG/$ORLIX -> their own icon.
   window.tokenImg=function(sym,size,addr){
-    size=size||22;var mono=window.tokenIcon(sym,size);
-    if(!addr)return mono;
-    var url=window.tokenLogoUrl(addr);
+    size=size||22;var b=base(sym);var mono=window.tokenIcon(sym,size);
+    var url=null, chip=false;
+    if(addr&&SPECIAL[String(addr).toLowerCase()]) url=SPECIAL[String(addr).toLowerCase()];
+    else{var m=MAP[b];if(m&&m.t){url="https://financialmodelingprep.com/image-stock/"+m.t+".png";chip=true}}
+    if(!url)return mono;
     var fb="data:image/svg+xml;utf8,"+encodeURIComponent(mono);
-    return '<img src="'+url+'" width="'+size+'" height="'+size+'" loading="lazy" alt="'+esc(sym||"")+'" style="border-radius:50%;object-fit:cover;vertical-align:middle;flex:none;background:#0b0d09" onerror="this.onerror=null;this.src=\''+fb+'\'">';
+    var st=chip?"border-radius:50%;object-fit:contain;background:#fff;padding:"+Math.round(size*0.12)+"px":"border-radius:50%;object-fit:cover;background:#0b0d09";
+    return '<img src="'+url+'" width="'+size+'" height="'+size+'" loading="lazy" alt="'+esc(sym||"")+'" style="'+st+';vertical-align:middle;flex:none;box-sizing:border-box" onerror="this.onerror=null;this.style.background=\'transparent\';this.style.padding=\'0\';this.src=\''+fb+'\'">';
   };
 })();
