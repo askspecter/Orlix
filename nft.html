@@ -118,35 +118,9 @@
     </div>
   </section>
 
-  <!-- CHART -->
-  <section class="block" id="chart">
-    <div class="sec-head"><span class="n">[02]</span><h2>$ORLIX Live Chart</h2></div>
-    <div class="chart-shell">
-      <div class="chart-ph" id="chartPh">
-        <div class="ph-mark" aria-hidden="true">
-          <img src="/assets/nft/orlix-mark.png" alt="ORLIX">
-        </div>
-        <p>Live $ORLIX price, depth &amp; trades on Robinhood Chain — powered by Defined.fi.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-          <button class="btn" id="loadChart">▸ LOAD LIVE CHART</button>
-          <a class="btn outline" target="_blank" rel="noopener"
-             href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c">OPEN ON DEFINED.FI ↗</a>
-        </div>
-      </div>
-      <iframe id="chartFrame" title="$ORLIX chart on Defined.fi"
-        data-src="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c?embedded=1&hideTxTable=1&hideSidebar=1&embedTheme=dark&chartSmoothing=1"
-        loading="lazy"></iframe>
-    </div>
-    <p class="hint" style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-      Powered by <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener" style="color:var(--green)">Defined.fi ↗</a>
-      <span style="color:var(--ink-3)">·</span>
-      <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener" style="color:var(--green)">Open full chart in new tab ↗</a>
-    </p>
-  </section>
-
   <!-- HOW IT WORKS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[03]</span><h2>How Minting Works</h2></div>
+    <div class="sec-head"><span class="n">[02]</span><h2>How Minting Works</h2></div>
     <div class="steps">
       <div class="step"><div class="s-n">01</div><h3>Hold $ORLIX</h3><p>Keep at least <b style="color:var(--green)">300,000 $ORLIX</b> per mint in your wallet on Robinhood Chain — that's what gets burned.</p></div>
       <div class="step"><div class="s-n">02</div><h3>Approve</h3><p>Sign an <b>approve</b> so the Agent contract can burn your $ORLIX. One-time per mint amount — nothing leaves until you mint.</p></div>
@@ -156,7 +130,7 @@
 
   <!-- TOKEN DETAILS -->
   <section class="block">
-    <div class="sec-head"><span class="n">[04]</span><h2>Collection &amp; Token</h2></div>
+    <div class="sec-head"><span class="n">[03]</span><h2>Collection &amp; Token</h2></div>
     <div class="meta-grid">
       <div class="meta">
         <u>$ORLIX CONTRACT</u>
@@ -181,7 +155,6 @@
       <a href="#mint">Mint</a>
       <a href="https://opensea.io/collection/orlix-agent" target="_blank" rel="noopener">OpenSea</a>
       <a href="https://app.orlixai.xyz">App</a>
-      <a href="https://www.defined.fi/token/robinhood/0x1efdd871f052900d88e4dc2d49bcd32bf77e333c" target="_blank" rel="noopener">Chart</a>
       <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
     </div>
     <small>© 2026 ORLIX · Robinhood Chain · not financial advice</small>
@@ -293,14 +266,6 @@
       onAddr(accs[0]);
     }catch(e){ toast("Connection rejected"); }
   }
-
-  // ---- chart: click-to-load embed (avoids a broken frame on page load) ----
-  const frame = $("#chartFrame");
-  const ph = $("#chartPh");
-  $("#loadChart").addEventListener("click",()=>{
-    if (!frame.src) frame.src = frame.getAttribute("data-src");
-    ph.classList.add("hide");
-  });
 
   // ---- MINT (OrlixAgentPhase2 — burn 300,000 $ORLIX per Agent) ----
   const MINT_SET = /^0x[0-9a-fA-F]{40}$/.test(CFG.mintContract);

@@ -162,17 +162,6 @@ section.block{margin:52px 0}
 .progress{height:6px;border-radius:100px;background:#141710;overflow:hidden;margin:14px 20px 20px}
 .progress i{display:block;height:100%;background:linear-gradient(90deg,var(--green-deep),var(--green));border-radius:100px;width:0;transition:width .8s var(--ease)}
 
-/* chart */
-.chart-shell{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--panel);min-height:520px}
-.chart-shell iframe{width:100%;height:520px;border:0;display:block;background:#0a0c07;position:relative;z-index:1}
-.chart-ph{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:30px;
-  background:radial-gradient(600px 300px at 50% 40%,rgba(207,246,5,.08),transparent 70%),linear-gradient(180deg,var(--panel-2),var(--panel));
-  transition:opacity .5s var(--ease)}
-.chart-ph.hide{opacity:0;pointer-events:none}
-.chart-ph p{color:var(--ink-2);font-size:.85rem;max-width:40ch}
-.chart-ph .ph-mark{width:60px;height:60px;opacity:.9;animation:bob 2.4s var(--ease) infinite}
-.chart-ph .ph-mark svg,.chart-ph .ph-mark img{width:100%;height:100%;border-radius:14px;object-fit:cover}
-@keyframes bob{50%{transform:translateY(-8px)}}
 
 /* token details */
 .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:14px;overflow:hidden}
