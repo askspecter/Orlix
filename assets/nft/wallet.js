@@ -19,7 +19,7 @@
   "use strict";
 
   // ── paste your Reown project id here ─────────────────────────────────────────
-  var PROJECT_ID = window.ORLIX_REOWN_PROJECT_ID || "";
+  var PROJECT_ID = window.ORLIX_REOWN_PROJECT_ID || "aad6e7468a8d723a2539e4d34ffb0897";
   // ─────────────────────────────────────────────────────────────────────────────
 
   var APPKIT = "https://esm.sh/@reown/appkit@^1.7.0";
