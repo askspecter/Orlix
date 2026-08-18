@@ -230,6 +230,14 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
 .agent-card .ac-meta a{color:var(--green);font-size:.95rem}
 .agent-skel{border:1px solid var(--line-soft);border-radius:14px;aspect-ratio:1/1.18;background:linear-gradient(100deg,var(--panel) 30%,rgba(207,246,5,.06) 50%,var(--panel) 70%);background-size:200% 100%;animation:sk 1.2s linear infinite}
 @keyframes sk{to{background-position:-200% 0}}
+.ac-wallet{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 11px 11px;border-top:1px solid var(--line-soft);font-size:.66rem}
+.acw-lbl{font-size:.5rem;letter-spacing:.2em;color:var(--ink-3)}
+.acw-addr{color:var(--green);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.acw-bal{margin-left:auto;color:var(--green);font-weight:600}
+.acw-create{margin-left:auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:var(--green);
+  background:rgba(207,246,5,.08);border:1px solid var(--line);border-radius:8px;padding:5px 9px;cursor:pointer}
+.acw-create:hover{background:rgba(207,246,5,.16)}
+.acw-create:disabled{opacity:.55;cursor:default}
 
 /* menu SOON pill (hamburger) */
 .menu-panel a .tag{float:right;font-size:.5rem;letter-spacing:.16em;color:var(--green);border:1px solid var(--green);border-radius:100px;padding:2px 7px;margin-left:8px;opacity:.9}

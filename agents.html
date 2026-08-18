@@ -96,10 +96,43 @@
 <script>
 (function(){
   "use strict";
-  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
+  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",registry:"",accountImpl:"",chainIdDec:4663,explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
   const $=s=>document.querySelector(s);
   const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
   const fmt=n=>n.toLocaleString("en-US",{maximumFractionDigits:0});
+  const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||"");
+  const argAddr=a=>a.toLowerCase().replace(/^0x/,"").padStart(64,"0");
+  const argUint=v=>BigInt(v).toString(16).padStart(64,"0");
+  const TBA_ON=isAddr(CFG.registry)&&isAddr(CFG.accountImpl);
+  function fmtTok(wei){const p=10n**18n;const w=bi(wei);const whole=w/p;const frac=Number((w%p)*10000n/p)/10000;return (Number(whole)+frac).toLocaleString("en-US",{maximumFractionDigits:2})}
+  async function getCode(addr){for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_getCode",params:[addr,"latest"]})});const j=await r.json();if(j&&typeof j.result==="string")return j.result}catch(_){}}return "0x"}
+  // ERC-6551 token-bound account address for Agent `id` (salt 0)
+  const tbaCall=id=>"0x246a0021"+argAddr(CFG.accountImpl)+argUint(0)+argUint(CFG.chainIdDec)+argAddr(CFG.mintContract)+argUint(id);
+  async function tbaOf(id){try{const r=await rpcCall(CFG.registry,tbaCall(id));return "0x"+r.slice(-40)}catch(_){return null}}
+  async function loadWallet(id){
+    const el=document.querySelector('.ac-wallet[data-id="'+id+'"]');if(!el)return;
+    const tba=await tbaOf(id);if(!tba){el.innerHTML='';return}
+    const [code,bal]=await Promise.all([getCode(tba),rpcCall(CFG.token,"0x70a08231"+argAddr(tba)).catch(()=>"0x0")]);
+    const live=code&&code!=="0x"&&code!=="0x0";
+    const wurl=CFG.explorer+"/address/"+tba;
+    el.innerHTML='<span class="acw-lbl">WALLET</span>'
+      +'<a class="acw-addr" href="'+wurl+'" target="_blank" rel="noopener" title="'+tba+'">'+short(tba)+' ↗</a>'
+      +(live?'<span class="acw-bal">'+fmtTok(bal)+' $ORLIX</span>'
+             :'<button class="acw-create" data-tba="'+id+'">Create ↗</button>');
+    const btn=el.querySelector('.acw-create');if(btn)btn.addEventListener('click',()=>createWallet(id,btn));
+  }
+  async function createWallet(id,btn){
+    if(!window.ethereum||!mAddr){toast("Connect wallet first");return}
+    try{
+      btn.disabled=true;btn.textContent="Creating…";
+      try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(_){}
+      const data="0x8a54c52f"+argAddr(CFG.accountImpl)+argUint(0)+argUint(CFG.chainIdDec)+argAddr(CFG.mintContract)+argUint(id);
+      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to:CFG.registry,data}]});
+      toast("Wallet creating…");
+      for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,2500));try{const rc=await window.ethereum.request({method:"eth_getTransactionReceipt",params:[tx]});if(rc){break}}catch(_){}}
+      toast("Agent wallet created ✓");loadWallet(id);
+    }catch(e){btn.disabled=false;btn.textContent="Create ↗";toast("Failed: "+((e&&e.message)||"").slice(0,50))}
+  }
   async function rpcCall(to,data){let e;for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_call",params:[{to,data},"latest"]})});const j=await r.json();if(j&&j.result&&j.result!=="0x")return j.result;if(j&&j.error)e=new Error(j.error.message)}catch(x){e=x}}throw e||new Error("rpc")}
   let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600)}
   async function connect(cb,fe){if(!window.ethereum){toast("No wallet found — open in a wallet browser");if(fe&&fe.focus)fe.focus();return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}toast("Wallet connected");cb(a[0])}catch(_){toast("Connection rejected")}}
@@ -139,14 +172,18 @@
       return '<div class="agent-card"><a class="ac-media" href="'+url+'" target="_blank" rel="noopener">'
         +(tier?'<span class="ac-tier" style="color:'+col+'">'+tier+'</span>':'')
         +'<img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"></a>'
-        +'<div class="ac-meta"><span class="ac-name">#'+id+'</span><a href="'+url+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div></div>';
+        +'<div class="ac-meta"><span class="ac-name">#'+id+'</span><a href="'+url+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div>'
+        +(TBA_ON?'<div class="ac-wallet" data-id="'+id+'"><span class="acw-lbl">WALLET</span><span class="acw-addr" style="color:var(--ink-3)">…</span></div>':'')
+        +'</div>';
     }).join("");
     summaryEl.innerHTML=Object.keys(counts).sort().map(t=>'<span class="sm" style="color:'+tierColor(t)+'">'+counts[t]+' '+t+'</span>').join("");
     agentsMsg.textContent="";busy=false;
+    if(TBA_ON)ids.forEach(id=>loadWallet(id));
   }
   connectBtn.addEventListener("click",()=>connect(a=>loadMyAgents(a),connectBtn));
   refreshBtn.addEventListener("click",()=>{ if(mAddr){ busy=false; loadMyAgents(mAddr); } });
   menuInit();
+  if(TBA_ON){var badge=document.querySelector('.cs-badge');if(badge)badge.innerHTML='<span class="dot"></span>Agent Wallets · Live';}
   if(window.ethereum){
     window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])loadMyAgents(a[0])}).catch(()=>{});
     if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{ if(a&&a[0]){ busy=false; loadMyAgents(a[0]); } else setDisconnected(); });
