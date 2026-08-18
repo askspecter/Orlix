@@ -63,6 +63,14 @@
           <div class="r-cell"><u>ACTIVE AGENTS</u><b id="dActive">—</b></div>
           <div class="r-cell"><u>YOUR CLAIMABLE</u><b id="dYourClaim" class="green">—</b></div>
         </div>
+        <div id="dOwner" style="display:none;margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:rgba(207,246,5,.03)">
+          <div style="font-size:.58rem;letter-spacing:.22em;color:var(--green);margin-bottom:9px">OWNER · DISTRIBUTE FEES</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input id="dAmt" inputmode="decimal" placeholder="$ORLIX amount to distribute" spellcheck="false" autocomplete="off" style="flex:1;min-width:150px;background:#0b0d09;border:1px solid var(--line);border-radius:10px;color:var(--ink);font:inherit;font-size:.9rem;padding:11px 13px">
+            <button class="btn" id="dDeposit">DEPOSIT</button>
+          </div>
+          <p class="hint" id="dOwnerMsg" style="margin-top:8px">Splits evenly across all activated Agents. Your $ORLIX: <b id="dOwnerBal">—</b></p>
+        </div>
         <div class="agents-bar" id="dBar" style="margin-top:14px">
           <button class="btn" id="dConnect">CONNECT WALLET</button>
           <span class="wallet-chip" id="dChip" style="display:none"><span class="dot"></span><span id="dAddr"></span></span>
@@ -147,7 +155,10 @@
   const badge=$("#distBadge");if(badge)badge.innerHTML='<span class="dot"></span>Live';
   const dGrid=$("#dGrid"),dMsg=$("#dMsg"),dTotal=$("#dTotal"),dActive=$("#dActive"),dYour=$("#dYourClaim");
   const dConnect=$("#dConnect"),dChip=$("#dChip"),dAddr=$("#dAddr"),dRefresh=$("#dRefresh"),dActivateAll=$("#dActivateAll"),dClaimAll=$("#dClaimAll");
-  let mAddr=null, myIds=[], stateById={}, busy=false;
+  const dOwner=$("#dOwner"),dAmt=$("#dAmt"),dDeposit=$("#dDeposit"),dOwnerBal=$("#dOwnerBal");
+  let mAddr=null, myIds=[], stateById={}, busy=false, distOwner=null;
+  const toWei=v=>{const s=String(v).trim();if(!s)return 0n;const[i,f=""]=s.split(".");const fr=(f+"0".repeat(mDec)).slice(0,mDec);return BigInt((i||"0")+fr)};
+  async function loadOwner(){try{const o=await rpcCall(CFG.distributor,"0x8da5cb5b");distOwner=("0x"+o.slice(-40)).toLowerCase()}catch(_){}}
 
   async function getDecimals(){try{const r=await rpcCall(CFG.token,"0x313ce567");const d=parseInt(r,16);mDec=(d>=0&&d<=36)?d:18}catch(_){mDec=18}}
   async function loadPool(){
@@ -172,6 +183,8 @@
     if(busy)return;busy=true;setConnected(addr);
     dMsg.textContent="Reading your Agents…";dGrid.innerHTML='<div class="agent-skel"></div><div class="agent-skel"></div><div class="agent-skel"></div>';
     await getDecimals();await loadPool();
+    if(!distOwner)await loadOwner();
+    if(distOwner&&addr.toLowerCase()===distOwner){dOwner.style.display="block";rpcCall(CFG.token,"0x70a08231"+argAddr(addr)).then(b=>{dOwnerBal.textContent=fmtTok(b)+" $ORLIX"}).catch(()=>{})}else{dOwner.style.display="none"}
     myIds=await ownedIds(addr);
     if(!myIds.length){dGrid.innerHTML="";dMsg.innerHTML='No ORLIX Agents in this wallet. <a href="/nft#mint" style="color:var(--green)">Mint one ↗</a>';dActivateAll.style.display="none";dClaimAll.style.display="none";busy=false;return}
     // activated + claimable per id
@@ -220,6 +233,20 @@
   dRefresh.addEventListener("click",()=>{if(mAddr){busy=false;load(mAddr)}});
   dActivateAll.addEventListener("click",()=>{const ids=myIds.filter(id=>!stateById[id].active);if(ids.length)send("0x43e788cf"+argArr(ids),"Activated all",dActivateAll)});
   dClaimAll.addEventListener("click",()=>{const ids=myIds.filter(id=>stateById[id].active&&stateById[id].cl>0n);if(ids.length)send("0x925489a8"+argArr(ids),"Claimed all",dClaimAll)});
+  async function doDeposit(){
+    const wei=toWei(dAmt.value);if(wei<=0n){toast("Enter a $ORLIX amount");return}
+    if(!window.ethereum||!mAddr){toast("Connect wallet first");return}
+    const ac=bi(await rpcCall(CFG.distributor,"0x06f9e52c").catch(()=>"0x0"));
+    if(ac===0n){toast("Activate at least 1 Agent first");return}
+    try{dDeposit.disabled=true;const t=dDeposit.textContent;dDeposit.textContent="…";await ensureChain();
+      const allow=bi(await rpcCall(CFG.token,"0xdd62ed3e"+argAddr(mAddr)+argAddr(CFG.distributor)).catch(()=>"0x0"));
+      if(allow<wei){dDeposit.textContent="APPROVE…";toast("Step 1/2 — approve $ORLIX");const atx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to:CFG.token,data:"0x095ea7b3"+argAddr(CFG.distributor)+argUint(wei)}]});dDeposit.textContent="CONFIRMING…";await waitReceipt(atx)}
+      dDeposit.textContent="DEPOSITING…";toast("Step 2/2 — deposit");
+      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to:CFG.distributor,data:"0xb6b55f25"+argUint(wei)}]});
+      await waitReceipt(tx);toast("Distributed ✓");dAmt.value="";dDeposit.disabled=false;dDeposit.textContent=t;busy=false;load(mAddr);
+    }catch(e){dDeposit.disabled=false;dDeposit.textContent="DEPOSIT";toast("Failed: "+((e&&e.message)||"").slice(0,50))}
+  }
+  dDeposit.addEventListener("click",doDeposit);
 
   loadPool();
   if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])load(a[0])}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0]){busy=false;load(a[0])}});}
