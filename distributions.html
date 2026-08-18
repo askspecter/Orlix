@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Distributions — ORLIX Agent · Robinhood Chain</title>
-<meta name="description" content="Coming soon: NFT-AMM trade fees streamed back to activated ORLIX Agents on Robinhood Chain.">
+<meta name="description" content="NFT-AMM trade fees streamed back to activated ORLIX Agents on Robinhood Chain. Activate, hold, earn $ORLIX.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orlixai.xyz/distributions">
-<meta property="og:title" content="Distributions — ORLIX Agent (coming soon)">
+<meta property="og:title" content="Distributions — ORLIX Agent">
 <meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#050505">
@@ -47,39 +47,63 @@
 </header>
 
 <main class="wrap">
-  <section class="hero" style="padding:56px 0 22px">
-    <span class="cs-badge"><span class="dot"></span>Coming Soon</span>
+  <section class="hero" style="padding:56px 0 20px">
+    <span class="cs-badge" id="distBadge"><span class="dot"></span>Coming Soon</span>
     <h1><em>Distributions</em>.</h1>
-    <p class="lead">Trading powers rewards. Fees from the <a href="/amm" style="color:var(--green)">NFT AMM</a> get routed back into the ecosystem and streamed to <b>activated Agents</b> — hold, activate, earn.</p>
+    <p class="lead">Trading powers rewards. Fees from the <a href="/amm" style="color:var(--green)">NFT AMM</a> are split across <b>activated Agents</b> — activate yours, hold, and claim $ORLIX.</p>
   </section>
 
-  <section class="block" style="margin-top:18px">
+  <!-- LIVE UI (shown when distributor is configured) -->
+  <section class="block" id="distLive" style="display:none;margin-top:14px">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — distributions.sh</span></div>
+      <div class="term-body">
+        <div class="r-grid" style="margin:0 0 6px">
+          <div class="r-cell"><u>DISTRIBUTED</u><b id="dTotal" class="green">—</b></div>
+          <div class="r-cell"><u>ACTIVE AGENTS</u><b id="dActive">—</b></div>
+          <div class="r-cell"><u>YOUR CLAIMABLE</u><b id="dYourClaim" class="green">—</b></div>
+        </div>
+        <div class="agents-bar" id="dBar" style="margin-top:14px">
+          <button class="btn" id="dConnect">CONNECT WALLET</button>
+          <span class="wallet-chip" id="dChip" style="display:none"><span class="dot"></span><span id="dAddr"></span></span>
+          <button class="btn outline" id="dRefresh" style="display:none">↻ REFRESH</button>
+          <button class="btn outline" id="dActivateAll" style="display:none">ACTIVATE ALL</button>
+          <button class="btn" id="dClaimAll" style="display:none">CLAIM ALL</button>
+        </div>
+        <div class="agent-grid" id="dGrid" style="margin-top:12px"></div>
+        <p class="hint" id="dMsg">Connect your wallet to activate Agents and claim $ORLIX.</p>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:12px">Rewards accrue to each Agent from the moment it's activated. Whoever holds the Agent at claim time gets paid. <a href="/agents" style="color:var(--green)">Your Agents ↗</a></p>
+  </section>
+
+  <!-- COMING SOON UI (shown when not yet configured) -->
+  <section class="block" id="distSoon" style="margin-top:18px">
     <div class="term">
       <div class="term-bar"><i></i><i></i><i></i><span>orlix — distributions.sh</span></div>
       <div class="term-body">
         <div style="font-size:.9rem;line-height:1.9"><span style="color:var(--green)">&gt;</span> <span class="cs-typed" id="typed"></span><span class="cs-caret"></span></div>
         <div style="margin-top:22px">
-          <div class="cs-progrow"><span>BUILD STATUS</span><b id="pct">IN PROGRESS · 40%</b></div>
-          <div class="cs-bar"><i style="width:40%"></i></div>
+          <div class="cs-progrow"><span>BUILD STATUS</span><b>DEPLOYING · 90%</b></div>
+          <div class="cs-bar"><i style="width:90%"></i></div>
         </div>
       </div>
     </div>
   </section>
 
   <section class="block">
-    <div class="sec-head"><span class="n">HOW IT WILL WORK</span></div>
+    <div class="sec-head"><span class="n">HOW IT WORKS</span></div>
     <div class="steps">
-      <div class="cs-feat"><div class="s-n">◍</div><h3>Fees in</h3><p>Every buy &amp; sell on the NFT AMM charges a small fee. That flow accumulates in the protocol instead of leaving to a third-party marketplace.</p></div>
-      <div class="cs-feat"><div class="s-n">◈</div><h3>Activate your Agent</h3><p>“Clock in” an Agent to make it eligible. Only activated Agents share in the stream — skin in the game, on-chain.</p></div>
-      <div class="cs-feat"><div class="s-n">✦</div><h3>Rewards out</h3><p>Distributions are paid to your Agents’ wallets — $ORLIX and reward tokens, airdropped directly. The more the pool trades, the more flows back.</p></div>
+      <div class="cs-feat"><div class="s-n">◍</div><h3>Fees in</h3><p>Every buy &amp; sell on the NFT AMM charges a fee. That $ORLIX is routed into the distributor instead of leaving to a third-party marketplace.</p></div>
+      <div class="cs-feat"><div class="s-n">◈</div><h3>Activate your Agent</h3><p>“Clock in” an Agent to make it eligible. Only activated Agents share the stream — one on-chain tx, no cost beyond gas.</p></div>
+      <div class="cs-feat"><div class="s-n">✦</div><h3>Claim $ORLIX</h3><p>Rewards accrue per Agent. Claim your share anytime — the more the pool trades, the more flows back.</p></div>
     </div>
   </section>
 
   <section class="hero" style="padding:10px 0 46px">
-    <p class="cs-note">The NFT AMM that powers these fees is <b style="color:var(--green)">live today</b>. Distributions land next.</p>
     <div class="cs-cta">
       <a class="btn mint-cta" href="/amm">TRADE ON THE AMM →</a>
-      <a class="btn outline mint-cta" href="https://x.com/orlixai" target="_blank" rel="noopener">FOLLOW FOR UPDATES</a>
+      <a class="btn outline mint-cta" href="/nft">MINT AN AGENT</a>
     </div>
   </section>
 </main>
@@ -87,17 +111,118 @@
 <footer>
   <div class="foot-in">
     <div class="fl"><a href="/">Home</a><a href="/nft">Mint NFT</a><a href="/amm">NFT AMM</a><a href="/agents">Agent Wallets</a></div>
-    <small>© 2026 ORLIX · Robinhood Chain · roadmap · not financial advice</small>
+    <small>© 2026 ORLIX · Robinhood Chain · not financial advice</small>
   </div>
 </footer>
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
-  var b=document.getElementById('menuBtn'),p=document.getElementById('menuPanel');
-  if(b&&p){b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
-  var txt="fee → swap → airdrop to activated Agents … building the reward engine.";
-  var el=document.getElementById('typed'),i=0;
-  (function tick(){if(!el)return;if(i<=txt.length){el.textContent=txt.slice(0,i++);setTimeout(tick,34)}})();
+  "use strict";
+  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",distributor:"",explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
+  const $=s=>document.querySelector(s);
+  const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
+  const isAddr=a=>/^0x[0-9a-fA-F]{40}$/.test(a||"");
+  const argAddr=a=>a.toLowerCase().replace(/^0x/,"").padStart(64,"0");
+  const argUint=v=>BigInt(v).toString(16).padStart(64,"0");
+  const argArr=ids=>argUint(0x20)+argUint(ids.length)+ids.map(argUint).join("");
+  const short=a=>a.slice(0,6)+"…"+a.slice(-4);
+  const DIST_ON=isAddr(CFG.distributor);
+  let mDec=18;
+  const fmtTok=wei=>{const p=10n**BigInt(mDec),w=bi(wei);const whole=w/p,frac=Number((w%p)*10000n/p)/10000;return (Number(whole)+frac).toLocaleString("en-US",{maximumFractionDigits:2})};
+  async function rpcCall(to,data){let e;for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_call",params:[{to,data},"latest"]})});const j=await r.json();if(j&&j.result&&j.result!=="0x")return j.result;if(j&&j.error)e=new Error(j.error.message)}catch(x){e=x}}throw e||new Error("rpc")}
+  let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800)}
+  async function waitReceipt(h){for(let i=0;i<60;i++){try{const r=await window.ethereum.request({method:"eth_getTransactionReceipt",params:[h]});if(r){if(r.status&&bi(r.status)===0n)throw new Error("reverted");return r}}catch(e){if(String(e&&e.message||"").includes("reverted"))throw e}await new Promise(r=>setTimeout(r,2500))}return null}
+  function menuInit(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',e=>{e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',e=>{if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
+  menuInit();
+
+  // ---- coming-soon typewriter (only if not live) ----
+  if(!DIST_ON){var txt="fee → distributor → activated Agents … deploying the reward engine.";var el=$("#typed"),i=0;(function tick(){if(!el)return;if(i<=txt.length){el.textContent=txt.slice(0,i++);setTimeout(tick,34)}})();}
+
+  if(!DIST_ON) return; // stay on coming-soon layout
+
+  // ================= LIVE =================
+  $("#distSoon").style.display="none";
+  $("#distLive").style.display="block";
+  const badge=$("#distBadge");if(badge)badge.innerHTML='<span class="dot"></span>Live';
+  const dGrid=$("#dGrid"),dMsg=$("#dMsg"),dTotal=$("#dTotal"),dActive=$("#dActive"),dYour=$("#dYourClaim");
+  const dConnect=$("#dConnect"),dChip=$("#dChip"),dAddr=$("#dAddr"),dRefresh=$("#dRefresh"),dActivateAll=$("#dActivateAll"),dClaimAll=$("#dClaimAll");
+  let mAddr=null, myIds=[], stateById={}, busy=false;
+
+  async function getDecimals(){try{const r=await rpcCall(CFG.token,"0x313ce567");const d=parseInt(r,16);mDec=(d>=0&&d<=36)?d:18}catch(_){mDec=18}}
+  async function loadPool(){
+    try{const [td,ac]=await Promise.all([rpcCall(CFG.distributor,"0xefca2eed").catch(()=>null),rpcCall(CFG.distributor,"0x06f9e52c").catch(()=>null)]);
+      if(td!=null)dTotal.textContent=fmtTok(td)+" $ORLIX";
+      if(ac!=null)dActive.textContent=Number(bi(ac)).toLocaleString("en-US");
+    }catch(_){}
+  }
+  async function connect(){
+    if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
+    try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length)return;
+      try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}
+      toast("Wallet connected");load(a[0]);
+    }catch(_){toast("Connection rejected")}
+  }
+  async function ownedIds(addr){
+    try{const r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721");if(r.ok){const j=await r.json();const mc=CFG.mintContract.toLowerCase();const ids=(j.items||[]).filter(it=>((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc).map(it=>parseInt(it.id||it.token_id)).filter(n=>!isNaN(n));if(ids.length)return ids.sort((a,b)=>a-b);}}catch(_){}
+    try{const next=Number(bi(await rpcCall(CFG.mintContract,"0x61b8ce8c")));const ids=[];for(let id=33;id<next&&id<=1111;id++)ids.push(id);const owners=await Promise.all(ids.map(id=>rpcCall(CFG.mintContract,"0x6352211e"+argUint(id)).catch(()=>null)));const me=addr.toLowerCase();return ids.filter((id,i)=>owners[i]&&("0x"+owners[i].slice(-40)).toLowerCase()===me).sort((a,b)=>a-b);}catch(_){return[]}
+  }
+  function setConnected(a){mAddr=a;dConnect.style.display="none";dChip.style.display="inline-flex";dAddr.textContent=short(a);dRefresh.style.display="inline-flex"}
+  async function load(addr){
+    if(busy)return;busy=true;setConnected(addr);
+    dMsg.textContent="Reading your Agents…";dGrid.innerHTML='<div class="agent-skel"></div><div class="agent-skel"></div><div class="agent-skel"></div>';
+    await getDecimals();await loadPool();
+    myIds=await ownedIds(addr);
+    if(!myIds.length){dGrid.innerHTML="";dMsg.innerHTML='No ORLIX Agents in this wallet. <a href="/nft#mint" style="color:var(--green)">Mint one ↗</a>';dActivateAll.style.display="none";dClaimAll.style.display="none";busy=false;return}
+    // activated + claimable per id
+    const [acts,claims]=await Promise.all([
+      Promise.all(myIds.map(id=>rpcCall(CFG.distributor,"0x32fad9d8"+argUint(id)).catch(()=>"0x0"))),
+      Promise.all(myIds.map(id=>rpcCall(CFG.distributor,"0xd1d58b25"+argUint(id)).catch(()=>"0x0")))
+    ]);
+    stateById={};let yourClaim=0n;
+    myIds.forEach((id,i)=>{const active=bi(acts[i])===1n;const cl=bi(claims[i]);stateById[id]={active,cl};if(active)yourClaim+=cl});
+    dYour.textContent=fmtTok(yourClaim)+" $ORLIX";
+    dGrid.innerHTML=myIds.map(id=>{
+      const s=stateById[id];const url=CFG.explorer+"/token/"+CFG.mintContract+"/instance/"+id;
+      const pill=s.active?'<span class="dist-pill on">ACTIVE</span>':'<span class="dist-pill">OFF</span>';
+      const claim=s.active?'<div class="ac-wallet"><span class="acw-lbl">CLAIMABLE</span><span class="acw-bal">'+fmtTok(s.cl)+' $ORLIX</span></div>':'';
+      let btn;
+      if(!s.active)btn='<button class="dist-act" data-act="activate" data-id="'+id+'">ACTIVATE</button>';
+      else if(s.cl>0n)btn='<button class="dist-act claim" data-act="claim" data-id="'+id+'">CLAIM</button>';
+      else btn='<button class="dist-act off" data-act="deactivate" data-id="'+id+'">DEACTIVATE</button>';
+      return '<div class="agent-card"><a class="ac-media" href="'+url+'" target="_blank" rel="noopener">'
+        +'<img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"></a>'
+        +'<div class="ac-meta"><span class="ac-name">#'+id+'</span>'+pill+'</div>'+claim
+        +'<div class="dist-actwrap">'+btn+'</div></div>';
+    }).join("");
+    dGrid.querySelectorAll(".dist-act").forEach(b=>b.addEventListener("click",()=>doAction(b.dataset.act,Number(b.dataset.id),b)));
+    const anyOff=myIds.some(id=>!stateById[id].active);
+    const anyClaim=myIds.some(id=>stateById[id].active&&stateById[id].cl>0n);
+    dActivateAll.style.display=anyOff?"inline-flex":"none";
+    dClaimAll.style.display=anyClaim?"inline-flex":"none";
+    dMsg.textContent="";busy=false;
+  }
+  async function ensureChain(){try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}}
+  async function send(data,label,btn){
+    if(!window.ethereum||!mAddr){toast("Connect wallet first");return}
+    try{if(btn){btn.disabled=true;btn.dataset.txt=btn.textContent;btn.textContent="…"}await ensureChain();
+      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to:CFG.distributor,data}]});
+      toast(label+" — confirming…");await waitReceipt(tx);toast(label+" ✓");
+      busy=false;load(mAddr);
+    }catch(e){if(btn){btn.disabled=false;btn.textContent=btn.dataset.txt||"—"}toast("Failed: "+((e&&e.message)||"").slice(0,50))}
+  }
+  function doAction(act,id,btn){
+    if(act==="activate")send("0xb260c42a"+argUint(id),"Activated",btn);
+    else if(act==="deactivate")send("0x916b9bef"+argUint(id),"Deactivated",btn);
+    else if(act==="claim")send("0x379607f5"+argUint(id),"Claimed",btn);
+  }
+  dConnect.addEventListener("click",connect);
+  dRefresh.addEventListener("click",()=>{if(mAddr){busy=false;load(mAddr)}});
+  dActivateAll.addEventListener("click",()=>{const ids=myIds.filter(id=>!stateById[id].active);if(ids.length)send("0x43e788cf"+argArr(ids),"Activated all",dActivateAll)});
+  dClaimAll.addEventListener("click",()=>{const ids=myIds.filter(id=>stateById[id].active&&stateById[id].cl>0n);if(ids.length)send("0x925489a8"+argArr(ids),"Claimed all",dClaimAll)});
+
+  loadPool();
+  if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])load(a[0])}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0]){busy=false;load(a[0])}});}
 })();
 </script>
 </body>

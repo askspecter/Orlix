@@ -227,6 +227,17 @@ footer{border-top:1px solid var(--line-soft);margin-top:64px;padding:30px 0 50px
   background:rgba(207,246,5,.08);border:1px solid var(--line);border-radius:8px;padding:5px 9px;cursor:pointer}
 .acw-create:hover{background:rgba(207,246,5,.16)}
 .acw-create:disabled{opacity:.55;cursor:default}
+/* distributions */
+.dist-pill{font-size:.5rem;letter-spacing:.16em;color:var(--ink-3);border:1px solid var(--line-soft);border-radius:100px;padding:3px 9px}
+.dist-pill.on{color:var(--green);border-color:var(--green);background:rgba(207,246,5,.08)}
+.dist-actwrap{padding:0 11px 11px}
+.dist-act{width:100%;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;font-weight:600;cursor:pointer;
+  border-radius:10px;padding:10px;border:1px solid var(--line);background:transparent;color:var(--ink);transition:.2s var(--ease)}
+.dist-act:hover{border-color:var(--green);color:var(--green)}
+.dist-act.claim{background:var(--green);border-color:var(--green);color:#0a0c07}
+.dist-act.claim:hover{background:var(--green-hot);box-shadow:0 0 20px rgba(207,246,5,.3)}
+.dist-act.off{opacity:.7;font-size:.6rem}
+.dist-act:disabled{opacity:.55;cursor:default}
 
 /* menu SOON pill (hamburger) */
 .menu-panel a .tag{float:right;font-size:.5rem;letter-spacing:.16em;color:var(--green);border:1px solid var(--green);border-radius:100px;padding:2px 7px;margin-left:8px;opacity:.9}
