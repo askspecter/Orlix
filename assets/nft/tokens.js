@@ -18,11 +18,26 @@
   function esc(s){return String(s).replace(/[&<>"]/g,function(x){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]});}
   window.ORLIX_TOKEN_MAP=MAP;
   window.tokenName=function(sym){var m=MAP[base(sym)];return m?m.n:sym;};
+  // generated monogram badge (fallback only)
   window.tokenIcon=function(sym,size){
     size=size||22;var b=base(sym);var m=MAP[b];var bg=m?m.c:'#3a4030';var fg=contrast(bg);
     var label=b.length>4?b.slice(0,4):b;var fs=label.length<=2?15:label.length===3?12:10;
     return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" style="flex:none;border-radius:'+(size*0.28)+'px;vertical-align:middle">'
       +'<rect width="40" height="40" rx="11" fill="'+bg+'"/>'
       +'<text x="20" y="20" dy="0.34em" text-anchor="middle" font-family="JetBrains Mono,monospace" font-weight="700" font-size="'+fs+'" fill="'+fg+'">'+esc(label)+'</text></svg>';
+  };
+  // official token logos, keyed by contract address
+  var SPECIAL={
+    "0x5fc5360d0400a0fd4f2af552add042d716f1d168":"https://assets.coingecko.com/coins/images/51281/standard/GDN_USDG_Token_200x200.png?1730484111", // USDG
+    "0x1efdd871f052900d88e4dc2d49bcd32bf77e333c":"/assets/nft/orlix-mark.png" // $ORLIX
+  };
+  window.tokenLogoUrl=function(addr){if(!addr)return null;var a=String(addr).toLowerCase();return SPECIAL[a]||("https://cdn.robinhood.com/ncw_assets/logos/"+a+".png")};
+  // real logo <img> by address, with monogram fallback on error
+  window.tokenImg=function(sym,size,addr){
+    size=size||22;var mono=window.tokenIcon(sym,size);
+    if(!addr)return mono;
+    var url=window.tokenLogoUrl(addr);
+    var fb="data:image/svg+xml;utf8,"+encodeURIComponent(mono);
+    return '<img src="'+url+'" width="'+size+'" height="'+size+'" loading="lazy" alt="'+esc(sym||"")+'" style="border-radius:50%;object-fit:cover;vertical-align:middle;flex:none;background:#0b0d09" onerror="this.onerror=null;this.src=\''+fb+'\'">';
   };
 })();

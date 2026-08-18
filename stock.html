@@ -167,12 +167,12 @@
   let mAddr=null, myIds=[], tbaCache={};
   const connectBtn=$("#connectBtn"),walletChip=$("#walletChip"),walletAddr=$("#walletAddr"),usdgBal=$("#usdgBal");
   const agentSel=$("#agentSel"),agentTba=$("#agentTba"),stockGrid=$("#stockGrid"),amtIn=$("#amtIn"),qOut=$("#qOut"),qPrice=$("#qPrice"),buyBtn=$("#buyBtn"),buyMsg=$("#buyMsg");
-  const ic=(window.tokenIcon||function(){return""});
+  const img=(window.tokenImg||function(){return""});
 
   // custom stock picker with icons
   let curStock=STOCKS[0];
   const curAddr=()=>curStock[2], curSym=()=>curStock[0];
-  stockGrid.innerHTML=STOCKS.map((s,i)=>'<div class="stk-tile'+(i===0?' on':'')+'" data-i="'+i+'">'+ic(s[0],34)+'<span class="sym">'+s[0]+'</span></div>').join("");
+  stockGrid.innerHTML=STOCKS.map((s,i)=>'<div class="stk-tile'+(i===0?' on':'')+'" data-i="'+i+'">'+img(s[0],34,s[2])+'<span class="sym">'+s[0]+'</span></div>').join("");
   stockGrid.querySelectorAll(".stk-tile").forEach(t=>t.addEventListener("click",()=>{
     curStock=STOCKS[Number(t.dataset.i)];
     stockGrid.querySelectorAll(".stk-tile").forEach(x=>x.classList.remove("on"));t.classList.add("on");
@@ -198,10 +198,10 @@
   async function refreshQuote(){
     const amt=usdgToWei(amtIn.value);const stock=curAddr(),sym=curSym();
     if(amt<=0n){qOut.textContent="—";qPrice.textContent="—";return}
-    qOut.innerHTML='<span class="q-icon">'+ic(sym,20)+'</span>…';
+    qOut.innerHTML='<span class="q-icon">'+img(sym,20,stock)+'</span>…';
     const out=await quote(stock,amt);
     if(out==null||out===0n){qOut.textContent="no quote";qPrice.textContent="—";return}
-    qOut.innerHTML='<span class="q-icon">'+ic(sym,20)+'</span>'+fmt18(out,4)+" "+sym;
+    qOut.innerHTML='<span class="q-icon">'+img(sym,20,stock)+'</span>'+fmt18(out,4)+" "+sym;
     const shares=Number(out)/1e18; const usd=Number(amt)/1e6;
     qPrice.textContent=shares>0?("$"+(usd/shares).toLocaleString("en-US",{maximumFractionDigits:2})):"—";
     refreshBuy();
