@@ -26,6 +26,13 @@
   .st-quote .q-out{font-size:1.5rem;font-weight:600;color:var(--green);font-variant-numeric:tabular-nums}
   .st-quote .q-lbl{font-size:.58rem;letter-spacing:.2em;color:var(--ink-3)}
   .st-warn{border:1px solid #F5C51833;background:#F5C51810;color:#F5C518;border-radius:12px;padding:11px 14px;font-size:.72rem;margin:0 0 16px;line-height:1.5}
+  .stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px}
+  .stk-tile{display:flex;flex-direction:column;align-items:center;gap:7px;border:1px solid var(--line-soft);border-radius:13px;padding:13px 6px;cursor:pointer;background:var(--panel);transition:.15s var(--ease)}
+  .stk-tile:hover{border-color:var(--line);transform:translateY(-1px)}
+  .stk-tile.on{border-color:var(--green);background:rgba(207,246,5,.06)}
+  .stk-tile .sym{font-size:.64rem;letter-spacing:.02em;color:var(--ink-2);font-weight:500}
+  .stk-tile.on .sym{color:var(--green)}
+  .q-icon{margin-right:9px}
 </style>
 </head>
 <body>
@@ -84,8 +91,8 @@
         </div>
 
         <div class="st-row">
-          <label class="st-lbl" for="stockSel">STOCK</label>
-          <select class="st-in" id="stockSel"></select>
+          <label class="st-lbl">STOCK</label>
+          <div class="stock-grid" id="stockGrid"></div>
         </div>
 
         <div class="st-row">
@@ -114,6 +121,7 @@
 </footer>
 <div class="toast" id="toast"></div>
 
+<script src="/assets/nft/tokens.js"></script>
 <script>
 (function(){
   "use strict";
@@ -158,9 +166,18 @@
   // ---- state ----
   let mAddr=null, myIds=[], tbaCache={};
   const connectBtn=$("#connectBtn"),walletChip=$("#walletChip"),walletAddr=$("#walletAddr"),usdgBal=$("#usdgBal");
-  const agentSel=$("#agentSel"),agentTba=$("#agentTba"),stockSel=$("#stockSel"),amtIn=$("#amtIn"),qOut=$("#qOut"),qPrice=$("#qPrice"),buyBtn=$("#buyBtn"),buyMsg=$("#buyMsg");
+  const agentSel=$("#agentSel"),agentTba=$("#agentTba"),stockGrid=$("#stockGrid"),amtIn=$("#amtIn"),qOut=$("#qOut"),qPrice=$("#qPrice"),buyBtn=$("#buyBtn"),buyMsg=$("#buyMsg");
+  const ic=(window.tokenIcon||function(){return""});
 
-  STOCKS.forEach(([sym,name,addr])=>{const o=document.createElement("option");o.value=addr;o.textContent=sym+" · "+name;stockSel.appendChild(o)});
+  // custom stock picker with icons
+  let curStock=STOCKS[0];
+  const curAddr=()=>curStock[2], curSym=()=>curStock[0];
+  stockGrid.innerHTML=STOCKS.map((s,i)=>'<div class="stk-tile'+(i===0?' on':'')+'" data-i="'+i+'">'+ic(s[0],34)+'<span class="sym">'+s[0]+'</span></div>').join("");
+  stockGrid.querySelectorAll(".stk-tile").forEach(t=>t.addEventListener("click",()=>{
+    curStock=STOCKS[Number(t.dataset.i)];
+    stockGrid.querySelectorAll(".stk-tile").forEach(x=>x.classList.remove("on"));t.classList.add("on");
+    refreshQuote();
+  }));
 
   const usdgToWei=v=>{const s=String(v).trim();if(!s)return 0n;const[i,f=""]=s.split(".");const fr=(f+"000000").slice(0,6);return BigInt((i||"0")+fr)};
   const fmt18=(wei,mx)=>{const p=10n**18n,w=bi(wei);const whole=w/p,frac=Number((w%p)*100000n/p)/100000;return (Number(whole)+frac).toLocaleString("en-US",{maximumFractionDigits:mx||4})};
@@ -179,25 +196,21 @@
   }
   let qT;
   async function refreshQuote(){
-    const amt=usdgToWei(amtIn.value);const stock=stockSel.value;
+    const amt=usdgToWei(amtIn.value);const stock=curAddr(),sym=curSym();
     if(amt<=0n){qOut.textContent="—";qPrice.textContent="—";return}
-    qOut.textContent="…";
+    qOut.innerHTML='<span class="q-icon">'+ic(sym,20)+'</span>…';
     const out=await quote(stock,amt);
     if(out==null||out===0n){qOut.textContent="no quote";qPrice.textContent="—";return}
-    const sym=stockSel.options[stockSel.selectedIndex].text.split(" ")[0];
-    qOut.textContent=fmt18(out,4)+" "+sym;
-    // price per share = USDG spent / shares
+    qOut.innerHTML='<span class="q-icon">'+ic(sym,20)+'</span>'+fmt18(out,4)+" "+sym;
     const shares=Number(out)/1e18; const usd=Number(amt)/1e6;
     qPrice.textContent=shares>0?("$"+(usd/shares).toLocaleString("en-US",{maximumFractionDigits:2})):"—";
-    window.__lastQuote={out,amt,stock};
     refreshBuy();
   }
   amtIn.addEventListener("input",()=>{clearTimeout(qT);qT=setTimeout(refreshQuote,400)});
-  stockSel.addEventListener("change",refreshQuote);
 
   function refreshBuy(){
-    const ok=mAddr&&agentSel.value&&stockSel.value&&usdgToWei(amtIn.value)>0n;
-    buyBtn.disabled=!ok;buyBtn.textContent=ok?("BUY "+stockSel.options[stockSel.selectedIndex].text.split(" ")[0]):(mAddr?"ENTER AMOUNT":"CONNECT WALLET");
+    const ok=mAddr&&agentSel.value&&curAddr()&&usdgToWei(amtIn.value)>0n;
+    buyBtn.disabled=!ok;buyBtn.textContent=ok?("BUY "+curSym()):(mAddr?"ENTER AMOUNT":"CONNECT WALLET");
   }
   agentSel.addEventListener("change",async()=>{const id=agentSel.value;if(!id){agentTba.textContent="";return}const tba=await tbaOf(id);agentTba.innerHTML=tba?('Agent #'+id+" wallet: <a href='"+CFG.explorer+"/address/"+tba+"' target='_blank' rel='noopener' style='color:var(--green)'>"+short(tba)+" ↗</a>"):"";refreshBuy()});
 
@@ -247,7 +260,7 @@
 
   async function buy(){
     if(!window.ethereum||!mAddr){toast("Connect wallet");return}
-    const stock=stockSel.value, id=agentSel.value, amt=usdgToWei(amtIn.value);
+    const stock=curAddr(), id=agentSel.value, amt=usdgToWei(amtIn.value);
     if(!id){toast("Pick an Agent");return}
     if(amt<=0n){toast("Enter USDG amount");return}
     try{
@@ -277,7 +290,7 @@
       buyMsg.innerHTML='Buying… <a href="'+CFG.explorer+'/tx/'+txh+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a>';
       await waitReceipt(txh);
       buyBtn.textContent="BOUGHT ✓";
-      const sym=stockSel.options[stockSel.selectedIndex].text.split(" ")[0];
+      const sym=curSym();
       buyMsg.innerHTML='🎉 '+sym+' now held inside Agent #'+id+'. <a href="/agents" style="color:var(--green)">See it ↗</a> · <a href="'+CFG.explorer+'/tx/'+txh+'" target="_blank" rel="noopener" style="color:var(--green)">tx ↗</a>';
       rpcCall(CFG.usdg,"0x70a08231"+wA(mAddr)).then(b=>{usdgBal.textContent="USDG: "+(b?fmt6(b):"0")});
       setTimeout(refreshBuy,4000);

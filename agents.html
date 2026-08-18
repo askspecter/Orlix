@@ -94,9 +94,11 @@
 </footer>
 <div class="toast" id="toast"></div>
 
+<script src="/assets/nft/tokens.js"></script>
 <script>
 (function(){
   "use strict";
+  const ic=(window.tokenIcon||function(){return""});
   const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06",chainIdDec:4663,explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
   const $=s=>document.querySelector(s);
   const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
@@ -135,7 +137,7 @@
       const toks=(Array.isArray(arr)?arr:[]).map(x=>{const t=(x&&x.token)||{};let v=0n;try{v=BigInt(x.value)}catch(_){v=0n}return {sym:t.symbol||"?",dec:parseInt(t.decimals||"18")||18,type:t.type||"",val:v}})
         .filter(t=>t.type.indexOf("ERC-20")>=0&&t.val>0n);
       if(!toks.length){el.innerHTML='<span class="acw-lbl">HOLDS</span><span class="ach-empty">— empty</span>';return}
-      el.innerHTML='<span class="acw-lbl">HOLDS</span>'+toks.slice(0,6).map(t=>'<span class="ach-tok">'+esc(fmtAmt(t.val,t.dec))+' '+esc(t.sym)+'</span>').join('');
+      el.innerHTML='<span class="acw-lbl">HOLDS</span>'+toks.slice(0,6).map(t=>'<span class="ach-tok">'+ic(t.sym,15)+' '+esc(fmtAmt(t.val,t.dec))+' '+esc(t.sym)+'</span>').join('');
     }catch(_){el.innerHTML='';}
   }
   async function createWallet(id,btn){
