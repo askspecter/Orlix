@@ -96,6 +96,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/assets/nft/tokens.js"></script>
+<script src="/assets/nft/wallet.js"></script>
 <script>
 (function(){
   "use strict";
@@ -174,7 +175,7 @@
   }
   async function rpcCall(to,data){let e;for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"eth_call",params:[{to,data},"latest"]})});const j=await r.json();if(j&&j.result&&j.result!=="0x")return j.result;if(j&&j.error)e=new Error(j.error.message)}catch(x){e=x}}throw e||new Error("rpc")}
   let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600)}
-  async function connect(cb,fe){if(!window.ethereum){toast("No wallet found — open in a wallet browser");if(fe&&fe.focus)fe.focus();return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}toast("Wallet connected");cb(a[0])}catch(_){toast("Connection rejected")}}
+  async function connect(cb,fe){if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");cb(a)});return}if(!window.ethereum){toast("No wallet found — open in a wallet browser");if(fe&&fe.focus)fe.focus();return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}toast("Wallet connected");cb(a[0])}catch(_){toast("Connection rejected")}}
   function menuInit(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',e=>{e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',e=>{if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
 
   const agentGrid=$("#agentGrid"),agentsMsg=$("#agentsMsg"),agentsCount=$("#agentsCount");

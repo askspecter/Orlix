@@ -18,6 +18,7 @@
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="stylesheet" href="/assets/nft/app.css">
+<script src="/assets/nft/wallet.js"></script>
 </head>
 <body>
 <div class="scanlines" aria-hidden="true"></div>
@@ -252,6 +253,7 @@
 
   // ---- wallet connect (reusable) ----
   async function connect(onAddr, focusEl){
+    if (window.ORLIX_WALLET){ ORLIX_WALLET.connect(function(a){ toast("Wallet connected"); onAddr(a); }); return; }
     if (!window.ethereum){ toast("No wallet found — open in a wallet browser"); if(focusEl&&focusEl.focus) focusEl.focus(); return; }
     try{
       const accs = await window.ethereum.request({method:"eth_requestAccounts"});

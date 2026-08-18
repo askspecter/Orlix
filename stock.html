@@ -120,6 +120,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/assets/nft/tokens.js"></script>
+<script src="/assets/nft/wallet.js"></script>
 <script>
 (function(){
   "use strict";
@@ -214,6 +215,7 @@
 
   // ---- wallet ----
   async function connect(){
+    if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");load(a)});return}
     if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
     try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length)return;
       try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}

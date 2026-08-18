@@ -15,6 +15,7 @@
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="stylesheet" href="/assets/nft/app.css">
+<script src="/assets/nft/wallet.js"></script>
 </head>
 <body>
 <div class="scanlines" aria-hidden="true"></div>
@@ -123,7 +124,7 @@
   function toTokens(h,d){try{const v=BigInt(h),p=10n**BigInt(d);return Number(v/p)+Number(v%p)/Number(p)}catch(_){return 0}}
   async function getDecimals(){try{const r=await rpcCall(CFG.token,"0x313ce567");const d=parseInt(r,16);return d>=0&&d<=36?d:18}catch(_){return 18}}
   let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1600)}
-  async function connect(cb,fe){if(!window.ethereum){toast("No wallet found — open in a wallet browser");if(fe&&fe.focus)fe.focus();return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}toast("Wallet connected");cb(a[0])}catch(_){toast("Connection rejected")}}
+  async function connect(cb,fe){if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");cb(a)});return}if(!window.ethereum){toast("No wallet found — open in a wallet browser");if(fe&&fe.focus)fe.focus();return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}toast("Wallet connected");cb(a[0])}catch(_){toast("Connection rejected")}}
   async function waitReceipt(h){for(let i=0;i<80;i++){try{const r=await window.ethereum.request({method:"eth_getTransactionReceipt",params:[h]});if(r){if(r.status&&bi(r.status)===0n)throw new Error("reverted");return r}}catch(e){if(String(e&&e.message||"").includes("reverted"))throw e}await new Promise(r=>setTimeout(r,2500))}return null}
   function menuInit(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',e=>{e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',e=>{if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
 

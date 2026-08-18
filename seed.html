@@ -11,6 +11,7 @@
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="stylesheet" href="/assets/nft/app.css">
+<script src="/assets/nft/wallet.js"></script>
 <style>
   .seed-in{width:100%;background:#0b0d09;border:1px solid var(--line);border-radius:12px;color:var(--ink);
     font:inherit;font-size:.95rem;padding:13px 14px;letter-spacing:.02em}
@@ -192,6 +193,7 @@
 
   function setConnected(a){mAddr=a;connectBtn.style.display="none";walletChip.style.display="inline-flex";walletAddr.textContent=short(a);loadWalletData();loadPool()}
   async function connect(){
+    if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");setConnected(a)});return}
     if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
     try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length){toast("No account");return}
       try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}

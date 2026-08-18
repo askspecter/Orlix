@@ -200,6 +200,7 @@
     }catch(_){}
   }
   async function connect(){
+    if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");load(a)});return}
     if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
     try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length)return;
       try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}
@@ -286,6 +287,7 @@
 </script>
 
 <script src="/assets/nft/tokens.js"></script>
+<script src="/assets/nft/wallet.js"></script>
 <script>
 /* Stock Rewards (fee-funded) — independent, gated on CFG.stockRewards */
 (function(){
@@ -333,7 +335,7 @@
   async function ensureChain(){try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}}
   async function tx(to,data){return window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to,data}]})}
   async function send(data,label,btn){if(!mAddr){toast("Connect wallet");return}try{if(btn){btn.disabled=true;btn.dataset.t=btn.textContent;btn.textContent="…"}await ensureChain();const h=await tx(CFG.stockRewards,data);toast(label+" — confirming…");await waitR(h);toast(label+" ✓");load(mAddr);pool()}catch(e){if(btn){btn.disabled=false;btn.textContent=btn.dataset.t||"—"}toast("Failed: "+((e&&e.message)||"").slice(0,50))}}
-  async function connect(){if(!window.ethereum){toast("No wallet found");return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a[0])return;await ensureChain();load(a[0])}catch(_){toast("Connection rejected")}}
+  async function connect(){if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){load(a)});return}if(!window.ethereum){toast("No wallet found");return}try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a[0])return;await ensureChain();load(a[0])}catch(_){toast("Connection rejected")}}
   connectBtn.addEventListener("click",connect);
   actAll.addEventListener("click",()=>{const ids=myIds.filter(id=>!st[id].active);if(ids.length)send("0x43e788cf"+argArr(ids),"Activated all",actAll)});
   claimAll.addEventListener("click",()=>{const ids=myIds.filter(id=>st[id].active&&st[id].cl>0n);if(ids.length)send("0x925489a8"+argArr(ids),"Claimed all",claimAll)});
