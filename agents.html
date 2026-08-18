@@ -50,7 +50,7 @@
   <section class="hero" style="padding:52px 0 18px">
     <span class="kicker"><span class="dot"></span>YOUR COLLECTION</span>
     <h1>Agent <em>Wallets</em>.</h1>
-    <p class="lead">Every ORLIX Agent you hold on Robinhood Chain. Soon each Agent gets its <b style="color:var(--green)">own on-chain account</b> — <b>your Agent becomes an address, not just an image.</b></p>
+    <p class="lead">Every ORLIX Agent you hold on Robinhood Chain — each with its <b style="color:var(--green)">own on-chain account</b> that holds tokens and earns rewards. <b>Your Agent is an address, not just an image.</b></p>
   </section>
 
   <section class="block" style="margin-top:8px">
@@ -96,7 +96,7 @@
 <script>
 (function(){
   "use strict";
-  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",registry:"",accountImpl:"",chainIdDec:4663,explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
+  const CFG={token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06",chainIdDec:4663,explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},rpcs:["https://rpc.mainnet.chain.robinhood.com/"]};
   const $=s=>document.querySelector(s);
   const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
   const fmt=n=>n.toLocaleString("en-US",{maximumFractionDigits:0});
