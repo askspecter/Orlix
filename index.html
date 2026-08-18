@@ -240,6 +240,54 @@
     </div>
   </section>
 
+  <!-- ══ Agent economy (static band) ══ -->
+  <style>
+    .econ{padding:min(16vh,140px) clamp(24px,6vw,96px);max-width:1280px;margin:0 auto}
+    .econ-kick{font-size:.62rem;letter-spacing:.42em;color:var(--ember);margin-bottom:14px}
+    .econ h2{font-family:var(--mono,"JetBrains Mono",monospace);font-weight:600;letter-spacing:-.02em;
+      font-size:clamp(2rem,6vw,3.6rem);line-height:1.02;color:var(--ink)}
+    .econ h2 em{font-style:normal;color:var(--ember)}
+    .econ-lead{margin:18px 0 46px;max-width:60ch;color:var(--ink-3);font-size:clamp(.9rem,2.2vw,1.05rem);line-height:1.6}
+    .econ-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .econ-card{display:block;border:1px solid var(--line);border-radius:16px;padding:26px 24px;
+      background:rgba(207,246,5,.015);transition:transform .4s var(--ease-out,ease),border-color .3s,background .3s;position:relative}
+    .econ-card:hover{transform:translateY(-4px);border-color:rgba(207,246,5,.4);background:rgba(207,246,5,.045)}
+    .econ-n{font-size:.6rem;letter-spacing:.24em;color:var(--ember)}
+    .econ-pill{position:absolute;top:22px;right:22px;font-size:.5rem;font-weight:600;letter-spacing:.2em;padding:4px 9px;border-radius:100px}
+    .econ-pill.live{background:var(--ember);color:#0a0602}
+    .econ-pill.soon{color:var(--ember);border:1px solid var(--ember)}
+    .econ-card h3{font-family:var(--mono,monospace);font-weight:600;color:var(--ink);font-size:1.15rem;margin:16px 0 8px;letter-spacing:.01em}
+    .econ-card p{color:var(--ink-3);font-size:.82rem;line-height:1.55}
+    .econ-card .go{display:inline-block;margin-top:16px;color:var(--ember);font-size:.72rem;letter-spacing:.1em}
+  </style>
+  <section class="scene scene-economy" id="economy">
+    <div class="econ">
+      <p class="econ-kick">THE AGENT ECONOMY</p>
+      <h2>Not just a terminal.<br><em>An economy of agents.</em></h2>
+      <p class="econ-lead">ORLIX Agents are NFTs that hold value and earn — minted by burning $ORLIX, traded against a live pool, and soon each with its own on-chain wallet.</p>
+      <div class="econ-grid">
+        <a class="econ-card" href="/nft" data-hover data-cursor="MINT">
+          <span class="econ-n">01</span><span class="econ-pill live">LIVE</span>
+          <h3>Mint an Agent</h3>
+          <p>1,111 Agents on Robinhood Chain. Minting burns 300,000 $ORLIX — deflationary by design.</p>
+          <span class="go">./mint-nft →</span>
+        </a>
+        <a class="econ-card" href="/amm" data-hover data-cursor="SWAP">
+          <span class="econ-n">02</span><span class="econ-pill live">LIVE</span>
+          <h3>NFT AMM</h3>
+          <p>Swap $ORLIX ⇄ Agent against a live pool. Buy or sell in one click — no counterparty.</p>
+          <span class="go">./nft-amm →</span>
+        </a>
+        <a class="econ-card" href="/agents" data-hover data-cursor="VIEW">
+          <span class="econ-n">03</span><span class="econ-pill soon">SOON</span>
+          <h3>Agent Wallets</h3>
+          <p>Each Agent becomes its own on-chain account — holds tokens, earns rewards. Not just an image.</p>
+          <span class="go">./agent-wallets →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- ══ CH 04 · Finale ══ -->
   <section class="scene scene-finale" id="finale" data-chapter="[04]" data-chapter-name="FINALE">
     <p class="fin-kicker">PERSONAL AI OPERATING SYSTEM</p>

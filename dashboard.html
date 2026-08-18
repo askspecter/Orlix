@@ -160,8 +160,6 @@ img{max-width:100%;display:block}
 .card-network{grid-column:11/13;grid-row:2/3}
 .card-token{grid-column:1/5;grid-row:3/4}
 .card-wallet{grid-column:5/9;grid-row:3/4}
-.card-basecity{grid-column:1/7;grid-row:4/5}
-.card-b20{grid-column:7/13;grid-row:4/5}
 .card-chat:hover{box-shadow:0 8px 24px rgba(207,246,5,.08);border-color:rgba(207,246,5,.2)}
 
 /* Card label */
@@ -230,31 +228,6 @@ img{max-width:100%;display:block}
 .tx-amount{font-size:.72rem;font-weight:700;font-family:var(--mono)}
 .tx-time{font-size:.6rem;color:var(--text-3)}
 
-/* Card: Base City */
-.basecity-preview{position:relative;height:140px;background:linear-gradient(180deg,#0a0e1a 0%,#0f1628 60%,#0a0a0a 100%);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
-.basecity-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(96,165,250,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(96,165,250,.06) 1px,transparent 1px);background-size:20px 20px;transform:perspective(400px) rotateX(45deg);transform-origin:center bottom}
-.basecity-buildings{position:absolute;bottom:0;left:0;right:0;height:90px;display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:0 14px}
-.bc-building{width:10px;border-radius:2px 2px 0 0;opacity:.7}
-.basecity-glow{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);width:180px;height:70px;background:radial-gradient(ellipse,rgba(96,165,250,.12) 0%,transparent 70%)}
-.basecity-label{position:absolute;top:8px;right:8px;font-size:.55rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(96,165,250,.2);padding:1px 5px;border-radius:var(--radius)}
-.basecity-title{font-size:.85rem;font-weight:700;color:var(--text-1);margin-bottom:3px}
-.basecity-desc{font-size:.72rem;color:var(--text-3);line-height:1.4;margin-bottom:10px}
-.basecity-stats{display:flex;gap:14px}
-.basecity-stat-val{font-size:.85rem;font-weight:700;color:var(--text-1)}
-.basecity-stat-label{font-size:.58rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em}
-
-/* Card: B20 */
-.b20-preview{padding:10px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px}
-.b20-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.b20-chain-pill{display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(96,165,250,.2);padding:2px 5px;border-radius:var(--radius)}
-.b20-field{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.72rem}
-.b20-field:last-child{border-bottom:none}
-.b20-field-label{color:var(--text-3)}
-.b20-field-val{color:var(--text-1);font-weight:600;font-family:var(--mono)}
-.b20-deploy-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;margin-top:10px;background:var(--orange);color:#0a0a0a;font-size:.72rem;font-weight:700;border:1px solid rgba(207,246,5,.4);border-radius:var(--radius);cursor:default}
-.b20-title{font-size:.85rem;font-weight:700;color:var(--text-1);margin-bottom:3px}
-.b20-desc{font-size:.72rem;color:var(--text-3);line-height:1.4}
-
 /* ── Provider Grid (Models) ── */
 .models-section{padding:48px 24px;border-top:1px solid var(--border)}
 .prov-grid{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
@@ -321,7 +294,7 @@ footer{padding:48px 32px 32px;background:var(--bg-2);border-top:1px solid var(--
   .btn-cta{padding:8px 16px;font-size:.75rem}
   .bento-grid{grid-template-columns:1fr;gap:6px}
   .card-chat,.card-models-count,.card-speed,.card-network,
-  .card-token,.card-wallet,.card-basecity,.card-b20{grid-column:1;grid-row:auto}
+  .card-token,.card-wallet{grid-column:1;grid-row:auto}
   .bento-card{padding:14px}
   .section{padding:32px 16px}
   .models-section{padding:32px 16px}
@@ -336,7 +309,6 @@ footer{padding:48px 32px 32px;background:var(--bg-2);border-top:1px solid var(--
   .footer-col h4{font-size:.72rem;margin-bottom:12px}
   .footer-col ul{gap:8px}
   .footer-col ul li a{font-size:.78rem}
-  .basecity-preview{height:120px}
   .chat-messages{gap:8px}
   .chat-bubble{font-size:.72rem}
   .term-body{min-height:160px;padding:12px;font-size:.7rem}
