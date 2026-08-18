@@ -1,7 +1,8 @@
 /* ORLIX shared connect-wallet modal
- * - EIP-6963 discovery (wallets announce their own name + icon)
- * - mobile deep-links when no wallet is injected
- * - "What is a wallet?" info, EN / ID by device language
+ * - horizontal wallet tiles (MetaMask / Rainbow / Coinbase / Browser Wallet / Trust …)
+ * - EIP-6963 discovery (installed wallets show their real icon + connect directly)
+ * - mobile deep-links when a wallet isn't installed
+ * - "What is a Wallet?" info, EN / ID by device language
  * Usage: ORLIX_WALLET.connect(addr => { ... })  // callback gets the account
  */
 (function(){
@@ -9,27 +10,33 @@
   var CHAIN={chainIdHex:"0x1237",params:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]}};
   var ID=(navigator.language||"en").toLowerCase().indexOf("id")===0;
   var T=ID?{
-    title:"Hubungkan Dompet",installed:"Terpasang",more:"Dompet lain",whatH:"Apa itu Dompet?",
-    whatP:"Dompet dipakai untuk mengirim, menerima, dan menyimpan aset digital — juga cara masuk tanpa membuat akun & kata sandi baru di tiap situs.",
-    get:"Dapatkan Dompet",learn:"Pelajari lebih lanjut",open:"BUKA APP",sign:"kami hanya pernah meminta anda menandatangani",
-    none:"Tidak ada dompet terdeteksi — buka lewat browser dompet, atau pilih di bawah.",connecting:"Menghubungkan…"
+    title:"Hubungkan Dompet",whatH:"Apa itu Dompet?",
+    whatP:"Sebuah dompet digunakan untuk mengirim, menerima, menyimpan, dan menampilkan aset digital. Ini juga cara baru untuk masuk, tanpa perlu membuat akun dan kata sandi baru di setiap situs web.",
+    get:"Dapatkan Dompet",learn:"Pelajari lebih lanjut",sign:"kami hanya pernah meminta anda menandatangani"
   }:{
-    title:"Connect wallet",installed:"Installed",more:"Other wallets",whatH:"What is a Wallet?",
-    whatP:"A wallet sends, receives and stores digital assets — and lets you sign in without a new account & password on every site.",
-    get:"Get a Wallet",learn:"Learn more",open:"OPEN APP",sign:"we only ever ask you to sign",
-    none:"No wallet detected — open in a wallet browser, or pick one below.",connecting:"Connecting…"
+    title:"Connect wallet",whatH:"What is a Wallet?",
+    whatP:"A wallet is used to send, receive, store, and display digital assets. It's also a new way to log in, without needing to create new accounts and passwords on every website.",
+    get:"Get a Wallet",learn:"Learn more",sign:"we only ever ask you to sign"
   };
-  // mobile deep-links (open this dApp inside the wallet's browser)
-  function dl(){
-    var host=location.host, path=location.pathname+location.search, url=location.href;
+  var isMobile=/android|iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  /* ---- brand icons (inline SVG so they always render, no external fetch) ---- */
+  var IC_MM="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 84'><rect width='84' height='84' rx='22' fill='#fff'/><polygon points='17,17 35,28 29,13' fill='#E2761B'/><polygon points='67,17 49,28 55,13' fill='#E2761B'/><polygon points='42,16 64,27 57,50 42,59 27,50 20,27' fill='#F6851B'/><polygon points='42,16 42,59 27,50 20,27' fill='#E4761B'/><polygon points='32,46 42,56 52,46' fill='#fff'/><circle cx='34' cy='38' r='3.1' fill='#3b2410'/><circle cx='50' cy='38' r='3.1' fill='#3b2410'/></svg>";
+  var IC_RB="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 84'><rect width='84' height='84' rx='22' fill='#001E59'/><g fill='none' stroke-linecap='round'><path d='M16 63 A47 47 0 0 1 63 16' stroke='#FF4000' stroke-width='8'/><path d='M16 63 A37 37 0 0 1 53 26' stroke='#FF9901' stroke-width='8'/><path d='M16 63 A27 27 0 0 1 43 36' stroke='#FFF700' stroke-width='8'/><path d='M16 63 A17 17 0 0 1 33 46' stroke='#01DA7A' stroke-width='8'/></g><circle cx='16' cy='63' r='6' fill='#174299'/></svg>";
+  var IC_CB="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 84'><rect width='84' height='84' rx='22' fill='#0052FF'/><circle cx='42' cy='42' r='19' fill='#fff'/><rect x='34' y='34' width='16' height='16' rx='4' fill='#0052FF'/></svg>";
+  var IC_BW="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 84'><rect width='84' height='84' rx='22' fill='#0B0D09'/><rect x='17' y='26' width='50' height='34' rx='8' fill='none' stroke='#CFF605' stroke-width='3.5'/><rect x='44' y='36' width='27' height='14' rx='5' fill='#0B0D09' stroke='#CFF605' stroke-width='3.5'/><circle cx='55' cy='43' r='2.6' fill='#CFF605'/></svg>";
+  var IC_TW="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 84'><rect width='84' height='84' rx='22' fill='#3375BB'/><path d='M42 16 L64 25 V43 C64 55 54 62 42 67 C30 62 20 55 20 43 V25 Z' fill='#fff'/><path d='M42 24 L57 31 V43 C57 51 50 56 42 60 C34 56 27 51 27 43 V31 Z' fill='#3375BB'/></svg>";
+
+  function known(){
+    var host=location.host, path=location.pathname+location.search, url=location.href, e=encodeURIComponent;
     return [
-      {name:"MetaMask",c:"#f6851b",href:"https://metamask.app.link/dapp/"+host+path},
-      {name:"Coinbase",c:"#1652f0",href:"https://go.cb-w.com/dapp?cb_url="+encodeURIComponent(url)},
-      {name:"Trust",c:"#3375bb",href:"https://link.trustwallet.com/open_url?url="+encodeURIComponent(url)},
-      {name:"Rainbow",c:"#7b3fe4",href:"https://rnbwapp.com/dapp?url="+encodeURIComponent(url)}
+      {key:"metamask",name:"MetaMask",icon:IC_MM,rdns:"io.metamask",match:/metamask/i,deeplink:"https://metamask.app.link/dapp/"+host+path,get:"https://metamask.io/download/"},
+      {key:"rainbow",name:"Rainbow",icon:IC_RB,rdns:"me.rainbow",match:/rainbow/i,deeplink:"https://rnbwapp.com/dapp?url="+e(url),get:"https://rainbow.me/"},
+      {key:"coinbase",name:"Coinbase",icon:IC_CB,rdns:"com.coinbase.wallet",match:/coinbase/i,deeplink:"https://go.cb-w.com/dapp?cb_url="+e(url),get:"https://www.coinbase.com/wallet/downloads"},
+      {key:"browser",name:"Browser Wallet",icon:IC_BW,rdns:"",match:null,deeplink:"",get:"https://ethereum.org/wallets/find-wallet/"},
+      {key:"trust",name:"Trust",icon:IC_TW,rdns:"com.trustwallet.app",match:/trust/i,deeplink:"https://link.trustwallet.com/open_url?url="+e(url),get:"https://trustwallet.com/download"}
     ];
   }
-  var isMobile=/android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
   // EIP-6963 discovery
   var found=[]; var seen={};
@@ -37,75 +44,77 @@
   window.addEventListener("eip6963:announceProvider",onAnnounce);
   try{window.dispatchEvent(new Event("eip6963:requestProvider"));}catch(_){}
 
-  var css="#ow-ov{position:fixed;inset:0;z-index:9999;background:rgba(3,4,3,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:18px;font-family:'JetBrains Mono',monospace}"
+  var css="#ow-ov{position:fixed;inset:0;z-index:9999;background:rgba(3,4,3,.74);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px;font-family:'JetBrains Mono',monospace}"
     +"#ow-ov.on{display:flex}"
-    +"#ow-m{width:100%;max-width:420px;background:#0b0d09;border:1px solid rgba(207,246,5,.18);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);color:#E9ECE2}"
-    +"#ow-h{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.06)}"
-    +"#ow-h b{font-size:1.05rem;font-weight:600;letter-spacing:.02em}"
-    +"#ow-x{background:transparent;border:none;color:#8b917f;font-size:1.4rem;cursor:pointer;line-height:1;padding:2px 6px}"
-    +"#ow-x:hover{color:#E9ECE2}"
-    +".ow-lbl{font-size:.56rem;letter-spacing:.24em;color:#5a5f50;padding:16px 20px 8px;text-transform:uppercase}"
-    +".ow-row{display:flex;align-items:center;gap:14px;width:100%;padding:12px 20px;background:transparent;border:none;color:#E9ECE2;cursor:pointer;text-align:left;text-decoration:none;transition:background .15s}"
-    +".ow-row:hover{background:rgba(207,246,5,.06)}"
-    +".ow-ic{width:40px;height:40px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;overflow:hidden;background:#12140d}"
-    +".ow-ic img{width:100%;height:100%;object-fit:cover}"
-    +".ow-nm{flex:1;font-size:1rem}"
-    +".ow-go{font-size:.6rem;letter-spacing:.14em;color:#CFF605;border:1px solid rgba(207,246,5,.5);border-radius:8px;padding:7px 11px}"
-    +".ow-what{padding:16px 20px 4px;border-top:1px solid rgba(255,255,255,.06);margin-top:6px}"
-    +".ow-what h4{font-size:.9rem;font-weight:600;margin:0 0 6px}"
-    +".ow-what p{font-size:.76rem;line-height:1.55;color:#8b917f;margin:0 0 12px}"
-    +".ow-btns{display:flex;gap:10px}"
-    +".ow-btns a{flex:1;text-align:center;font-size:.72rem;font-weight:600;letter-spacing:.04em;color:#CFF605;border:1px solid rgba(207,246,5,.4);border-radius:10px;padding:11px;text-decoration:none}"
+    +"#ow-m{width:100%;max-width:440px;background:#0b0d09;border:1px solid rgba(207,246,5,.18);border-radius:22px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);color:#E9ECE2}"
+    +"#ow-h{position:relative;padding:20px 20px 18px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)}"
+    +"#ow-h b{font-size:1.14rem;font-weight:600;letter-spacing:.01em}"
+    +"#ow-x{position:absolute;right:14px;top:14px;width:32px;height:32px;background:rgba(255,255,255,.05);border:none;border-radius:9px;color:#8b917f;font-size:1.3rem;cursor:pointer;line-height:1}"
+    +"#ow-x:hover{color:#E9ECE2;background:rgba(255,255,255,.09)}"
+    +"#ow-tiles{display:flex;gap:16px;overflow-x:auto;padding:22px 20px;-webkit-overflow-scrolling:touch;scrollbar-width:none}"
+    +"#ow-tiles::-webkit-scrollbar{display:none}"
+    +".ow-tile{flex:0 0 auto;width:84px;background:none;border:none;padding:0;cursor:pointer;color:#E9ECE2;font-family:inherit;text-align:center}"
+    +".ow-ti{display:block;width:82px;height:82px;border-radius:22px;overflow:hidden;background:#12140d;margin:0 auto 11px;transition:box-shadow .16s,transform .16s}"
+    +".ow-ti img{width:100%;height:100%;object-fit:cover;display:block}"
+    +".ow-tile:hover .ow-ti{box-shadow:0 0 0 2px rgba(207,246,5,.55);transform:translateY(-2px)}"
+    +".ow-tn{display:block;font-size:.82rem;line-height:1.22;color:#cdd2c4}"
+    +".ow-what{padding:24px 26px 8px;border-top:1px solid rgba(255,255,255,.06);text-align:center}"
+    +".ow-what h4{font-size:1.05rem;font-weight:600;margin:0 0 12px}"
+    +".ow-what p{font-size:.82rem;line-height:1.62;color:#8b917f;margin:0}"
+    +".ow-btns{display:flex;gap:12px;margin-top:18px}"
+    +".ow-btns a{flex:1;text-align:center;font-size:.82rem;font-weight:600;letter-spacing:.02em;color:#CFF605;border:1px solid rgba(207,246,5,.4);border-radius:11px;padding:13px 8px;text-decoration:none;line-height:1.3}"
     +".ow-btns a:hover{background:rgba(207,246,5,.08)}"
-    +"#ow-f{padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);font-size:.66rem;color:#5a5f50;display:flex;align-items:center;gap:9px}"
-    +"#ow-f .d{width:7px;height:7px;border-radius:50%;background:#CFF605;box-shadow:0 0 8px #CFF605}"
+    +"#ow-f{padding:15px 22px;border-top:1px solid rgba(255,255,255,.06);font-size:.66rem;color:#5a5f50;display:flex;align-items:center;gap:9px}"
+    +"#ow-f .d{width:7px;height:7px;border-radius:50%;background:#CFF605;box-shadow:0 0 8px #CFF605;flex:none}"
     +"#ow-f b{color:#8b917f;font-weight:500}";
 
-  var ov,listEl,cb=null,busy=false;
+  var ov,tilesEl,cb=null,busy=false,currentTiles=[];
   function build(){
     var s=document.createElement("style");s.textContent=css;document.head.appendChild(s);
     ov=document.createElement("div");ov.id="ow-ov";
     ov.innerHTML='<div id="ow-m" role="dialog" aria-modal="true">'
       +'<div id="ow-h"><b>'+T.title+'</b><button id="ow-x" aria-label="Close">×</button></div>'
-      +'<div id="ow-list"></div>'
+      +'<div id="ow-tiles"></div>'
       +'<div class="ow-what"><h4>'+T.whatH+'</h4><p>'+T.whatP+'</p>'
       +'<div class="ow-btns"><a href="https://ethereum.org/wallets/find-wallet/" target="_blank" rel="noopener">'+T.get+'</a>'
       +'<a href="https://ethereum.org/wallets/" target="_blank" rel="noopener">'+T.learn+'</a></div></div>'
       +'<div id="ow-f"><span class="d"></span>orlixai.xyz <b>/ '+T.sign+'</b></div></div>';
     document.body.appendChild(ov);
-    listEl=ov.querySelector("#ow-list");
+    tilesEl=ov.querySelector("#ow-tiles");
     ov.addEventListener("click",function(e){if(e.target===ov)close();});
     ov.querySelector("#ow-x").addEventListener("click",close);
     renderList();
   }
-  function iconFor(d){
-    if(d&&d.info&&d.info.icon)return '<img src="'+d.info.icon+'" alt="">';
-    return (d&&d.info&&d.info.name?d.info.name[0]:"?");
+  function toSrc(icon){if(!icon)return "";if(icon.charAt(0)==="<")return "data:image/svg+xml,"+encodeURIComponent(icon);return icon;}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(x){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];});}
+
+  function buildTiles(){
+    var base=known(), usedFound={};
+    base.forEach(function(t){
+      if(t.key==="browser"){ if(window.ethereum) t.provider=window.ethereum; return; }
+      for(var i=0;i<found.length;i++){ if(usedFound[i])continue; var d=found[i],info=d.info||{};
+        if((t.rdns&&info.rdns===t.rdns)||(t.match&&t.match.test(info.name||""))){ t.provider=d.provider; if(info.icon)t.icon=info.icon; usedFound[i]=1; break; } }
+    });
+    found.forEach(function(d,i){ if(usedFound[i])return; var info=d.info||{}; base.push({key:"x"+i,name:info.name||"Wallet",icon:info.icon||"",provider:d.provider}); });
+    base.sort(function(a,b){return (b.provider?1:0)-(a.provider?1:0);});
+    return base;
   }
   function renderList(){
-    if(!listEl)return;
-    var html="";
-    if(found.length){
-      html+='<div class="ow-lbl">'+T.installed+'</div>';
-      found.forEach(function(d,i){
-        html+='<button class="ow-row" data-i="'+i+'"><span class="ow-ic">'+iconFor(d)+'</span><span class="ow-nm">'+esc(d.info.name)+'</span><span class="ow-go">→</span></button>';
-      });
-    } else if(window.ethereum){
-      html+='<div class="ow-lbl">'+T.installed+'</div>';
-      html+='<button class="ow-row" data-eth="1"><span class="ow-ic">👛</span><span class="ow-nm">Browser Wallet</span><span class="ow-go">→</span></button>';
-    }
-    if(isMobile){
-      html+='<div class="ow-lbl">'+T.more+'</div>';
-      dl().forEach(function(w){
-        html+='<a class="ow-row" href="'+w.href+'"><span class="ow-ic" style="background:'+w.c+';color:#fff">'+esc(w.name[0])+'</span><span class="ow-nm">'+esc(w.name)+'</span><span class="ow-go">'+T.open+'</span></a>';
-      });
-    }
-    if(!found.length&&!window.ethereum&&!isMobile){html='<p style="padding:20px;color:#8b917f;font-size:.8rem;line-height:1.5">'+T.none+'</p>'+html;}
-    listEl.innerHTML=html;
-    listEl.querySelectorAll(".ow-row[data-i]").forEach(function(b){b.addEventListener("click",function(){pick(found[Number(b.dataset.i)].provider);});});
-    var eb=listEl.querySelector(".ow-row[data-eth]");if(eb)eb.addEventListener("click",function(){pick(window.ethereum);});
+    if(!tilesEl)return;
+    currentTiles=buildTiles();
+    tilesEl.innerHTML=currentTiles.map(function(t,i){
+      var src=toSrc(t.icon), ic=src?'<img src="'+src+'" alt="">':esc((t.name||"?")[0]);
+      return '<button class="ow-tile" data-i="'+i+'"><span class="ow-ti">'+ic+'</span><span class="ow-tn">'+esc(t.name)+'</span></button>';
+    }).join("");
+    tilesEl.querySelectorAll(".ow-tile").forEach(function(b){ b.addEventListener("click",function(){ tileClick(currentTiles[Number(b.dataset.i)]); }); });
   }
-  function esc(s){return String(s).replace(/[&<>"]/g,function(x){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];});}
+  function tileClick(t){
+    if(!t)return;
+    if(t.provider) return pick(t.provider);
+    if(isMobile && t.deeplink){ location.href=t.deeplink; return; }
+    if(t.key==="browser"){ if(window.ethereum) return pick(window.ethereum); }
+    if(t.get) window.open(t.get,"_blank","noopener");
+  }
 
   async function pick(provider){
     if(busy||!provider)return;busy=true;
@@ -119,15 +128,11 @@
       if(cb)cb(a[0]);
     }catch(e){busy=false;}
   }
-  function open(){if(!ov)build();found=[];seen={};try{window.dispatchEvent(new Event("eip6963:requestProvider"));}catch(_){}renderList();ov.classList.add("on");}
+  function open(){if(!ov)build();try{window.dispatchEvent(new Event("eip6963:requestProvider"));}catch(_){}renderList();ov.classList.add("on");}
   function close(){if(ov)ov.classList.remove("on");}
 
   window.ORLIX_WALLET={
-    connect:function(onAccount){
-      cb=onAccount||null;
-      if(!window.ethereum&&!found.length&&!isMobile){/* still open to show info */}
-      open();
-    },
+    connect:function(onAccount){ cb=onAccount||null; open(); },
     open:open, close:close
   };
 })();
