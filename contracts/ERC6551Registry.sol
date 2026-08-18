@@ -104,6 +104,8 @@ contract ERC6551Registry is IERC6551Registry {
     ) external view returns (address) {
         assembly {
             pop(chainId)
+            pop(tokenContract)
+            pop(tokenId)
             calldatacopy(0x8c, 0x24, 0x80)
             mstore(0x6c, 0x5af43d82803e903d91602b57fd5bf3)
             mstore(0x5d, implementation)
