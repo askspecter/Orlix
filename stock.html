@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stock Desk — ORLIX Agent · Robinhood Chain</title>
+<meta name="description" content="Turn USDG into tokenized stocks (AAPL, TSLA, NVDA…) held inside your ORLIX Agent's on-chain wallet. Powered by Uniswap v4 on Robinhood Chain.">
+<meta name="robots" content="index">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orlixai.xyz/stock">
+<meta property="og:title" content="Stock Desk — ORLIX Agent">
+<meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/nft/app.css">
+<style>
+  .st-in{width:100%;background:#0b0d09;border:1px solid var(--line);border-radius:12px;color:var(--ink);font:inherit;font-size:1rem;padding:13px 14px}
+  .st-in:focus{outline:none;border-color:var(--green)}
+  .st-lbl{display:block;font-size:.6rem;letter-spacing:.2em;color:var(--ink-3);margin:0 0 7px 2px}
+  .st-row{margin:0 0 15px}
+  select.st-in{appearance:none;cursor:pointer}
+  .st-quote{display:flex;align-items:baseline;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:16px;background:rgba(207,246,5,.03);margin:2px 0 16px}
+  .st-quote .q-out{font-size:1.5rem;font-weight:600;color:var(--green);font-variant-numeric:tabular-nums}
+  .st-quote .q-lbl{font-size:.58rem;letter-spacing:.2em;color:var(--ink-3)}
+  .st-warn{border:1px solid #F5C51833;background:#F5C51810;color:#F5C518;border-radius:12px;padding:11px 14px;font-size:.72rem;margin:0 0 16px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/">
+      <img src="/assets/nft/orlix-mark.png" alt="ORLIX" width="30" height="30">
+      <b>ORLIX<sup>®</sup></b>
+    </a>
+    <div class="top-nav">
+      <a class="ghost hide-sm" href="/agents">AGENT WALLETS</a>
+      <a class="btn" href="/nft">MINT</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
+    </div>
+  </div>
+  <nav class="menu-panel" id="menuPanel" aria-label="Menu">
+    <a href="/">Home</a>
+    <a href="/nft">Mint NFT</a>
+    <a href="/amm">NFT AMM</a>
+    <a href="/agents">Agent Wallets</a>
+    <a href="/stock" class="on">Stock Desk</a>
+    <a href="/distributions">Distributions</a>
+    <a href="/launcher">Agent Launcher</a>
+    <a href="/box">Agent Box</a>
+    <a href="https://opensea.io/collection/orlix-agent" target="_blank" rel="noopener">OpenSea ↗</a>
+    <a href="https://app.orlixai.xyz">App</a>
+    <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="padding:52px 0 18px">
+    <span class="kicker"><span class="dot"></span>STOCK-ACCUMULATING AGENTS</span>
+    <h1>Stock <em>Desk</em>.</h1>
+    <p class="lead">Turn <b style="color:var(--green)">USDG</b> into tokenized stocks — AAPL, TSLA, NVDA and more — held <b>inside your Agent's on-chain wallet</b>. The stock stays in the NFT and moves with it. <span style="color:var(--ink-3)">Powered by Uniswap v4 · beta</span></p>
+  </section>
+
+  <section class="block" style="margin-top:12px">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — stock.sh</span></div>
+      <div class="term-body">
+        <div class="agents-bar" style="margin-bottom:16px">
+          <button class="btn" id="connectBtn">CONNECT WALLET</button>
+          <span class="wallet-chip" id="walletChip" style="display:none"><span class="dot"></span><span id="walletAddr"></span></span>
+          <span class="hint" id="usdgBal" style="margin:0"></span>
+        </div>
+
+        <div class="st-warn">Beta &amp; unaudited. Test with a small amount first. Buys route through Uniswap v4 with a 3% slippage guard; output lands in the selected Agent's wallet.</div>
+
+        <div class="st-row">
+          <label class="st-lbl" for="agentSel">BUY INTO AGENT</label>
+          <select class="st-in" id="agentSel"><option value="">Connect wallet…</option></select>
+          <p class="hint" id="agentTba" style="margin:7px 0 0 2px"></p>
+        </div>
+
+        <div class="st-row">
+          <label class="st-lbl" for="stockSel">STOCK</label>
+          <select class="st-in" id="stockSel"></select>
+        </div>
+
+        <div class="st-row">
+          <label class="st-lbl" for="amtIn">SPEND · USDG</label>
+          <input class="st-in" id="amtIn" inputmode="decimal" placeholder="e.g. 100" spellcheck="false" autocomplete="off">
+        </div>
+
+        <div class="st-quote">
+          <div><span class="q-lbl" id="qLbl">YOU RECEIVE ≈</span><br><b class="q-out" id="qOut">—</b></div>
+          <div style="text-align:right"><span class="q-lbl">PER SHARE</span><br><b id="qPrice" style="color:var(--ink-2)">—</b></div>
+        </div>
+
+        <button class="btn mint-cta" id="buyBtn" style="width:100%;justify-content:center" disabled>CONNECT WALLET</button>
+        <p class="hint" id="buyMsg" style="margin-top:10px">Pick an Agent, a stock, and how much USDG to spend. Two one-time approvals (USDG → Permit2 → router), then buy.</p>
+      </div>
+    </div>
+    <p class="hint" style="margin-top:12px">Your Agents &amp; their holdings: <a href="/agents" style="color:var(--green)">Agent Wallets ↗</a>. Need USDG? Bridge/swap on Robinhood Chain first.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="fl"><a href="/">Home</a><a href="/agents">Agent Wallets</a><a href="/amm">NFT AMM</a><a href="/nft">Mint NFT</a></div>
+    <small>© 2026 ORLIX · Robinhood Chain · Stock Desk is beta &amp; unaudited · not financial advice</small>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const CFG={
+    router:"0x8876789976decbfcbbbe364623c63652db8c0904",
+    permit2:"0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    quoter:"0x8dc178efb8111bb0973dd9d722ebeff267c98f94",
+    usdg:"0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", usdgDec:6,
+    registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",
+    accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06",
+    mintContract:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",
+    fee:3000, tick:60, chainIdDec:4663,
+    explorer:"https://robinhoodchain.blockscout.com",chainIdHex:"0x1237",
+    chainParams:{chainId:"0x1237",chainName:"Robinhood Chain",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://rpc.mainnet.chain.robinhood.com/"],blockExplorerUrls:["https://robinhoodchain.blockscout.com"]},
+    rpcs:["https://rpc.mainnet.chain.robinhood.com/"]
+  };
+  const STOCKS=[
+    ["AAPLx","Apple","0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9"],
+    ["MSFTx","Microsoft","0xe93237C50D904957Cf27E7B1133b510C669c2e74"],
+    ["NVDAx","NVIDIA","0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC"],
+    ["AMZNx","Amazon","0x12f190a9F9d7D37a250758b26824B97CE941bF54"],
+    ["GOOGLx","Alphabet","0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3"],
+    ["METAx","Meta","0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35"],
+    ["TSLAx","Tesla","0x322F0929c4625eD5bAd873c95208D54E1c003b2d"],
+    ["PLTRx","Palantir","0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a"],
+    ["AMDx","AMD","0x86923f96303D656E4aa86D9d42D1e57ad2023fdC"],
+    ["GMEx","GameStop","0x1b0E319c6A659F002271B69dB8A7df2F911c153E"],
+    ["SPCXx","SpaceX","0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa"]
+  ];
+  const $=s=>document.querySelector(s);
+  const bi=h=>{try{return BigInt(h)}catch(_){return 0n}};
+  const wU=v=>BigInt(v).toString(16).padStart(64,"0");
+  const wA=a=>a.toLowerCase().replace(/^0x/,"").padStart(64,"0");
+  const short=a=>a.slice(0,6)+"…"+a.slice(-4);
+  const MAXU=(1n<<160n)-1n, MAXEXP=(1n<<48n)-1n;
+  async function rpcCall(to,data,from){const body={jsonrpc:"2.0",id:1,method:"eth_call",params:[Object.assign({to,data},from?{from}:{}),"latest"]};for(const u of CFG.rpcs){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json();if(j&&j.result!==undefined&&j.result!=="0x")return j.result;if(j&&j.error)throw new Error(j.error.message)}catch(x){}}return null}
+  let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1900)}
+  async function waitReceipt(h){for(let i=0;i<60;i++){try{const r=await window.ethereum.request({method:"eth_getTransactionReceipt",params:[h]});if(r){if(r.status&&bi(r.status)===0n)throw new Error("reverted");return r}}catch(e){if(String(e&&e.message||"").includes("reverted"))throw e}await new Promise(r=>setTimeout(r,2500))}return null}
+  function menuInit(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',e=>{e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',e=>{if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
+  menuInit();
+
+  // ---- state ----
+  let mAddr=null, myIds=[], tbaCache={};
+  const connectBtn=$("#connectBtn"),walletChip=$("#walletChip"),walletAddr=$("#walletAddr"),usdgBal=$("#usdgBal");
+  const agentSel=$("#agentSel"),agentTba=$("#agentTba"),stockSel=$("#stockSel"),amtIn=$("#amtIn"),qOut=$("#qOut"),qPrice=$("#qPrice"),buyBtn=$("#buyBtn"),buyMsg=$("#buyMsg");
+
+  STOCKS.forEach(([sym,name,addr])=>{const o=document.createElement("option");o.value=addr;o.textContent=sym+" · "+name;stockSel.appendChild(o)});
+
+  const usdgToWei=v=>{const s=String(v).trim();if(!s)return 0n;const[i,f=""]=s.split(".");const fr=(f+"000000").slice(0,6);return BigInt((i||"0")+fr)};
+  const fmt18=(wei,mx)=>{const p=10n**18n,w=bi(wei);const whole=w/p,frac=Number((w%p)*100000n/p)/100000;return (Number(whole)+frac).toLocaleString("en-US",{maximumFractionDigits:mx||4})};
+  const fmt6=wei=>{const p=10n**6n,w=bi(wei);return (Number(w/p)+Number(w%p)/1e6).toLocaleString("en-US",{maximumFractionDigits:2})};
+
+  // ---- token-bound account for an Agent id ----
+  async function tbaOf(id){if(tbaCache[id])return tbaCache[id];const data="0x246a0021"+wA(CFG.accountImpl)+wU(0)+wU(CFG.chainIdDec)+wA(CFG.mintContract)+wU(id);const r=await rpcCall(CFG.registry,data);if(!r)return null;const a="0x"+r.slice(-40);tbaCache[id]=a;return a}
+
+  // ---- v4 quote ----
+  function poolKeyWords(stock){const[c0,c1]=[CFG.usdg,stock].sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);const z=(c0.toLowerCase()===CFG.usdg.toLowerCase());return {c0,c1,z}}
+  async function quote(stock,amtWei){
+    const {c0,c1,z}=poolKeyWords(stock);
+    const tuple=wA(c0)+wA(c1)+wU(CFG.fee)+wU(CFG.tick)+wA("0x0")+wU(z?1:0)+wU(amtWei)+wU(0x100)+wU(0);
+    const r=await rpcCall(CFG.quoter,"0xaa9d21cb"+wU(0x20)+tuple);
+    if(!r)return null;return bi("0x"+r.slice(2,66));
+  }
+  let qT;
+  async function refreshQuote(){
+    const amt=usdgToWei(amtIn.value);const stock=stockSel.value;
+    if(amt<=0n){qOut.textContent="—";qPrice.textContent="—";return}
+    qOut.textContent="…";
+    const out=await quote(stock,amt);
+    if(out==null||out===0n){qOut.textContent="no quote";qPrice.textContent="—";return}
+    const sym=stockSel.options[stockSel.selectedIndex].text.split(" ")[0];
+    qOut.textContent=fmt18(out,4)+" "+sym;
+    // price per share = USDG spent / shares
+    const shares=Number(out)/1e18; const usd=Number(amt)/1e6;
+    qPrice.textContent=shares>0?("$"+(usd/shares).toLocaleString("en-US",{maximumFractionDigits:2})):"—";
+    window.__lastQuote={out,amt,stock};
+    refreshBuy();
+  }
+  amtIn.addEventListener("input",()=>{clearTimeout(qT);qT=setTimeout(refreshQuote,400)});
+  stockSel.addEventListener("change",refreshQuote);
+
+  function refreshBuy(){
+    const ok=mAddr&&agentSel.value&&stockSel.value&&usdgToWei(amtIn.value)>0n;
+    buyBtn.disabled=!ok;buyBtn.textContent=ok?("BUY "+stockSel.options[stockSel.selectedIndex].text.split(" ")[0]):(mAddr?"ENTER AMOUNT":"CONNECT WALLET");
+  }
+  agentSel.addEventListener("change",async()=>{const id=agentSel.value;if(!id){agentTba.textContent="";return}const tba=await tbaOf(id);agentTba.innerHTML=tba?('Agent #'+id+" wallet: <a href='"+CFG.explorer+"/address/"+tba+"' target='_blank' rel='noopener' style='color:var(--green)'>"+short(tba)+" ↗</a>"):"";refreshBuy()});
+
+  // ---- wallet ----
+  async function connect(){
+    if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
+    try{const a=await window.ethereum.request({method:"eth_requestAccounts"});if(!a||!a.length)return;
+      try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}
+      toast("Wallet connected");load(a[0]);
+    }catch(_){toast("Connection rejected")}
+  }
+  async function ownedIds(addr){
+    try{const r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721");if(r.ok){const j=await r.json();const mc=CFG.mintContract.toLowerCase();const ids=(j.items||[]).filter(it=>((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc).map(it=>parseInt(it.id||it.token_id)).filter(n=>!isNaN(n));if(ids.length)return ids.sort((a,b)=>a-b)}}catch(_){}
+    return []
+  }
+  async function load(addr){
+    mAddr=addr;connectBtn.style.display="none";walletChip.style.display="inline-flex";walletAddr.textContent=short(addr);
+    rpcCall(CFG.usdg,"0x70a08231"+wA(addr)).then(b=>{usdgBal.textContent="USDG: "+(b?fmt6(b):"0")});
+    myIds=await ownedIds(addr);
+    agentSel.innerHTML="";
+    if(!myIds.length){const o=document.createElement("option");o.value="";o.textContent="No Agents — mint one first";agentSel.appendChild(o);buyMsg.innerHTML='You need an ORLIX Agent to buy into. <a href="/nft#mint" style="color:var(--green)">Mint one ↗</a>';}
+    else{myIds.forEach(id=>{const o=document.createElement("option");o.value=id;o.textContent="Agent #"+id;agentSel.appendChild(o)});agentSel.dispatchEvent(new Event("change"))}
+    refreshBuy();
+  }
+  connectBtn.addEventListener("click",connect);
+
+  // ---- buy ----
+  async function ensureChain(){try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}}
+  async function tx(to,data){return window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to,data}]})}
+
+  // build v4 execute(commands, inputs, deadline) for USDG->stock, output to recipient
+  const encBytes=hex=>{hex=hex.replace(/^0x/,"");const len=hex.length/2;const pad=Math.ceil(hex.length/64)*64;return wU(len)+hex.padEnd(pad,"0")};
+  function encBytesArray(items){const n=items.length;let head=wU(n),offs="",tail="",cur=n*32;const el=items.map(encBytes);for(const e of el){offs+=wU(cur);cur+=e.length/2}for(const e of el)tail+=e;return head+offs+tail}
+  function buildSwap(stock,amtIn,minOut,recipient){
+    const {c0,c1,z}=poolKeyWords(stock);
+    const struct=wA(c0)+wA(c1)+wU(CFG.fee)+wU(CFG.tick)+wA("0x0")+wU(z?1:0)+wU(amtIn)+wU(minOut)+wU(0x120)+wU(0);
+    const p0=wU(0x20)+struct;                    // ExactInputSingleParams
+    const p1=wA(CFG.usdg)+wU(amtIn);             // SETTLE_ALL(currencyIn, maxAmount)
+    const p2=wA(stock)+wA(recipient)+wU(0);      // TAKE(currencyOut, recipient, OPEN_DELTA)
+    const actionsEnc=encBytes("060c0e");
+    const input0=wU(0x40)+wU(0x40+actionsEnc.length/2)+actionsEnc+encBytesArray([p0,p1,p2]);
+    const cmdEnc=encBytes("10");
+    const inputsArr=encBytesArray([input0]);
+    const deadline=Math.floor(Date.now()/1000)+1200;
+    return "0x3593564c"+wU(0x60)+wU(0x60+cmdEnc.length/2)+wU(deadline)+cmdEnc+inputsArr;
+  }
+
+  async function buy(){
+    if(!window.ethereum||!mAddr){toast("Connect wallet");return}
+    const stock=stockSel.value, id=agentSel.value, amt=usdgToWei(amtIn.value);
+    if(!id){toast("Pick an Agent");return}
+    if(amt<=0n){toast("Enter USDG amount");return}
+    try{
+      buyBtn.disabled=true;const label=buyBtn.textContent;
+      await ensureChain();
+      const recipient=await tbaOf(id);
+      if(!recipient){toast("Couldn't resolve Agent wallet");buyBtn.disabled=false;return}
+      // check USDG balance
+      const bal=bi(await rpcCall(CFG.usdg,"0x70a08231"+wA(mAddr)));
+      if(bal<amt){toast("Not enough USDG");buyBtn.disabled=false;buyBtn.textContent=label;return}
+      // 1) USDG -> Permit2 allowance (ERC20 approve)
+      const a1=bi(await rpcCall(CFG.usdg,"0xdd62ed3e"+wA(mAddr)+wA(CFG.permit2)));
+      if(a1<amt){buyBtn.textContent="APPROVE USDG…";buyMsg.textContent="Step 1/3 — approve USDG to Permit2.";const t=await tx(CFG.usdg,"0x095ea7b3"+wA(CFG.permit2)+wU((1n<<256n)-1n));await waitReceipt(t)}
+      // 2) Permit2 -> router allowance (approve(token,spender,uint160,uint48))
+      // Permit2.allowance returns (uint160 amount, uint48 expiration, uint48 nonce) — 3 words
+      const pr=await rpcCall(CFG.permit2,"0x927da105"+wA(mAddr)+wA(CFG.usdg)+wA(CFG.router));
+      let allowAmt=0n, exp=0n;
+      if(pr){allowAmt=bi("0x"+pr.slice(2,66));exp=bi("0x"+pr.slice(66,130))}
+      const nowS=BigInt(Math.floor(Date.now()/1000));
+      if(allowAmt<amt||exp<nowS+60n){buyBtn.textContent="APPROVE ROUTER…";buyMsg.textContent="Step 2/3 — approve the router via Permit2.";const d="0x87517c45"+wA(CFG.usdg)+wA(CFG.router)+wU(MAXU)+wU(MAXEXP);const t=await tx(CFG.permit2,d);await waitReceipt(t)}
+      // 3) quote + minOut (3% slippage) + execute
+      buyBtn.textContent="BUYING…";buyMsg.textContent="Step 3/3 — confirm the swap.";
+      const out=await quote(stock,amt); if(out==null||out===0n){throw new Error("no quote")}
+      const minOut=out*97n/100n;
+      const data=buildSwap(stock,amt,minOut,recipient);
+      const txh=await tx(CFG.router,data);
+      buyMsg.innerHTML='Buying… <a href="'+CFG.explorer+'/tx/'+txh+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a>';
+      await waitReceipt(txh);
+      buyBtn.textContent="BOUGHT ✓";
+      const sym=stockSel.options[stockSel.selectedIndex].text.split(" ")[0];
+      buyMsg.innerHTML='🎉 '+sym+' now held inside Agent #'+id+'. <a href="/agents" style="color:var(--green)">See it ↗</a> · <a href="'+CFG.explorer+'/tx/'+txh+'" target="_blank" rel="noopener" style="color:var(--green)">tx ↗</a>';
+      rpcCall(CFG.usdg,"0x70a08231"+wA(mAddr)).then(b=>{usdgBal.textContent="USDG: "+(b?fmt6(b):"0")});
+      setTimeout(refreshBuy,4000);
+    }catch(e){buyBtn.disabled=false;refreshBuy();toast("Failed: "+((e&&e.message)||"").slice(0,60))}
+  }
+  buyBtn.addEventListener("click",buy);
+
+  if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])load(a[0])}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{if(a&&a[0])load(a[0])})}
+})();
+</script>
+</body>
+</html>

@@ -166,6 +166,11 @@
       "source": "/box.html",
       "destination": "/box",
       "permanent": true
+    },
+    {
+      "source": "/stock.html",
+      "destination": "/stock",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -268,6 +273,10 @@
     {
       "source": "/box",
       "destination": "/box.html"
+    },
+    {
+      "source": "/stock",
+      "destination": "/stock.html"
     }
   ]
 }
