@@ -124,6 +124,16 @@
   var NFT_ABI=["function ownerOf(uint256) view returns (address)"];
 
   var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
+  // RAW send — encode calldata offline (ethers) then send via window.ethereum, never letting ethers
+  // populate/send (its eth_feeHistory/eth_maxPriorityFeePerGas calls throw "could not coalesce" on this RPC).
+  function rrpc(m,p){ return fetch(CFG.rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:m,params:p||[]})}).then(function(r){return r.json()}).then(function(j){if(j.error)throw new Error(j.error.message||"rpc error");return j.result}); }
+  async function waitRc(h){ for(var i=0;i<150;i++){ var r=null; try{r=await rrpc("eth_getTransactionReceipt",[h]);}catch(_){}
+      if(r) return {status:parseInt(r.status,16),logs:r.logs||[],hash:r.transactionHash||h};
+      await new Promise(function(res){setTimeout(res,2000)}); }
+    throw new Error("Timed out waiting for confirmation (tx may still land)."); }
+  async function ensureChain(){ try{ var c=await window.ethereum.request({method:"eth_chainId"}); if(c!==CFG.chainIdHex) await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }catch(_){} }
+  async function rawSend(to,data,value,gas){ var p={from:S.addr,to:to,data:data}; if(value!=null)p.value="0x"+value.toString(16); if(gas!=null)p.gas="0x"+gas.toString(16);
+    var h=await window.ethereum.request({method:"eth_sendTransaction",params:[p]}); var rc=await waitRc(h); if(rc.status===0)throw new Error("Transaction reverted on-chain."); return rc; }
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
   function fmt(n){n=Number(n);if(!isFinite(n))return"0";if(n===0)return"0";if(n<1e-6)return n.toExponential(2);if(n<1)return n.toPrecision(3);return n.toLocaleString("en",{maximumFractionDigits:n<1000?2:0})}
@@ -134,12 +144,6 @@
   function setConnected(a){S.addr=a;$("#connectBtn").style.display="none";var c=$("#walletChip");c.style.display="inline-flex";$("#walletAddr").textContent=short(a);if(S.token)renderFees();}
   function connect(){if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){setConnected(a)});return;}if(!window.ethereum){toast("No wallet found");return;}window.ethereum.request({method:"eth_requestAccounts"}).then(function(a){if(a&&a[0])setConnected(a[0])})}
   $("#connectBtn").addEventListener("click",connect);
-
-  async function signer(){
-    var bp=new ethers.BrowserProvider(window.ethereum),net=await bp.getNetwork();
-    if(Number(net.chainId)!==CFG.chainId){await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]});bp=new ethers.BrowserProvider(window.ethereum);}
-    return await bp.getSigner();
-  }
 
   async function load(ca){
     ca=(ca||"").trim();
@@ -225,31 +229,31 @@
     }catch(_){}
   }
 
+  var cvI=new ethers.Interface(CURVE_ABI), ercI=new ethers.Interface(ERC20_ABI);
   async function trade(){
     if(!S.addr){connect();return;}
     var amt=$("#amtIn").value.trim(); if(!amt||Number(amt)<=0){toast("Enter an amount");return;}
     var btn=$("#tradeBtn"),msg=$("#tradeMsg"); btn.disabled=true;
     try{
-      var sg=await signer(); var cv=new ethers.Contract(S.curve,CURVE_ABI,sg);
+      await ensureChain();
       if(S.side==="buy"){
         var qin=ethers.parseUnits(amt,S.pairDec);
-        if(S.native){ btn.textContent="SIGN…"; msg.textContent="Buying…"; var tx=await cv.buy(qin,0n,S.addr,{value:qin,gasLimit:2500000n}); await done(tx); }
+        if(S.native){ btn.textContent="SIGN…"; msg.textContent="Buying…"; var rc=await rawSend(S.curve,cvI.encodeFunctionData("buy",[qin,0n,S.addr]),qin,2500000n); await done(rc); }
         else{
-          var erc=new ethers.Contract(S.pairAddr,ERC20_ABI,sg); var al=await erc.allowance(S.addr,S.curve);
-          if(al<qin){ btn.textContent="APPROVE…"; msg.textContent="Approve "+S.pairSym+"…"; var a=await erc.approve(S.curve,qin,{gasLimit:120000n}); await a.wait(); }
-          btn.textContent="SIGN…"; msg.textContent="Buying…"; var tx2=await cv.buy(qin,0n,S.addr,{gasLimit:2500000n}); await done(tx2);
+          var al=await new ethers.Contract(S.pairAddr,ERC20_ABI,ro).allowance(S.addr,S.curve);
+          if(al<qin){ btn.textContent="APPROVE…"; msg.textContent="Approve "+S.pairSym+"…"; await rawSend(S.pairAddr,ercI.encodeFunctionData("approve",[S.curve,qin]),null,120000n); }
+          btn.textContent="SIGN…"; msg.textContent="Buying…"; var rc2=await rawSend(S.curve,cvI.encodeFunctionData("buy",[qin,0n,S.addr]),null,2500000n); await done(rc2);
         }
       }else{
         var tin=ethers.parseUnits(amt,S.dec);
-        var tkc=new ethers.Contract(S.token,ERC20_ABI,sg); var al2=await tkc.allowance(S.addr,S.curve);
-        if(al2<tin){ btn.textContent="APPROVE…"; msg.textContent="Approve $"+S.sym+"…"; var a2=await tkc.approve(S.curve,tin,{gasLimit:120000n}); await a2.wait(); }
-        btn.textContent="SIGN…"; msg.textContent="Selling…"; var tx3=await cv.sell(tin,0n,S.addr,{gasLimit:2500000n}); await done(tx3);
+        var al2=await new ethers.Contract(S.token,ERC20_ABI,ro).allowance(S.addr,S.curve);
+        if(al2<tin){ btn.textContent="APPROVE…"; msg.textContent="Approve $"+S.sym+"…"; await rawSend(S.token,ercI.encodeFunctionData("approve",[S.curve,tin]),null,120000n); }
+        btn.textContent="SIGN…"; msg.textContent="Selling…"; var rc3=await rawSend(S.curve,cvI.encodeFunctionData("sell",[tin,0n,S.addr]),null,2500000n); await done(rc3);
       }
     }catch(e){ btn.disabled=false; sideUI(); msg.innerHTML='<span style="color:#ff6b6b">'+((e&&(e.shortMessage||e.message))||"Failed").slice(0,110)+'</span>'; }
   }
-  async function done(tx){
-    $("#tradeMsg").innerHTML='Confirming… <a href="'+CFG.explorer+'/tx/'+tx.hash+'" target="_blank" rel="noopener">'+short(tx.hash)+'</a>';
-    await tx.wait(); toast("Done ✓"); $("#tradeMsg").textContent="Trade confirmed."; $("#amtIn").value="";
+  async function done(rc){
+    toast("Done ✓"); $("#tradeMsg").innerHTML='Trade confirmed. <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">'+short(rc.hash)+'</a>'; $("#amtIn").value="";
     await refresh(); var s=S.state,pct=Math.min(100,Math.round(s.progress*1000)/10); var b=$("#cvBar"); if(b)b.style.width=pct+"%";
     $("#tradeBtn").disabled=false; sideUI(); renderFees();
   }
@@ -285,16 +289,14 @@
   async function claim(viaAgent,hasNative,hasToken){
     var btn=$("#claimBtn"),msg=$("#claimMsg"); btn.disabled=true; btn.textContent="SIGN…";
     try{
-      var sg=await signer();
-      var escI=new ethers.Interface(ESCROW_ABI);
+      await ensureChain();
+      var escI=new ethers.Interface(ESCROW_ABI), acctI=new ethers.Interface(ACCT_ABI);
       if(viaAgent){
-        var acct=new ethers.Contract(S.feeRecipient,ACCT_ABI,sg);
-        if(hasNative){ var d=escI.encodeFunctionData("claim"); var tx=await acct.execute(CFG.feeEscrow,0n,d,0,{gasLimit:400000n}); await tx.wait(); }
-        if(hasToken){ var d2=escI.encodeFunctionData("claimToken",[S.pairAddr]); var tx2=await acct.execute(CFG.feeEscrow,0n,d2,0,{gasLimit:400000n}); await tx2.wait(); }
+        if(hasNative){ var d=escI.encodeFunctionData("claim"); await rawSend(S.feeRecipient,acctI.encodeFunctionData("execute",[CFG.feeEscrow,0n,d,0]),null,400000n); }
+        if(hasToken){ var d2=escI.encodeFunctionData("claimToken",[S.pairAddr]); await rawSend(S.feeRecipient,acctI.encodeFunctionData("execute",[CFG.feeEscrow,0n,d2,0]),null,400000n); }
       }else{
-        var esc=new ethers.Contract(CFG.feeEscrow,ESCROW_ABI,sg);
-        if(hasNative){ var t=await esc.claim({gasLimit:250000n}); await t.wait(); }
-        if(hasToken){ var t2=await esc.claimToken(S.pairAddr,{gasLimit:250000n}); await t2.wait(); }
+        if(hasNative){ await rawSend(CFG.feeEscrow,escI.encodeFunctionData("claim"),null,250000n); }
+        if(hasToken){ await rawSend(CFG.feeEscrow,escI.encodeFunctionData("claimToken",[S.pairAddr]),null,250000n); }
       }
       toast("Fees claimed ✓"); renderFees();
     }catch(e){ btn.disabled=false; btn.textContent="CLAIM FEES"; msg.innerHTML='<span style="color:#ff6b6b">'+((e&&(e.shortMessage||e.message))||"Failed").slice(0,100)+'</span>'; }

@@ -206,6 +206,13 @@
   var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
   var roV2=new ethers.Contract(CFG.v2Factory,V2_ABI,ro), roReg=new ethers.Contract(CFG.registry,REG_ABI,ro);
   var iface=new ethers.Interface(V2_ABI);
+  // raw RPC read + receipt poll — used so we never let ethers build/send the tx
+  // (ethers calls eth_feeHistory/eth_maxPriorityFeePerGas which this RPC returns non-standard → "could not coalesce")
+  function rrpc(method,params){ return fetch(CFG.rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:method,params:params||[]})}).then(function(r){return r.json()}).then(function(j){if(j.error)throw new Error(j.error.message||"rpc error");return j.result}); }
+  async function waitRc(hash){ for(var i=0;i<150;i++){ var r=null; try{r=await rrpc("eth_getTransactionReceipt",[hash]);}catch(_){}
+      if(r){ return {status:parseInt(r.status,16), logs:r.logs||[], hash:r.transactionHash||hash}; }
+      await new Promise(function(res){setTimeout(res,2000)}); }
+    throw new Error("Timed out waiting for confirmation (tx may still land — check the explorer)."); }
 
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
@@ -256,9 +263,7 @@
     if(!name||sym.length<2){toast("Enter a name and ticker");return;}
     var btn=$("#deployBtn"); warn(""); status("");
     try{
-      var bp=new ethers.BrowserProvider(window.ethereum), net=await bp.getNetwork();
-      if(Number(net.chainId)!==CFG.chainId){ try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]});bp=new ethers.BrowserProvider(window.ethereum);}catch(_){toast("Switch to Robinhood Chain");return;} }
-      var signer=await bp.getSigner();
+      try{ var cid=await window.ethereum.request({method:"eth_chainId"}); if(cid!==CFG.chainIdHex) await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }catch(_){toast("Switch to Robinhood Chain");return;}
       var fee=state.fee||await roV2.launchFee();
       var devBuy=$("#fBuy").value&&Number($("#fBuy").value)>0?ethers.parseEther($("#fBuy").value):0n;
       // ── balance pre-check (avoids "could not coalesce" from a failed estimate) ──
@@ -278,20 +283,23 @@
       try{var ok=await roV2.canLaunch(state.addr); if(ok===false)warn("canLaunch() is false for your wallet — if it isn't allowed the tx reverts (only gas lost).");}catch(_){}
       var params={name:name,symbol:sym,logo:logo,description:($("#fDesc").value||"").trim(),socials:socials,creatorFeeRecipient:creator,creatorTaxBps:taxBps,buybackEnabled:true,expectedEconomics:econ,salt:salt};
       btn.textContent="SIGN IN WALLET…";
-      var tx;
-      // fixed gasLimit → skip ethers estimateGas (the source of "could not coalesce" on this RPC)
+      // Encode calldata offline, then send RAW via window.ethereum — never let ethers populate/send
+      // the tx (its eth_feeHistory/eth_maxPriorityFeePerGas calls are what throw "could not coalesce").
+      var to,data,value,gas;
       if(devBuy>0n&&pairAddr===ZERO){
-        var lab=new ethers.Contract(CFG.v2LaunchAndBuy,LAB_ABI,signer);
         var rp=Object.assign({},params,{creatorFeeRecipient:(creator!==ZERO?creator:state.addr)});
+        data=new ethers.Interface(LAB_ABI).encodeFunctionData("launchAndBuy",[rp,state.cfgId,pairAddr,devBuy,0n,state.addr,[]]);
+        to=CFG.v2LaunchAndBuy; value=fee+devBuy; gas=GAS_LAB;
         status("Launch + dev buy in one tx…");
-        tx=await lab.launchAndBuy(rp,state.cfgId,pairAddr,devBuy,0n,state.addr,[],{value:fee+devBuy,gasLimit:GAS_LAB});
       }else{
         if(devBuy>0n&&pairAddr!==ZERO)warn("Dev buy is only wired for ETH pairs — launching without it.");
+        data=iface.encodeFunctionData("launchToken",[params,state.cfgId,pairAddr,[]]);
+        to=CFG.v2Factory; value=fee; gas=GAS_LAUNCH;
         status("Deploying → bonding curve (pair "+state.pair.sym+")…");
-        tx=await new ethers.Contract(CFG.v2Factory,V2_ABI,signer).launchToken(params,state.cfgId,pairAddr,[],{value:fee,gasLimit:GAS_LAUNCH});
       }
-      status("Confirming… <span style=\"color:var(--ink-3)\">"+tx.hash.slice(0,12)+"…</span>");
-      var rc=await tx.wait();
+      var hash=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:state.addr,to:to,data:data,value:"0x"+value.toString(16),gas:"0x"+gas.toString(16)}]});
+      status("Confirming… <span style=\"color:var(--ink-3)\">"+String(hash).slice(0,12)+"…</span>");
+      var rc=await waitRc(hash);
       if(rc.status===0){ throw new Error("Transaction reverted on-chain (check whitelist / params)."); }
       onLaunched(rc);
     }catch(e){
