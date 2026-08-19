@@ -35,7 +35,8 @@
   .aw-val{margin-left:auto;text-align:right}
   .aw-val u{display:block;text-decoration:none;font-size:.54rem;letter-spacing:.2em;color:var(--ink-3)}
   .aw-val b{color:var(--ink);font-size:1.05rem}
-  .aw-acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 20px 16px}
+  .aw-acts{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 20px 16px}
+  .aw-act{font-size:.66rem !important}
   .aw-act{font-family:var(--mono);font-size:.72rem;color:var(--ink);background:#0a0c07;border:1px solid var(--line-soft);border-radius:11px;padding:12px 6px;cursor:pointer;transition:.16s;text-align:center}
   .aw-act:hover{border-color:rgba(207,246,5,.4)}
   .aw-act.on{border-color:var(--green);color:var(--green)}
@@ -158,6 +159,7 @@
       <div class="aw-act on" data-view="assets"><span class="i">◍</span>Assets</div>
       <div class="aw-act" data-view="receive"><span class="i">▼</span>Receive</div>
       <div class="aw-act" data-view="send"><span class="i">▲</span>Send</div>
+      <div class="aw-act" data-view="launched"><span class="i">✦</span>Launched</div>
     </div>
     <div class="aw-body" id="awBody"></div>
   </div>
@@ -294,7 +296,7 @@
   menuInit();
 
   /* ═══════════ AGENT WALLET (send / receive / import) ═══════════ */
-  const roE=new ethers.JsonRpcProvider(CFG.rpcs[0],{chainId:CFG.chainIdDec,name:"robinhood"});
+  const roE=new ethers.JsonRpcProvider(CFG.rpcs[0],{chainId:CFG.chainIdDec,name:"robinhood"},{staticNetwork:true,batchMaxCount:1});
   const ACCT_ABI=["function execute(address to,uint256 value,bytes data,uint8 operation) payable returns (bytes)"];
   const ERC20_ABI=["function transfer(address,uint256) returns (bool)","function balanceOf(address) view returns (uint256)","function symbol() view returns (string)","function decimals() view returns (uint8)"];
   const erc20If=new ethers.Interface(ERC20_ABI);
@@ -384,9 +386,37 @@
       sel.querySelectorAll(".aw-chip").forEach(b=>b.addEventListener("click",()=>{AW.sendIdx=+b.dataset.i;sel.querySelectorAll(".aw-chip").forEach(x=>x.classList.toggle("on",x===b))}));
       $("#awMax").addEventListener("click",()=>{const a=AW.assets[AW.sendIdx];let v=a.bal;if(!a.addr&&v>ethers.parseEther("0.0003"))v=v-ethers.parseEther("0.0003");$("#awAmt").value=ethers.formatUnits(v,a.dec)});
       $("#awSend").addEventListener("click",doSend);
+    } else if(AW.view==="launched"){
+      loadLaunched();
     }
   }
   function switchView(v){AW.view=v;$("#awOv").querySelectorAll(".aw-act").forEach(x=>x.classList.toggle("on",x.dataset.view===v));renderView()}
+
+  // ── tokens launched under this Agent (creator fees → this Agent's wallet) ──
+  const V2_FACTORY="0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e";
+  const FAC_ABI=["event TokenLaunched(address indexed token,address indexed curve,address indexed deployer,address pairToken,uint256 launchConfigId,uint256 graduationThreshold)","function getLaunchedToken(address token) view returns ((address token,address curve,address deployer,address creatorFeeRecipient,address pairToken,uint256 graduationThreshold,uint24 poolFee,int24 tickSpacing,uint16 creatorTaxBps,bool buybackEnabled,uint8 phase,uint256 sweptQuote,uint256 sweptTokens,uint256 sweptAt,bool exists))"];
+  const INFO_ABI=["function symbol() view returns (string)","function getTokenInfo() view returns (address d,string logo,string desc,(string a,string b,string c,string e,string f) s)"];
+  const facI=new ethers.Interface(FAC_ABI);
+  let TL_TOPIC=null; try{TL_TOPIC=facI.getEvent("TokenLaunched").topicHash;}catch(_){}
+  async function loadLaunched(){
+    const box=$("#awBody"); box.innerHTML='<p class="hint" style="text-align:center;padding:20px">Loading launches…</p>';
+    try{
+      const latest=await roE.getBlockNumber(); const lookback=1500000n, chunk=250000n; let start=latest>lookback?latest-lookback:0n; let toks=[];
+      const padded="0x000000000000000000000000"+(mAddr||"").slice(2).toLowerCase();
+      for(let to=latest; to>=start; to-=chunk){ let from=(to-chunk+1n>start)?(to-chunk+1n):start;
+        const logs=await roE.getLogs({address:V2_FACTORY,fromBlock:from,toBlock:to,topics:[TL_TOPIC,null,null,padded]}).catch(()=>[]);
+        for(const lg of logs){ try{const pl=facI.parseLog(lg); if(pl)toks.push(pl.args.token);}catch(_){}}
+        if(from===start)break;
+      }
+      toks=[...new Set(toks.map(a=>a.toLowerCase()))];
+      const fac=new ethers.Contract(V2_FACTORY,FAC_ABI,roE); const mine=[];
+      for(const t of toks){ try{const lt=await fac.getLaunchedToken(t); if((lt.creatorFeeRecipient||"").toLowerCase()===(AW.tba||"").toLowerCase()) mine.push({token:t,graduated:Number(lt.phase)>=2});}catch(_){}}
+      if(AW.view!=="launched")return;
+      if(!mine.length){ box.innerHTML='<p class="aw-msg" style="text-align:center;padding:14px 0">No tokens launched under this Agent yet.<br><a href="/launcher" style="color:var(--green)">Launch one →</a></p>'; return; }
+      box.innerHTML=mine.map((x,i)=>'<a class="aw-asset" href="/curve?ca='+x.token+'" id="lt'+i+'"><span class="ic"><span style="color:var(--green);font-weight:700">◆</span></span><span class="nm"><b>'+short(x.token)+'</b><span>bonding curve</span></span><span class="amt"><b>'+(x.graduated?'Graduated':'On curve')+'</b><span>trade ↗</span></span></a>').join("");
+      mine.forEach(async (x,i)=>{ try{ const tk=new ethers.Contract(x.token,INFO_ABI,roE); const sy=await tk.symbol().catch(()=>null); const info=await tk.getTokenInfo().catch(()=>null); const el=document.getElementById('lt'+i); if(!el)return; if(sy){const b=el.querySelector('.nm b'); if(b)b.textContent='$'+sy;} const ic=el.querySelector('.ic'); if(info&&info.logo){ic.innerHTML='<img src="'+info.logo+'" alt="" onerror="this.style.display=\'none\'">';}else if(sy){ic.innerHTML='<span style="color:var(--green);font-weight:700">'+sy[0]+'</span>';} }catch(_){}});
+    }catch(_){ if(AW.view==="launched")$("#awBody").innerHTML='<p class="aw-msg" style="text-align:center;padding:14px 0">Couldn\'t load launches.</p>'; }
+  }
 
   async function importToken(){
     const ca=prompt("Token contract address (0x…)");

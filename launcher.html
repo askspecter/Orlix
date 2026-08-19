@@ -206,7 +206,7 @@
   var TOKEN_ABI=["function symbol() view returns (string)","function name() view returns (string)","function getTokenInfo() view returns (address d,string logo,string desc,(string a,string b,string c,string e,string f) s)"];
   var CURVE_ABI=["function realQuoteReserve() view returns (uint256)","function graduationThreshold() view returns (uint256)","function graduated() view returns (bool)"];
 
-  var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
+  var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"},{staticNetwork:true,batchMaxCount:1});
   var roV2=new ethers.Contract(CFG.v2Factory,V2_ABI,ro), roReg=new ethers.Contract(CFG.registry,REG_ABI,ro);
   var iface=new ethers.Interface(V2_ABI);
   // raw RPC read + receipt poll — used so we never let ethers build/send the tx
@@ -388,7 +388,7 @@
   var items=[], filter="all";
   async function indexLaunches(){
     try{
-      var latest=await ro.getBlockNumber(), lookback=400000n, chunk=9000n, start=latest>lookback?latest-lookback:0n, out=[];
+      var latest=await ro.getBlockNumber(), lookback=1500000n, chunk=250000n, start=latest>lookback?latest-lookback:0n, out=[];
       var TL_TOPIC=null; try{TL_TOPIC=iface.getEvent("TokenLaunched").topicHash;}catch(_){}
       for(var to=latest; to>=start; to-=chunk){ var from=(to-chunk+1n>start)?(to-chunk+1n):start; var flt={address:CFG.v2Factory,fromBlock:from,toBlock:to}; if(TL_TOPIC)flt.topics=[TL_TOPIC]; var logs=await ro.getLogs(flt).catch(()=>[]);
         for(var i=logs.length-1;i>=0;i--){ try{var pl=iface.parseLog(logs[i]); if(pl&&pl.name==="TokenLaunched"){ out.push({token:pl.args.token,curve:pl.args.curve,deployer:(pl.args.deployer||"").toLowerCase(),pair:pl.args.pairToken,threshold:pl.args.graduationThreshold,block:Number(logs[i].blockNumber)}); }}catch(_){}}

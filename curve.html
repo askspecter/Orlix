@@ -123,7 +123,7 @@
   var ACCT_ABI=["function execute(address to,uint256 value,bytes data,uint8 operation) payable returns (bytes)","function token() view returns (uint256,address,uint256)"];
   var NFT_ABI=["function ownerOf(uint256) view returns (address)"];
 
-  var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
+  var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"},{staticNetwork:true,batchMaxCount:1});
   // RAW send — encode calldata offline (ethers) then send via window.ethereum, never letting ethers
   // populate/send (its eth_feeHistory/eth_maxPriorityFeePerGas calls throw "could not coalesce" on this RPC).
   function rrpc(m,p){ return fetch(CFG.rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:m,params:p||[]})}).then(function(r){return r.json()}).then(function(j){if(j.error)throw new Error(j.error.message||"rpc error");return j.result}); }
