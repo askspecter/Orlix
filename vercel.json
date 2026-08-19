@@ -294,7 +294,7 @@
     },
     {
       "source": "/floor",
-      "destination": "/floor.html"
+      "destination": "/launcher.html"
     }
   ]
 }
