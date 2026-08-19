@@ -369,11 +369,17 @@
     }
   }
   function onLaunched(rc){
-    var token=null;
-    try{for(var i=0;i<rc.logs.length;i++){try{var pl=iface.parseLog(rc.logs[i]); if(pl&&pl.name==="TokenLaunched"){token=pl.args.token;break;}}catch(_){}}}catch(_){}
+    var token=null, ev=null;
+    try{for(var i=0;i<rc.logs.length;i++){try{var pl=iface.parseLog(rc.logs[i]); if(pl&&pl.name==="TokenLaunched"){token=pl.args.token;ev=pl.args;break;}}catch(_){}}}catch(_){}
     var btn=$("#deployBtn"); btn.textContent="LAUNCHED ✓"; btn.disabled=false;
-    if(token){ status('Launched <b style="color:var(--green)">$'+$("#fSym").value.toUpperCase()+'</b> → <a href="/curve?ca='+token+'">Trade &amp; track ↗</a>'+(state.agentAddr?'<br>Creator fees route to Agent #'+state.agentId+'.':'')); toast("Launched ✓"); setTimeout(function(){closeModal();indexLaunches();},1600); }
-    else { status('Launched ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>'); }
+    if(token){ status('Launched <b style="color:var(--green)">$'+$("#fSym").value.toUpperCase()+'</b> → <a href="/curve?ca='+token+'">Trade &amp; track ↗</a>'+(state.agentAddr?'<br>Creator fees route to Agent #'+state.agentId+'.':'')); toast("Launched ✓");
+      // Optimistically show it in the feed right away (the log indexer can lag a few blocks).
+      try{ if(!items.some(function(it){return it.token.toLowerCase()===token.toLowerCase()})){
+        var it={token:token,curve:ev.curve,deployer:(state.addr||"").toLowerCase(),pair:ev.pairToken,threshold:ev.graduationThreshold,block:1e15};
+        items.unshift(it); render(); enrichOne(it).then(render);
+      } }catch(_){}
+      setTimeout(function(){closeModal();indexLaunches();},1600); }
+    else { status('Launched ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>'); setTimeout(function(){indexLaunches();},2500); }
     refreshBal();
   }
   $("#deployBtn").addEventListener("click",deploy);
@@ -382,10 +388,14 @@
   var items=[], filter="all";
   async function indexLaunches(){
     try{
-      var latest=await ro.getBlockNumber(), lookback=400000n, chunk=15000n, start=latest>lookback?latest-lookback:0n, out=[];
-      for(var to=latest; to>=start; to-=chunk){ var from=(to-chunk+1n>start)?(to-chunk+1n):start; var logs=await ro.getLogs({address:CFG.v2Factory,fromBlock:from,toBlock:to}).catch(()=>[]);
+      var latest=await ro.getBlockNumber(), lookback=400000n, chunk=9000n, start=latest>lookback?latest-lookback:0n, out=[];
+      var TL_TOPIC=null; try{TL_TOPIC=iface.getEvent("TokenLaunched").topicHash;}catch(_){}
+      for(var to=latest; to>=start; to-=chunk){ var from=(to-chunk+1n>start)?(to-chunk+1n):start; var flt={address:CFG.v2Factory,fromBlock:from,toBlock:to}; if(TL_TOPIC)flt.topics=[TL_TOPIC]; var logs=await ro.getLogs(flt).catch(()=>[]);
         for(var i=logs.length-1;i>=0;i--){ try{var pl=iface.parseLog(logs[i]); if(pl&&pl.name==="TokenLaunched"){ out.push({token:pl.args.token,curve:pl.args.curve,deployer:(pl.args.deployer||"").toLowerCase(),pair:pl.args.pairToken,threshold:pl.args.graduationThreshold,block:Number(logs[i].blockNumber)}); }}catch(_){}}
         if(out.length>=40)break; if(from===start)break; }
+      // Preserve any optimistic entries (a just-launched token the indexer hasn't caught yet).
+      var seen={}; out.forEach(function(o){seen[o.token.toLowerCase()]=1;});
+      items.forEach(function(o){ if(o&&o.token&&!seen[o.token.toLowerCase()]) out.push(o); });
       items=out.sort(function(a,b){return b.block-a.block}).slice(0,40);
       if(!items.length){ $("#flGrid").innerHTML='<div class="fl-load">No launches yet. <a href="#" id="beFirst" style="color:var(--green)">Be the first →</a></div>'; var bf=$("#beFirst"); if(bf)bf.addEventListener("click",function(e){e.preventDefault();openModal()}); return; }
       render(); enrichAll();
