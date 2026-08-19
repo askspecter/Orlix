@@ -275,13 +275,13 @@
   async function ensureLogo(){ if(state.logo&&/^https?:/.test(state.logo))return state.logo; var data=state.logo||monogram($("#fSym").value||"OX"); try{ var r=await fetch("/api/launch?action=upload",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data:data})}); var j=await r.json(); if(r.ok&&j.url){state.logo=j.url;return j.url;} }catch(_){} return data; }
 
   // ── agents ──
-  async function loadAgents(addr){ try{ var r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721"),ids=[]; if(r.ok){var j=await r.json();var mc=CFG.agentNft.toLowerCase(); ids=(j.items||[]).filter(function(it){return((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc}).map(function(it){return parseInt(it.id||it.token_id)}).filter(function(n){return!isNaN(n)});} ids=[...new Set(ids)].sort(function(a,b){return a-b}); state.agents=ids; if(ids.length){ renderAgents(); } else{$("#lxAgents").innerHTML='<span class="lx-note">No ORLIX Agent in this wallet — launch fees go to your wallet, or <a href="/nft" target="_blank">mint an Agent</a>.</span>';} }catch(e){$("#agentNote").textContent="Couldn't load Agents.";} }
-  async function pickAgent(id){ if(state.agentId===id){ state.agentId=null; state.agentAddr=null; renderAgents(); return; }
+  async function loadAgents(addr){ try{ var r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721"),ids=[]; if(r.ok){var j=await r.json();var mc=CFG.agentNft.toLowerCase(); ids=(j.items||[]).filter(function(it){return((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc}).map(function(it){return parseInt(it.id||it.token_id)}).filter(function(n){return!isNaN(n)});} ids=[...new Set(ids)].sort(function(a,b){return a-b}); state.agents=ids; if(ids.length){ if(state.agentId===null)state.agentId=ids[0]; await pickAgent(state.agentId,true); } else{$("#lxAgents").innerHTML='<span class="lx-note">No ORLIX Agent in this wallet — launch fees go to your wallet, or <a href="/nft" target="_blank">mint an Agent</a>.</span>';} }catch(e){$("#agentNote").textContent="Couldn't load Agents.";} }
+  async function pickAgent(id,force){ if(!force&&state.agentId===id){ state.agentId=null; state.agentAddr=null; renderAgents(); return; }
     state.agentId=id; try{state.agentAddr=await roReg.account(CFG.accountImpl,SALT0,CFG.chainId,CFG.agentNft,id);}catch(_){state.agentAddr=null;} renderAgents(); }
   function renderAgents(){ if(!state.agents.length)return;
     var note = state.agentId!==null
-      ? 'Creator fees accrue <b>inside Agent #'+state.agentId+'\'s wallet</b>'+(state.agentAddr?' · <span style="color:var(--green)">'+short(state.agentAddr)+'</span>':'')+'. Tap again to route fees to your own wallet instead.'
-      : 'Optional — fees go to <b>your own wallet</b> by default. Tap an Agent to route creator fees into its wallet instead.';
+      ? 'Creator fees route <b>into Agent #'+state.agentId+'\'s wallet</b>'+(state.agentAddr?' · <span style="color:var(--green)">'+short(state.agentAddr)+'</span>':'')+'. Tap it again to send fees to your own wallet instead.'
+      : 'Fees go to <b>your own wallet</b>. Tap an Agent to route creator fees into its wallet instead.';
     $("#lxAgents").innerHTML=state.agents.map(function(id){return '<button type="button" class="lx-agent'+(state.agentId===id?' on':'')+'" data-id="'+id+'">Agent #'+id+'</button>'}).join("")+'<div class="lx-note" style="width:100%;margin-top:4px">'+note+'</div>'; $("#lxAgents").querySelectorAll(".lx-agent").forEach(function(b){b.addEventListener("click",function(){pickAgent(+b.dataset.id)})}); }
 
   // ── deploy ──
@@ -327,6 +327,10 @@
         to=CFG.v2Factory; value=fee; gas=GAS_LAUNCH;
         status("Deploying → bonding curve (pair "+state.pair.sym+")…");
       }
+      var sel=data.slice(0,10); console.info("[ORLIX launcher build 2026-08-19b] launch selector:",sel);
+      // The factory's verified launchToken is the 4-arg form 0xa72101af; the 3-arg
+      // form (0xf35abbcf) reverts. Guard so stale code can never send the wrong one.
+      if(!devBuy&&sel!=="0xa72101af"){ throw new Error("Old cached page (wrong call "+sel+"). Hard-refresh: pull down to reload / clear the tab, then retry."); }
       var txp={from:state.addr,to:to,data:data,value:"0x"+value.toString(16)};
       status("Simulating launch…");
       var why=await preflight(to,data,value);     // specific reason, in the browser, before any gas
