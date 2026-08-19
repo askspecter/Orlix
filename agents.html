@@ -398,13 +398,16 @@
   const INFO_ABI=["function symbol() view returns (string)","function getTokenInfo() view returns (address d,string logo,string desc,(string a,string b,string c,string e,string f) s)"];
   const facI=new ethers.Interface(FAC_ABI);
   let TL_TOPIC=null; try{TL_TOPIC=facI.getEvent("TokenLaunched").topicHash;}catch(_){}
+  async function glRetry(flt){ for(let k=0;k<3;k++){ try{return await roE.getLogs(flt);}catch(_){ await new Promise(r=>setTimeout(r,600)); } } return null; }
   async function loadLaunched(){
     const box=$("#awBody"); box.innerHTML='<p class="hint" style="text-align:center;padding:20px">Loading launches…</p>';
     try{
-      const latest=await roE.getBlockNumber(); const lookback=1500000n, chunk=250000n; let start=latest>lookback?latest-lookback:0n; let toks=[];
+      let latest=null; for(let k=0;k<3;k++){ try{latest=await roE.getBlockNumber();break;}catch(_){ await new Promise(r=>setTimeout(r,500)); } }
+      if(latest==null){ if(AW.view==="launched")box.innerHTML='<p class="aw-msg" style="text-align:center;padding:14px 0">Couldn\'t reach the chain. <a href="#" id="awRetryL" style="color:var(--green)">Retry</a></p>'; var rb=document.getElementById("awRetryL"); if(rb)rb.addEventListener("click",e=>{e.preventDefault();loadLaunched()}); return; }
+      const lookback=1500000n, chunk=150000n; let start=latest>lookback?latest-lookback:0n; let toks=[], anyOk=false;
       const padded="0x000000000000000000000000"+(mAddr||"").slice(2).toLowerCase();
       for(let to=latest; to>=start; to-=chunk){ let from=(to-chunk+1n>start)?(to-chunk+1n):start;
-        const logs=await roE.getLogs({address:V2_FACTORY,fromBlock:from,toBlock:to,topics:[TL_TOPIC,null,null,padded]}).catch(()=>[]);
+        const logs=await glRetry({address:V2_FACTORY,fromBlock:from,toBlock:to,topics:[TL_TOPIC,null,null,padded]}); if(logs===null)continue; anyOk=true;
         for(const lg of logs){ try{const pl=facI.parseLog(lg); if(pl)toks.push(pl.args.token);}catch(_){}}
         if(from===start)break;
       }
@@ -412,7 +415,9 @@
       const fac=new ethers.Contract(V2_FACTORY,FAC_ABI,roE); const mine=[];
       for(const t of toks){ try{const lt=await fac.getLaunchedToken(t); if((lt.creatorFeeRecipient||"").toLowerCase()===(AW.tba||"").toLowerCase()) mine.push({token:t,graduated:Number(lt.phase)>=2});}catch(_){}}
       if(AW.view!=="launched")return;
-      if(!mine.length){ box.innerHTML='<p class="aw-msg" style="text-align:center;padding:14px 0">No tokens launched under this Agent yet.<br><a href="/launcher" style="color:var(--green)">Launch one →</a></p>'; return; }
+      if(!mine.length){
+        if(!anyOk){ box.innerHTML='<p class="aw-msg" style="text-align:center;padding:14px 0">Couldn\'t reach the chain. <a href="#" id="awRetryL" style="color:var(--green)">Retry</a></p>'; var rb2=document.getElementById("awRetryL"); if(rb2)rb2.addEventListener("click",e=>{e.preventDefault();loadLaunched()}); return; }
+        box.innerHTML='<p class="aw-msg" style="text-align:center;padding:14px 0">No tokens launched under this Agent yet.<br><a href="/launcher" style="color:var(--green)">Launch one →</a></p>'; return; }
       box.innerHTML=mine.map((x,i)=>'<a class="aw-asset" href="/curve?ca='+x.token+'" id="lt'+i+'"><span class="ic"><span style="color:var(--green);font-weight:700">◆</span></span><span class="nm"><b>'+short(x.token)+'</b><span>bonding curve</span></span><span class="amt"><b>'+(x.graduated?'Graduated':'On curve')+'</b><span>trade ↗</span></span></a>').join("");
       mine.forEach(async (x,i)=>{ try{ const tk=new ethers.Contract(x.token,INFO_ABI,roE); const sy=await tk.symbol().catch(()=>null); const info=await tk.getTokenInfo().catch(()=>null); const el=document.getElementById('lt'+i); if(!el)return; if(sy){const b=el.querySelector('.nm b'); if(b)b.textContent='$'+sy;} const ic=el.querySelector('.ic'); if(info&&info.logo){ic.innerHTML='<img src="'+info.logo+'" alt="" onerror="this.style.display=\'none\'">';}else if(sy){ic.innerHTML='<span style="color:var(--green);font-weight:700">'+sy[0]+'</span>';} }catch(_){}});
     }catch(_){ if(AW.view==="launched")$("#awBody").innerHTML='<p class="aw-msg" style="text-align:center;padding:14px 0">Couldn\'t load launches.</p>'; }
