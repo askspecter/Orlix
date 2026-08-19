@@ -144,6 +144,8 @@
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
   function fmt(n){n=Number(n);if(!isFinite(n))return"0";if(n===0)return"0";if(n<1e-6)return n.toExponential(2);if(n<1)return n.toPrecision(3);return n.toLocaleString("en",{maximumFractionDigits:n<1000?2:0})}
+  // readable per-token price: tiny ETH prices shown in gwei (1 gwei = 1e-9 ETH)
+  function priceStr(p,sym){ if(!p||!isFinite(p))return "0 "+sym; if(sym==="ETH"&&p<1e-4){ var g=p*1e9; return (g<0.01?g.toExponential(2):g.toLocaleString("en",{maximumFractionDigits:g<1?4:2}))+" gwei"; } return fmt(p)+" "+sym; }
 
   var S={addr:null, token:null, curve:null, dec:18, sym:"", name:"", logo:"", pairSym:"ETH", pairAddr:ZERO, pairDec:18, native:true, feeRecipient:ZERO, side:"buy", state:null};
 
@@ -195,8 +197,8 @@
           +'<div class="cv-pad">'
             +'<div class="cv-head"><div class="cv-logo">'+logo+'</div><div class="cv-ttl"><b>$'+S.sym+'</b><span>'+(S.name||"")+'</span>'
               +'<div class="cv-ca"><code>'+short(S.token)+'</code><a href="'+CFG.explorer+'/token/'+S.token+'" target="_blank" rel="noopener">↗</a></div></div></div>'
-            +'<div class="cv-price">'+fmt(s.price)+' <small>'+S.pairSym+'</small></div>'
-            +'<div class="cv-sub">≈ '+fmt(mcap)+' '+S.pairSym+' market cap · '+(s.graduated?'<span style="color:var(--green)">graduated</span>':(s.ready?'ready to graduate':'on the curve'))+'</div>'
+            +'<div class="cv-price">'+fmt(mcap)+' <small>'+S.pairSym+' market cap</small></div>'
+            +'<div class="cv-sub">'+priceStr(s.price,S.pairSym)+' / token · '+(s.graduated?'<span style="color:var(--green)">graduated</span>':(s.ready?'ready to graduate':'on the curve'))+'</div>'
             +'<div class="cv-barwrap"><div class="cv-barrow"><span>Bond progress</span><b>'+pct+'%</b></div><div class="cv-bar"><i id="cvBar"></i></div>'
               +'<div class="cv-raise"><span>'+fmt(raised)+' '+S.pairSym+' raised</span><span>target '+fmt(target)+' '+S.pairSym+'</span></div></div>'
           +'</div>'
