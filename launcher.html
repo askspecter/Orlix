@@ -231,6 +231,8 @@
     try{ await rrpc("eth_call",[{from:state.addr,to:to,data:data,value:"0x"+value.toString(16)},"latest"]); }
     catch(e){ var r=decodeRevert(e.data); if(r) return "Contract rejected: "+r;
       var sel=(typeof e.data==="string"&&e.data.length>=10)?e.data.slice(0,10):null;
+      var KNOWN={"0x85b8e2f4":"Metadata too long — the image/description won't fit on-chain. Use a smaller image or shorter description.","0xd92e233d":"A required address is zero.","0x1f2a2005":"Amount is zero.","0x21c4e357":"Launch is closed / not ready."};
+      if(sel&&KNOWN[sel]) return KNOWN[sel];
       return "Contract rejected the launch"+(sel?" ("+sel+")":" (execution reverted, no reason)")+". Likely the fee, whitelist, or the ticker/name is already taken — try a different name/ticker."; }
     return null;
   }
@@ -283,7 +285,11 @@
   function setLogoPreview(url,mark){ var img=$("#dropImg"); img.src=url; img.style.display="block"; $("#dropTxt").style.display="none"; $("#lxDrop").classList.add("loaded"); if(mark)state.logo=url; }
   $("#lxDrop").addEventListener("click",function(){$("#fFile").click()});
   $("#fFile").addEventListener("change",function(e){ var f=e.target.files&&e.target.files[0]; if(!f)return; if(f.size>1.4*1024*1024){toast("Image too large (max ~1MB)");return;} var rd=new FileReader(); rd.onload=async function(){ setLogoPreview(rd.result,false); $("#genMsg").textContent="Uploading image…"; try{ var r=await fetch("/api/launch?action=upload",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data:rd.result})}); var j=await r.json(); if(!r.ok)throw new Error(); state.logo=j.url; $("#genMsg").textContent="Image ready."; }catch(_){ state.logo=rd.result; $("#genMsg").textContent="Image set."; } }; rd.readAsDataURL(f); });
-  async function ensureLogo(){ if(state.logo&&/^https?:/.test(state.logo))return state.logo; var data=state.logo||monogram($("#fSym").value||"OX"); try{ var r=await fetch("/api/launch?action=upload",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data:data})}); var j=await r.json(); if(r.ok&&j.url){state.logo=j.url;return j.url;} }catch(_){} return data; }
+  var LOGO_FALLBACK="https://orlixai.xyz/assets/nft/orlix-mark.png";
+  async function ensureLogo(){ if(state.logo&&/^https?:/.test(state.logo))return state.logo; var data=state.logo||monogram($("#fSym").value||"OX"); try{ var r=await fetch("/api/launch?action=upload",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data:data})}); var j=await r.json(); if(r.ok&&j.url){state.logo=j.url;return j.url;} }catch(_){}
+    // On-chain logo must be a short URL — the factory reverts with MetadataTooLong() on a long
+    // data: URI. If hosting failed, fall back to the hosted ORLIX mark instead of the raw data URI.
+    return LOGO_FALLBACK; }
 
   // ── agents ──
   async function loadAgents(addr){ try{ var r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721"),ids=[]; if(r.ok){var j=await r.json();var mc=CFG.agentNft.toLowerCase(); ids=(j.items||[]).filter(function(it){return((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc}).map(function(it){return parseInt(it.id||it.token_id)}).filter(function(n){return!isNaN(n)});} ids=[...new Set(ids)].sort(function(a,b){return a-b}); state.agents=ids; if(ids.length){ if(state.agentId===null)state.agentId=ids[0]; await pickAgent(state.agentId,true); } else{$("#lxAgents").innerHTML='<span class="lx-note">No ORLIX Agent in this wallet — launch fees go to your wallet, or <a href="/nft" target="_blank">mint an Agent</a>.</span>';} }catch(e){$("#agentNote").textContent="Couldn't load Agents.";} }
@@ -315,6 +321,7 @@
 
       btn.disabled=true; btn.textContent="PREPARING…"; status("Uploading image &amp; reading economics…");
       var logo=await ensureLogo();
+      if(!logo||/^data:/i.test(logo)){ warn("Image couldn't be hosted — launching with the ORLIX mark (a data image can't go on-chain)."); logo=LOGO_FALLBACK; }
       var socials={twitter:($("#fX").value||"").trim(),telegram:($("#fTg").value||"").trim(),discord:"",website:"",farcaster:""};
       // If fees route to an Agent, make sure the Agent's token-bound wallet exists on-chain
       // first — the factory rejects a creator fee recipient that has no deployed account.
