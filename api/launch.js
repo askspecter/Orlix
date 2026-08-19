@@ -51,39 +51,48 @@ function fallbackPackage(idea) {
   return { name, ticker, description: String(idea).slice(0, 180) };
 }
 
-async function generate(idea) {
-  const key = process.env.BANKR_LLM_KEY || '';
-  if (!key) return fallbackPackage(idea);
-  const sys =
-    'You are ORLIX\'s degen token-launch engine on Robinhood Chain. From a one-sentence idea, invent a WILD, memeable launch package that would pop off on crypto Twitter. ' +
-    'Rules: name = punchy, funny or epic, <=28 chars, no generic words like "Token"/"Coin". ticker = 3-6 UPPERCASE letters, clever, easy to shill. ' +
-    'description = 1-2 electric sentences with attitude, <=180 chars. image_prompt = a vivid, unhinged art-direction prompt for a square token mascot/logo: subject, style (e.g. 3D render, neon, glitch, sticker, hyperreal), mood, background — no text/words in the image. ' +
-    'Return ONLY compact JSON: {"name":string,"ticker":string,"description":string,"image_prompt":string}. No markdown.';
+const GEN_SYS =
+  'You are ORLIX\'s degen token-launch engine on Robinhood Chain. From a one-sentence idea, invent a WILD, memeable launch package that would pop off on crypto Twitter. ' +
+  'Rules: name = punchy, funny or epic, <=28 chars, no generic words like "Token"/"Coin". ticker = 3-6 UPPERCASE letters, clever, easy to shill. ' +
+  'description = 1-2 electric sentences with attitude, <=180 chars. image_prompt = a vivid, unhinged art-direction prompt for a square token mascot/logo: subject, style (e.g. 3D render, neon, glitch, sticker, hyperreal), mood, background — no text/words in the image. ' +
+  'Return ONLY compact JSON: {"name":string,"ticker":string,"description":string,"image_prompt":string}. No markdown.';
+
+function parsePkg(txt) {
+  const m = String(txt || '').match(/\{[\s\S]*\}/);
+  if (!m) return null;
   try {
-    const r = await fetch('https://llm.bankr.bot/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'system', content: sys }, { role: 'user', content: String(idea).slice(0, 400) }],
-        max_tokens: 500,
-        temperature: 1.0,
-      }),
-    });
-    const j = await r.json();
-    let txt = j?.choices?.[0]?.message?.content || '';
-    const m = txt.match(/\{[\s\S]*\}/);
-    if (m) {
-      const o = JSON.parse(m[0]);
-      const ticker = String(o.ticker || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-      if (o.name && ticker) return {
-        name: String(o.name).slice(0, 42),
-        ticker,
-        description: String(o.description || '').slice(0, 220),
-        image_prompt: String(o.image_prompt || '').slice(0, 500),
-      };
-    }
+    const o = JSON.parse(m[0]);
+    const ticker = String(o.ticker || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    if (o.name && ticker) return {
+      name: String(o.name).slice(0, 42), ticker,
+      description: String(o.description || '').slice(0, 220),
+      image_prompt: String(o.image_prompt || '').slice(0, 500),
+    };
   } catch (_) {}
+  return null;
+}
+
+async function generate(idea) {
+  // Try Venice (same key as image gen, reliable) then Bankr; deterministic fallback last.
+  const attempts = [];
+  const vkey = process.env.VENICE_API_KEY || '';
+  if (vkey) attempts.push({ url: 'https://api.venice.ai/api/v1/chat/completions', key: vkey, model: 'venice-uncensored' });
+  const bkey = process.env.BANKR_LLM_KEY || '';
+  if (bkey) attempts.push({ url: 'https://llm.bankr.bot/v1/chat/completions', key: bkey, model: 'gpt-4o-mini' });
+  const user = String(idea).slice(0, 400);
+  for (const a of attempts) {
+    try {
+      const r = await fetch(a.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + a.key },
+        body: JSON.stringify({ model: a.model, messages: [{ role: 'system', content: GEN_SYS }, { role: 'user', content: user }], max_tokens: 500, temperature: 1.0 }),
+      });
+      if (!r.ok) continue;
+      const j = await r.json();
+      const pkg = parsePkg(j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
+      if (pkg) return pkg;
+    } catch (_) {}
+  }
   return fallbackPackage(idea);
 }
 
