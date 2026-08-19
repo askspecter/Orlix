@@ -20,15 +20,16 @@ function creds() {
   return c.find((x) => x.url && x.token) || null;
 }
 async function redis(url, token, ...args) {
-  const r = await fetch(url + '/pipeline', {
+  // Upstash single-command REST: POST base URL with a JSON array body ["SET","key","val"].
+  // (The /pipeline endpoint rejects our body with "failed to parse pipeline request".)
+  const r = await fetch(url, {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify([args]),
+    body: JSON.stringify(args),
   });
   const j = await r.json();
-  if (Array.isArray(j) && j[0]) { if (j[0].error) throw new Error(j[0].error); return j[0].result; }
-  if (j.error) throw new Error(j.error);
-  return j.result ?? null;
+  if (j && j.error) throw new Error(j.error);
+  return j ? (j.result ?? null) : null;
 }
 function rid() {
   return Array.from({ length: 20 }, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[(Math.random() * 36) | 0]).join('');
