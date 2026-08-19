@@ -4,17 +4,63 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Launcher — ORLIX · Robinhood Chain</title>
-<meta name="description" content="Coming soon: a native token launchpad on Robinhood Chain — bonding curve, fair launch, built into ORLIX.">
+<meta name="description" content="Launch a token on Robinhood Chain, run by your Agent. Fair bonding curve, pair against ETH or a tokenized stock, creator fees accrue inside your Agent's wallet.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orlixai.xyz/launcher">
-<meta property="og:title" content="Agent Launcher — ORLIX (coming soon)">
+<meta property="og:title" content="Agent Launcher — ORLIX">
 <meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="stylesheet" href="/assets/nft/app.css">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="/assets/nft/tokens.js"></script>
+<script src="/assets/nft/wallet.js"></script>
+<style>
+  .lx-form{display:grid;gap:16px}
+  .lx-row{display:grid;gap:16px}
+  @media(min-width:640px){.lx-row.two{grid-template-columns:1fr 1fr}.lx-row.three{grid-template-columns:1fr 1fr 1fr}}
+  .lx-lbl{display:block;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+  .lx-in{width:100%;background:#0a0c07;border:1px solid var(--line-soft);border-radius:11px;color:var(--ink);
+    font-family:var(--mono);font-size:.9rem;padding:13px 14px;outline:none;transition:.18s}
+  .lx-in:focus{border-color:var(--green)}
+  textarea.lx-in{resize:vertical;min-height:74px;line-height:1.5}
+  .lx-pairs{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .lx-pairs::-webkit-scrollbar{display:none}
+  .lx-pair{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;width:78px;cursor:pointer;
+    padding:12px 6px;border:1px solid var(--line-soft);border-radius:13px;background:#0a0c07;transition:.16s}
+  .lx-pair:hover{border-color:rgba(207,246,5,.4)}
+  .lx-pair.on{border-color:var(--green);background:rgba(207,246,5,.06)}
+  .lx-pair .ic{width:38px;height:38px;border-radius:10px;overflow:hidden;background:#12140d;display:grid;place-items:center}
+  .lx-pair .ic img{width:100%;height:100%;object-fit:cover}
+  .lx-pair .sym{font-size:.72rem;color:var(--ink);font-weight:600}
+  .lx-agents{display:flex;gap:8px;flex-wrap:wrap}
+  .lx-agent{cursor:pointer;font-size:.74rem;color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;
+    padding:8px 14px;background:#0a0c07;transition:.16s}
+  .lx-agent:hover{border-color:rgba(207,246,5,.4);color:var(--ink)}
+  .lx-agent.on{border-color:var(--green);color:var(--green);font-weight:600}
+  .lx-note{font-size:.7rem;color:var(--ink-3);line-height:1.5}
+  .lx-note b{color:var(--ink-2);font-weight:500}
+  .lx-note a{color:var(--green);text-decoration:underline}
+  .lx-cfg{display:flex;flex-direction:column;gap:8px}
+  .lx-cfg label{display:flex;align-items:center;gap:10px;font-size:.76rem;color:var(--ink-2);cursor:pointer}
+  .lx-cfg input{accent-color:var(--green)}
+  .lx-deploy{width:100%;font-size:1rem;padding:16px;font-weight:600;letter-spacing:.04em}
+  .lx-status{font-size:.78rem;line-height:1.5;color:var(--ink-2);margin-top:12px;word-break:break-word}
+  .lx-status a{color:var(--green);text-decoration:underline}
+  .lx-warn{font-size:.7rem;color:#f5c518;line-height:1.5;margin-top:8px}
+  .lx-mode{display:inline-flex;gap:4px;border:1px solid var(--line-soft);border-radius:11px;padding:4px;margin-bottom:6px}
+  .lx-mode button{font-family:var(--mono);font-size:.72rem;color:var(--ink-2);background:none;border:none;cursor:pointer;
+    padding:8px 14px;border-radius:8px;transition:.16s}
+  .lx-mode button.on{background:var(--green);color:#0a0c07;font-weight:600}
+  .lx-chip{display:inline-flex;align-items:center;gap:7px;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px}
+  .lx-chip .d{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .lx-fee{display:flex;justify-content:space-between;font-size:.74rem;color:var(--ink-3);border-top:1px solid var(--line-soft);padding-top:14px;margin-top:4px}
+  .lx-fee b{color:var(--ink);font-weight:500}
+</style>
 </head>
 <body>
 <div class="scanlines" aria-hidden="true"></div>
@@ -27,7 +73,8 @@
     </a>
     <div class="top-nav">
       <a class="ghost hide-sm" href="/amm">NFT AMM</a>
-      <a class="btn" href="/nft">MINT</a>
+      <button class="btn" id="connectBtn">CONNECT</button>
+      <span class="chip" id="walletChip" style="display:none"><span id="walletAddr"></span></span>
       <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
     </div>
   </div>
@@ -48,93 +95,315 @@
 </header>
 
 <main class="wrap">
-  <section class="hero" style="padding:56px 0 26px;text-align:center">
-    <span class="cs-badge"><span class="dot"></span>Coming Soon</span>
-    <h1>Agent <em>Launcher</em>.</h1>
-    <p class="lead" style="margin:0 auto">Pick how you want to launch on Robinhood Chain. Two paths — one built for trusted, curated drops, one for permissionless fair launches. Deploy in a click, trade from day one.</p>
+  <section class="hero" style="padding:52px 0 22px">
+    <span class="lx-chip"><span class="d"></span>Live · Robinhood Chain</span>
+    <h1 style="margin-top:18px">Agent <em>Launcher</em>.</h1>
+    <p class="lead">Launch a token, <b>run by your Agent</b>. Fair bonding curve, pair against ETH or a tokenized stock, auto-graduates to a locked pool. Creator fees accrue <b>inside your Agent's wallet</b>.</p>
   </section>
 
-  <section class="block" style="margin-top:4px">
-    <div class="launch-opts">
-      <button class="launch-opt" data-opt="special" type="button">
-        <span class="lo-soon">SOON</span>
-        <div class="lo-ic">◈</div>
-        <h3>Special Projects</h3>
-        <p>Curated, hand-reviewed launches for teams and partners. Custom supply &amp; vesting, verified deployer, featured placement across the ORLIX terminal.</p>
-        <div class="lo-tags"><span>Curated</span><span>Vesting</span><span>Featured</span></div>
-        <span class="lo-go">Choose Special Projects →</span>
-      </button>
-      <button class="launch-opt" data-opt="safe" type="button">
-        <span class="lo-soon">SOON</span>
-        <div class="lo-ic">◍</div>
-        <h3>Safe Launch</h3>
-        <p>Permissionless fair launch on a bonding curve. Locked liquidity, anti-snipe guard, no presale — the same open rules for everyone from block one.</p>
-        <div class="lo-tags"><span>Bonding curve</span><span>Liquidity locked</span><span>Fair</span></div>
-        <span class="lo-go">Choose Safe Launch →</span>
-      </button>
-    </div>
-  </section>
-
-  <section class="block" style="margin-top:10px">
+  <section class="block">
     <div class="term">
       <div class="term-bar"><i></i><i></i><i></i><span>orlix — launcher.sh</span></div>
       <div class="term-body">
-        <div style="font-size:.9rem;line-height:1.9"><span style="color:var(--green)">&gt;</span> <span class="cs-typed" id="typed"></span><span class="cs-caret"></span></div>
-        <div style="margin-top:22px">
-          <div class="cs-progrow"><span>BUILD STATUS</span><b>IN PROGRESS · 25%</b></div>
-          <div class="cs-bar"><i style="width:25%"></i></div>
+        <div class="lx-mode" id="lxMode">
+          <button data-mode="v2" class="on">Fair Launch · bonding curve</button>
+          <button data-mode="v1">Instant pool</button>
         </div>
+
+        <form class="lx-form" id="lxForm" onsubmit="return false">
+          <div class="lx-row two">
+            <div><span class="lx-lbl">Token name</span><input class="lx-in" id="fName" placeholder="e.g. Couch Trader" maxlength="42"></div>
+            <div><span class="lx-lbl">Ticker</span><input class="lx-in" id="fSym" placeholder="e.g. COUCH" maxlength="11" style="text-transform:uppercase"></div>
+          </div>
+          <div><span class="lx-lbl">Description</span><textarea class="lx-in" id="fDesc" placeholder="A short description of the token" maxlength="300"></textarea></div>
+          <div><span class="lx-lbl">Token image URL</span><input class="lx-in" id="fLogo" placeholder="https://…/logo.png"></div>
+          <div class="lx-row three">
+            <div><span class="lx-lbl">X profile</span><input class="lx-in" id="fX" placeholder="@handle"></div>
+            <div><span class="lx-lbl">Telegram</span><input class="lx-in" id="fTg" placeholder="t.me/…"></div>
+            <div><span class="lx-lbl">Website</span><input class="lx-in" id="fWeb" placeholder="https://…"></div>
+          </div>
+
+          <div id="pairWrap">
+            <span class="lx-lbl">Paired asset — the token graduates into a pool against this</span>
+            <div class="lx-pairs" id="lxPairs"></div>
+          </div>
+
+          <div id="cfgWrap" style="display:none">
+            <span class="lx-lbl">Launch config</span>
+            <div class="lx-cfg" id="lxCfg"></div>
+          </div>
+
+          <div>
+            <span class="lx-lbl">Run under Agent — creator fees accrue in its wallet</span>
+            <div class="lx-agents" id="lxAgents"><span class="lx-note" id="agentNote">Connect your wallet to pick an Agent.</span></div>
+          </div>
+
+          <div class="lx-row two">
+            <div><span class="lx-lbl">Dev buy (optional, ETH)</span><input class="lx-in" id="fBuy" placeholder="0.0" inputmode="decimal"></div>
+            <div><span class="lx-lbl">Creator tax %  (0–10)</span><input class="lx-in" id="fTax" placeholder="0" inputmode="decimal"></div>
+          </div>
+
+          <div class="lx-fee"><span>Launch fee</span><b id="lxFee">—</b></div>
+
+          <button class="btn lx-deploy" id="deployBtn" type="button">CONNECT WALLET TO LAUNCH</button>
+          <div class="lx-warn" id="lxWarn" style="display:none"></div>
+          <div class="lx-status" id="lxStatus"></div>
+        </form>
       </div>
     </div>
-  </section>
-
-  <section class="hero" style="padding:10px 0 46px">
-    <p class="cs-note">First up: mint an Agent and trade on the live AMM. The Launcher is on the roadmap next.</p>
-    <div class="cs-cta">
-      <a class="btn mint-cta" href="/nft">MINT AN AGENT →</a>
-      <a class="btn outline mint-cta" href="https://x.com/orlixai" target="_blank" rel="noopener">FOLLOW FOR UPDATES</a>
-    </div>
+    <p class="lx-note" style="margin-top:14px;text-align:center">
+      Non-custodial — every transaction is signed in your own wallet. Built on the Pons launch protocol on Robinhood Chain.
+    </p>
   </section>
 </main>
-
-<div class="toast" id="toast"></div>
-
-<style>
-  .launch-opts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:640px){.launch-opts{grid-template-columns:1fr}}
-  .launch-opt{position:relative;text-align:left;background:linear-gradient(180deg,rgba(207,246,5,.03),rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:26px 24px 22px;cursor:pointer;color:var(--ink,#E9ECE2);font-family:inherit;transition:border-color .18s,transform .18s,background .18s;display:flex;flex-direction:column}
-  .launch-opt:hover{border-color:rgba(207,246,5,.5);transform:translateY(-3px);background:linear-gradient(180deg,rgba(207,246,5,.06),rgba(255,255,255,.01))}
-  .lo-soon{position:absolute;top:16px;right:16px;font-size:.52rem;letter-spacing:.22em;color:#050505;background:var(--green,#CFF605);border-radius:6px;padding:4px 8px;font-weight:700}
-  .lo-ic{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--green,#CFF605);background:rgba(207,246,5,.08);border:1px solid rgba(207,246,5,.2);margin-bottom:16px}
-  .launch-opt h3{font-size:1.28rem;margin:0 0 8px;letter-spacing:.01em}
-  .launch-opt p{font-size:.86rem;line-height:1.6;color:#9aa08d;margin:0 0 16px;flex:1}
-  .lo-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
-  .lo-tags span{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#c8ceba;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:5px 10px}
-  .lo-go{font-size:.78rem;font-weight:600;letter-spacing:.03em;color:var(--green,#CFF605)}
-</style>
 
 <footer>
   <div class="foot-in">
     <div class="fl"><a href="/">Home</a><a href="/nft">Mint NFT</a><a href="/amm">NFT AMM</a><a href="/agents">Agent Wallets</a></div>
-    <small>© 2026 ORLIX · Robinhood Chain · roadmap · not financial advice</small>
+    <small>© 2026 ORLIX · Robinhood Chain · a third-party interface on Pons · not financial advice</small>
   </div>
 </footer>
 
+<div class="toast" id="toast"></div>
+
 <script>
 (function(){
-  var b=document.getElementById('menuBtn'),p=document.getElementById('menuPanel');
-  if(b&&p){b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
-  var txt="deploy --curve=bonding --chain=robinhood … wiring the launchpad.";
-  var el=document.getElementById('typed'),i=0;
-  (function tick(){if(!el)return;if(i<=txt.length){el.textContent=txt.slice(0,i++);setTimeout(tick,34)}})();
-  var toast=document.getElementById('toast'),tt;
-  function say(m){if(!toast)return;toast.textContent=m;toast.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){toast.classList.remove('show')},1900)}
-  Array.prototype.forEach.call(document.querySelectorAll('.launch-opt'),function(btn){
-    btn.addEventListener('click',function(){
-      var o=btn.getAttribute('data-opt');
-      say((o==='safe'?'Safe Launch':'Special Projects')+' — coming soon. Follow @orlixai for the go-live.');
-    });
-  });
+  "use strict";
+  var $=function(s){return document.querySelector(s)};
+  // menu
+  (function(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})})();
+
+  var CFG={
+    chainIdHex:"0x1237", chainId:4663,
+    rpc:"https://rpc.mainnet.chain.robinhood.com/",
+    explorer:"https://robinhoodchain.blockscout.com",
+    // Pons v2 (docs.ponsfamily.com/v2)
+    v2Factory:"0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e",
+    v2LaunchAndBuy:"0xe33E9E479dF8802cb0866d5d05258bEc4cF62948",
+    // Pons v1 (instant Uniswap V3 pool, WETH)
+    v1Factory:"0xA5aAb3F0c6EeadF30Ef1D3Eb997108E976351feB",
+    v1FeeWei:"500000000000000", // 0.0005 ETH
+    // ORLIX Agent (ERC-6551)
+    agentNft:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",
+    registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",
+    accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06"
+  };
+  var ZERO="0x0000000000000000000000000000000000000000";
+  var SALT0="0x0000000000000000000000000000000000000000000000000000000000000000";
+
+  // RWA quote tokens (from Pons registry). ETH native is always first.
+  var PAIRS=[
+    {sym:"ETH",  name:"Ether",             addr:ZERO},
+    {sym:"USDG", name:"Global Dollar",     addr:"0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"},
+    {sym:"NVDA", name:"NVIDIA",            addr:"0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC"},
+    {sym:"TSLA", name:"Tesla",             addr:"0x322F0929c4625eD5bAd873c95208D54E1c003b2d"},
+    {sym:"AAPL", name:"Apple",             addr:"0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9"},
+    {sym:"SPY",  name:"S&P 500 ETF",       addr:"0x117cc2133c37B721F49dE2A7a74833232B3B4C0C"},
+    {sym:"GME",  name:"GameStop",          addr:"0x1b0E319c6A659F002271B69dB8A7df2F911c153E"},
+    {sym:"COIN", name:"Coinbase",          addr:"0x6330D8C3178a418788dF01a47479c0ce7CCF450b"},
+    {sym:"META", name:"Meta Platforms",    addr:"0xc0D6457C16Cc70d6790Dd43521C899C87ce02f35"},
+    {sym:"MSFT", name:"Microsoft",         addr:"0xe93237C50D904957Cf27E7B1133b510C669c2e74"},
+    {sym:"AMZN", name:"Amazon",            addr:"0x12f190a9F9d7D37a250758b26824B97CE941bF54"},
+    {sym:"GOOGL",name:"Alphabet Class A",  addr:"0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3"},
+    {sym:"AMD",  name:"Advanced Micro Devices",addr:"0x86923f96303D656E4aa86D9d42D1e57ad2023fdC"},
+    {sym:"PLTR", name:"Palantir",          addr:"0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a"},
+    {sym:"SPCX", name:"SpaceX Class A",    addr:"0x4a0E65A3EcceC6dBe60AE065F2e7bb85Fae35eEa"},
+    {sym:"CRCL", name:"Circle",            addr:"0xdF0992E440dD0be65BD8439b609d6D4366bf1CB5"},
+    {sym:"MU",   name:"Micron",            addr:"0xfF080c8ce2E5feadaCa0Da81314Ae59D232d4afD"},
+    {sym:"SNDK", name:"SanDisk",           addr:"0xB90A19fF0Af67f7779afF50A882A9CfF42446400"}
+  ];
+
+  // ─── ABIs (verified from Pons v2 docs / launchpad repo) ───
+  var V2_ABI=[
+    "function launchToken((string name,string symbol,string logo,string description,(string twitter,string telegram,string discord,string website,string farcaster) socials,address creatorFeeRecipient,uint16 creatorTaxBps,bool buybackEnabled,bytes32 expectedEconomics,bytes32 salt) params,uint256 launchConfigId,address pairToken,address[] snipeTaxExemptions) payable returns (address token,address curve)",
+    "function previewLaunchEconomics(uint256 launchConfigId,address pairToken) view returns (bytes32)",
+    "function launchFee() view returns (uint256)",
+    "function launchConfigCount() view returns (uint256)",
+    "function getLaunchConfig(uint256 id) view returns ((uint256 supply,uint256 curveFeeBps,uint256 phantomQuote,uint256 graduationThreshold,uint24 poolFee,int24 tickSpacing,bool enabled))",
+    "function approvedPairTokens(address pairToken) view returns (bool)",
+    "function canLaunch(address account) view returns (bool)",
+    "function maxCreatorTaxBps() view returns (uint16)",
+    "event TokenLaunched(address indexed token,address indexed curve,address indexed deployer,address pairToken,uint256 launchConfigId,uint256 graduationThreshold)"
+  ];
+  var LAB_ABI=[
+    "function launchAndBuy((string name,string symbol,string logo,string description,(string twitter,string telegram,string discord,string website,string farcaster) socials,address creatorFeeRecipient,uint16 creatorTaxBps,bool buybackEnabled,bytes32 expectedEconomics,bytes32 salt) params,uint256 launchConfigId,address pairToken,uint256 quoteIn,uint256 minTokensOut,address recipient,address[] snipeTaxExemptions) payable returns (address token,address curve,uint256 tokensOut)"
+  ];
+  var V1_ABI=[
+    "function launchToken((string name,string symbol,string logo,string description,(string twitter,string telegram,string discord,string website,string farcaster) socials,address feeWallet) params,uint256 launchConfigId,uint256 dexId,bytes32 salt) payable returns (address token,address pool)",
+    "event TokenLaunched(address indexed token,address indexed pool,address indexed deployer,uint256 supply)"
+  ];
+  var REG_ABI=["function account(address implementation,bytes32 salt,uint256 chainId,address tokenContract,uint256 tokenId) view returns (address)"];
+
+  var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
+  var roV2=new ethers.Contract(CFG.v2Factory,V2_ABI,ro);
+  var roReg=new ethers.Contract(CFG.registry,REG_ABI,ro);
+
+  var state={mode:"v2",pair:PAIRS[0],cfgId:0,fee:0n,addr:null,agents:[],agentId:null,agentAddr:null,configs:[]};
+
+  var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
+  function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
+  function pairImg(p){ if(window.tokenImg){return window.tokenImg(p.sym,38,p.addr)} return '<span style="color:var(--green)">'+p.sym[0]+'</span>'; }
+
+  // ── pair tiles ──
+  function renderPairs(){
+    var el=$("#lxPairs");
+    el.innerHTML=PAIRS.map(function(p,i){
+      return '<button type="button" class="lx-pair'+(state.pair.sym===p.sym?' on':'')+'" data-i="'+i+'" title="'+p.name+'"><span class="ic">'+pairImg(p)+'</span><span class="sym">'+p.sym+'</span></button>';
+    }).join("");
+    el.querySelectorAll(".lx-pair").forEach(function(b){b.addEventListener("click",function(){state.pair=PAIRS[+b.dataset.i];renderPairs();refreshFee()})});
+  }
+
+  // ── launch configs + fee (read live) ──
+  async function loadConfigs(){
+    try{
+      var fee=await roV2.launchFee(); state.fee=fee; $("#lxFee").textContent=ethers.formatEther(fee)+" ETH";
+    }catch(e){ $("#lxFee").textContent="0.0005 ETH"; }
+    try{
+      var n=Number(await roV2.launchConfigCount());
+      var cfgs=[];
+      for(var i=0;i<n && i<8;i++){ try{var c=await roV2.getLaunchConfig(i); if(c.enabled) cfgs.push({id:i,supply:c.supply,grad:c.graduationThreshold,poolFee:Number(c.poolFee)});}catch(_){}}
+      state.configs=cfgs;
+      if(cfgs.length){ state.cfgId=cfgs[0].id; renderConfigs(); }
+    }catch(e){}
+  }
+  function renderConfigs(){
+    if(state.mode!=="v2"||!state.configs.length){ $("#cfgWrap").style.display="none"; return; }
+    $("#cfgWrap").style.display="";
+    $("#lxCfg").innerHTML=state.configs.map(function(c){
+      var sup=(c.supply/(10n**18n)).toString();
+      return '<label><input type="radio" name="lxcfg" '+(state.cfgId===c.id?"checked":"")+' data-id="'+c.id+'"> #'+c.id+' · supply '+Intl.NumberFormat("en",{notation:"compact"}).format(Number(sup))+' · graduates ~'+ethers.formatEther(c.grad)+' · pool fee '+c.poolFee+'</label>';
+    }).join("");
+    $("#lxCfg").querySelectorAll("input").forEach(function(r){r.addEventListener("change",function(){state.cfgId=+r.dataset.id;refreshFee()})});
+  }
+  function refreshFee(){ $("#lxFee").textContent = state.fee? ethers.formatEther(state.fee)+" ETH" : (state.mode==="v1"?"0.0005 ETH":"—"); }
+
+  // ── agents ──
+  async function loadAgents(addr){
+    var note=$("#agentNote");
+    try{
+      var r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721");
+      var ids=[];
+      if(r.ok){var j=await r.json();var mc=CFG.agentNft.toLowerCase();
+        ids=(j.items||[]).filter(function(it){return((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc}).map(function(it){return parseInt(it.id||it.token_id)}).filter(function(n){return!isNaN(n)});}
+      ids=[...new Set(ids)].sort(function(a,b){return a-b});
+      state.agents=ids;
+      if(ids.length){ if(state.agentId===null) state.agentId=ids[0]; await pickAgent(state.agentId); renderAgents(); }
+      else { $("#lxAgents").innerHTML='<span class="lx-note">No ORLIX Agent in this wallet — you can still launch (fees go to your wallet), or <a href="/nft" target="_blank">mint an Agent</a> to bind fees to it.</span>'; }
+    }catch(e){ if(note) note.textContent="Couldn't load Agents."; }
+  }
+  async function pickAgent(id){
+    state.agentId=id;
+    try{ state.agentAddr=await roReg.account(CFG.accountImpl,SALT0,CFG.chainId,CFG.agentNft,id); }catch(_){ state.agentAddr=null; }
+    renderAgents();
+  }
+  function renderAgents(){
+    if(!state.agents.length)return;
+    var w=state.agentAddr?(' · fees → <span style="color:var(--green)">'+short(state.agentAddr)+'</span>'):'';
+    $("#lxAgents").innerHTML=state.agents.map(function(id){return '<button type="button" class="lx-agent'+(state.agentId===id?' on':'')+'" data-id="'+id+'">Agent #'+id+'</button>'}).join("")
+      +'<div class="lx-note" style="width:100%;margin-top:4px">Creator fees accrue <b>inside this Agent\'s wallet</b>'+w+' — selling the Agent sells its fee stream too.</div>';
+    $("#lxAgents").querySelectorAll(".lx-agent").forEach(function(b){b.addEventListener("click",function(){pickAgent(+b.dataset.id)})});
+  }
+
+  // ── mode ──
+  $("#lxMode").querySelectorAll("button").forEach(function(b){b.addEventListener("click",function(){
+    state.mode=b.dataset.mode;
+    $("#lxMode").querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b)});
+    $("#pairWrap").style.display = state.mode==="v2" ? "" : "none";
+    renderConfigs(); refreshFee();
+  })});
+
+  // ── connect ──
+  function setConnected(a){
+    state.addr=a; $("#connectBtn").style.display="none";
+    var chip=$("#walletChip"); chip.style.display="inline-flex"; $("#walletAddr").textContent=short(a);
+    $("#deployBtn").textContent="LAUNCH TOKEN";
+    loadAgents(a);
+  }
+  function connect(){
+    if(window.ORLIX_WALLET){ ORLIX_WALLET.connect(function(a){toast("Wallet connected");setConnected(a)}); return; }
+    if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
+    window.ethereum.request({method:"eth_requestAccounts"}).then(function(a){if(a&&a[0])setConnected(a[0])});
+  }
+  $("#connectBtn").addEventListener("click",connect);
+
+  // ── deploy ──
+  function warn(m){var w=$("#lxWarn");if(!m){w.style.display="none";return}w.style.display="";w.textContent="⚠ "+m}
+  function status(html){$("#lxStatus").innerHTML=html}
+
+  async function deploy(){
+    if(!state.addr){ connect(); return; }
+    var name=$("#fName").value.trim(), sym=$("#fSym").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(!name||sym.length<2){ toast("Enter a name and ticker"); return; }
+    var btn=$("#deployBtn"); warn(""); status("");
+    try{
+      var bp=new ethers.BrowserProvider(window.ethereum);
+      var net=await bp.getNetwork();
+      if(Number(net.chainId)!==CFG.chainId){
+        try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); bp=new ethers.BrowserProvider(window.ethereum); }
+        catch(_){ toast("Switch to Robinhood Chain"); return; }
+      }
+      var signer=await bp.getSigner();
+      btn.disabled=true; btn.textContent="PREPARING…";
+
+      var socials={twitter:($("#fX").value||"").trim(),telegram:($("#fTg").value||"").trim(),discord:"",website:($("#fWeb").value||"").trim(),farcaster:""};
+      var creator=state.agentAddr||ZERO;
+      var taxPct=Math.max(0,Math.min(10,Number($("#fTax").value||0)));
+      var taxBps=Math.round(taxPct*100);
+      var salt=ethers.hexlify(ethers.randomBytes(32));
+      var devBuy=$("#fBuy").value&&Number($("#fBuy").value)>0?ethers.parseEther($("#fBuy").value):0n;
+
+      if(state.mode==="v1"){
+        var v1=new ethers.Contract(CFG.v1Factory,V1_ABI,signer);
+        var p1={name:name,symbol:sym,logo:($("#fLogo").value||"").trim(),description:($("#fDesc").value||"").trim(),socials:socials,feeWallet:(creator!==ZERO?creator:state.addr)};
+        var val1=BigInt(CFG.v1FeeWei)+devBuy;
+        btn.textContent="SIGN IN WALLET…"; status("Deploying via Pons v1 → Uniswap V3 pool…");
+        var tx1=await v1.launchToken(p1,0,0,salt,{value:val1});
+        status("Confirming… <span style=\"color:var(--ink-3)\">"+tx1.hash.slice(0,12)+"…</span>");
+        var rc1=await tx1.wait(); onLaunched(rc1,v1.interface);
+        return;
+      }
+
+      // v2 — read economics + fee live
+      var pairAddr=state.pair.addr;
+      var f=new ethers.Contract(CFG.v2Factory,V2_ABI,signer);
+      var econ=await roV2.previewLaunchEconomics(state.cfgId,pairAddr);
+      var fee=state.fee||await roV2.launchFee();
+      try{ var ok=await roV2.canLaunch(state.addr); if(ok===false) warn("canLaunch() is false for your wallet — if it's not allowed the tx reverts (only gas lost)."); }catch(_){}
+
+      var params={name:name,symbol:sym,logo:($("#fLogo").value||"").trim(),description:($("#fDesc").value||"").trim(),
+        socials:socials,creatorFeeRecipient:creator,creatorTaxBps:taxBps,buybackEnabled:true,expectedEconomics:econ,salt:salt};
+
+      btn.textContent="SIGN IN WALLET…";
+      var tx;
+      if(devBuy>0n && pairAddr===ZERO){
+        var lab=new ethers.Contract(CFG.v2LaunchAndBuy,LAB_ABI,signer);
+        var rp=Object.assign({},params,{creatorFeeRecipient:(creator!==ZERO?creator:state.addr)});
+        status("Launch + dev buy in one tx…");
+        tx=await lab.launchAndBuy(rp,state.cfgId,pairAddr,devBuy,0n,state.addr,[],{value:fee+devBuy});
+      } else {
+        if(devBuy>0n && pairAddr!==ZERO) warn("Dev buy is only wired for ETH pairs — launching without the dev buy.");
+        status("Deploying via Pons v2 → bonding curve (pair "+state.pair.sym+")…");
+        tx=await f.launchToken(params,state.cfgId,pairAddr,[],{value:fee});
+      }
+      status("Confirming… <span style=\"color:var(--ink-3)\">"+tx.hash.slice(0,12)+"…</span>");
+      var rc=await tx.wait(); onLaunched(rc,f.interface);
+    }catch(e){
+      btn.disabled=false; btn.textContent="LAUNCH TOKEN";
+      var msg=(e&&(e.shortMessage||e.reason||e.message))||"Transaction failed";
+      status('<span style="color:#ff6b6b">Failed: '+String(msg).slice(0,120)+'</span>');
+    }
+  }
+  function onLaunched(rc,iface){
+    var token=null;
+    try{ for(var i=0;i<rc.logs.length;i++){ try{var pl=iface.parseLog(rc.logs[i]); if(pl&&pl.name==="TokenLaunched"){token=pl.args.token;break;}}catch(_){}} }catch(_){}
+    var btn=$("#deployBtn"); btn.textContent="LAUNCHED ✓"; btn.disabled=false;
+    if(token){ status('Launched <b style="color:var(--green)">$'+$("#fSym").value.toUpperCase()+'</b> → <a href="'+CFG.explorer+'/token/'+token+'" target="_blank" rel="noopener">'+short(token)+' ↗</a>'+(state.agentAddr?'<br>Creator fees route to Agent #'+state.agentId+'.':'')); }
+    else { status('Launched ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>'); }
+  }
+  $("#deployBtn").addEventListener("click",deploy);
+
+  // init
+  renderPairs(); loadConfigs();
 })();
 </script>
 </body>
