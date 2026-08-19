@@ -404,7 +404,7 @@
     var token=null;
     try{for(var i=0;i<rc.logs.length;i++){try{var pl=iface.parseLog(rc.logs[i]); if(pl&&pl.name==="TokenLaunched"){token=pl.args.token;break;}}catch(_){}}}catch(_){}
     var btn=$("#deployBtn"); btn.textContent="LAUNCHED ✓"; btn.disabled=false;
-    if(token){ status('Launched <b style="color:var(--green)">$'+$("#fSym").value.toUpperCase()+'</b> → <a href="'+CFG.explorer+'/token/'+token+'" target="_blank" rel="noopener">'+short(token)+' ↗</a>'+(state.agentAddr?'<br>Creator fees route to Agent #'+state.agentId+'.':'')); }
+    if(token){ status('Launched <b style="color:var(--green)">$'+$("#fSym").value.toUpperCase()+'</b> → <a href="/curve?ca='+token+'">Trade &amp; track ↗</a> · <a href="'+CFG.explorer+'/token/'+token+'" target="_blank" rel="noopener">explorer</a>'+(state.agentAddr?'<br>Creator fees route to Agent #'+state.agentId+'.':'')); }
     else{ status('Launched ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>'); }
   }
   $("#deployBtn").addEventListener("click",deploy);
