@@ -386,22 +386,36 @@
 
   // ── FEED (the floor) ──
   var items=[], filter="all";
-  async function getLogsRetry(flt){ for(var k=0;k<3;k++){ try{ return await ro.getLogs(flt); }catch(_){ await new Promise(function(r){setTimeout(r,600)}); } } return null; /* null = failed after retries */ }
+  var TL_TOPIC=""; try{TL_TOPIC=iface.getEvent("TokenLaunched").topicHash.toLowerCase();}catch(_){}
   var feedRetried=false;
+  // Index launches from Blockscout's factory logs (browser-reliable, newest-first,
+  // paginated) instead of RPC getLogs — the public RPC's getLogs is flaky from mobile.
   async function indexLaunches(){
-    var TL_TOPIC=null; try{TL_TOPIC=iface.getEvent("TokenLaunched").topicHash;}catch(_){}
-    var latest; try{ latest=await ro.getBlockNumber(); }catch(_){ if(!items.length)$("#flGrid").innerHTML='<div class="fl-load">Reaching the chain…</div>'; return retryFeedSoon(); }
-    var lookback=1500000n, chunk=150000n, start=latest>lookback?latest-lookback:0n, out=[], anyOk=false;
-    for(var to=latest; to>=start; to-=chunk){ var from=(to-chunk+1n>start)?(to-chunk+1n):start; var flt={address:CFG.v2Factory,fromBlock:from,toBlock:to}; if(TL_TOPIC)flt.topics=[TL_TOPIC];
-      var logs=await getLogsRetry(flt); if(logs===null) continue; anyOk=true;
-      for(var i=logs.length-1;i>=0;i--){ try{var pl=iface.parseLog(logs[i]); if(pl&&pl.name==="TokenLaunched"){ out.push({token:pl.args.token,curve:pl.args.curve,deployer:(pl.args.deployer||"").toLowerCase(),pair:pl.args.pairToken,threshold:pl.args.graduationThreshold,block:Number(logs[i].blockNumber)}); }}catch(_){}}
-      if(out.length>=40)break; if(from===start)break; }
+    var out=[], ok=false;
+    try{
+      var base=CFG.explorer+"/api/v2/addresses/"+CFG.v2Factory+"/logs", next="";
+      for(var page=0; page<5; page++){
+        var r=await fetch(base+(next?("?"+next):"")); if(!r.ok)break; ok=true;
+        var j=await r.json();
+        (j.items||[]).forEach(function(it){
+          var tp=it.topics||[]; if(!tp[0]||(TL_TOPIC&&String(tp[0]).toLowerCase()!==TL_TOPIC))return;
+          if(!tp[1]||!tp[2])return;
+          var token="0x"+String(tp[1]).slice(-40), curve="0x"+String(tp[2]).slice(-40);
+          var deployer=tp[3]?("0x"+String(tp[3]).slice(-40)).toLowerCase():"";
+          var d=(it.data||"0x").replace(/^0x/,""); var pair=ZERO, thr=0n;
+          if(d.length>=192){ pair="0x"+d.slice(24,64); try{thr=BigInt("0x"+d.slice(128,192));}catch(_){} }
+          out.push({token:token,curve:curve,deployer:deployer,pair:pair,threshold:thr,block:Number(it.block_number)||0});
+        });
+        if(out.length>=40)break;
+        var np=j.next_page_params; if(!np)break; next=new URLSearchParams(np).toString();
+      }
+    }catch(_){}
     // merge optimistic entries (a just-launched token the indexer hasn't caught yet)
     var seen={}; out.forEach(function(o){seen[o.token.toLowerCase()]=1;});
     items.forEach(function(o){ if(o&&o.token&&!seen[o.token.toLowerCase()]) out.push(o); });
     var merged=out.sort(function(a,b){return b.block-a.block}).slice(0,40);
     if(!merged.length){
-      if(!anyOk){ if(!items.length)$("#flGrid").innerHTML='<div class="fl-load">Reaching the chain…</div>'; return retryFeedSoon(); } // transient failure: keep trying, never wipe
+      if(!ok){ if(!items.length)$("#flGrid").innerHTML='<div class="fl-load">Reaching the chain…</div>'; return retryFeedSoon(); }
       $("#flGrid").innerHTML='<div class="fl-load">No launches yet. <a href="#" id="beFirst" style="color:var(--green)">Be the first →</a></div>'; var bf=$("#beFirst"); if(bf)bf.addEventListener("click",function(e){e.preventDefault();openModal()}); return;
     }
     items=merged; render(); enrichAll();
