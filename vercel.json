@@ -176,6 +176,11 @@
       "source": "/curve.html",
       "destination": "/curve",
       "permanent": true
+    },
+    {
+      "source": "/floor.html",
+      "destination": "/floor",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -286,6 +291,10 @@
     {
       "source": "/curve",
       "destination": "/curve.html"
+    },
+    {
+      "source": "/floor",
+      "destination": "/floor.html"
     }
   ]
 }

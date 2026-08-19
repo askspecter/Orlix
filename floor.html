@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Floor — ORLIX Agent Launcher</title>
+<meta name="description" content="Every token launched on Robinhood Chain — live bonding curves, progress to graduation, and the tokens running on the curve now.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/nft/app.css">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="/assets/nft/tokens.js"></script>
+<script src="/assets/nft/wallet.js"></script>
+<style>
+  .fl-wrap{max-width:960px}
+  .fl-top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .fl-search{flex:1 1 240px;background:#0a0c07;border:1px solid var(--line-soft);border-radius:11px;color:var(--ink);font-family:var(--mono);font-size:.85rem;padding:12px 14px;outline:none}
+  .fl-search:focus{border-color:var(--green)}
+  .fl-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .fl-f{font-family:var(--mono);font-size:.72rem;color:var(--ink-2);background:#0a0c07;border:1px solid var(--line-soft);border-radius:999px;padding:9px 16px;cursor:pointer;transition:.16s;letter-spacing:.04em}
+  .fl-f:hover{border-color:rgba(207,246,5,.4)}
+  .fl-f.on{border-color:var(--green);color:var(--green);font-weight:600}
+  .fl-f b{color:var(--ink-3);font-weight:400;margin-left:6px}
+  .fl-f.on b{color:var(--green)}
+  .fl-grid{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:660px){.fl-grid{grid-template-columns:1fr 1fr}}
+  .fl-card{border:1px solid var(--line-soft);border-radius:15px;background:var(--panel);padding:16px;cursor:pointer;transition:.16s;display:block;color:inherit}
+  .fl-card:hover{border-color:rgba(207,246,5,.45);transform:translateY(-2px)}
+  .fl-card.grad{border-color:rgba(207,246,5,.35)}
+  .fl-h{display:flex;align-items:center;gap:12px}
+  .fl-lg{width:44px;height:44px;border-radius:11px;overflow:hidden;background:#12140d;flex:none;display:grid;place-items:center;color:var(--green);font-weight:700}
+  .fl-lg img{width:100%;height:100%;object-fit:cover}
+  .fl-nm b{display:block;color:var(--ink);font-size:1rem;font-weight:600}
+  .fl-nm span{display:block;font-size:.72rem;color:var(--ink-2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fl-badge{margin-left:auto;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px;border-radius:999px;border:1px solid var(--line-soft);color:var(--ink-2)}
+  .fl-badge.live{color:var(--green);border-color:rgba(207,246,5,.4)}
+  .fl-badge.grad{background:var(--green);color:#0a0c07;border-color:var(--green)}
+  .fl-bar{height:7px;border-radius:100px;background:#141710;overflow:hidden;margin:14px 0 8px}
+  .fl-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green-deep),var(--green));border-radius:100px;width:0;transition:width .6s var(--ease)}
+  .fl-meta{display:flex;justify-content:space-between;font-size:.7rem;color:var(--ink-3)}
+  .fl-meta b{color:var(--ink-2);font-weight:500}
+  .fl-pair{font-size:.6rem;color:var(--ink-3);border:1px solid var(--line-soft);border-radius:6px;padding:3px 7px}
+  .fl-load{padding:60px 20px;text-align:center;color:var(--ink-3);font-size:.85rem;grid-column:1/-1}
+  .fl-skel{opacity:.5}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/"><img src="/assets/nft/orlix-mark.png" alt="ORLIX" width="30" height="30"><b>ORLIX<sup>®</sup></b></a>
+    <div class="top-nav">
+      <a class="ghost hide-sm" href="/curve">Trade</a>
+      <a class="btn" href="/launcher">LAUNCH ↗</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
+    </div>
+  </div>
+  <nav class="menu-panel" id="menuPanel" aria-label="Menu">
+    <a href="/">Home</a><a href="/launcher">Agent Launcher</a><a href="/floor" class="on">The Floor</a><a href="/curve">Trade a token</a>
+    <a href="/nft">Mint NFT</a><a href="/amm">NFT AMM</a><a href="/agents">Agent Wallets</a><a href="/stock">Stock Desk</a>
+    <a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
+  </nav>
+</header>
+
+<main class="wrap fl-wrap">
+  <section class="hero" style="padding:44px 0 16px">
+    <h1>The <em>Floor</em>.</h1>
+    <p class="lead">Every token launched through the Agent Launcher — live bonding curves and their progress to graduation. All LP locks are permanent.</p>
+  </section>
+
+  <div class="fl-top">
+    <input class="fl-search" id="flSearch" placeholder="Search name, ticker, or CA">
+    <a class="btn" href="/launcher">Launch a token →</a>
+  </div>
+  <div class="fl-filters" id="flFilters">
+    <button class="fl-f on" data-f="all">All <b id="cAll">·</b></button>
+    <button class="fl-f" data-f="curve">On curve <b id="cCurve">·</b></button>
+    <button class="fl-f" data-f="grad">Graduated <b id="cGrad">·</b></button>
+    <button class="fl-f" data-f="mine">My launches</button>
+  </div>
+
+  <div class="fl-grid" id="flGrid"><div class="fl-load">Indexing recent launches…</div></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s)};
+  (function(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})})();
+
+  var CFG={ chainId:4663, rpc:"https://rpc.mainnet.chain.robinhood.com/", explorer:"https://robinhoodchain.blockscout.com", v2Factory:"0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e" };
+  var ZERO="0x0000000000000000000000000000000000000000";
+  var PAIR_SYM={"0x5fc5360d0400a0fd4f2af552add042d716f1d168":"USDG","0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec":"NVDA","0x322f0929c4625ed5bad873c95208d54e1c003b2d":"TSLA","0xaf3d76f1834a1d425780943c99ea8a608f8a93f9":"AAPL","0x117cc2133c37b721f49de2a7a74833232b3b4c0c":"SPY","0x1b0e319c6a659f002271b69db8a7df2f911c153e":"GME","0x6330d8c3178a418788df01a47479c0ce7ccf450b":"COIN","0xc0d6457c16cc70d6790dd43521c899c87ce02f35":"META","0xe93237c50d904957cf27e7b1133b510c669c2e74":"MSFT","0x12f190a9f9d7d37a250758b26824b97ce941bf54":"AMZN","0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3":"GOOGL"};
+  function symOf(a){if(!a||a===ZERO)return"ETH";return PAIR_SYM[a.toLowerCase()]||"quote"}
+
+  var LAUNCH_EVT=["event TokenLaunched(address indexed token,address indexed curve,address indexed deployer,address pairToken,uint256 launchConfigId,uint256 graduationThreshold)"];
+  var TOKEN_ABI=["function symbol() view returns (string)","function name() view returns (string)","function getTokenInfo() view returns (address d,string logo,string desc,(string a,string b,string c,string e,string f) s)"];
+  var CURVE_ABI=["function realQuoteReserve() view returns (uint256)","function graduationThreshold() view returns (uint256)","function graduated() view returns (bool)"];
+
+  var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
+  var iface=new ethers.Interface(LAUNCH_EVT);
+  var items=[], filter="all", myAddr=null;
+
+  var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},1800)}
+  function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
+  function fmt(n){n=Number(n);if(!isFinite(n)||n===0)return"0";if(n<0.001)return n.toExponential(1);if(n<1)return n.toPrecision(2);return n.toLocaleString("en",{maximumFractionDigits:n<1000?1:0})}
+
+  // wallet (for "my launches")
+  if(window.ethereum){ window.ethereum.request({method:"eth_accounts"}).then(function(a){if(a&&a[0])myAddr=a[0].toLowerCase()}).catch(function(){}); }
+
+  async function indexLaunches(){
+    try{
+      var latest=await ro.getBlockNumber();
+      var lookback=400000n, chunk=15000n, start=latest>lookback?latest-lookback:0n, out=[];
+      for(var to=latest; to>=start; to-=chunk){
+        var from=(to-chunk+1n>start)?(to-chunk+1n):start;
+        var logs=await ro.getLogs({address:CFG.v2Factory,fromBlock:from,toBlock:to}).catch(()=>[]);
+        for(var i=logs.length-1;i>=0;i--){ try{var pl=iface.parseLog(logs[i]); if(pl&&pl.name==="TokenLaunched"){
+          out.push({token:pl.args.token,curve:pl.args.curve,deployer:(pl.args.deployer||"").toLowerCase(),pair:pl.args.pairToken,threshold:pl.args.graduationThreshold,block:Number(logs[i].blockNumber)});
+        }}catch(_){}}
+        if(out.length>=40)break; if(from===start)break;
+      }
+      items=out.sort(function(a,b){return b.block-a.block}).slice(0,40);
+      if(!items.length){ $("#flGrid").innerHTML='<div class="fl-load">No launches indexed yet. <a href="/launcher" style="color:var(--green)">Be the first →</a></div>'; return; }
+      renderSkeleton(); enrichAll();
+    }catch(e){ $("#flGrid").innerHTML='<div class="fl-load">Couldn\'t reach the chain. Refresh to retry.</div>'; }
+  }
+
+  function cardHtml(it){
+    var sym=it.sym||short(it.token), pct=it.progress!=null?Math.min(100,Math.round(it.progress*1000)/10):0;
+    var badge=it.graduated?'<span class="fl-badge grad">Graduated</span>':(it.enriched?'<span class="fl-badge live">On curve</span>':'<span class="fl-badge">…</span>');
+    var logo=it.logo?('<img src="'+it.logo+'" alt="" onerror="this.style.display=\'none\'">'):(sym[0]||"?");
+    return '<a class="fl-card'+(it.graduated?' grad':'')+(it.enriched?'':' fl-skel')+'" href="/curve?ca='+it.token+'">'
+      +'<div class="fl-h"><div class="fl-lg">'+logo+'</div><div class="fl-nm"><b>$'+sym+'</b><span>'+(it.name||short(it.token))+'</span></div>'+badge+'</div>'
+      +'<div class="fl-bar"><i style="width:'+pct+'%"></i></div>'
+      +'<div class="fl-meta"><span><b>'+pct+'%</b> to graduation</span><span class="fl-pair">'+symOf(it.pair)+'</span></div></a>';
+  }
+  function passesFilter(it){
+    if(filter==="curve")return it.enriched&&!it.graduated;
+    if(filter==="grad")return it.graduated;
+    if(filter==="mine")return myAddr&&it.deployer===myAddr;
+    return true;
+  }
+  function render(){
+    var q=($("#flSearch").value||"").trim().toLowerCase();
+    var list=items.filter(passesFilter).filter(function(it){ if(!q)return true; return (it.sym||"").toLowerCase().includes(q)||(it.name||"").toLowerCase().includes(q)||it.token.toLowerCase().includes(q); });
+    $("#flGrid").innerHTML=list.length?list.map(cardHtml).join(""):'<div class="fl-load">Nothing here yet.</div>';
+    $("#cAll").textContent=items.length;
+    $("#cCurve").textContent=items.filter(function(i){return i.enriched&&!i.graduated}).length;
+    $("#cGrad").textContent=items.filter(function(i){return i.graduated}).length;
+  }
+  function renderSkeleton(){ render(); }
+
+  async function enrichOne(it){
+    try{
+      var tk=new ethers.Contract(it.token,TOKEN_ABI,ro), cv=new ethers.Contract(it.curve,CURVE_ABI,ro);
+      var r=await Promise.all([tk.symbol().catch(()=>null),tk.getTokenInfo().catch(()=>null),cv.realQuoteReserve().catch(()=>0n),cv.graduated().catch(()=>false),tk.name().catch(()=>"")]);
+      it.sym=r[0]||short(it.token); if(r[1]&&r[1].logo)it.logo=r[1].logo; it.name=r[4]||"";
+      var thr=it.threshold>0n?it.threshold:await cv.graduationThreshold().catch(()=>0n);
+      it.progress=thr>0n?Number(r[2])/Number(thr):0; it.graduated=r[3]; it.enriched=true;
+    }catch(_){ it.enriched=true; it.sym=it.sym||short(it.token); it.progress=0; }
+  }
+  async function enrichAll(){
+    var i=0, running=0, done=0;
+    return new Promise(function(resolve){
+      function next(){
+        while(running<4 && i<items.length){ var it=items[i++]; running++; enrichOne(it).then(function(){ running--; done++; render(); if(done>=items.length)resolve(); else next(); }); }
+      }
+      next();
+    });
+  }
+
+  $("#flFilters").querySelectorAll(".fl-f").forEach(function(b){b.addEventListener("click",function(){filter=b.dataset.f;$("#flFilters").querySelectorAll(".fl-f").forEach(function(x){x.classList.toggle("on",x===b)});render();})});
+  $("#flSearch").addEventListener("input",render);
+
+  indexLaunches();
+})();
+</script>
+</body>
+</html>
