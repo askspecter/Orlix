@@ -54,6 +54,9 @@
     },
     "api/aeon.js": {
       "maxDuration": 15
+    },
+    "api/launch.js": {
+      "maxDuration": 60
     }
   },
   "redirects": [

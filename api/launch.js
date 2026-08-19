@@ -109,7 +109,7 @@ async function generateImage(prompt) {
         body: JSON.stringify({
           model,
           prompt: String(prompt).slice(0, 1400) + ', centered square icon, vibrant, high detail, no text, no watermark',
-          width: 640, height: 640, format: 'webp', steps: 18,
+          width: 640, height: 640, format: 'webp', steps: 12,
           safe_mode: false, hide_watermark: true,
         }),
       });
