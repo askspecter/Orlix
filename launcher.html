@@ -53,7 +53,7 @@
   /* modal */
   .lx-ov{position:fixed;inset:0;z-index:200;background:rgba(3,4,3,.78);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;overflow:auto}
   .lx-ov.on{display:flex}
-  .lx-modal{width:100%;max-width:640px;margin:auto}
+  .lx-modal{width:100%;max-width:640px;margin:0 auto}
   .lx-x{position:absolute;top:14px;right:16px;width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);border:none;color:var(--ink-2);font-size:1.3rem;cursor:pointer;z-index:2}
   .lx-x:hover{color:var(--ink)}
   .lx-sec{padding:22px 0;border-top:1px solid var(--line-soft)}.lx-sec:first-child{border-top:0;padding-top:2px}
@@ -202,7 +202,7 @@
     "event TokenLaunched(address indexed token,address indexed curve,address indexed deployer,address pairToken,uint256 launchConfigId,uint256 graduationThreshold)"
   ];
   var LAB_ABI=["function launchAndBuy((string name,string symbol,string logo,string description,(string twitter,string telegram,string discord,string website,string farcaster) socials,address creatorFeeRecipient,uint16 creatorTaxBps,bool buybackEnabled,bytes32 expectedEconomics,bytes32 salt) params,uint256 launchConfigId,address pairToken,uint256 quoteIn,uint256 minTokensOut,address recipient,address[] snipeTaxExemptions) payable returns (address,address,uint256)"];
-  var REG_ABI=["function account(address implementation,bytes32 salt,uint256 chainId,address tokenContract,uint256 tokenId) view returns (address)"];
+  var REG_ABI=["function account(address implementation,bytes32 salt,uint256 chainId,address tokenContract,uint256 tokenId) view returns (address)","function createAccount(address implementation,bytes32 salt,uint256 chainId,address tokenContract,uint256 tokenId) returns (address)"];
   var TOKEN_ABI=["function symbol() view returns (string)","function name() view returns (string)","function getTokenInfo() view returns (address d,string logo,string desc,(string a,string b,string c,string e,string f) s)"];
   var CURVE_ABI=["function realQuoteReserve() view returns (uint256)","function graduationThreshold() view returns (uint256)","function graduated() view returns (bool)"];
 
@@ -229,7 +229,9 @@
     try{ var ok=await roV2.canLaunch(state.addr); if(ok===false) return "This wallet isn't allowed to launch yet (canLaunch = false) — it needs to be whitelisted on the factory."; }catch(_){}
     try{ var c=await roV2.getLaunchConfig(state.cfgId); if(c&&c.enabled===false) return "Launch config #"+state.cfgId+" is disabled — reload the page and try again."; }catch(_){ return "Launch config #"+state.cfgId+" can't be read — reload the page."; }
     try{ await rrpc("eth_call",[{from:state.addr,to:to,data:data,value:"0x"+value.toString(16)},"latest"]); }
-    catch(e){ var r=decodeRevert(e.data); return r ? ("Contract rejected: "+r) : "Contract rejected the launch (execution reverted, no reason). Likely the ticker/name is already taken, the fee, or whitelist — try a different name/ticker."; }
+    catch(e){ var r=decodeRevert(e.data); if(r) return "Contract rejected: "+r;
+      var sel=(typeof e.data==="string"&&e.data.length>=10)?e.data.slice(0,10):null;
+      return "Contract rejected the launch"+(sel?" ("+sel+")":" (execution reverted, no reason)")+". Likely the fee, whitelist, or the ticker/name is already taken — try a different name/ticker."; }
     return null;
   }
   async function estGas(txp,fallback){
@@ -238,6 +240,15 @@
       if(/revert|insufficient funds|exceeds|not allowed|denied|whitelist|too low|too high/i.test(m)) throw new Error(m);
       return fallback; }
   }
+  async function sendRaw(to,data,value,gas){ var p={from:state.addr,to:to,data:data,value:"0x"+(value||0n).toString(16)};
+    p.gas="0x"+(await estGas(p,gas)).toString(16);
+    var h=await window.ethereum.request({method:"eth_sendTransaction",params:[p]}); var rc=await waitRc(h); if(rc.status===0)throw new Error("Transaction reverted."); return rc; }
+  async function ensureAgentWallet(){ if(!state.agentAddr||state.agentId===null)return;
+    var code=""; try{ code=await rrpc("eth_getCode",[state.agentAddr,"latest"]); }catch(_){ return; }
+    if(code&&code!=="0x")return; // already deployed
+    status("Deploying Agent #"+state.agentId+"'s wallet…"); $("#deployBtn").textContent="DEPLOY AGENT…";
+    var regI=new ethers.Interface(REG_ABI);
+    await sendRaw(CFG.registry, regI.encodeFunctionData("createAccount",[CFG.accountImpl,SALT0,CFG.chainId,CFG.agentNft,state.agentId]), 0n, 300000n); }
 
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
@@ -305,6 +316,9 @@
       btn.disabled=true; btn.textContent="PREPARING…"; status("Uploading image &amp; reading economics…");
       var logo=await ensureLogo();
       var socials={twitter:($("#fX").value||"").trim(),telegram:($("#fTg").value||"").trim(),discord:"",website:"",farcaster:""};
+      // If fees route to an Agent, make sure the Agent's token-bound wallet exists on-chain
+      // first — the factory rejects a creator fee recipient that has no deployed account.
+      await ensureAgentWallet();
       var creator=state.agentAddr||ZERO;
       var taxBps=Math.round(Math.max(0,Math.min(10,Number($("#fTax").value||0)))*100);
       var salt=ethers.hexlify(ethers.randomBytes(32));

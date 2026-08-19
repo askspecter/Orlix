@@ -110,6 +110,9 @@
 
   window.ORLIX_WALLET = {
     connect: async function (onAccount) {
+      // Fast path: an injected wallet (in-app browser / extension) is already present.
+      // Use it directly for an instant prompt instead of loading the WalletConnect bundle.
+      if (window.ethereum && window.ethereum.request) return injectedConnect(onAccount);
       if (!PROJECT_ID) return injectedConnect(onAccount);
       pendingCb = onAccount || null; pending = true; fired = false;
       try {
