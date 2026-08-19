@@ -118,7 +118,7 @@
     "event CurveSell(address indexed seller,address indexed recipient,uint256 tokensIn,uint256 quoteOut,uint256 fee,uint256 tax)"
   ];
   var TOKEN_ABI=["function name() view returns (string)","function symbol() view returns (string)","function decimals() view returns (uint8)","function totalSupply() view returns (uint256)","function getTokenInfo() view returns (address tokenDeployer,string tokenLogo,string tokenDescription,(string twitter,string telegram,string discord,string website,string farcaster) tokenSocials)"];
-  var ERC20_ABI=["function decimals() view returns (uint8)","function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
+  var ERC20_ABI=["function decimals() view returns (uint8)","function symbol() view returns (string)","function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
   var ESCROW_ABI=["function balanceOf(address) view returns (uint256)","function balanceOfToken(address,address) view returns (uint256)","function claim()","function claimToken(address)"];
   var ACCT_ABI=["function execute(address to,uint256 value,bytes data,uint8 operation) payable returns (bytes)","function token() view returns (uint256,address,uint256)"];
   var NFT_ABI=["function ownerOf(uint256) view returns (address)"];
@@ -144,8 +144,8 @@
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
   function fmt(n){n=Number(n);if(!isFinite(n))return"0";if(n===0)return"0";if(n<1e-6)return n.toExponential(2);if(n<1)return n.toPrecision(3);return n.toLocaleString("en",{maximumFractionDigits:n<1000?2:0})}
-  // readable per-token price: tiny ETH prices shown in gwei (1 gwei = 1e-9 ETH)
-  function priceStr(p,sym){ if(!p||!isFinite(p))return "0 "+sym; if(sym==="ETH"&&p<1e-4){ var g=p*1e9; return (g<0.01?g.toExponential(2):g.toLocaleString("en",{maximumFractionDigits:g<1?4:2}))+" gwei"; } return fmt(p)+" "+sym; }
+  // clean amount: hide dust (shows 0), else compact
+  function qFmt(n){ n=Number(n); if(!isFinite(n)||Math.abs(n)<1e-6)return "0"; if(n<1)return n.toPrecision(3); return n.toLocaleString("en",{maximumFractionDigits:n<1000?2:0}); }
 
   var S={addr:null, token:null, curve:null, dec:18, sym:"", name:"", logo:"", pairSym:"ETH", pairAddr:ZERO, pairDec:18, native:true, feeRecipient:ZERO, side:"buy", state:null};
 
@@ -168,8 +168,8 @@
       var cv=new ethers.Contract(lt.curve,CURVE_ABI,ro);
       var res=await Promise.all([tk.symbol().catch(()=>"?"),tk.name().catch(()=>""),tk.decimals().catch(()=>18),tk.getTokenInfo().catch(()=>null),tk.totalSupply().catch(()=>0n),cv.isNativeQuote().catch(()=>true)]);
       S.sym=res[0];S.name=res[1];S.dec=Number(res[2]);S.logo=res[3]?res[3].tokenLogo:"";S.supply=res[4];S.native=res[5];
-      S.pairSym=symOf(S.pairAddr);
-      if(!S.native&&S.pairAddr!==ZERO){try{S.pairDec=Number(await new ethers.Contract(S.pairAddr,ERC20_ABI,ro).decimals());}catch(_){S.pairDec=18;}}else S.pairDec=18;
+      if(S.native||S.pairAddr===ZERO){ S.pairSym="ETH"; S.pairDec=18; }
+      else { try{ var perc=new ethers.Contract(S.pairAddr,ERC20_ABI,ro); var pr=await Promise.all([perc.symbol().catch(()=>null),perc.decimals().catch(()=>18)]); S.pairSym=pr[0]||symOf(S.pairAddr); S.pairDec=Number(pr[1])||18; }catch(_){ S.pairSym=symOf(S.pairAddr); S.pairDec=18; } }
       await refresh();
       renderShell();
       buildChart(lt.curve);
@@ -197,10 +197,10 @@
           +'<div class="cv-pad">'
             +'<div class="cv-head"><div class="cv-logo">'+logo+'</div><div class="cv-ttl"><b>$'+S.sym+'</b><span>'+(S.name||"")+'</span>'
               +'<div class="cv-ca"><code>'+short(S.token)+'</code><a href="'+CFG.explorer+'/token/'+S.token+'" target="_blank" rel="noopener">↗</a></div></div></div>'
-            +'<div class="cv-price">'+fmt(mcap)+' <small>'+S.pairSym+' market cap</small></div>'
-            +'<div class="cv-sub">'+priceStr(s.price,S.pairSym)+' / token · '+(s.graduated?'<span style="color:var(--green)">graduated</span>':(s.ready?'ready to graduate':'on the curve'))+'</div>'
+            +'<div class="cv-price">'+qFmt(mcap)+' <small>'+S.pairSym+' market cap</small></div>'
+            +'<div class="cv-sub">'+(s.graduated?'<span style="color:var(--green)">graduated · trading on the DEX</span>':(s.ready?'ready to graduate':'on the bonding curve'))+'</div>'
             +'<div class="cv-barwrap"><div class="cv-barrow"><span>Bond progress</span><b>'+pct+'%</b></div><div class="cv-bar"><i id="cvBar"></i></div>'
-              +'<div class="cv-raise"><span>'+fmt(raised)+' '+S.pairSym+' raised</span><span>target '+fmt(target)+' '+S.pairSym+'</span></div></div>'
+              +'<div class="cv-raise"><span>'+qFmt(raised)+' '+S.pairSym+' raised</span><span>target '+qFmt(target)+' '+S.pairSym+'</span></div></div>'
           +'</div>'
           +'<div class="cv-chart" id="cvChart"><div class="cv-load" style="padding:40px">Loading chart…</div></div>'
           +'<div class="cv-stat"><div><u>PAIR</u><b>'+S.pairSym+'</b></div><div><u>SUPPLY</u><b>'+fmt(Number(S.supply)/(10**S.dec))+'</b></div></div>'
@@ -312,28 +312,30 @@
   }
 
   // ── price chart (from curve trade events) ──
+  // Trade history from Blockscout curve logs (browser-reliable). Always draws a
+  // chart — a flat baseline at the current price when there are no trades yet.
   async function buildChart(curve){
     var el=$("#cvChart"); if(!el)return;
+    var pts=[];
     try{
       var iface=new ethers.Interface(CURVE_ABI);
-      var latest=await ro.getBlockNumber();
-      var lookback=120000n, chunk=12000n, start=latest>lookback?latest-lookback:0n;
-      var pts=[];
-      for(var to=latest; to>=start; to-=chunk){
-        var from=(to-chunk+1n>start)?(to-chunk+1n):start;
-        var logs=await ro.getLogs({address:curve,fromBlock:from,toBlock:to}).catch(()=>[]);
-        for(var i=0;i<logs.length;i++){ try{ var pl=iface.parseLog(logs[i]); if(!pl)continue;
-          var price=0;
-          if(pl.name==="CurveBuy"){ var q=pl.args.quoteIn,t=pl.args.tokensOut; if(t>0n)price=(Number(q)/(10**S.pairDec))/(Number(t)/(10**S.dec)); }
-          else if(pl.name==="CurveSell"){ var q2=pl.args.quoteOut,t2=pl.args.tokensIn; if(t2>0n)price=(Number(q2)/(10**S.pairDec))/(Number(t2)/(10**S.dec)); }
-          if(price>0&&isFinite(price)) pts.push({b:Number(logs[i].blockNumber),p:price});
-        }catch(_){}}
-        if(pts.length>2 && (latest-from)>60000n) break;
-        if(from===start)break;
+      var buyT=iface.getEvent("CurveBuy").topicHash.toLowerCase(), sellT=iface.getEvent("CurveSell").topicHash.toLowerCase();
+      var base=CFG.explorer+"/api/v2/addresses/"+curve+"/logs", next="";
+      for(var page=0;page<3;page++){
+        var r=await fetch(base+(next?("?"+next):"")); if(!r.ok)break; var j=await r.json();
+        (j.items||[]).forEach(function(it){ var tp=it.topics||[]; var d=(it.data||"0x").replace(/^0x/,""); if(d.length<128)return;
+          var t0=(tp[0]||"").toLowerCase(), price=0;
+          try{
+            if(t0===buyT){ var q=Number(BigInt("0x"+d.slice(0,64)))/(10**S.pairDec), tok=Number(BigInt("0x"+d.slice(64,128)))/(10**S.dec); if(tok>0)price=q/tok; }
+            else if(t0===sellT){ var tk=Number(BigInt("0x"+d.slice(0,64)))/(10**S.dec), qo=Number(BigInt("0x"+d.slice(64,128)))/(10**S.pairDec); if(tk>0)price=qo/tk; }
+          }catch(_){}
+          if(price>0&&isFinite(price)) pts.push({b:Number(it.block_number)||0,p:price});
+        });
+        var np=j.next_page_params; if(!np)break; next=new URLSearchParams(np).toString();
       }
-      pts.sort(function(a,b){return a.b-b.b});
-      drawChart(el,pts);
-    }catch(e){ el.innerHTML='<div class="cv-load" style="padding:40px">No trade history yet.</div>'; }
+    }catch(_){}
+    pts.sort(function(a,b){return a.b-b.b});
+    drawChart(el,pts);
   }
   function drawChart(el,pts){
     if(!pts.length){ var pr=S.state?S.state.price:0; pts=[{b:0,p:pr},{b:1,p:pr}]; }
