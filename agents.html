@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Wallets — ORLIX Agent · Robinhood Chain</title>
-<meta name="description" content="View the ORLIX Agent NFTs in your wallet on Robinhood Chain — each Agent's own on-chain wallet coming soon.">
+<meta name="description" content="Your ORLIX Agents on Robinhood Chain — each Agent is a real on-chain wallet: receive, send, hold tokenized stocks, and import any token.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
@@ -15,6 +15,56 @@
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="stylesheet" href="/assets/nft/app.css">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<style>
+  .ac-open{display:block;width:100%;margin-top:10px;font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--green);background:rgba(207,246,5,.06);border:1px solid rgba(207,246,5,.35);border-radius:9px;padding:9px;cursor:pointer;transition:.16s}
+  .ac-open:hover{background:rgba(207,246,5,.12)}
+  .aw-ov{position:fixed;inset:0;z-index:200;background:rgba(3,4,3,.8);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;padding:22px 14px;overflow:auto}
+  .aw-ov.on{display:flex}
+  .aw-m{width:100%;max-width:440px;margin:auto;background:#0b0d09;border:1px solid var(--line-soft);border-radius:20px;overflow:hidden;position:relative}
+  .aw-x{position:absolute;top:12px;right:14px;width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);border:none;color:var(--ink-2);font-size:1.3rem;cursor:pointer;z-index:2}
+  .aw-x:hover{color:var(--ink)}
+  .aw-top{display:flex;align-items:center;gap:14px;padding:22px 20px 18px}
+  .aw-av{width:56px;height:56px;border-radius:14px;overflow:hidden;background:#12140d;flex:none}
+  .aw-av img{width:100%;height:100%;object-fit:cover}
+  .aw-ti b{display:block;color:var(--ink);font-size:1.15rem;font-weight:600}
+  .aw-ti .addr{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;color:var(--ink-3);margin-top:4px;cursor:pointer}
+  .aw-ti .addr code{color:var(--green)}
+  .aw-val{margin-left:auto;text-align:right}
+  .aw-val u{display:block;text-decoration:none;font-size:.54rem;letter-spacing:.2em;color:var(--ink-3)}
+  .aw-val b{color:var(--ink);font-size:1.05rem}
+  .aw-acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 20px 16px}
+  .aw-act{font-family:var(--mono);font-size:.72rem;color:var(--ink);background:#0a0c07;border:1px solid var(--line-soft);border-radius:11px;padding:12px 6px;cursor:pointer;transition:.16s;text-align:center}
+  .aw-act:hover{border-color:rgba(207,246,5,.4)}
+  .aw-act.on{border-color:var(--green);color:var(--green)}
+  .aw-act .i{display:block;font-size:1.1rem;margin-bottom:4px;color:var(--green)}
+  .aw-body{border-top:1px solid var(--line-soft);padding:18px 20px;max-height:52vh;overflow:auto}
+  .aw-asset{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-soft);cursor:pointer}
+  .aw-asset:last-child{border-bottom:0}
+  .aw-asset .ic{width:34px;height:34px;border-radius:9px;overflow:hidden;background:#12140d;flex:none;display:grid;place-items:center}
+  .aw-asset .ic img{width:100%;height:100%;object-fit:cover}
+  .aw-asset .nm{flex:1;min-width:0}
+  .aw-asset .nm b{display:block;color:var(--ink);font-size:.9rem;font-weight:600}
+  .aw-asset .nm span{font-size:.68rem;color:var(--ink-3)}
+  .aw-asset .amt{text-align:right}
+  .aw-asset .amt b{display:block;color:var(--ink);font-size:.9rem;font-weight:500}
+  .aw-asset .amt span{font-size:.68rem;color:var(--ink-3)}
+  .aw-lbl{display:block;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:2px 0 7px}
+  .aw-in{width:100%;background:#0a0c07;border:1px solid var(--line-soft);border-radius:11px;color:var(--ink);font-family:var(--mono);font-size:.88rem;padding:12px 13px;outline:none;margin-bottom:12px}
+  .aw-in:focus{border-color:var(--green)}
+  .aw-qr{display:grid;place-items:center;padding:8px 0 16px}
+  .aw-qr canvas,.aw-qr img{border-radius:12px;background:#fff;padding:10px}
+  .aw-full{width:100%;font-size:.7rem;color:var(--ink-2);word-break:break-all;text-align:center;background:#0a0c07;border:1px solid var(--line-soft);border-radius:10px;padding:11px;cursor:pointer}
+  .aw-btn{width:100%;font-size:.92rem;padding:14px;font-weight:600;letter-spacing:.03em}
+  .aw-msg{font-size:.74rem;color:var(--ink-2);margin-top:11px;line-height:1.5;word-break:break-word}
+  .aw-msg a{color:var(--green);text-decoration:underline}
+  .aw-sel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .aw-chip{font-size:.72rem;color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;padding:7px 12px;cursor:pointer}
+  .aw-chip.on{border-color:var(--green);color:var(--green)}
+  .aw-max{float:right;color:var(--green);cursor:pointer;font-size:.6rem;letter-spacing:.1em}
+</style>
 </head>
 <body>
 <div class="scanlines" aria-hidden="true"></div>
@@ -94,6 +144,24 @@
   </div>
 </footer>
 <div class="toast" id="toast"></div>
+
+<!-- AGENT WALLET MODAL -->
+<div class="aw-ov" id="awOv">
+  <div class="aw-m">
+    <button class="aw-x" id="awClose" aria-label="Close">×</button>
+    <div class="aw-top">
+      <div class="aw-av"><img id="awImg" alt=""></div>
+      <div class="aw-ti"><b id="awName">Agent</b><div class="addr" id="awAddr"><code></code> ⧉</div></div>
+      <div class="aw-val"><u>VALUE</u><b id="awVal">—</b></div>
+    </div>
+    <div class="aw-acts">
+      <div class="aw-act on" data-view="assets"><span class="i">◍</span>Assets</div>
+      <div class="aw-act" data-view="receive"><span class="i">▼</span>Receive</div>
+      <div class="aw-act" data-view="send"><span class="i">▲</span>Send</div>
+    </div>
+    <div class="aw-body" id="awBody"></div>
+  </div>
+</div>
 
 <script src="/assets/nft/tokens.js"></script>
 <script src="/assets/nft/wallet.js"></script>
@@ -214,7 +282,7 @@
         +(tier?'<span class="ac-tier" style="color:'+col+'">'+tier+'</span>':'')
         +'<img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"></a>'
         +'<div class="ac-meta"><span class="ac-name">#'+id+'</span><a href="'+url+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div>'
-        +(TBA_ON?'<div class="ac-wallet" data-id="'+id+'"><span class="acw-lbl">WALLET</span><span class="acw-addr" style="color:var(--ink-3)">…</span></div><div class="ac-holds" data-id="'+id+'"></div>':'')
+        +(TBA_ON?'<div class="ac-wallet" data-id="'+id+'"><span class="acw-lbl">WALLET</span><span class="acw-addr" style="color:var(--ink-3)">…</span></div><div class="ac-holds" data-id="'+id+'"></div><button class="ac-open" data-open="'+id+'">Open wallet →</button>':'')
         +'</div>';
     }).join("");
     summaryEl.innerHTML=Object.keys(counts).sort().map(t=>'<span class="sm" style="color:'+tierColor(t)+'">'+counts[t]+' '+t+'</span>').join("");
@@ -224,6 +292,127 @@
   connectBtn.addEventListener("click",()=>connect(a=>loadMyAgents(a),connectBtn));
   refreshBtn.addEventListener("click",()=>{ if(mAddr){ busy=false; loadMyAgents(mAddr); } });
   menuInit();
+
+  /* ═══════════ AGENT WALLET (send / receive / import) ═══════════ */
+  const roE=new ethers.JsonRpcProvider(CFG.rpcs[0],{chainId:CFG.chainIdDec,name:"robinhood"});
+  const ACCT_ABI=["function execute(address to,uint256 value,bytes data,uint8 operation) payable returns (bytes)"];
+  const ERC20_ABI=["function transfer(address,uint256) returns (bool)","function balanceOf(address) view returns (uint256)","function symbol() view returns (string)","function decimals() view returns (uint8)"];
+  const erc20If=new ethers.Interface(ERC20_ABI);
+  const CUSTOM_KEY="orlix-agent-tokens";
+  const getCustom=()=>{try{return JSON.parse(localStorage.getItem(CUSTOM_KEY)||"[]")}catch(_){return[]}};
+  const addCustom=a=>{const l=getCustom();if(!l.map(x=>x.toLowerCase()).includes(a.toLowerCase())){l.push(a);localStorage.setItem(CUSTOM_KEY,JSON.stringify(l))}};
+  const imgFn=window.tokenImg||ic;
+  let AW={id:null,tba:null,live:false,assets:[],view:"assets"};
+
+  function awOpen(){$("#awOv").classList.add("on");document.body.style.overflow="hidden"}
+  function awCloseFn(){$("#awOv").classList.remove("on");document.body.style.overflow=""}
+  $("#awClose").addEventListener("click",awCloseFn);
+  $("#awOv").addEventListener("click",e=>{if(e.target===$("#awOv"))awCloseFn()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")awCloseFn()});
+  $("#awOv").querySelectorAll(".aw-act").forEach(b=>b.addEventListener("click",()=>{AW.view=b.dataset.view;$("#awOv").querySelectorAll(".aw-act").forEach(x=>x.classList.toggle("on",x===b));renderView()}));
+
+  agentGrid.addEventListener("click",e=>{const b=e.target.closest(".ac-open");if(b){e.preventDefault();openWallet(+b.dataset.open)}});
+
+  async function openWallet(id){
+    AW={id,tba:null,live:false,assets:[],view:"assets"};
+    $("#awName").textContent="Agent #"+id;
+    $("#awImg").src="/assets/nft/phase2/images/"+id+".png";$("#awImg").onerror=function(){this.onerror=null;this.src="/assets/nft/orlix-mark.png"};
+    $("#awVal").textContent="—";$("#awAddr").querySelector("code").textContent="…";
+    $("#awBody").innerHTML='<p class="hint" style="text-align:center;padding:20px">Loading wallet…</p>';
+    awOpen();
+    const tba=await tbaOf(id); if(!tba){$("#awBody").innerHTML='<p class="hint" style="text-align:center;padding:20px">Couldn\'t resolve this Agent\'s wallet.</p>';return}
+    AW.tba=tba; $("#awAddr").querySelector("code").textContent=short(tba);
+    const code=await getCode(tba); AW.live=code&&code!=="0x"&&code!=="0x0";
+    await loadAssets(); renderView();
+  }
+  $("#awAddr").addEventListener("click",()=>{if(AW.tba){navigator.clipboard.writeText(AW.tba).then(()=>toast("Address copied"))}});
+
+  async function loadAssets(){
+    const assets=[];
+    // native ETH
+    try{const b=await roE.getBalance(AW.tba);assets.push({sym:"ETH",addr:null,dec:18,bal:b,val6:0n,logo:null});}catch(_){}
+    // indexed ERC-20s
+    let seen={};
+    try{
+      const r=await fetch(CFG.explorer+"/api/v2/addresses/"+AW.tba+"/token-balances");
+      if(r.ok){const arr=await r.json();(Array.isArray(arr)?arr:[]).forEach(x=>{const t=(x&&x.token)||{};let v=0n;try{v=BigInt(x.value)}catch(_){}
+        const ad=(t.address||t.address_hash||"");if((t.type||"").indexOf("ERC-20")<0||v<=0n||!ad)return;seen[ad.toLowerCase()]=1;
+        assets.push({sym:t.symbol||"?",addr:ad,dec:parseInt(t.decimals||"18")||18,bal:v,val6:0n});});}
+    }catch(_){}
+    // custom / imported tokens
+    for(const ca of getCustom()){ if(seen[ca.toLowerCase()])continue; try{
+      const c=new ethers.Contract(ca,ERC20_ABI,roE);
+      const [b,sy,de]=await Promise.all([c.balanceOf(AW.tba).catch(()=>0n),c.symbol().catch(()=>"?"),c.decimals().catch(()=>18)]);
+      assets.push({sym:sy,addr:ca,dec:Number(de),bal:b,val6:0n,custom:true});
+    }catch(_){}}
+    // value stocks/USDG in USDG
+    let total6=0n;
+    await Promise.all(assets.map(async a=>{ if(!a.addr)return; const l=a.addr.toLowerCase(); if(l===USDGL){a.val6=a.bal;} else if(STOCKSET.has(l)){a.val6=await quoteToUsdg(a.addr,a.bal).catch(()=>0n);} total6+=a.val6; }));
+    AW.assets=assets; AW.total6=total6;
+    $("#awVal").textContent=total6>0n?("$"+fmtUsd(total6)):"—";
+  }
+
+  function assetRow(a,i){
+    const logo=a.addr?imgFn(a.sym,34,a.addr):'<span style="color:var(--green);font-weight:700">Ξ</span>';
+    const val=a.val6>0n?("≈ $"+fmtUsd(a.val6)):(a.addr?"":"");
+    return '<div class="aw-asset" data-i="'+i+'"><span class="ic">'+logo+'</span><span class="nm"><b>'+esc(a.sym)+'</b><span>'+(a.addr?short(a.addr):"native")+'</span></span><span class="amt"><b>'+esc(fmtAmt(a.bal,a.dec))+'</b><span>'+val+'</span></span></div>';
+  }
+  function renderView(){
+    const body=$("#awBody");
+    if(AW.view==="assets"){
+      body.innerHTML=(AW.assets.length?AW.assets.map(assetRow).join(""):'<p class="hint" style="padding:16px 0">No assets yet — receive some below.</p>')
+        +'<button class="btn outline aw-btn" id="awImport" style="margin-top:14px;font-size:.72rem">＋ Import token</button>';
+      body.querySelectorAll(".aw-asset").forEach(r=>r.addEventListener("click",()=>{AW.sendIdx=+r.dataset.i;switchView("send")}));
+      $("#awImport").addEventListener("click",importToken);
+    } else if(AW.view==="receive"){
+      body.innerHTML='<span class="aw-lbl">Receive to this Agent wallet</span><div class="aw-qr" id="awQr"></div><div class="aw-full" id="awFull">'+AW.tba+'</div><p class="aw-msg">Send ETH or any Robinhood-Chain token to this address. It lands inside Agent #'+AW.id+'.</p>';
+      $("#awFull").addEventListener("click",()=>navigator.clipboard.writeText(AW.tba).then(()=>toast("Address copied")));
+      const q=$("#awQr");
+      if(window.QRCode&&QRCode.toCanvas){const cv=document.createElement("canvas");q.appendChild(cv);QRCode.toCanvas(cv,AW.tba,{width:184,margin:1},function(){});}
+      else{q.innerHTML='<img src="https://api.qrserver.com/v1/create-qr-code/?size=184x184&data='+AW.tba+'" width="184" height="184" alt="">';}
+    } else if(AW.view==="send"){
+      if(!AW.live){ body.innerHTML='<p class="aw-msg">This Agent wallet isn\'t deployed yet — deploy it once to send from it.</p><button class="btn aw-btn" id="awDeploy" style="margin-top:12px">Deploy wallet</button>';
+        $("#awDeploy").addEventListener("click",async function(){this.disabled=true;this.textContent="Deploying…";await createWallet(AW.id,{disabled:false,set textContent(v){}});const code=await getCode(AW.tba);AW.live=code&&code!=="0x"&&code!=="0x0";renderView();}); return; }
+      const idx=AW.sendIdx!=null&&AW.assets[AW.sendIdx]?AW.sendIdx:0;
+      body.innerHTML='<span class="aw-lbl">Asset</span><div class="aw-sel" id="awSel"></div>'
+        +'<span class="aw-lbl">Recipient address</span><input class="aw-in" id="awTo" placeholder="0x…">'
+        +'<span class="aw-lbl">Amount <a class="aw-max" id="awMax">MAX</a></span><input class="aw-in" id="awAmt" placeholder="0.0" inputmode="decimal">'
+        +'<button class="btn aw-btn" id="awSend">Send</button><div class="aw-msg" id="awSendMsg"></div>';
+      const sel=$("#awSel");
+      sel.innerHTML=AW.assets.map((a,i)=>'<button class="aw-chip'+(i===idx?' on':'')+'" data-i="'+i+'">'+esc(a.sym)+'</button>').join("");
+      AW.sendIdx=idx;
+      sel.querySelectorAll(".aw-chip").forEach(b=>b.addEventListener("click",()=>{AW.sendIdx=+b.dataset.i;sel.querySelectorAll(".aw-chip").forEach(x=>x.classList.toggle("on",x===b))}));
+      $("#awMax").addEventListener("click",()=>{const a=AW.assets[AW.sendIdx];let v=a.bal;if(!a.addr&&v>ethers.parseEther("0.0003"))v=v-ethers.parseEther("0.0003");$("#awAmt").value=ethers.formatUnits(v,a.dec)});
+      $("#awSend").addEventListener("click",doSend);
+    }
+  }
+  function switchView(v){AW.view=v;$("#awOv").querySelectorAll(".aw-act").forEach(x=>x.classList.toggle("on",x.dataset.view===v));renderView()}
+
+  async function importToken(){
+    const ca=prompt("Token contract address (0x…)");
+    if(!ca||!isAddr(ca.trim())){if(ca)toast("Invalid address");return}
+    addCustom(ca.trim());toast("Token added");await loadAssets();renderView();
+  }
+  async function doSend(){
+    const a=AW.assets[AW.sendIdx],to=($("#awTo").value||"").trim(),amt=($("#awAmt").value||"").trim(),msg=$("#awSendMsg"),btn=$("#awSend");
+    if(!isAddr(to)){msg.innerHTML='<span style="color:#ff6b6b">Enter a valid recipient address.</span>';return}
+    if(!amt||Number(amt)<=0){msg.innerHTML='<span style="color:#ff6b6b">Enter an amount.</span>';return}
+    try{
+      btn.disabled=true;btn.textContent="Sign in wallet…";msg.textContent="";
+      const bp=new ethers.BrowserProvider(window.ethereum),net=await bp.getNetwork();
+      if(Number(net.chainId)!==CFG.chainIdDec){try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(_){}}
+      const signer=await(new ethers.BrowserProvider(window.ethereum)).getSigner();
+      const acct=new ethers.Contract(AW.tba,ACCT_ABI,signer);
+      let tx;
+      if(!a.addr){ const v=ethers.parseEther(amt); if(v>a.bal){msg.innerHTML='<span style="color:#ff6b6b">Amount exceeds balance.</span>';btn.disabled=false;btn.textContent="Send";return} tx=await acct.execute(to,v,"0x",0,{gasLimit:250000n}); }
+      else{ const v=ethers.parseUnits(amt,a.dec); if(v>a.bal){msg.innerHTML='<span style="color:#ff6b6b">Amount exceeds balance.</span>';btn.disabled=false;btn.textContent="Send";return} const data=erc20If.encodeFunctionData("transfer",[to,v]); tx=await acct.execute(a.addr,0n,data,0,{gasLimit:250000n}); }
+      msg.innerHTML='Confirming… <a href="'+CFG.explorer+'/tx/'+tx.hash+'" target="_blank" rel="noopener">'+short(tx.hash)+'</a>';
+      const rc=await tx.wait(); if(rc.status===0)throw new Error("Transaction reverted");
+      toast("Sent ✓");msg.textContent="Sent ✓";$("#awAmt").value="";$("#awTo").value="";
+      await loadAssets();
+    }catch(e){ btn.disabled=false;btn.textContent="Send"; const m=(e&&(e.info&&e.info.error&&e.info.error.message||e.shortMessage||e.reason||e.message))||"Failed"; msg.innerHTML='<span style="color:#ff6b6b">'+String(m).slice(0,120)+'</span>'; }
+  }
+
   if(TBA_ON){var badge=document.querySelector('.cs-badge');if(badge)badge.innerHTML='<span class="dot"></span>Agent Wallets · Live';}
   if(window.ethereum){
     window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0])loadMyAgents(a[0])}).catch(()=>{});
