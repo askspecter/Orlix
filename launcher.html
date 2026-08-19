@@ -213,6 +213,15 @@
       if(r){ return {status:parseInt(r.status,16), logs:r.logs||[], hash:r.transactionHash||hash}; }
       await new Promise(function(res){setTimeout(res,2000)}); }
     throw new Error("Timed out waiting for confirmation (tx may still land — check the explorer)."); }
+  // Simulate first: eth_estimateGas returns the REAL gas needed (a launch deploys 2 contracts,
+  // often > the hardcoded floor → out-of-gas revert). If the call reverts for another reason
+  // (whitelist / fee / economics drift) we surface that reason instead of burning gas blind.
+  async function estGas(txp,fallback){
+    try{ var e=await rrpc("eth_estimateGas",[txp]); var g=BigInt(e); g=g+g/4n; return g>fallback?g:fallback; }
+    catch(err){ var m=(err&&err.message)||"";
+      if(/revert|insufficient funds|exceeds|not allowed|denied|whitelist|too low|too high/i.test(m)) throw new Error(m);
+      return fallback; }
+  }
 
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
@@ -297,7 +306,11 @@
         to=CFG.v2Factory; value=fee; gas=GAS_LAUNCH;
         status("Deploying → bonding curve (pair "+state.pair.sym+")…");
       }
-      var hash=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:state.addr,to:to,data:data,value:"0x"+value.toString(16),gas:"0x"+gas.toString(16)}]});
+      var txp={from:state.addr,to:to,data:data,value:"0x"+value.toString(16)};
+      status("Simulating launch…");
+      var gasUse=await estGas(txp,gas);           // real gas, or throws the on-chain revert reason
+      txp.gas="0x"+gasUse.toString(16);
+      var hash=await window.ethereum.request({method:"eth_sendTransaction",params:[txp]});
       status("Confirming… <span style=\"color:var(--ink-3)\">"+String(hash).slice(0,12)+"…</span>");
       var rc=await waitRc(hash);
       if(rc.status===0){ throw new Error("Transaction reverted on-chain (check whitelist / params)."); }

@@ -132,7 +132,14 @@
       await new Promise(function(res){setTimeout(res,2000)}); }
     throw new Error("Timed out waiting for confirmation (tx may still land)."); }
   async function ensureChain(){ try{ var c=await window.ethereum.request({method:"eth_chainId"}); if(c!==CFG.chainIdHex) await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }catch(_){} }
-  async function rawSend(to,data,value,gas){ var p={from:S.addr,to:to,data:data}; if(value!=null)p.value="0x"+value.toString(16); if(gas!=null)p.gas="0x"+gas.toString(16);
+  async function estGas(txp,fallback){
+    try{ var e=await rrpc("eth_estimateGas",[txp]); var g=BigInt(e); g=g+g/4n; return g>fallback?g:fallback; }
+    catch(err){ var m=(err&&err.message)||"";
+      if(/revert|insufficient funds|exceeds|not allowed|denied|slippage|graduat/i.test(m)) throw new Error(m);
+      return fallback; }
+  }
+  async function rawSend(to,data,value,gas){ var p={from:S.addr,to:to,data:data}; if(value!=null)p.value="0x"+value.toString(16);
+    if(gas!=null)p.gas="0x"+(await estGas(p,gas)).toString(16);
     var h=await window.ethereum.request({method:"eth_sendTransaction",params:[p]}); var rc=await waitRc(h); if(rc.status===0)throw new Error("Transaction reverted on-chain."); return rc; }
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
