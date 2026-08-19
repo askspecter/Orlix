@@ -73,6 +73,11 @@
   @keyframes lxpulse{0%,100%{opacity:1}50%{opacity:.55}}
   .lx-imgbtn{width:96px;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:var(--green);background:rgba(207,246,5,.06);border:1px solid rgba(207,246,5,.35);border-radius:9px;padding:7px 4px;cursor:pointer;transition:.16s}
   .lx-imgbtn:hover{background:rgba(207,246,5,.12)}.lx-imgbtn:disabled{opacity:.5}
+  .lx-styles{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:11px}
+  .lx-styles .lbl{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-right:2px}
+  .lx-sty{font-family:var(--mono);font-size:.68rem;color:var(--ink-2);background:#0a0c07;border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px;cursor:pointer;transition:.16s;letter-spacing:.02em}
+  .lx-sty:hover{border-color:var(--green)}
+  .lx-sty.on{border-color:var(--green);color:var(--green);font-weight:600;background:rgba(207,246,5,.07)}
   .lx-kick{display:inline-flex;align-items:center;gap:8px;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;padding:8px 15px}
   .lx-kick .d{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
   .lx-drop:hover{border-color:var(--green)}.lx-drop img{width:100%;height:100%;object-fit:cover}
@@ -158,6 +163,13 @@
               <div><span class="lx-lbl">Name</span><input class="lx-in" id="fName" placeholder="Couch Trader" maxlength="42"></div>
               <div><span class="lx-lbl">Ticker</span><input class="lx-in" id="fSym" placeholder="COUCH" maxlength="11" style="text-transform:uppercase"></div>
             </div>
+          </div>
+          <div class="lx-styles" id="lxStyles">
+            <span class="lbl">Art style</span>
+            <button type="button" class="lx-sty on" data-sty="pixel">🎮 Pixel</button>
+            <button type="button" class="lx-sty" data-sty="degen">🐸 Degen meme</button>
+            <button type="button" class="lx-sty" data-sty="neon">💠 Neon</button>
+            <button type="button" class="lx-sty" data-sty="3d">🧊 3D</button>
           </div>
           <div style="margin-top:13px"><span class="lx-lbl">Description</span><textarea class="lx-in" id="fDesc" placeholder="What is this token about?" maxlength="300"></textarea></div>
           <div class="lx-row two" style="margin-top:13px"><div><span class="lx-lbl">X profile</span><input class="lx-in" id="fX" placeholder="@handle"></div><div><span class="lx-lbl">Telegram</span><input class="lx-in" id="fTg" placeholder="t.me/…"></div></div>
@@ -267,7 +279,7 @@
   function fmt(n){n=Number(n);if(!isFinite(n)||n===0)return"0";if(n<0.001)return n.toExponential(1);if(n<1)return n.toPrecision(2);return n.toLocaleString("en",{maximumFractionDigits:n<1000?1:0})}
   function errMsg(e){ if(!e)return"Failed"; if(e.info&&e.info.error&&e.info.error.message)return e.info.error.message; if(e.shortMessage)return e.shortMessage; if(e.reason)return e.reason; return (e.message||"Failed"); }
 
-  var state={pair:PAIRS[0],cfgId:0,fee:0n,addr:null,bal:0n,agents:[],agentId:null,agentAddr:null,configs:[],logo:"",imgPrompt:"",userUploaded:false};
+  var state={pair:PAIRS[0],cfgId:0,fee:0n,addr:null,bal:0n,agents:[],agentId:null,agentAddr:null,configs:[],logo:"",imgPrompt:"",imgStyle:"pixel",userUploaded:false};
 
   // ── wallet + balance ──
   async function refreshBal(){ if(!state.addr)return; try{ state.bal=await ro.getBalance(state.addr); $("#walletBal").innerHTML="<b>"+Number(ethers.formatEther(state.bal)).toFixed(4)+"</b> ETH"; }catch(_){} }
@@ -299,7 +311,7 @@
     drop.classList.add("gen"); $("#dropImg").style.display="none"; $("#dropTxt").style.display="block"; $("#dropTxt").innerHTML="✦<br>painting"; if(ab){ab.disabled=true;}
     $("#genMsg").textContent="Generating AI image… (can take ~15s)";
     try{
-      var r=await fetch("/api/launch?action=image",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt:prompt})});
+      var r=await fetch("/api/launch?action=image",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt:prompt,style:state.imgStyle})});
       var j=await r.json(); if(!r.ok)throw new Error(j.error||"Image failed");
       var url=j.url||j.dataUrl; if(!url)throw new Error("No image");
       state.userUploaded=false; setLogoPreview(url,true); state.logo=url;
@@ -312,6 +324,11 @@
     var rr=$("#reroll"); if(rr)rr.addEventListener("click",function(e){e.preventDefault();genImage(state.imgPrompt);});
   }
   $("#aiImgBtn").addEventListener("click",function(){genImage();});
+  // art-style picker → drives the AI image theme (pixel-art degen meme by default)
+  $("#lxStyles").querySelectorAll(".lx-sty").forEach(function(b){ b.addEventListener("click",function(){
+    state.imgStyle=b.dataset.sty; $("#lxStyles").querySelectorAll(".lx-sty").forEach(function(x){x.classList.toggle("on",x===b)});
+    if(!state.userUploaded && state.imgPrompt) genImage(state.imgPrompt); // instant re-paint in the new style
+  }); });
   function monogram(t){ t=(t||"OX").toUpperCase().slice(0,4); var svg="<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><rect width='120' height='120' rx='24' fill='#0b0d09'/><rect x='2' y='2' width='116' height='116' rx='23' fill='none' stroke='#CFF605' stroke-opacity='.5' stroke-width='2'/><text x='50%' y='54%' font-family='monospace' font-size='"+(t.length>2?34:46)+"' font-weight='700' fill='#CFF605' text-anchor='middle' dominant-baseline='middle'>"+t+"</text></svg>"; return "data:image/svg+xml;base64,"+btoa(svg); }
   function setLogoPreview(url,mark){ var img=$("#dropImg"); img.src=url; img.style.display="block"; $("#dropTxt").style.display="none"; $("#lxDrop").classList.add("loaded"); if(mark)state.logo=url; }
   $("#lxDrop").addEventListener("click",function(){$("#fFile").click()});

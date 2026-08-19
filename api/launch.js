@@ -54,8 +54,20 @@ function fallbackPackage(idea) {
 const GEN_SYS =
   'You are ORLIX\'s degen token-launch engine on Robinhood Chain. From a one-sentence idea, invent a WILD, memeable launch package that would pop off on crypto Twitter. ' +
   'Rules: name = punchy, funny or epic, <=28 chars, no generic words like "Token"/"Coin". ticker = 3-6 UPPERCASE letters, clever, easy to shill. ' +
-  'description = 1-2 electric sentences with attitude, <=180 chars. image_prompt = a vivid, unhinged art-direction prompt for a square token mascot/logo: subject, style (e.g. 3D render, neon, glitch, sticker, hyperreal), mood, background — no text/words in the image. ' +
+  'description = 1-2 electric sentences with attitude, <=180 chars. ' +
+  'image_prompt = a vivid degen-meme art-direction prompt for a square token mascot: describe the SUBJECT and its unhinged crypto-meme action/expression (think pepe/wojak/chad/doge energy, moon, laser eyes, tendies, pump) and the MOOD/background only — do NOT specify a render style (pixel/3D/neon is chosen separately). No text/words in the image. ' +
   'Return ONLY compact JSON: {"name":string,"ticker":string,"description":string,"image_prompt":string}. No markdown.';
+
+// Art-direction presets appended to every image prompt. Default is a pixel-art degen meme.
+const STYLE_PRESETS = {
+  pixel: 'as a 16-bit pixel-art degen crypto meme, retro arcade sprite, crisp pixelated shading, limited neon palette, dithering, punchy meme energy, flat solid background',
+  degen: 'as an unhinged degen crypto meme sticker, bold outlines, exaggerated meme expression, vaporwave neon accents, glossy sticker finish, high contrast, flat background',
+  neon: 'as a neon-glow synthwave degen meme, glowing outlines, dark background, electric cyan and lime rim light, retro-futuristic, high contrast',
+  '3d': 'as a glossy 3D-rendered degen meme mascot, soft studio lighting, vibrant plastic material, playful, clean gradient background',
+};
+function stylePreset(s) {
+  return STYLE_PRESETS[String(s || '').toLowerCase()] || STYLE_PRESETS.pixel;
+}
 
 function parsePkg(txt) {
   const m = String(txt || '').match(/\{[\s\S]*\}/);
@@ -97,9 +109,11 @@ async function generate(idea) {
 }
 
 // AI image via Venice (uncensored, fast). Returns a base64 data URL, or null.
-async function generateImage(prompt) {
+// `style` selects an art-direction preset (default: pixel-art degen meme).
+async function generateImage(prompt, style) {
   const key = process.env.VENICE_API_KEY || '';
   if (!key || !prompt) return null;
+  const preset = stylePreset(style);
   const models = ['flux-dev', 'venice-sd35', 'stable-diffusion-3.5'];
   for (const model of models) {
     try {
@@ -108,7 +122,7 @@ async function generateImage(prompt) {
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
         body: JSON.stringify({
           model,
-          prompt: String(prompt).slice(0, 1400) + ', centered square icon, vibrant, high detail, no text, no watermark',
+          prompt: String(prompt).slice(0, 1200) + ', ' + preset + ', centered square meme icon, no text, no watermark',
           width: 640, height: 640, format: 'webp', steps: 12,
           safe_mode: false, hide_watermark: true,
         }),
@@ -179,7 +193,8 @@ module.exports = async function handler(req, res) {
   if (action === 'image') {
     const prompt = (body.prompt || '').toString().trim();
     if (prompt.length < 3) return res.status(400).json({ error: 'Provide an image prompt.' });
-    const dataUrl = await generateImage(prompt);
+    const style = (body.style || 'pixel').toString();
+    const dataUrl = await generateImage(prompt, style);
     if (!dataUrl) return res.status(502).json({ error: 'Image generation unavailable.' });
     const c = creds();
     if (!c) return res.status(200).json({ dataUrl }); // no store — return inline (caller may still use it as preview)
