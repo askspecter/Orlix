@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Launcher — ORLIX · Robinhood Chain</title>
-<meta name="description" content="Launch a token on Robinhood Chain, run by your Agent. Fair bonding curve, pair against ETH or a tokenized stock, creator fees accrue inside your Agent's wallet.">
+<meta name="description" content="Launch a token on Robinhood Chain, run by your Agent. Describe it in one sentence, pair against a tokenized stock, and creator fees accrue inside your Agent's wallet.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
@@ -19,47 +19,65 @@
 <script src="/assets/nft/tokens.js"></script>
 <script src="/assets/nft/wallet.js"></script>
 <style>
-  .lx-form{display:grid;gap:16px}
-  .lx-row{display:grid;gap:16px}
-  @media(min-width:640px){.lx-row.two{grid-template-columns:1fr 1fr}.lx-row.three{grid-template-columns:1fr 1fr 1fr}}
-  .lx-lbl{display:block;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+  .lx-wrap{max-width:760px}
+  .lx-sec{padding:24px 0;border-top:1px solid var(--line-soft)}
+  .lx-sec:first-child{border-top:0;padding-top:4px}
+  .lx-h{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+  .lx-h .n{font-size:.6rem;letter-spacing:.2em;color:#0a0c07;background:var(--green);border-radius:6px;padding:4px 8px;font-weight:700}
+  .lx-h b{font-size:.82rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);font-weight:600}
+  .lx-h span{font-size:.68rem;color:var(--ink-3)}
+  .lx-row{display:grid;gap:14px}
+  @media(min-width:600px){.lx-row.two{grid-template-columns:1fr 1fr}}
+  .lx-lbl{display:block;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
   .lx-in{width:100%;background:#0a0c07;border:1px solid var(--line-soft);border-radius:11px;color:var(--ink);
     font-family:var(--mono);font-size:.9rem;padding:13px 14px;outline:none;transition:.18s}
   .lx-in:focus{border-color:var(--green)}
-  textarea.lx-in{resize:vertical;min-height:74px;line-height:1.5}
-  .lx-pairs{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  textarea.lx-in{resize:vertical;min-height:70px;line-height:1.5}
+  /* AI bar */
+  .lx-ai{display:flex;gap:10px;flex-wrap:wrap}
+  .lx-ai .lx-in{flex:1 1 260px}
+  .lx-ai .btn{flex:0 0 auto}
+  /* logo + identity */
+  .lx-id{display:flex;gap:16px;align-items:flex-start}
+  .lx-up{flex:0 0 auto;width:96px}
+  .lx-drop{width:96px;height:96px;border-radius:16px;border:1px dashed rgba(207,246,5,.35);background:#0a0c07;
+    display:grid;place-items:center;cursor:pointer;overflow:hidden;transition:.18s;text-align:center}
+  .lx-drop:hover{border-color:var(--green)}
+  .lx-drop img{width:100%;height:100%;object-fit:cover}
+  .lx-drop span{font-size:.58rem;letter-spacing:.14em;color:var(--ink-3);padding:0 6px;line-height:1.5}
+  .lx-idf{flex:1;display:grid;gap:14px;min-width:0}
+  /* pairs */
+  .lx-pairs{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
   .lx-pairs::-webkit-scrollbar{display:none}
-  .lx-pair{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;width:78px;cursor:pointer;
+  .lx-pair{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:7px;width:76px;cursor:pointer;
     padding:12px 6px;border:1px solid var(--line-soft);border-radius:13px;background:#0a0c07;transition:.16s}
   .lx-pair:hover{border-color:rgba(207,246,5,.4)}
   .lx-pair.on{border-color:var(--green);background:rgba(207,246,5,.06)}
   .lx-pair .ic{width:38px;height:38px;border-radius:10px;overflow:hidden;background:#12140d;display:grid;place-items:center}
   .lx-pair .ic img{width:100%;height:100%;object-fit:cover}
   .lx-pair .sym{font-size:.72rem;color:var(--ink);font-weight:600}
+  .lx-cfg{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .lx-cfg label{display:flex;align-items:center;gap:10px;font-size:.74rem;color:var(--ink-2);cursor:pointer}
+  .lx-cfg input{accent-color:var(--green)}
+  /* agents */
   .lx-agents{display:flex;gap:8px;flex-wrap:wrap}
   .lx-agent{cursor:pointer;font-size:.74rem;color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;
     padding:8px 14px;background:#0a0c07;transition:.16s}
   .lx-agent:hover{border-color:rgba(207,246,5,.4);color:var(--ink)}
   .lx-agent.on{border-color:var(--green);color:var(--green);font-weight:600}
-  .lx-note{font-size:.7rem;color:var(--ink-3);line-height:1.5}
+  .lx-note{font-size:.7rem;color:var(--ink-3);line-height:1.55}
   .lx-note b{color:var(--ink-2);font-weight:500}
   .lx-note a{color:var(--green);text-decoration:underline}
-  .lx-cfg{display:flex;flex-direction:column;gap:8px}
-  .lx-cfg label{display:flex;align-items:center;gap:10px;font-size:.76rem;color:var(--ink-2);cursor:pointer}
-  .lx-cfg input{accent-color:var(--green)}
-  .lx-deploy{width:100%;font-size:1rem;padding:16px;font-weight:600;letter-spacing:.04em}
-  .lx-status{font-size:.78rem;line-height:1.5;color:var(--ink-2);margin-top:12px;word-break:break-word}
+  /* launch */
+  .lx-fee{display:flex;justify-content:space-between;font-size:.76rem;color:var(--ink-3);margin:2px 0 16px}
+  .lx-fee b{color:var(--ink);font-weight:500}
+  .lx-deploy{width:100%;font-size:1rem;padding:17px;font-weight:600;letter-spacing:.04em}
+  .lx-status{font-size:.78rem;line-height:1.55;color:var(--ink-2);margin-top:14px;word-break:break-word}
   .lx-status a{color:var(--green);text-decoration:underline}
-  .lx-warn{font-size:.7rem;color:#f5c518;line-height:1.5;margin-top:8px}
-  .lx-mode{display:inline-flex;gap:4px;border:1px solid var(--line-soft);border-radius:11px;padding:4px;margin-bottom:6px}
-  .lx-mode button{font-family:var(--mono);font-size:.72rem;color:var(--ink-2);background:none;border:none;cursor:pointer;
-    padding:8px 14px;border-radius:8px;transition:.16s}
-  .lx-mode button.on{background:var(--green);color:#0a0c07;font-weight:600}
+  .lx-warn{font-size:.7rem;color:#f5c518;line-height:1.5;margin-top:10px}
   .lx-chip{display:inline-flex;align-items:center;gap:7px;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
     color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px}
   .lx-chip .d{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  .lx-fee{display:flex;justify-content:space-between;font-size:.74rem;color:var(--ink-3);border-top:1px solid var(--line-soft);padding-top:14px;margin-top:4px}
-  .lx-fee b{color:var(--ink);font-weight:500}
 </style>
 </head>
 <body>
@@ -94,65 +112,81 @@
   </nav>
 </header>
 
-<main class="wrap">
-  <section class="hero" style="padding:52px 0 22px">
+<main class="wrap lx-wrap">
+  <section class="hero" style="padding:52px 0 20px">
     <span class="lx-chip"><span class="d"></span>Live · Robinhood Chain</span>
     <h1 style="margin-top:18px">Agent <em>Launcher</em>.</h1>
-    <p class="lead">Launch a token, <b>run by your Agent</b>. Fair bonding curve, pair against ETH or a tokenized stock, auto-graduates to a locked pool. Creator fees accrue <b>inside your Agent's wallet</b>.</p>
+    <p class="lead">Launch a token, <b>run by your Agent</b>. Describe it in one sentence — AI drafts the package — pair against a tokenized stock, and creator fees accrue <b>inside your Agent's wallet</b>.</p>
   </section>
 
   <section class="block">
     <div class="term">
       <div class="term-bar"><i></i><i></i><i></i><span>orlix — launcher.sh</span></div>
       <div class="term-body">
-        <div class="lx-mode" id="lxMode">
-          <button data-mode="v2" class="on">Fair Launch · bonding curve</button>
-          <button data-mode="v1">Instant pool</button>
+
+        <!-- 1 · Describe (AI) -->
+        <div class="lx-sec">
+          <div class="lx-h"><span class="n">01</span><b>Describe it</b><span>AI drafts name · ticker · description</span></div>
+          <div class="lx-ai">
+            <input class="lx-in" id="fIdea" placeholder="e.g. a couch potato that day-trades NVDA at 3am">
+            <button class="btn" id="genBtn" type="button">✦ Generate</button>
+          </div>
+          <div class="lx-note" id="genMsg" style="margin-top:8px"></div>
         </div>
 
-        <form class="lx-form" id="lxForm" onsubmit="return false">
-          <div class="lx-row two">
-            <div><span class="lx-lbl">Token name</span><input class="lx-in" id="fName" placeholder="e.g. Couch Trader" maxlength="42"></div>
-            <div><span class="lx-lbl">Ticker</span><input class="lx-in" id="fSym" placeholder="e.g. COUCH" maxlength="11" style="text-transform:uppercase"></div>
+        <!-- 2 · Token identity -->
+        <div class="lx-sec">
+          <div class="lx-h"><span class="n">02</span><b>Token</b></div>
+          <div class="lx-id">
+            <div class="lx-up">
+              <div class="lx-drop" id="lxDrop"><span id="dropTxt">Choose<br>image</span><img id="dropImg" style="display:none" alt=""></div>
+              <input type="file" id="fFile" accept="image/*" hidden>
+            </div>
+            <div class="lx-idf">
+              <div class="lx-row two">
+                <div><span class="lx-lbl">Token name</span><input class="lx-in" id="fName" placeholder="Couch Trader" maxlength="42"></div>
+                <div><span class="lx-lbl">Ticker</span><input class="lx-in" id="fSym" placeholder="COUCH" maxlength="11" style="text-transform:uppercase"></div>
+              </div>
+              <div><span class="lx-lbl">Description</span><textarea class="lx-in" id="fDesc" placeholder="What is this token about?" maxlength="300"></textarea></div>
+            </div>
           </div>
-          <div><span class="lx-lbl">Description</span><textarea class="lx-in" id="fDesc" placeholder="A short description of the token" maxlength="300"></textarea></div>
-          <div><span class="lx-lbl">Token image URL</span><input class="lx-in" id="fLogo" placeholder="https://…/logo.png"></div>
-          <div class="lx-row three">
+          <div class="lx-row two" style="margin-top:14px">
             <div><span class="lx-lbl">X profile</span><input class="lx-in" id="fX" placeholder="@handle"></div>
             <div><span class="lx-lbl">Telegram</span><input class="lx-in" id="fTg" placeholder="t.me/…"></div>
-            <div><span class="lx-lbl">Website</span><input class="lx-in" id="fWeb" placeholder="https://…"></div>
           </div>
+        </div>
 
-          <div id="pairWrap">
-            <span class="lx-lbl">Paired asset — the token graduates into a pool against this</span>
-            <div class="lx-pairs" id="lxPairs"></div>
+        <!-- 3 · Market -->
+        <div class="lx-sec">
+          <div class="lx-h"><span class="n">03</span><b>Market</b><span>fair bonding curve → graduates to a locked pool</span></div>
+          <span class="lx-lbl">Paired asset — the token trades &amp; graduates against this</span>
+          <div class="lx-pairs" id="lxPairs"></div>
+          <div class="lx-cfg" id="lxCfg"></div>
+        </div>
+
+        <!-- 4 · Agent -->
+        <div class="lx-sec">
+          <div class="lx-h"><span class="n">04</span><b>Run under Agent</b><span>creator fees accrue in its wallet</span></div>
+          <div class="lx-agents" id="lxAgents"><span class="lx-note" id="agentNote">Connect your wallet to pick an Agent.</span></div>
+        </div>
+
+        <!-- 5 · Launch -->
+        <div class="lx-sec">
+          <div class="lx-h"><span class="n">05</span><b>Launch</b></div>
+          <div class="lx-row two" style="margin-bottom:16px">
+            <div><span class="lx-lbl">Dev buy — optional (ETH)</span><input class="lx-in" id="fBuy" placeholder="0.0" inputmode="decimal"></div>
+            <div><span class="lx-lbl">Creator tax % (0–10)</span><input class="lx-in" id="fTax" placeholder="0" inputmode="decimal"></div>
           </div>
-
-          <div id="cfgWrap" style="display:none">
-            <span class="lx-lbl">Launch config</span>
-            <div class="lx-cfg" id="lxCfg"></div>
-          </div>
-
-          <div>
-            <span class="lx-lbl">Run under Agent — creator fees accrue in its wallet</span>
-            <div class="lx-agents" id="lxAgents"><span class="lx-note" id="agentNote">Connect your wallet to pick an Agent.</span></div>
-          </div>
-
-          <div class="lx-row two">
-            <div><span class="lx-lbl">Dev buy (optional, ETH)</span><input class="lx-in" id="fBuy" placeholder="0.0" inputmode="decimal"></div>
-            <div><span class="lx-lbl">Creator tax %  (0–10)</span><input class="lx-in" id="fTax" placeholder="0" inputmode="decimal"></div>
-          </div>
-
           <div class="lx-fee"><span>Launch fee</span><b id="lxFee">—</b></div>
-
           <button class="btn lx-deploy" id="deployBtn" type="button">CONNECT WALLET TO LAUNCH</button>
           <div class="lx-warn" id="lxWarn" style="display:none"></div>
           <div class="lx-status" id="lxStatus"></div>
-        </form>
+        </div>
+
       </div>
     </div>
     <p class="lx-note" style="margin-top:14px;text-align:center">
-      Non-custodial — every transaction is signed in your own wallet. Built on the Pons launch protocol on Robinhood Chain.
+      Non-custodial — every transaction is signed in your own wallet. Built on the Pons v2 protocol on Robinhood Chain.
     </p>
   </section>
 </main>
@@ -170,20 +204,14 @@
 (function(){
   "use strict";
   var $=function(s){return document.querySelector(s)};
-  // menu
   (function(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})})();
 
   var CFG={
     chainIdHex:"0x1237", chainId:4663,
     rpc:"https://rpc.mainnet.chain.robinhood.com/",
     explorer:"https://robinhoodchain.blockscout.com",
-    // Pons v2 (docs.ponsfamily.com/v2)
     v2Factory:"0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e",
     v2LaunchAndBuy:"0xe33E9E479dF8802cb0866d5d05258bEc4cF62948",
-    // Pons v1 (instant Uniswap V3 pool, WETH)
-    v1Factory:"0xA5aAb3F0c6EeadF30Ef1D3Eb997108E976351feB",
-    v1FeeWei:"500000000000000", // 0.0005 ETH
-    // ORLIX Agent (ERC-6551)
     agentNft:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",
     registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",
     accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06"
@@ -191,7 +219,6 @@
   var ZERO="0x0000000000000000000000000000000000000000";
   var SALT0="0x0000000000000000000000000000000000000000000000000000000000000000";
 
-  // RWA quote tokens (from Pons registry). ETH native is always first.
   var PAIRS=[
     {sym:"ETH",  name:"Ether",             addr:ZERO},
     {sym:"USDG", name:"Global Dollar",     addr:"0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168"},
@@ -213,24 +240,17 @@
     {sym:"SNDK", name:"SanDisk",           addr:"0xB90A19fF0Af67f7779afF50A882A9CfF42446400"}
   ];
 
-  // ─── ABIs (verified from Pons v2 docs / launchpad repo) ───
   var V2_ABI=[
     "function launchToken((string name,string symbol,string logo,string description,(string twitter,string telegram,string discord,string website,string farcaster) socials,address creatorFeeRecipient,uint16 creatorTaxBps,bool buybackEnabled,bytes32 expectedEconomics,bytes32 salt) params,uint256 launchConfigId,address pairToken,address[] snipeTaxExemptions) payable returns (address token,address curve)",
     "function previewLaunchEconomics(uint256 launchConfigId,address pairToken) view returns (bytes32)",
     "function launchFee() view returns (uint256)",
     "function launchConfigCount() view returns (uint256)",
     "function getLaunchConfig(uint256 id) view returns ((uint256 supply,uint256 curveFeeBps,uint256 phantomQuote,uint256 graduationThreshold,uint24 poolFee,int24 tickSpacing,bool enabled))",
-    "function approvedPairTokens(address pairToken) view returns (bool)",
     "function canLaunch(address account) view returns (bool)",
-    "function maxCreatorTaxBps() view returns (uint16)",
     "event TokenLaunched(address indexed token,address indexed curve,address indexed deployer,address pairToken,uint256 launchConfigId,uint256 graduationThreshold)"
   ];
   var LAB_ABI=[
     "function launchAndBuy((string name,string symbol,string logo,string description,(string twitter,string telegram,string discord,string website,string farcaster) socials,address creatorFeeRecipient,uint16 creatorTaxBps,bool buybackEnabled,bytes32 expectedEconomics,bytes32 salt) params,uint256 launchConfigId,address pairToken,uint256 quoteIn,uint256 minTokensOut,address recipient,address[] snipeTaxExemptions) payable returns (address token,address curve,uint256 tokensOut)"
-  ];
-  var V1_ABI=[
-    "function launchToken((string name,string symbol,string logo,string description,(string twitter,string telegram,string discord,string website,string farcaster) socials,address feeWallet) params,uint256 launchConfigId,uint256 dexId,bytes32 salt) payable returns (address token,address pool)",
-    "event TokenLaunched(address indexed token,address indexed pool,address indexed deployer,uint256 supply)"
   ];
   var REG_ABI=["function account(address implementation,bytes32 salt,uint256 chainId,address tokenContract,uint256 tokenId) view returns (address)"];
 
@@ -238,155 +258,142 @@
   var roV2=new ethers.Contract(CFG.v2Factory,V2_ABI,ro);
   var roReg=new ethers.Contract(CFG.registry,REG_ABI,ro);
 
-  var state={mode:"v2",pair:PAIRS[0],cfgId:0,fee:0n,addr:null,agents:[],agentId:null,agentAddr:null,configs:[]};
+  var state={pair:PAIRS[0],cfgId:0,fee:0n,addr:null,agents:[],agentId:null,agentAddr:null,configs:[],logo:""};
 
   var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
   function pairImg(p){ if(window.tokenImg){return window.tokenImg(p.sym,38,p.addr)} return '<span style="color:var(--green)">'+p.sym[0]+'</span>'; }
 
-  // ── pair tiles ──
   function renderPairs(){
     var el=$("#lxPairs");
-    el.innerHTML=PAIRS.map(function(p,i){
-      return '<button type="button" class="lx-pair'+(state.pair.sym===p.sym?' on':'')+'" data-i="'+i+'" title="'+p.name+'"><span class="ic">'+pairImg(p)+'</span><span class="sym">'+p.sym+'</span></button>';
-    }).join("");
-    el.querySelectorAll(".lx-pair").forEach(function(b){b.addEventListener("click",function(){state.pair=PAIRS[+b.dataset.i];renderPairs();refreshFee()})});
+    el.innerHTML=PAIRS.map(function(p,i){return '<button type="button" class="lx-pair'+(state.pair.sym===p.sym?' on':'')+'" data-i="'+i+'" title="'+p.name+'"><span class="ic">'+pairImg(p)+'</span><span class="sym">'+p.sym+'</span></button>'}).join("");
+    el.querySelectorAll(".lx-pair").forEach(function(b){b.addEventListener("click",function(){state.pair=PAIRS[+b.dataset.i];renderPairs()})});
   }
 
-  // ── launch configs + fee (read live) ──
   async function loadConfigs(){
+    try{ var fee=await roV2.launchFee(); state.fee=fee; $("#lxFee").textContent=ethers.formatEther(fee)+" ETH"; }catch(e){ $("#lxFee").textContent="0.0005 ETH"; }
     try{
-      var fee=await roV2.launchFee(); state.fee=fee; $("#lxFee").textContent=ethers.formatEther(fee)+" ETH";
-    }catch(e){ $("#lxFee").textContent="0.0005 ETH"; }
-    try{
-      var n=Number(await roV2.launchConfigCount());
-      var cfgs=[];
-      for(var i=0;i<n && i<8;i++){ try{var c=await roV2.getLaunchConfig(i); if(c.enabled) cfgs.push({id:i,supply:c.supply,grad:c.graduationThreshold,poolFee:Number(c.poolFee)});}catch(_){}}
-      state.configs=cfgs;
-      if(cfgs.length){ state.cfgId=cfgs[0].id; renderConfigs(); }
+      var n=Number(await roV2.launchConfigCount()), cfgs=[];
+      for(var i=0;i<n&&i<8;i++){ try{var c=await roV2.getLaunchConfig(i); if(c.enabled)cfgs.push({id:i,supply:c.supply,grad:c.graduationThreshold,poolFee:Number(c.poolFee)});}catch(_){}}
+      state.configs=cfgs; if(cfgs.length){state.cfgId=cfgs[0].id;renderConfigs();}
     }catch(e){}
   }
   function renderConfigs(){
-    if(state.mode!=="v2"||!state.configs.length){ $("#cfgWrap").style.display="none"; return; }
-    $("#cfgWrap").style.display="";
-    $("#lxCfg").innerHTML=state.configs.map(function(c){
-      var sup=(c.supply/(10n**18n)).toString();
-      return '<label><input type="radio" name="lxcfg" '+(state.cfgId===c.id?"checked":"")+' data-id="'+c.id+'"> #'+c.id+' · supply '+Intl.NumberFormat("en",{notation:"compact"}).format(Number(sup))+' · graduates ~'+ethers.formatEther(c.grad)+' · pool fee '+c.poolFee+'</label>';
-    }).join("");
-    $("#lxCfg").querySelectorAll("input").forEach(function(r){r.addEventListener("change",function(){state.cfgId=+r.dataset.id;refreshFee()})});
+    if(state.configs.length<2){$("#lxCfg").innerHTML="";return;}
+    $("#lxCfg").innerHTML=state.configs.map(function(c){var sup=(c.supply/(10n**18n)).toString();
+      return '<label><input type="radio" name="lxcfg" '+(state.cfgId===c.id?"checked":"")+' data-id="'+c.id+'"> #'+c.id+' · supply '+Intl.NumberFormat("en",{notation:"compact"}).format(Number(sup))+' · graduates ~'+ethers.formatEther(c.grad)+'</label>';}).join("");
+    $("#lxCfg").querySelectorAll("input").forEach(function(r){r.addEventListener("change",function(){state.cfgId=+r.dataset.id})});
   }
-  function refreshFee(){ $("#lxFee").textContent = state.fee? ethers.formatEther(state.fee)+" ETH" : (state.mode==="v1"?"0.0005 ETH":"—"); }
+
+  // ── AI generate ──
+  $("#genBtn").addEventListener("click",async function(){
+    var idea=$("#fIdea").value.trim(); if(idea.length<3){toast("Describe your idea first");return;}
+    var b=$("#genBtn"); b.disabled=true; b.textContent="…"; $("#genMsg").textContent="Drafting your launch package…";
+    try{
+      var r=await fetch("/api/launch?action=generate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({idea:idea})});
+      var j=await r.json(); if(!r.ok)throw new Error(j.error||"Generation failed");
+      $("#fName").value=j.name||""; $("#fSym").value=(j.ticker||"").toUpperCase(); $("#fDesc").value=j.description||"";
+      $("#genMsg").textContent="Drafted — tweak anything you like.";
+      if(!state.logo) setLogoPreview(monogram(j.ticker||j.name||"OX"),true);
+    }catch(e){ $("#genMsg").innerHTML='<span style="color:#ff6b6b">'+(e.message||"Generation failed")+'</span>'; }
+    b.disabled=false; b.textContent="✦ Generate";
+  });
+
+  // ── image ──
+  function monogram(t){ t=(t||"OX").toUpperCase().slice(0,4);
+    var svg="<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><rect width='120' height='120' rx='24' fill='#0b0d09'/><rect x='2' y='2' width='116' height='116' rx='23' fill='none' stroke='#CFF605' stroke-opacity='.5' stroke-width='2'/><text x='50%' y='54%' font-family='JetBrains Mono,monospace' font-size='"+(t.length>2?34:46)+"' font-weight='700' fill='#CFF605' text-anchor='middle' dominant-baseline='middle'>"+t+"</text></svg>";
+    return "data:image/svg+xml;base64,"+btoa(svg);
+  }
+  function setLogoPreview(url,markAsLogo){ var img=$("#dropImg"),tx=$("#dropTxt"); img.src=url; img.style.display="block"; tx.style.display="none"; if(markAsLogo)state.logo=url; }
+  $("#lxDrop").addEventListener("click",function(){$("#fFile").click()});
+  $("#fFile").addEventListener("change",async function(e){
+    var f=e.target.files&&e.target.files[0]; if(!f)return;
+    if(f.size>1.4*1024*1024){toast("Image too large (max ~1MB)");return;}
+    var rd=new FileReader();
+    rd.onload=async function(){
+      setLogoPreview(rd.result,false); $("#genMsg").textContent="Uploading image…";
+      try{
+        var r=await fetch("/api/launch?action=upload",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data:rd.result})});
+        var j=await r.json(); if(!r.ok)throw new Error(j.error||"Upload failed");
+        state.logo=j.url; $("#genMsg").textContent="Image ready.";
+      }catch(err){ state.logo=rd.result; $("#genMsg").textContent="Image set (hosted upload unavailable)."; }
+    };
+    rd.readAsDataURL(f);
+  });
+  async function ensureLogo(){
+    if(state.logo && /^https?:/.test(state.logo)) return state.logo;
+    // upload the current preview (monogram or data URI) so the on-chain logo is a real URL
+    var data=state.logo||monogram($("#fSym").value||$("#fName").value||"OX");
+    try{
+      var r=await fetch("/api/launch?action=upload",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({data:data})});
+      var j=await r.json(); if(r.ok&&j.url){state.logo=j.url;return j.url;}
+    }catch(_){}
+    return data; // fall back to the data URI
+  }
 
   // ── agents ──
   async function loadAgents(addr){
-    var note=$("#agentNote");
     try{
-      var r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721");
-      var ids=[];
+      var r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721"), ids=[];
       if(r.ok){var j=await r.json();var mc=CFG.agentNft.toLowerCase();
         ids=(j.items||[]).filter(function(it){return((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc}).map(function(it){return parseInt(it.id||it.token_id)}).filter(function(n){return!isNaN(n)});}
-      ids=[...new Set(ids)].sort(function(a,b){return a-b});
-      state.agents=ids;
-      if(ids.length){ if(state.agentId===null) state.agentId=ids[0]; await pickAgent(state.agentId); renderAgents(); }
-      else { $("#lxAgents").innerHTML='<span class="lx-note">No ORLIX Agent in this wallet — you can still launch (fees go to your wallet), or <a href="/nft" target="_blank">mint an Agent</a> to bind fees to it.</span>'; }
-    }catch(e){ if(note) note.textContent="Couldn't load Agents."; }
+      ids=[...new Set(ids)].sort(function(a,b){return a-b}); state.agents=ids;
+      if(ids.length){ if(state.agentId===null)state.agentId=ids[0]; await pickAgent(state.agentId); }
+      else{ $("#lxAgents").innerHTML='<span class="lx-note">No ORLIX Agent in this wallet — you can still launch (fees go to your wallet), or <a href="/nft" target="_blank">mint an Agent</a> to bind fees to it.</span>'; }
+    }catch(e){ $("#agentNote").textContent="Couldn't load Agents."; }
   }
-  async function pickAgent(id){
-    state.agentId=id;
-    try{ state.agentAddr=await roReg.account(CFG.accountImpl,SALT0,CFG.chainId,CFG.agentNft,id); }catch(_){ state.agentAddr=null; }
-    renderAgents();
-  }
+  async function pickAgent(id){ state.agentId=id; try{state.agentAddr=await roReg.account(CFG.accountImpl,SALT0,CFG.chainId,CFG.agentNft,id);}catch(_){state.agentAddr=null;} renderAgents(); }
   function renderAgents(){
     if(!state.agents.length)return;
     var w=state.agentAddr?(' · fees → <span style="color:var(--green)">'+short(state.agentAddr)+'</span>'):'';
     $("#lxAgents").innerHTML=state.agents.map(function(id){return '<button type="button" class="lx-agent'+(state.agentId===id?' on':'')+'" data-id="'+id+'">Agent #'+id+'</button>'}).join("")
-      +'<div class="lx-note" style="width:100%;margin-top:4px">Creator fees accrue <b>inside this Agent\'s wallet</b>'+w+' — selling the Agent sells its fee stream too.</div>';
+      +'<div class="lx-note" style="width:100%;margin-top:4px">Creator fees accrue <b>inside this Agent\'s wallet</b>'+w+' — sell the Agent, sell its fee stream too.</div>';
     $("#lxAgents").querySelectorAll(".lx-agent").forEach(function(b){b.addEventListener("click",function(){pickAgent(+b.dataset.id)})});
   }
 
-  // ── mode ──
-  $("#lxMode").querySelectorAll("button").forEach(function(b){b.addEventListener("click",function(){
-    state.mode=b.dataset.mode;
-    $("#lxMode").querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b)});
-    $("#pairWrap").style.display = state.mode==="v2" ? "" : "none";
-    renderConfigs(); refreshFee();
-  })});
-
   // ── connect ──
-  function setConnected(a){
-    state.addr=a; $("#connectBtn").style.display="none";
-    var chip=$("#walletChip"); chip.style.display="inline-flex"; $("#walletAddr").textContent=short(a);
-    $("#deployBtn").textContent="LAUNCH TOKEN";
-    loadAgents(a);
-  }
-  function connect(){
-    if(window.ORLIX_WALLET){ ORLIX_WALLET.connect(function(a){toast("Wallet connected");setConnected(a)}); return; }
-    if(!window.ethereum){toast("No wallet found — open in a wallet browser");return}
-    window.ethereum.request({method:"eth_requestAccounts"}).then(function(a){if(a&&a[0])setConnected(a[0])});
-  }
+  function setConnected(a){ state.addr=a; $("#connectBtn").style.display="none"; var chip=$("#walletChip"); chip.style.display="inline-flex"; $("#walletAddr").textContent=short(a); $("#deployBtn").textContent="LAUNCH TOKEN"; loadAgents(a); }
+  function connect(){ if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");setConnected(a)});return;} if(!window.ethereum){toast("No wallet found — open in a wallet browser");return;} window.ethereum.request({method:"eth_requestAccounts"}).then(function(a){if(a&&a[0])setConnected(a[0])}); }
   $("#connectBtn").addEventListener("click",connect);
 
-  // ── deploy ──
+  // ── deploy (v2 only) ──
   function warn(m){var w=$("#lxWarn");if(!m){w.style.display="none";return}w.style.display="";w.textContent="⚠ "+m}
   function status(html){$("#lxStatus").innerHTML=html}
-
   async function deploy(){
-    if(!state.addr){ connect(); return; }
+    if(!state.addr){connect();return;}
     var name=$("#fName").value.trim(), sym=$("#fSym").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
-    if(!name||sym.length<2){ toast("Enter a name and ticker"); return; }
+    if(!name||sym.length<2){toast("Enter a name and ticker");return;}
     var btn=$("#deployBtn"); warn(""); status("");
     try{
-      var bp=new ethers.BrowserProvider(window.ethereum);
-      var net=await bp.getNetwork();
-      if(Number(net.chainId)!==CFG.chainId){
-        try{ await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); bp=new ethers.BrowserProvider(window.ethereum); }
-        catch(_){ toast("Switch to Robinhood Chain"); return; }
-      }
+      var bp=new ethers.BrowserProvider(window.ethereum), net=await bp.getNetwork();
+      if(Number(net.chainId)!==CFG.chainId){ try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]});bp=new ethers.BrowserProvider(window.ethereum);}catch(_){toast("Switch to Robinhood Chain");return;} }
       var signer=await bp.getSigner();
-      btn.disabled=true; btn.textContent="PREPARING…";
-
-      var socials={twitter:($("#fX").value||"").trim(),telegram:($("#fTg").value||"").trim(),discord:"",website:($("#fWeb").value||"").trim(),farcaster:""};
+      btn.disabled=true; btn.textContent="PREPARING…"; status("Uploading image &amp; reading launch economics…");
+      var logo=await ensureLogo();
+      var socials={twitter:($("#fX").value||"").trim(),telegram:($("#fTg").value||"").trim(),discord:"",website:"",farcaster:""};
       var creator=state.agentAddr||ZERO;
-      var taxPct=Math.max(0,Math.min(10,Number($("#fTax").value||0)));
-      var taxBps=Math.round(taxPct*100);
+      var taxBps=Math.round(Math.max(0,Math.min(10,Number($("#fTax").value||0)))*100);
       var salt=ethers.hexlify(ethers.randomBytes(32));
       var devBuy=$("#fBuy").value&&Number($("#fBuy").value)>0?ethers.parseEther($("#fBuy").value):0n;
-
-      if(state.mode==="v1"){
-        var v1=new ethers.Contract(CFG.v1Factory,V1_ABI,signer);
-        var p1={name:name,symbol:sym,logo:($("#fLogo").value||"").trim(),description:($("#fDesc").value||"").trim(),socials:socials,feeWallet:(creator!==ZERO?creator:state.addr)};
-        var val1=BigInt(CFG.v1FeeWei)+devBuy;
-        btn.textContent="SIGN IN WALLET…"; status("Deploying via Pons v1 → Uniswap V3 pool…");
-        var tx1=await v1.launchToken(p1,0,0,salt,{value:val1});
-        status("Confirming… <span style=\"color:var(--ink-3)\">"+tx1.hash.slice(0,12)+"…</span>");
-        var rc1=await tx1.wait(); onLaunched(rc1,v1.interface);
-        return;
-      }
-
-      // v2 — read economics + fee live
       var pairAddr=state.pair.addr;
-      var f=new ethers.Contract(CFG.v2Factory,V2_ABI,signer);
       var econ=await roV2.previewLaunchEconomics(state.cfgId,pairAddr);
       var fee=state.fee||await roV2.launchFee();
-      try{ var ok=await roV2.canLaunch(state.addr); if(ok===false) warn("canLaunch() is false for your wallet — if it's not allowed the tx reverts (only gas lost)."); }catch(_){}
-
-      var params={name:name,symbol:sym,logo:($("#fLogo").value||"").trim(),description:($("#fDesc").value||"").trim(),
-        socials:socials,creatorFeeRecipient:creator,creatorTaxBps:taxBps,buybackEnabled:true,expectedEconomics:econ,salt:salt};
-
+      try{var ok=await roV2.canLaunch(state.addr); if(ok===false)warn("canLaunch() is false for your wallet — if it's not allowed the tx reverts (only gas lost).");}catch(_){}
+      var params={name:name,symbol:sym,logo:logo,description:($("#fDesc").value||"").trim(),socials:socials,creatorFeeRecipient:creator,creatorTaxBps:taxBps,buybackEnabled:true,expectedEconomics:econ,salt:salt};
       btn.textContent="SIGN IN WALLET…";
       var tx;
-      if(devBuy>0n && pairAddr===ZERO){
+      if(devBuy>0n&&pairAddr===ZERO){
         var lab=new ethers.Contract(CFG.v2LaunchAndBuy,LAB_ABI,signer);
         var rp=Object.assign({},params,{creatorFeeRecipient:(creator!==ZERO?creator:state.addr)});
         status("Launch + dev buy in one tx…");
         tx=await lab.launchAndBuy(rp,state.cfgId,pairAddr,devBuy,0n,state.addr,[],{value:fee+devBuy});
-      } else {
-        if(devBuy>0n && pairAddr!==ZERO) warn("Dev buy is only wired for ETH pairs — launching without the dev buy.");
-        status("Deploying via Pons v2 → bonding curve (pair "+state.pair.sym+")…");
-        tx=await f.launchToken(params,state.cfgId,pairAddr,[],{value:fee});
+      }else{
+        if(devBuy>0n&&pairAddr!==ZERO)warn("Dev buy is only wired for ETH pairs — launching without it.");
+        status("Deploying → bonding curve (pair "+state.pair.sym+")…");
+        tx=await new ethers.Contract(CFG.v2Factory,V2_ABI,signer).launchToken(params,state.cfgId,pairAddr,[],{value:fee});
       }
       status("Confirming… <span style=\"color:var(--ink-3)\">"+tx.hash.slice(0,12)+"…</span>");
-      var rc=await tx.wait(); onLaunched(rc,f.interface);
+      var rc=await tx.wait(); onLaunched(rc,new ethers.Interface(V2_ABI));
     }catch(e){
       btn.disabled=false; btn.textContent="LAUNCH TOKEN";
       var msg=(e&&(e.shortMessage||e.reason||e.message))||"Transaction failed";
@@ -395,14 +402,13 @@
   }
   function onLaunched(rc,iface){
     var token=null;
-    try{ for(var i=0;i<rc.logs.length;i++){ try{var pl=iface.parseLog(rc.logs[i]); if(pl&&pl.name==="TokenLaunched"){token=pl.args.token;break;}}catch(_){}} }catch(_){}
+    try{for(var i=0;i<rc.logs.length;i++){try{var pl=iface.parseLog(rc.logs[i]); if(pl&&pl.name==="TokenLaunched"){token=pl.args.token;break;}}catch(_){}}}catch(_){}
     var btn=$("#deployBtn"); btn.textContent="LAUNCHED ✓"; btn.disabled=false;
     if(token){ status('Launched <b style="color:var(--green)">$'+$("#fSym").value.toUpperCase()+'</b> → <a href="'+CFG.explorer+'/token/'+token+'" target="_blank" rel="noopener">'+short(token)+' ↗</a>'+(state.agentAddr?'<br>Creator fees route to Agent #'+state.agentId+'.':'')); }
-    else { status('Launched ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>'); }
+    else{ status('Launched ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>'); }
   }
   $("#deployBtn").addEventListener("click",deploy);
 
-  // init
   renderPairs(); loadConfigs();
 })();
 </script>
