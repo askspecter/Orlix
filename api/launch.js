@@ -55,9 +55,10 @@ async function generate(idea) {
   const key = process.env.BANKR_LLM_KEY || '';
   if (!key) return fallbackPackage(idea);
   const sys =
-    'You are ORLIX\'s token launch engine on Robinhood Chain. Given a one-sentence idea, invent a launch package. ' +
-    'Return ONLY compact JSON: {"name": string (catchy, <=32 chars), "ticker": string (3-6 UPPERCASE letters/numbers), ' +
-    '"description": string (1-2 punchy sentences, <=200 chars)}. No markdown, no extra text.';
+    'You are ORLIX\'s degen token-launch engine on Robinhood Chain. From a one-sentence idea, invent a WILD, memeable launch package that would pop off on crypto Twitter. ' +
+    'Rules: name = punchy, funny or epic, <=28 chars, no generic words like "Token"/"Coin". ticker = 3-6 UPPERCASE letters, clever, easy to shill. ' +
+    'description = 1-2 electric sentences with attitude, <=180 chars. image_prompt = a vivid, unhinged art-direction prompt for a square token mascot/logo: subject, style (e.g. 3D render, neon, glitch, sticker, hyperreal), mood, background — no text/words in the image. ' +
+    'Return ONLY compact JSON: {"name":string,"ticker":string,"description":string,"image_prompt":string}. No markdown.';
   try {
     const r = await fetch('https://llm.bankr.bot/v1/chat/completions', {
       method: 'POST',
@@ -65,8 +66,8 @@ async function generate(idea) {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [{ role: 'system', content: sys }, { role: 'user', content: String(idea).slice(0, 400) }],
-        max_tokens: 400,
-        temperature: 0.9,
+        max_tokens: 500,
+        temperature: 1.0,
       }),
     });
     const j = await r.json();
@@ -75,10 +76,41 @@ async function generate(idea) {
     if (m) {
       const o = JSON.parse(m[0]);
       const ticker = String(o.ticker || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-      if (o.name && ticker) return { name: String(o.name).slice(0, 42), ticker, description: String(o.description || '').slice(0, 220) };
+      if (o.name && ticker) return {
+        name: String(o.name).slice(0, 42),
+        ticker,
+        description: String(o.description || '').slice(0, 220),
+        image_prompt: String(o.image_prompt || '').slice(0, 500),
+      };
     }
   } catch (_) {}
   return fallbackPackage(idea);
+}
+
+// AI image via Venice (uncensored, fast). Returns a base64 data URL, or null.
+async function generateImage(prompt) {
+  const key = process.env.VENICE_API_KEY || '';
+  if (!key || !prompt) return null;
+  const models = ['flux-dev', 'venice-sd35', 'stable-diffusion-3.5'];
+  for (const model of models) {
+    try {
+      const r = await fetch('https://api.venice.ai/api/v1/image/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
+        body: JSON.stringify({
+          model,
+          prompt: String(prompt).slice(0, 1400) + ', centered square icon, vibrant, high detail, no text, no watermark',
+          width: 640, height: 640, format: 'webp', steps: 18,
+          safe_mode: false, hide_watermark: true,
+        }),
+      });
+      if (!r.ok) continue;
+      const j = await r.json();
+      const b64 = j && j.images && j.images[0];
+      if (b64) return 'data:image/webp;base64,' + b64;
+    } catch (_) {}
+  }
+  return null;
 }
 
 module.exports = async function handler(req, res) {
@@ -131,6 +163,23 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ url: `${BASE_URL}/api/launch?action=img&id=${id}` });
     } catch (e) {
       return res.status(500).json({ error: 'Upload failed.' });
+    }
+  }
+
+  // ── AI image generation (Venice) → hosted URL ──
+  if (action === 'image') {
+    const prompt = (body.prompt || '').toString().trim();
+    if (prompt.length < 3) return res.status(400).json({ error: 'Provide an image prompt.' });
+    const dataUrl = await generateImage(prompt);
+    if (!dataUrl) return res.status(502).json({ error: 'Image generation unavailable.' });
+    const c = creds();
+    if (!c) return res.status(200).json({ dataUrl }); // no store — return inline (caller may still use it as preview)
+    const id = rid();
+    try {
+      await redis(c.url, c.token, 'SET', IMG_PREFIX + id, dataUrl);
+      return res.status(200).json({ url: `${BASE_URL}/api/launch?action=img&id=${id}` });
+    } catch (e) {
+      return res.status(200).json({ dataUrl });
     }
   }
 
