@@ -208,7 +208,12 @@
   var iface=new ethers.Interface(V2_ABI);
   // raw RPC read + receipt poll — used so we never let ethers build/send the tx
   // (ethers calls eth_feeHistory/eth_maxPriorityFeePerGas which this RPC returns non-standard → "could not coalesce")
-  function rrpc(method,params){ return fetch(CFG.rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:method,params:params||[]})}).then(function(r){return r.json()}).then(function(j){if(j.error)throw new Error(j.error.message||"rpc error");return j.result}); }
+  function rrpc(method,params){ return fetch(CFG.rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:method,params:params||[]})}).then(function(r){return r.json()}).then(function(j){if(j.error){var e=new Error(j.error.message||"rpc error");e.data=(j.error.data&&j.error.data.data)||j.error.data;throw e;}return j.result}); }
+  // decode a Solidity revert payload → human string (Error(string) / Panic(uint256))
+  function decodeRevert(d){ if(!d||d==="0x"||typeof d!=="string")return null;
+    try{ if(d.slice(0,10)==="0x08c379a0")return ethers.AbiCoder.defaultAbiCoder().decode(["string"],"0x"+d.slice(10))[0];
+      if(d.slice(0,10)==="0x4e487b71")return "Panic("+ethers.AbiCoder.defaultAbiCoder().decode(["uint256"],"0x"+d.slice(10))[0].toString()+")"; }catch(_){}
+    return null; }
   async function waitRc(hash){ for(var i=0;i<150;i++){ var r=null; try{r=await rrpc("eth_getTransactionReceipt",[hash]);}catch(_){}
       if(r){ return {status:parseInt(r.status,16), logs:r.logs||[], hash:r.transactionHash||hash}; }
       await new Promise(function(res){setTimeout(res,2000)}); }
@@ -216,6 +221,14 @@
   // Simulate first: eth_estimateGas returns the REAL gas needed (a launch deploys 2 contracts,
   // often > the hardcoded floor → out-of-gas revert). If the call reverts for another reason
   // (whitelist / fee / economics drift) we surface that reason instead of burning gas blind.
+  // Diagnose why a launch would revert, in the user's browser (RPC returns bare "execution reverted").
+  async function preflight(to,data,value){
+    try{ var ok=await roV2.canLaunch(state.addr); if(ok===false) return "Wallet Anda belum diizinkan me-launch (canLaunch = false) — perlu di-whitelist oleh admin factory."; }catch(_){}
+    try{ var c=await roV2.getLaunchConfig(state.cfgId); if(c&&c.enabled===false) return "Launch config #"+state.cfgId+" tidak aktif — muat ulang halaman lalu coba lagi."; }catch(_){ return "Launch config #"+state.cfgId+" tidak terbaca — muat ulang halaman."; }
+    try{ await rrpc("eth_call",[{from:state.addr,to:to,data:data,value:"0x"+value.toString(16)},"latest"]); }
+    catch(e){ var r=decodeRevert(e.data); return r ? ("Kontrak menolak: "+r) : "Kontrak menolak launch (execution reverted, tanpa alasan). Kemungkinan: ticker/nama sudah dipakai, fee, atau whitelist. Coba ganti nama/ticker."; }
+    return null;
+  }
   async function estGas(txp,fallback){
     try{ var e=await rrpc("eth_estimateGas",[txp]); var g=BigInt(e); g=g+g/4n; return g>fallback?g:fallback; }
     catch(err){ var m=(err&&err.message)||"";
@@ -308,6 +321,8 @@
       }
       var txp={from:state.addr,to:to,data:data,value:"0x"+value.toString(16)};
       status("Simulating launch…");
+      var why=await preflight(to,data,value);     // specific reason, in the browser, before any gas
+      if(why) throw new Error(why);
       var gasUse=await estGas(txp,gas);           // real gas, or throws the on-chain revert reason
       txp.gas="0x"+gasUse.toString(16);
       var hash=await window.ethereum.request({method:"eth_sendTransaction",params:[txp]});
@@ -317,7 +332,7 @@
       onLaunched(rc);
     }catch(e){
       btn.disabled=false; btn.textContent="LAUNCH TOKEN";
-      status('<span style="color:#ff6b6b">Failed: '+String(errMsg(e)).slice(0,140)+'</span>');
+      status('<span style="color:#ff6b6b">Failed: '+String(errMsg(e)).slice(0,240)+'</span>');
     }
   }
   function onLaunched(rc){
