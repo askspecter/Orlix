@@ -4,17 +4,65 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Box — ORLIX · Robinhood Chain</title>
-<meta name="description" content="Coming soon: an on-chain gacha for ORLIX holders — open a Box for token certificates & rewards on Robinhood Chain.">
+<meta name="description" content="An on-chain gacha for ORLIX holders — spend $ORLIX, open a Box, pull rewards straight to your Agent's wallet. Provably random, settled on Robinhood Chain.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orlixai.xyz/box">
-<meta property="og:title" content="Agent Box — ORLIX (coming soon)">
+<meta property="og:title" content="Agent Box — ORLIX">
 <meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
 <link rel="stylesheet" href="/assets/nft/app.css">
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="/assets/nft/tokens.js"></script>
+<script src="/assets/nft/wallet.js"></script>
+<style>
+  .bx-wrap{max-width:900px}
+  .bx-grid{display:grid;gap:20px}
+  @media(min-width:820px){.bx-grid{grid-template-columns:1fr 1fr;align-items:start}}
+  .bx-card{border:1px solid var(--line-soft);border-radius:18px;background:var(--panel);padding:22px}
+  /* the box */
+  .bx-stage{display:grid;place-items:center;padding:26px 0 10px}
+  .bx-box{width:170px;height:170px;position:relative;cursor:pointer;filter:drop-shadow(0 12px 30px rgba(207,246,5,.18));transition:transform .2s}
+  .bx-box:hover{transform:translateY(-4px)}
+  .bx-box.shake{animation:bxshake .5s ease-in-out infinite}
+  @keyframes bxshake{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+  .bx-box svg{width:100%;height:100%;display:block}
+  .bx-glow{position:absolute;inset:-30% 0 auto 0;height:60%;background:radial-gradient(closest-side,rgba(207,246,5,.5),transparent);opacity:0;transition:opacity .3s}
+  .bx-box.open .bx-glow{opacity:1}
+  .bx-hint{font-size:.72rem;color:var(--ink-3);text-align:center;margin-top:8px}
+  /* result */
+  .bx-result{border:1px solid rgba(207,246,5,.35);border-radius:16px;background:linear-gradient(180deg,rgba(207,246,5,.06),transparent);padding:20px;text-align:center;margin-top:16px;display:none}
+  .bx-result.show{display:block;animation:bxpop .4s var(--ease)}
+  @keyframes bxpop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+  .bx-result .tier{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--green)}
+  .bx-result .amt{font-size:1.8rem;font-weight:700;color:var(--ink);margin:6px 0 2px}
+  .bx-result .sub{font-size:.74rem;color:var(--ink-2)}
+  .bx-result a{color:var(--green);text-decoration:underline}
+  /* stats + odds */
+  .bx-rows{display:grid;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:12px;overflow:hidden;margin-top:4px}
+  .bx-row{background:var(--panel);display:flex;justify-content:space-between;align-items:center;padding:12px 14px;gap:10px}
+  .bx-row u{text-decoration:none;font-size:.56rem;letter-spacing:.2em;color:var(--ink-3)}
+  .bx-row b{color:var(--ink);font-size:.92rem;font-weight:600}
+  .bx-odds{margin-top:6px}
+  .bx-odd{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+  .bx-odd:last-child{border-bottom:0}
+  .bx-odd .nm{flex:1;color:var(--ink);font-size:.86rem;font-weight:500}
+  .bx-odd .pay{color:var(--green);font-size:.8rem;font-weight:600}
+  .bx-odd .pct{width:52px;text-align:right;color:var(--ink-3);font-size:.72rem}
+  .bx-odd .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .bx-lbl{display:block;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin:2px 0 9px}
+  .bx-agents{display:flex;flex-wrap:wrap;gap:8px}
+  .bx-agent{font-family:var(--mono);font-size:.72rem;color:var(--ink-2);background:#0a0c07;border:1px solid var(--line-soft);border-radius:999px;padding:8px 13px;cursor:pointer;transition:.16s}
+  .bx-agent:hover{border-color:rgba(207,246,5,.4)}.bx-agent.on{border-color:var(--green);color:var(--green);font-weight:600}
+  .bx-act{width:100%;margin-top:14px;font-size:.95rem;padding:15px;font-weight:600}
+  .bx-msg{font-size:.76rem;color:var(--ink-2);margin-top:12px;line-height:1.5;word-break:break-word;text-align:center}
+  .bx-msg a{color:var(--green);text-decoration:underline}
+  .bx-note{font-size:.68rem;color:var(--ink-3);margin-top:14px;line-height:1.6}
+  .bx-load{padding:40px 20px;text-align:center;color:var(--ink-3);font-size:.85rem}
+</style>
 </head>
 <body>
 <div class="scanlines" aria-hidden="true"></div>
@@ -26,8 +74,8 @@
       <b>ORLIX<sup>®</sup></b>
     </a>
     <div class="top-nav">
-      <a class="ghost hide-sm" href="/amm">NFT AMM</a>
-      <a class="btn" href="/nft">MINT</a>
+      <button class="btn" id="connectBtn">CONNECT</button>
+      <span class="chip" id="walletChip" style="display:none"><span id="walletAddr"></span></span>
       <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
     </div>
   </div>
@@ -47,58 +95,220 @@
   </nav>
 </header>
 
-<main class="wrap">
-  <section class="hero" style="padding:56px 0 22px">
-    <span class="cs-badge"><span class="dot"></span>Coming Soon</span>
+<main class="wrap bx-wrap">
+  <section class="hero" style="padding:44px 0 14px">
+    <span class="kicker"><span class="dot"></span>ON-CHAIN GACHA</span>
     <h1>Agent <em>Box</em>.</h1>
-    <p class="lead">An <b>on-chain gacha</b> for ORLIX holders. Open a Box, pull token certificates and rewards — provably random, settled on Robinhood Chain.</p>
+    <p class="lead">Spend <b style="color:var(--green)">$ORLIX</b>, open a Box, pull a reward — <b>provably random</b> and settled on Robinhood Chain. Rewards flow straight to your Agent's wallet.</p>
   </section>
 
-  <section class="block" style="margin-top:18px">
-    <div class="term">
-      <div class="term-bar"><i></i><i></i><i></i><span>orlix — box.sh</span></div>
-      <div class="term-body">
-        <div style="font-size:.9rem;line-height:1.9"><span style="color:var(--green)">&gt;</span> <span class="cs-typed" id="typed"></span><span class="cs-caret"></span></div>
-        <div style="margin-top:22px">
-          <div class="cs-progrow"><span>BUILD STATUS</span><b>IN PROGRESS · 15%</b></div>
-          <div class="cs-bar"><i style="width:15%"></i></div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <div id="bxBody"><div class="bx-load">Loading the Box…</div></div>
 
-  <section class="block">
-    <div class="sec-head"><span class="n">INSIDE THE BOX</span></div>
-    <div class="steps">
-      <div class="cs-feat"><div class="s-n">◍</div><h3>Open with $ORLIX</h3><p>Spend $ORLIX to open a Box. Each pull is settled on-chain — no hidden server, no house edge you can’t see.</p></div>
-      <div class="cs-feat"><div class="s-n">◈</div><h3>Provably random</h3><p>Outcomes are verifiable on Robinhood Chain. What you pull is what the contract rolled — transparent by design.</p></div>
-      <div class="cs-feat"><div class="s-n">✦</div><h3>Real rewards</h3><p>Token certificates, reward drops, and rare pulls flow straight to your Agent’s wallet. Collect, hold, or trade.</p></div>
-    </div>
-  </section>
-
-  <section class="hero" style="padding:10px 0 46px">
-    <p class="cs-note">Hold an Agent to be first in line when the Box opens. Mint is live now.</p>
-    <div class="cs-cta">
-      <a class="btn mint-cta" href="/nft">MINT AN AGENT →</a>
-      <a class="btn outline mint-cta" href="https://x.com/orlixai" target="_blank" rel="noopener">FOLLOW FOR UPDATES</a>
-    </div>
+  <section class="hero" style="padding:22px 0 46px">
+    <p class="bx-note" style="text-align:center">Every open is one transaction. The <code>roll</code> is emitted on-chain and recomputable from the tx inputs — what you pull is what the contract rolled.</p>
   </section>
 </main>
 
 <footer>
   <div class="foot-in">
-    <div class="fl"><a href="/">Home</a><a href="/nft">Mint NFT</a><a href="/amm">NFT AMM</a><a href="/agents">Agent Wallets</a></div>
-    <small>© 2026 ORLIX · Robinhood Chain · roadmap · not financial advice</small>
+    <div class="fl"><a href="/">Home</a><a href="/nft">Mint NFT</a><a href="/agents">Agent Wallets</a><a href="/launcher">Launcher</a></div>
+    <small>© 2026 ORLIX · Robinhood Chain · gacha is for fun · not financial advice</small>
   </div>
 </footer>
 
+<div class="toast" id="toast"></div>
+
 <script>
 (function(){
-  var b=document.getElementById('menuBtn'),p=document.getElementById('menuPanel');
-  if(b&&p){b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})}
-  var txt="open --box --random=onchain … loading the gacha engine.";
-  var el=document.getElementById('typed'),i=0;
-  (function tick(){if(!el)return;if(i<=txt.length){el.textContent=txt.slice(0,i++);setTimeout(tick,34)}})();
+  "use strict";
+  var $=function(s,r){return (r||document).querySelector(s)};
+  (function(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})})();
+
+  var CFG={
+    chainIdHex:"0x1237", chainId:4663, rpc:"https://rpc.mainnet.chain.robinhood.com/",
+    explorer:"https://robinhoodchain.blockscout.com",
+    token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",  // $ORLIX
+    boxContract:"",                                       // ← paste OrlixAgentBox address after deploy
+    registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",
+    accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06",
+    agentNft:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c"  // Phase-2 Agent NFT
+  };
+  var ZERO="0x0000000000000000000000000000000000000000", SALT0="0x"+"0".repeat(64);
+  var TIER_COLORS=["#8a8f7a","#CFF605","#57d0ff","#c77dff","#ffd166","#ff6b6b"];
+
+  var BOX_ABI=[
+    "function boxPrice() view returns (uint256)",
+    "function poolBalance() view returns (uint256)",
+    "function paused() view returns (bool)",
+    "function totalOpened() view returns (uint256)",
+    "function tiersCount() view returns (uint256)",
+    "function tier(uint256) view returns (uint256 weight,uint256 payout,string name)",
+    "function open(address rewardTo) returns (uint256,uint256)",
+    "event BoxOpened(address indexed opener,address indexed rewardTo,uint256 indexed boxId,uint256 tier,string tierName,uint256 payout,uint256 roll)"
+  ];
+  var ERC20_ABI=["function decimals() view returns (uint8)","function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
+  var REG_ABI=["function account(address implementation,bytes32 salt,uint256 chainId,address tokenContract,uint256 tokenId) view returns (address)"];
+
+  var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
+  var roReg=new ethers.Contract(CFG.registry,REG_ABI,ro);
+  var boxI=new ethers.Interface(BOX_ABI), ercI=new ethers.Interface(ERC20_ABI);
+
+  // RAW send (encode calldata offline; never let ethers populate fees → avoids "could not coalesce").
+  function rrpc(m,p){ return fetch(CFG.rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:m,params:p||[]})}).then(function(r){return r.json()}).then(function(j){if(j.error){var e=new Error(j.error.message||"rpc");e.data=(j.error.data&&j.error.data.data)||j.error.data;throw e;}return j.result}); }
+  async function waitRc(h){ for(var i=0;i<150;i++){ var r=null; try{r=await rrpc("eth_getTransactionReceipt",[h]);}catch(_){}
+    if(r) return {status:parseInt(r.status,16),logs:r.logs||[],hash:r.transactionHash||h};
+    await new Promise(function(res){setTimeout(res,2000)}); }
+    throw new Error("Timed out waiting for confirmation (tx may still land)."); }
+  async function ensureChain(){ try{ var c=await window.ethereum.request({method:"eth_chainId"}); if(c!==CFG.chainIdHex) await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]}); }catch(_){} }
+  async function estGas(txp,fb){ try{ var e=await rrpc("eth_estimateGas",[txp]); var g=BigInt(e); g=g+g/4n; return g>fb?g:fb; }catch(err){ var m=(err&&err.message)||""; if(/revert|insufficient|exceeds|not allowed|paused/i.test(m))throw new Error(m); return fb; } }
+  async function rawSend(to,data,gas){ var p={from:S.addr,to:to,data:data}; p.gas="0x"+(await estGas(p,gas)).toString(16);
+    var h=await window.ethereum.request({method:"eth_sendTransaction",params:[p]}); var rc=await waitRc(h); if(rc.status===0)throw new Error("Transaction reverted on-chain."); return rc; }
+
+  var toastT;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2200)}
+  function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
+  function fmtTok(wei,dec){ dec=dec||18; var neg=wei<0n; if(neg)wei=-wei; var p=10n**BigInt(dec); var whole=wei/p; var frac=Number((wei%p)*10000n/p)/10000; var n=Number(whole)+frac; return (neg?"-":"")+n.toLocaleString("en",{maximumFractionDigits:n<1?4:(n<1000?2:0)}); }
+
+  var S={addr:null, dec:18, price:0n, pool:0n, paused:false, tiers:[], totalWeight:0, opened:0, agents:[], agentId:null, agentAddr:null, opening:false};
+
+  // ── wallet ──
+  function setConnected(a){ S.addr=a; $("#connectBtn").style.display="none"; var c=$("#walletChip"); c.style.display="inline-flex"; $("#walletAddr").textContent=short(a); loadAgents(a); renderRecipient(); }
+  function connect(){ if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");setConnected(a)});return;} if(!window.ethereum){toast("No wallet found — open in a wallet browser");return;} window.ethereum.request({method:"eth_requestAccounts"}).then(function(a){if(a&&a[0])setConnected(a[0])}); }
+  $("#connectBtn").addEventListener("click",connect);
+
+  async function loadAgents(addr){
+    try{ var r=await fetch(CFG.explorer+"/api/v2/addresses/"+addr+"/nft?type=ERC-721"); var ids=[];
+      if(r.ok){ var j=await r.json(); var mc=CFG.agentNft.toLowerCase(); ids=(j.items||[]).filter(function(it){return((it.token&&(it.token.address||it.token.address_hash))||"").toLowerCase()===mc}).map(function(it){return parseInt(it.id||it.token_id)}).filter(function(n){return!isNaN(n)}); }
+      ids=[...new Set(ids)].sort(function(a,b){return a-b}); S.agents=ids;
+      if(ids.length){ if(S.agentId===null)S.agentId=ids[0]; try{S.agentAddr=await roReg.account(CFG.accountImpl,SALT0,CFG.chainId,CFG.agentNft,S.agentId);}catch(_){S.agentAddr=null;} }
+      renderRecipient();
+    }catch(_){}
+  }
+  async function pickAgent(id){ if(S.agentId===id){ S.agentId=null; S.agentAddr=null; renderRecipient(); return; }
+    S.agentId=id; try{S.agentAddr=await roReg.account(CFG.accountImpl,SALT0,CFG.chainId,CFG.agentNft,id);}catch(_){S.agentAddr=null;} renderRecipient(); }
+  function rewardTo(){ return (S.agentId!==null&&S.agentAddr)?S.agentAddr:S.addr; }
+
+  // ── load box data ──
+  async function loadBox(){
+    if(!/^0x[0-9a-fA-F]{40}$/.test(CFG.boxContract)){
+      $("#bxBody").innerHTML='<div class="bx-card"><div class="bx-load">Agent Box isn\'t wired to a contract yet. Deploy <code>OrlixAgentBox.sol</code>, then set its address in <code>box.html</code> (CFG.boxContract).</div></div>';
+      return;
+    }
+    try{
+      var box=new ethers.Contract(CFG.boxContract,BOX_ABI,ro);
+      var dec=18; try{ dec=Number(await new ethers.Contract(CFG.token,ERC20_ABI,ro).decimals()); }catch(_){}
+      S.dec=dec;
+      var base=await Promise.all([box.boxPrice(),box.poolBalance(),box.paused(),box.totalOpened(),box.tiersCount()]);
+      S.price=base[0]; S.pool=base[1]; S.paused=base[2]; S.opened=Number(base[3]); var n=Number(base[4]);
+      var tiers=[]; var tw=0n;
+      for(var i=0;i<n;i++){ try{ var t=await box.tier(i); tiers.push({weight:t[0],payout:t[1],name:t[2]}); tw+=t[0]; }catch(_){} }
+      S.tiers=tiers; S.totalWeight=Number(tw);
+      renderShell();
+    }catch(e){ $("#bxBody").innerHTML='<div class="bx-card"><div class="bx-load">Couldn\'t reach the Box: '+(((e&&e.message)||"")+"").slice(0,80)+'</div></div>'; }
+  }
+
+  function boxSvg(){
+    return '<div class="bx-glow"></div><svg viewBox="0 0 100 100" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">'
+      +'<rect x="20" y="18" width="60" height="10" fill="#a9cf04"/><rect x="18" y="26" width="64" height="8" fill="#cff605"/>'
+      +'<rect x="22" y="34" width="56" height="46" fill="#cff605"/><rect x="22" y="34" width="56" height="46" fill="none" stroke="#0b0d09" stroke-width="2"/>'
+      +'<rect x="26" y="38" width="6" height="6" fill="#0b0d09"/><rect x="68" y="38" width="6" height="6" fill="#0b0d09"/>'
+      +'<rect x="26" y="70" width="6" height="6" fill="#0b0d09"/><rect x="68" y="70" width="6" height="6" fill="#0b0d09"/>'
+      +'<text x="50" y="63" font-family="monospace" font-size="26" font-weight="700" fill="#0b0d09" text-anchor="middle">?</text></svg>';
+  }
+
+  function renderShell(){
+    var priceStr=fmtTok(S.price,S.dec);
+    $("#bxBody").innerHTML=
+      '<div class="bx-grid">'
+      +'<div class="bx-card">'
+        +'<div class="bx-stage"><div class="bx-box" id="bxBox">'+boxSvg()+'</div></div>'
+        +'<div class="bx-hint" id="bxHint">'+(S.paused?'Box is paused right now.':'Tap the Box or the button to open.')+'</div>'
+        +'<div class="bx-result" id="bxResult"></div>'
+        +'<div id="bxRecip" style="margin-top:16px"></div>'
+        +'<button class="btn bx-act" id="openBtn">'+(S.addr?('OPEN — '+priceStr+' $ORLIX'):'CONNECT TO OPEN')+'</button>'
+        +'<div class="bx-msg" id="bxMsg"></div>'
+      +'</div>'
+      +'<div class="bx-card">'
+        +'<span class="bx-lbl">The Box</span>'
+        +'<div class="bx-rows">'
+          +'<div class="bx-row"><u>PRICE / OPEN</u><b>'+priceStr+' $ORLIX</b></div>'
+          +'<div class="bx-row"><u>PRIZE POOL</u><b>'+fmtTok(S.pool,S.dec)+' $ORLIX</b></div>'
+          +'<div class="bx-row"><u>OPENED</u><b>'+S.opened.toLocaleString("en")+'</b></div>'
+        +'</div>'
+        +'<span class="bx-lbl" style="margin-top:18px">Drop table · provably random</span>'
+        +'<div class="bx-odds">'+S.tiers.map(function(t,i){ var pct=S.totalWeight>0?(Number(t.weight)/S.totalWeight*100):0; var c=TIER_COLORS[i%TIER_COLORS.length];
+            return '<div class="bx-odd"><span class="dot" style="background:'+c+'"></span><span class="nm">'+esc(t.name||("Tier "+i))+'</span><span class="pay">'+(t.payout>0n?('+'+fmtTok(t.payout,S.dec)+' $ORLIX'):'—')+'</span><span class="pct">'+(pct>=10?pct.toFixed(0):pct.toFixed(1))+'%</span></div>'; }).join("")+'</div>'
+        +'<div class="bx-note">Odds are the on-chain tier weights. Rewards pay from the prize pool straight to the recipient wallet you choose.</div>'
+      +'</div>'
+      +'</div>';
+    $("#bxBox").addEventListener("click",openBox);
+    $("#openBtn").addEventListener("click",openBox);
+    renderRecipient();
+  }
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])})}
+
+  function renderRecipient(){
+    var el=$("#bxRecip"); if(!el)return;
+    if(!S.addr){ el.innerHTML=''; var ob=$("#openBtn"); if(ob){ob.textContent="CONNECT TO OPEN";} return; }
+    var to=rewardTo();
+    var chips = S.agents.length ? ('<div class="bx-agents">'+S.agents.map(function(id){return '<button type="button" class="bx-agent'+(S.agentId===id?' on':'')+'" data-id="'+id+'">Agent #'+id+'</button>'}).join("")+'</div>') : '';
+    var note = (S.agentId!==null&&S.agentAddr)
+      ? 'Rewards go to <b style="color:var(--green)">Agent #'+S.agentId+"'s wallet</b> · "+short(S.agentAddr)+'. Tap it again to send to your own wallet.'
+      : (S.agents.length ? 'Rewards go to <b>your own wallet</b>. Tap an Agent to route them into its wallet.' : 'Rewards go to your wallet. <a href="/nft" target="_blank">Mint an Agent</a> to collect into an Agent wallet.');
+    el.innerHTML='<span class="bx-lbl">Reward recipient</span>'+chips+'<div class="bx-note">'+note+'</div>';
+    el.querySelectorAll(".bx-agent").forEach(function(b){b.addEventListener("click",function(){pickAgent(+b.dataset.id)})});
+    var ob=$("#openBtn"); if(ob&&!S.opening)ob.textContent="OPEN — "+fmtTok(S.price,S.dec)+" $ORLIX";
+  }
+
+  // ── open a box ──
+  async function openBox(){
+    if(S.opening)return;
+    if(!S.addr){connect();return;}
+    if(S.paused){toast("Box is paused");return;}
+    var btn=$("#openBtn"), msg=$("#bxMsg"), boxEl=$("#bxBox"), res=$("#bxResult");
+    S.opening=true; btn.disabled=true; res.classList.remove("show"); msg.textContent="";
+    try{
+      await ensureChain();
+      var to=rewardTo();
+      // balance check
+      var bal=await new ethers.Contract(CFG.token,ERC20_ABI,ro).balanceOf(S.addr);
+      if(bal<S.price){ throw new Error("Not enough $ORLIX. Need "+fmtTok(S.price,S.dec)+", you have "+fmtTok(bal,S.dec)+"."); }
+      // approve if needed
+      var al=await new ethers.Contract(CFG.token,ERC20_ABI,ro).allowance(S.addr,CFG.boxContract);
+      if(al<S.price){ btn.textContent="APPROVE $ORLIX…"; msg.textContent="Approve $ORLIX for the Box…"; await rawSend(CFG.token,ercI.encodeFunctionData("approve",[CFG.boxContract,(1n<<255n)]),120000n); }
+      btn.textContent="OPENING…"; if(boxEl)boxEl.classList.add("shake"); msg.textContent="Rolling on-chain…";
+      var rc=await rawSend(CFG.boxContract, boxI.encodeFunctionData("open",[to]), 500000n);
+      if(boxEl){boxEl.classList.remove("shake");boxEl.classList.add("open");}
+      showResult(rc);
+    }catch(e){
+      if(boxEl)boxEl.classList.remove("shake");
+      msg.innerHTML='<span style="color:#ff6b6b">'+esc((((e&&(e.shortMessage||e.message))||"Failed")+"")).slice(0,140)+'</span>';
+    }
+    S.opening=false; btn.disabled=false; renderRecipient();
+  }
+
+  function showResult(rc){
+    var ev=null;
+    try{ for(var i=0;i<rc.logs.length;i++){ try{ var pl=boxI.parseLog(rc.logs[i]); if(pl&&pl.name==="BoxOpened"){ ev=pl.args; break; } }catch(_){} } }catch(_){}
+    var res=$("#bxResult");
+    if(ev){
+      var idx=Number(ev.tier), c=TIER_COLORS[idx%TIER_COLORS.length];
+      var pay=ev.payout, won=pay>0n;
+      res.innerHTML='<div class="tier" style="color:'+c+'">'+esc(ev.tierName||("Tier "+idx))+'</div>'
+        +'<div class="amt">'+(won?('+'+fmtTok(pay,S.dec)+' $ORLIX'):'No drop')+'</div>'
+        +'<div class="sub">'+(won?('Sent to '+short(String(ev.rewardTo))):'Better luck next pull')+' · <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a></div>';
+      res.classList.add("show");
+      $("#bxMsg").textContent="";
+      toast(won?"You pulled "+ev.tierName+" ✓":"Opened — no drop");
+    }else{
+      $("#bxMsg").innerHTML='Opened ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>';
+    }
+    // refresh pool / count in the background
+    loadBox();
+  }
+
+  // boot
+  loadBox();
+  if(window.ORLIX_WALLET&&window.ethereum){ try{ window.ethereum.request({method:"eth_accounts"}).then(function(a){if(a&&a[0])setConnected(a[0])}); }catch(_){} }
 })();
 </script>
 </body>
