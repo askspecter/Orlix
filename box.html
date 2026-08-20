@@ -41,6 +41,19 @@
   .bx-result .amt{font-size:1.8rem;font-weight:700;color:var(--ink);margin:6px 0 2px}
   .bx-result .sub{font-size:.74rem;color:var(--ink-2)}
   .bx-result a{color:var(--green);text-decoration:underline}
+  /* bearer-deed certificate */
+  .bx-cert{margin:6px auto 12px;max-width:420px;background:linear-gradient(135deg,#f4f7f4,#e7efee 60%,#eef1f7);border:2px solid #1f7a6b;border-radius:10px;padding:16px 16px 12px;color:#0d2b28;box-shadow:0 10px 30px rgba(0,0,0,.4);position:relative;overflow:hidden}
+  .bx-cert::before{content:"";position:absolute;inset:6px;border:1px solid rgba(31,122,107,.45);border-radius:7px;pointer-events:none}
+  .bx-cert .ex{font-family:Georgia,'Times New Roman',serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#1f6a5e;text-align:center}
+  .bx-cert .sub2{font-family:Georgia,serif;font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:#5a7a74;text-align:center;margin-top:2px}
+  .bx-cert .own{font-family:Georgia,serif;font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;color:#2b5c54;text-align:center;margin-top:12px}
+  .bx-cert .big{font-family:Georgia,serif;font-weight:700;font-size:1.9rem;color:#0d2b28;text-align:center;line-height:1.1;margin-top:2px}
+  .bx-cert .face{display:inline-block;background:#1f7a6b;color:#eafff9;font-family:Georgia,serif;font-size:.6rem;letter-spacing:.1em;padding:3px 10px;border-radius:4px;margin-top:8px}
+  .bx-cert .mid{text-align:center}
+  .bx-cert .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;gap:10px}
+  .bx-cert .seal{width:46px;height:46px;border-radius:50%;border:2px solid #1f7a6b;display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;font-size:.7rem;color:#1f6a5e;flex:none;background:rgba(31,122,107,.06)}
+  .bx-cert .fine{font-family:Georgia,serif;font-size:.46rem;letter-spacing:.06em;color:#5a7a74;text-align:center;margin-top:12px;line-height:1.5}
+  .bx-cert .tag{font-family:Georgia,serif;font-size:.5rem;letter-spacing:.14em;color:#2b5c54}
   /* stats + odds */
   .bx-rows{display:grid;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:12px;overflow:hidden;margin-top:4px}
   .bx-row{background:var(--panel);display:flex;justify-content:space-between;align-items:center;padding:12px 14px;gap:10px}
@@ -296,6 +309,19 @@
     S.opening=false; btn.disabled=false; renderRecipient();
   }
 
+  function certificateHtml(tierName, amtStr, sym, to, boxId){
+    var branch = "RH-"+(1000+((boxId||0)%9000));
+    return '<div class="bx-cert">'
+      +'<div class="ex">The ORLIX Stonk Exchange · Robinhood Chain</div>'
+      +'<div class="sub2">First edition · Bearer deed · No. '+boxId+'</div>'
+      +'<div class="own">The bearer owns</div>'
+      +'<div class="mid"><div class="big">'+esc(amtStr)+' '+esc(sym)+'</div><span class="face">SEALED CERTIFICATE · '+esc(tierName||"PULL")+'</span></div>'
+      +'<div class="row"><div><div class="tag">'+esc(sym)+' BROKER</div><div class="tag" style="opacity:.7">'+short(to)+'</div></div>'
+        +'<div class="seal">'+esc((sym||"?").slice(0,4))+'</div>'
+        +'<div style="text-align:right"><div class="tag">BRANCH</div><div class="tag" style="opacity:.7">'+branch+'</div></div></div>'
+      +'<div class="fine">Redeems for Robinhood Chain '+esc(sym)+' tokens · sealed in your Agent’s wallet · not issued by or affiliated with any referenced company</div>'
+      +'</div>';
+  }
   function showResult(rc){
     var ev=null;
     try{ for(var i=0;i<rc.logs.length;i++){ try{ var pl=boxI.parseLog(rc.logs[i]); if(pl&&pl.name==="BoxOpened"){ ev=pl.args; break; } }catch(_){} } }catch(_){}
@@ -304,9 +330,10 @@
       var idx=Number(ev.tier), c=TIER_COLORS[idx%TIER_COLORS.length];
       var amt=ev.rewardAmount, tok=String(ev.rewardToken||ZERO), won=(tok!==ZERO&&amt>0n);
       var m=TMETA[tok.toLowerCase()]||{sym:"",dec:18};
-      res.innerHTML='<div class="tier" style="color:'+c+'">'+esc(ev.tierName||("Tier "+idx))+'</div>'
-        +'<div class="amt">'+(won?('+'+fmtTok(amt,m.dec)+' '+esc(m.sym||"tokens")):'No drop')+'</div>'
-        +'<div class="sub">'+(won?('Certificate sent to '+short(String(ev.rewardTo))):'Better luck next pull')+' · <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a></div>';
+      var cert = won ? certificateHtml(ev.tierName, fmtTok(amt,m.dec), m.sym||"TOKEN", String(ev.rewardTo), Number(ev.boxId)) : '';
+      res.innerHTML='<div class="tier" style="color:'+c+'">'+esc(ev.tierName||("Tier "+idx))+(won?' · certificate minted':'')+'</div>'
+        +(won?cert:'<div class="amt">No drop</div>')
+        +'<div class="sub">'+(won?('Sealed in '+short(String(ev.rewardTo))+"'s wallet"):'Better luck next pull')+' · <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a></div>';
       res.classList.add("show");
       $("#bxMsg").textContent="";
       toast(won?("You pulled "+ev.tierName+" ✓"):"Opened — no drop");
