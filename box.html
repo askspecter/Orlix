@@ -138,15 +138,15 @@
 
   var BOX_ABI=[
     "function boxPrice() view returns (uint256)",
-    "function poolBalance() view returns (uint256)",
+    "function poolBalance(address token) view returns (uint256)",
     "function paused() view returns (bool)",
     "function totalOpened() view returns (uint256)",
     "function tiersCount() view returns (uint256)",
-    "function tier(uint256) view returns (uint256 weight,uint256 payout,string name)",
-    "function open(address rewardTo) returns (uint256,uint256)",
-    "event BoxOpened(address indexed opener,address indexed rewardTo,uint256 indexed boxId,uint256 tier,string tierName,uint256 payout,uint256 roll)"
+    "function tier(uint256) view returns (uint256 weight,address token,uint256 amount,string name)",
+    "function open(address rewardTo) returns (uint256,address,uint256)",
+    "event BoxOpened(address indexed opener,address indexed rewardTo,uint256 indexed boxId,uint256 tier,string tierName,address rewardToken,uint256 rewardAmount,uint256 roll)"
   ];
-  var ERC20_ABI=["function decimals() view returns (uint8)","function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
+  var ERC20_ABI=["function decimals() view returns (uint8)","function symbol() view returns (string)","function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
   var REG_ABI=["function account(address implementation,bytes32 salt,uint256 chainId,address tokenContract,uint256 tokenId) view returns (address)"];
 
   var ro=new ethers.JsonRpcProvider(CFG.rpc,{chainId:CFG.chainId,name:"robinhood"});
@@ -169,6 +169,14 @@
   function fmtTok(wei,dec){ dec=dec||18; var neg=wei<0n; if(neg)wei=-wei; var p=10n**BigInt(dec); var whole=wei/p; var frac=Number((wei%p)*10000n/p)/10000; var n=Number(whole)+frac; return (neg?"-":"")+n.toLocaleString("en",{maximumFractionDigits:n<1?4:(n<1000?2:0)}); }
 
   var S={addr:null, dec:18, price:0n, pool:0n, paused:false, tiers:[], totalWeight:0, opened:0, agents:[], agentId:null, agentAddr:null, opening:false};
+
+  // token symbol + decimals resolver (cached)
+  var TMETA={};
+  async function tokenMeta(addr){ addr=(addr||"").toLowerCase(); if(!addr||addr===ZERO)return {sym:"",dec:18};
+    if(TMETA[addr])return TMETA[addr]; var c=new ethers.Contract(addr,ERC20_ABI,ro); var sym="?",dec=18;
+    try{sym=await c.symbol();}catch(_){} try{dec=Number(await c.decimals());}catch(_){}
+    TMETA[addr]={sym:sym,dec:dec}; return TMETA[addr]; }
+  function tokIcon(sym,addr){ if(window.tokenImg&&sym)return window.tokenImg(sym,16,addr); return ''; }
 
   // ── wallet ──
   function setConnected(a){ S.addr=a; $("#connectBtn").style.display="none"; var c=$("#walletChip"); c.style.display="inline-flex"; $("#walletAddr").textContent=short(a); loadAgents(a); renderRecipient(); }
@@ -195,12 +203,13 @@
     }
     try{
       var box=new ethers.Contract(CFG.boxContract,BOX_ABI,ro);
+      TMETA[CFG.token.toLowerCase()]={sym:"ORLIX",dec:18};
       var dec=18; try{ dec=Number(await new ethers.Contract(CFG.token,ERC20_ABI,ro).decimals()); }catch(_){}
-      S.dec=dec;
-      var base=await Promise.all([box.boxPrice(),box.poolBalance(),box.paused(),box.totalOpened(),box.tiersCount()]);
+      S.dec=dec; TMETA[CFG.token.toLowerCase()].dec=dec;
+      var base=await Promise.all([box.boxPrice(),box.poolBalance(CFG.token),box.paused(),box.totalOpened(),box.tiersCount()]);
       S.price=base[0]; S.pool=base[1]; S.paused=base[2]; S.opened=Number(base[3]); var n=Number(base[4]);
       var tiers=[]; var tw=0n;
-      for(var i=0;i<n;i++){ try{ var t=await box.tier(i); tiers.push({weight:t[0],payout:t[1],name:t[2]}); tw+=t[0]; }catch(_){} }
+      for(var i=0;i<n;i++){ try{ var t=await box.tier(i); var m=await tokenMeta(t[1]); tiers.push({weight:t[0],token:t[1],amount:t[2],name:t[3],sym:m.sym,dec:m.dec}); tw+=t[0]; }catch(_){} }
       S.tiers=tiers; S.totalWeight=Number(tw);
       renderShell();
     }catch(e){ $("#bxBody").innerHTML='<div class="bx-card"><div class="bx-load">Couldn\'t reach the Box: '+(((e&&e.message)||"")+"").slice(0,80)+'</div></div>'; }
@@ -231,13 +240,14 @@
         +'<span class="bx-lbl">The Box</span>'
         +'<div class="bx-rows">'
           +'<div class="bx-row"><u>PRICE / OPEN</u><b>'+priceStr+' $ORLIX</b></div>'
-          +'<div class="bx-row"><u>PRIZE POOL</u><b>'+fmtTok(S.pool,S.dec)+' $ORLIX</b></div>'
+          +'<div class="bx-row"><u>$ORLIX IN POOL</u><b>'+fmtTok(S.pool,S.dec)+' $ORLIX</b></div>'
           +'<div class="bx-row"><u>OPENED</u><b>'+S.opened.toLocaleString("en")+'</b></div>'
         +'</div>'
         +'<span class="bx-lbl" style="margin-top:18px">Drop table · provably random</span>'
         +'<div class="bx-odds">'+S.tiers.map(function(t,i){ var pct=S.totalWeight>0?(Number(t.weight)/S.totalWeight*100):0; var c=TIER_COLORS[i%TIER_COLORS.length];
-            return '<div class="bx-odd"><span class="dot" style="background:'+c+'"></span><span class="nm">'+esc(t.name||("Tier "+i))+'</span><span class="pay">'+(t.payout>0n?('+'+fmtTok(t.payout,S.dec)+' $ORLIX'):'—')+'</span><span class="pct">'+(pct>=10?pct.toFixed(0):pct.toFixed(1))+'%</span></div>'; }).join("")+'</div>'
-        +'<div class="bx-note">Odds are the on-chain tier weights. Rewards pay from the prize pool straight to the recipient wallet you choose.</div>'
+            var drop = (t.token&&t.token!==ZERO&&t.amount>0n) ? (tokIcon(t.sym,t.token)+' +'+fmtTok(t.amount,t.dec)+' '+esc(t.sym)) : '<span style="color:var(--ink-3)">— no drop</span>';
+            return '<div class="bx-odd"><span class="dot" style="background:'+c+'"></span><span class="nm">'+esc(t.name||("Tier "+i))+'</span><span class="pay">'+drop+'</span><span class="pct">'+(pct>=10?pct.toFixed(0):pct.toFixed(1))+'%</span></div>'; }).join("")+'</div>'
+        +'<div class="bx-note">Odds are the on-chain tier weights. Each drop is a <b>token certificate</b> — the exact ERC-20 shown, paid from the prize pool straight to the recipient wallet you choose.</div>'
       +'</div>'
       +'</div>';
     $("#bxBox").addEventListener("click",openBox);
@@ -292,13 +302,14 @@
     var res=$("#bxResult");
     if(ev){
       var idx=Number(ev.tier), c=TIER_COLORS[idx%TIER_COLORS.length];
-      var pay=ev.payout, won=pay>0n;
+      var amt=ev.rewardAmount, tok=String(ev.rewardToken||ZERO), won=(tok!==ZERO&&amt>0n);
+      var m=TMETA[tok.toLowerCase()]||{sym:"",dec:18};
       res.innerHTML='<div class="tier" style="color:'+c+'">'+esc(ev.tierName||("Tier "+idx))+'</div>'
-        +'<div class="amt">'+(won?('+'+fmtTok(pay,S.dec)+' $ORLIX'):'No drop')+'</div>'
-        +'<div class="sub">'+(won?('Sent to '+short(String(ev.rewardTo))):'Better luck next pull')+' · <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a></div>';
+        +'<div class="amt">'+(won?('+'+fmtTok(amt,m.dec)+' '+esc(m.sym||"tokens")):'No drop')+'</div>'
+        +'<div class="sub">'+(won?('Certificate sent to '+short(String(ev.rewardTo))):'Better luck next pull')+' · <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a></div>';
       res.classList.add("show");
       $("#bxMsg").textContent="";
-      toast(won?"You pulled "+ev.tierName+" ✓":"Opened — no drop");
+      toast(won?("You pulled "+ev.tierName+" ✓"):"Opened — no drop");
     }else{
       $("#bxMsg").innerHTML='Opened ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view transaction ↗</a>';
     }

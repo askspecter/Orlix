@@ -4,19 +4,21 @@ pragma solidity ^0.8.20;
 /**
  * OrlixAgentBox — an on-chain gacha for ORLIX holders on Robinhood Chain.
  *
- * Spend $ORLIX to open a Box. The contract rolls a weighted-random tier and pays
- * the tier's $ORLIX reward straight to a recipient you choose (your Agent's
- * token-bound wallet). Every open is a single transaction, fully settled and
- * verifiable on-chain: the emitted `roll` can be recomputed from the inputs
- * below, so what you pull is exactly what the contract rolled.
+ * Pay $ORLIX to open a Box. The contract rolls a weighted-random tier and sends
+ * that tier's reward — a "token certificate": any ERC-20 the box holds, e.g.
+ * tokenized stocks (NVDA/TSLA/AAPL…), USDG, or a rare $ORLIX drop — straight to
+ * a recipient you choose (your Agent's token-bound wallet).
+ *
+ * Every open is a single transaction, fully settled and verifiable on-chain:
+ * the emitted `roll` is recomputable from the tx inputs, so what you pull is
+ * exactly what the contract rolled.
  *
  * Self-contained (no imports) so it compiles cleanly in Remix.
  *
  * Randomness note: the roll is seeded from the previous blockhash, prevrandao,
  * the sender/recipient and an internal nonce. On a single-sequencer Orbit L2
  * this is transparent and verifiable but not manipulation-proof against the
- * sequencer — fine for a gacha, and honest about it. Swap in a VRF later if one
- * ships on Robinhood Chain.
+ * sequencer — fine for a gacha, and honest about it. Swap in a VRF later.
  */
 
 interface IERC20 {
@@ -27,14 +29,19 @@ interface IERC20 {
 
 contract OrlixAgentBox {
   address public owner;
-  IERC20  public immutable ORLIX;
-  uint256 public boxPrice;      // $ORLIX (wei) charged per open
-  uint256 public totalOpened;   // running count / boxId source
+  IERC20  public immutable ORLIX;   // payment token
+  uint256 public boxPrice;          // $ORLIX (wei) charged per open
+  uint256 public totalOpened;
   bool    public paused;
 
-  // Reward tiers as parallel arrays. weight = relative probability; payout = $ORLIX paid.
+  // Reward tiers as parallel arrays.
+  //   weight  = relative probability
+  //   token   = ERC-20 paid as the reward (address(0) = "no drop" / dud)
+  //   amount  = reward amount (token's own decimals)
+  //   name    = display label ("Common", "NVDA Cert", "Jackpot", …)
   uint256[] private _weight;
-  uint256[] private _payout;
+  address[] private _token;
+  uint256[] private _amount;
   string[]  private _name;
   uint256 public totalWeight;
 
@@ -47,12 +54,13 @@ contract OrlixAgentBox {
     uint256 indexed boxId,
     uint256 tier,
     string  tierName,
-    uint256 payout,
+    address rewardToken,
+    uint256 rewardAmount,
     uint256 roll
   );
   event TiersSet(uint256 count, uint256 totalWeight);
   event PriceSet(uint256 price);
-  event Funded(address indexed from, uint256 amount);
+  event Funded(address indexed from, address indexed token, uint256 amount);
   event OwnershipTransferred(address indexed from, address indexed to);
 
   modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
@@ -68,14 +76,24 @@ contract OrlixAgentBox {
   }
 
   // ── admin ──
-  function setTiers(uint256[] calldata weights, uint256[] calldata payouts, string[] calldata names) external onlyOwner {
-    require(weights.length == payouts.length && weights.length == names.length && weights.length > 0, "len");
-    delete _weight; delete _payout; delete _name;
+  function setTiers(
+    uint256[] calldata weights,
+    address[] calldata tokens,
+    uint256[] calldata amounts,
+    string[]  calldata names
+  ) external onlyOwner {
+    require(
+      weights.length == tokens.length &&
+      weights.length == amounts.length &&
+      weights.length == names.length &&
+      weights.length > 0, "len");
+    delete _weight; delete _token; delete _amount; delete _name;
     uint256 tw;
     for (uint256 i; i < weights.length; i++) {
       require(weights[i] > 0, "weight 0");
       _weight.push(weights[i]);
-      _payout.push(payouts[i]);
+      _token.push(tokens[i]);
+      _amount.push(amounts[i]);
       _name.push(names[i]);
       tw += weights[i];
     }
@@ -86,14 +104,14 @@ contract OrlixAgentBox {
   function setPrice(uint256 p) external onlyOwner { boxPrice = p; emit PriceSet(p); }
   function setPaused(bool p) external onlyOwner { paused = p; }
 
-  /// Top up the prize pool with $ORLIX (approve this contract first).
-  function fund(uint256 amount) external {
-    require(ORLIX.transferFrom(msg.sender, address(this), amount), "fund");
-    emit Funded(msg.sender, amount);
+  /// Top up the prize pool with any reward token (approve this contract first).
+  function fund(address token, uint256 amount) external {
+    require(IERC20(token).transferFrom(msg.sender, address(this), amount), "fund");
+    emit Funded(msg.sender, token, amount);
   }
 
-  function withdraw(address to, uint256 amount) external onlyOwner {
-    require(ORLIX.transfer(to, amount), "withdraw");
+  function withdraw(address token, address to, uint256 amount) external onlyOwner {
+    require(IERC20(token).transfer(to, amount), "withdraw");
   }
 
   function transferOwnership(address n) external onlyOwner {
@@ -103,21 +121,27 @@ contract OrlixAgentBox {
   }
 
   // ── views ──
-  function poolBalance() external view returns (uint256) { return ORLIX.balanceOf(address(this)); }
+  function poolBalance(address token) external view returns (uint256) {
+    return IERC20(token).balanceOf(address(this));
+  }
   function tiersCount() external view returns (uint256) { return _weight.length; }
-  function tier(uint256 i) external view returns (uint256 weight, uint256 payout, string memory name) {
-    return (_weight[i], _payout[i], _name[i]);
+  function tier(uint256 i) external view returns (uint256 weight, address token, uint256 amount, string memory name) {
+    return (_weight[i], _token[i], _amount[i], _name[i]);
   }
 
   // ── the pull ──
   /// Open a Box. Pays `boxPrice` $ORLIX (must be approved) and sends the rolled
-  /// reward to `rewardTo` (your Agent's wallet, or your own address).
-  function open(address rewardTo) external nonReentrant returns (uint256 pickedTier, uint256 payout) {
+  /// reward token to `rewardTo` (your Agent's wallet, or your own address).
+  function open(address rewardTo)
+    external
+    nonReentrant
+    returns (uint256 pickedTier, address rewardToken, uint256 rewardAmount)
+  {
     require(!paused, "paused");
     require(totalWeight > 0, "no tiers");
     require(rewardTo != address(0), "rewardTo 0");
 
-    // Charge the price into the pool.
+    // Charge the price in $ORLIX.
     require(ORLIX.transferFrom(msg.sender, address(this), boxPrice), "pay");
 
     // Verifiable roll: recompute off-chain from these exact inputs.
@@ -138,17 +162,21 @@ contract OrlixAgentBox {
       acc += _weight[i];
       if (roll < acc) { t = i; break; }
     }
+
     pickedTier = t;
-    payout = _payout[t];
+    rewardToken = _token[t];
+    rewardAmount = _amount[t];
 
     uint256 boxId = totalOpened++;
 
-    if (payout > 0) {
-      uint256 bal = ORLIX.balanceOf(address(this));
-      if (payout > bal) payout = bal; // never revert on an underfunded jackpot — pay what's available
-      if (payout > 0) require(ORLIX.transfer(rewardTo, payout), "reward");
+    if (rewardToken != address(0) && rewardAmount > 0) {
+      uint256 bal = IERC20(rewardToken).balanceOf(address(this));
+      if (rewardAmount > bal) rewardAmount = bal; // never revert on an underfunded drop
+      if (rewardAmount > 0) require(IERC20(rewardToken).transfer(rewardTo, rewardAmount), "reward");
+    } else {
+      rewardAmount = 0;
     }
 
-    emit BoxOpened(msg.sender, rewardTo, boxId, t, _name[t], payout, roll);
+    emit BoxOpened(msg.sender, rewardTo, boxId, t, _name[t], rewardToken, rewardAmount, roll);
   }
 }
