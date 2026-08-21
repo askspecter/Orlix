@@ -354,7 +354,7 @@ h1,h2,h3,.sec-head h2,.step h3,.cs-feat h3{font-family:var(--display);font-weigh
 h1{font-weight:700;letter-spacing:-.035em;font-size:clamp(2.6rem,7.4vw,4.8rem)}
 h1 em{background:linear-gradient(180deg,var(--green-hot),var(--green-deep));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--green)}
 .stat b,.bb-main b,.hr-amt,.cv-price,.bx-result .amt{font-family:var(--display);font-weight:700;letter-spacing:-.02em}
-.stat b{font-size:clamp(1.25rem,3.3vw,1.55rem);line-height:1.1;overflow-wrap:anywhere}
+.stat b{font-size:clamp(1.15rem,2.7vw,1.4rem);line-height:1.15;overflow-wrap:normal;white-space:nowrap}
 .brand b{font-family:var(--display);font-weight:700;letter-spacing:0}
 .sec-head h2{font-size:1.32rem}
 .step h3,.cs-feat h3{font-size:1.06rem;letter-spacing:-.01em}
