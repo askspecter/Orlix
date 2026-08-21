@@ -1,5 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 :root{
   --bg:#050505; --panel:#0b0d09; --panel-2:#0f120b;
+  --display:'Space Grotesk','DejaVu Sans',system-ui,sans-serif;
   --ink:#E9ECE2; --ink-2:#9aa08d; --ink-3:#5a5f50;
   --green:#CFF605; --green-hot:#E4FF54; --green-deep:#7c9403;
   --ok:#CFF605; --bad:#5a5f50;
@@ -346,3 +348,29 @@ section.block{margin:60px 0}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
 }
+
+/* ── DISPLAY TYPE + bolder surfaces (visible identity pass) ── */
+h1,h2,h3,.sec-head h2,.step h3,.cs-feat h3{font-family:var(--display);font-weight:700}
+h1{font-weight:700;letter-spacing:-.035em;font-size:clamp(2.6rem,7.4vw,4.8rem)}
+h1 em{background:linear-gradient(180deg,var(--green-hot),var(--green-deep));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--green)}
+.stat b,.bb-main b,.hr-amt,.cv-price,.bx-result .amt{font-family:var(--display);font-weight:700;letter-spacing:-.02em}
+.stat b{font-size:clamp(1.25rem,3.3vw,1.55rem);line-height:1.1;overflow-wrap:anywhere}
+.brand b{font-family:var(--display);font-weight:700;letter-spacing:0}
+.sec-head h2{font-size:1.32rem}
+.step h3,.cs-feat h3{font-size:1.06rem;letter-spacing:-.01em}
+
+/* panels: a touch lighter + gradient sheen so cards read as designed */
+:root{--panel:#0e110b; --panel-2:#12160d; --line-soft:rgba(233,236,226,.11)}
+.stat,.step,.cs-feat,.meta,.result,.field{background:linear-gradient(180deg,rgba(255,255,255,.02),transparent 60%),var(--panel)}
+.stat{border-radius:15px;padding:20px 16px}
+.step,.cs-feat{border-radius:16px;padding:22px}
+.sec-head .n::after{width:60px;background:linear-gradient(90deg,var(--green),transparent)}
+
+/* section cards get an accent top line on hover for life */
+.step,.cs-feat{position:relative}
+.step::before,.cs-feat::before{content:"";position:absolute;left:0;top:-1px;height:2px;width:0;background:linear-gradient(90deg,var(--green),transparent);transition:width .4s var(--ease);border-radius:2px}
+.step:hover::before,.cs-feat:hover::before{width:70%}
+
+/* CTA buttons: slightly larger, more presence */
+.btn{padding:11px 17px;letter-spacing:.13em}
+.mint-cta,.cv-act,.bx-act,.lx-deploy,.dist-act.claim{font-family:var(--display);font-weight:700;letter-spacing:.06em}
