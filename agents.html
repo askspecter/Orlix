@@ -214,7 +214,6 @@
              :'<button class="acw-create" data-tba="'+id+'">Create ↗</button>');
     const btn=el.querySelector('.acw-create');if(btn)btn.addEventListener('click',()=>createWallet(id,btn));
     loadHoldings(id,tba);
-    loadLaunched(id,tba);
   }
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   function fmtAmt(val,dec){const p=10n**BigInt(dec),w=val/p;const frac=Number((val%p)*10000n/p)/10000;const num=Number(w)+frac;return num.toLocaleString("en-US",{maximumFractionDigits:num<1?4:2})}
@@ -235,37 +234,6 @@
       let val6=0n;for(const v of vals)val6+=v;
       if(val6>0n){const ve=el.querySelector('.ach-val');if(ve)ve.textContent="≈ $"+fmtUsd(val6);pfTotal6+=val6;updatePf()}
     }catch(_){el.innerHTML='';}
-  }
-  // ── tokens launched under an Agent (creator fees route to its wallet) ──
-  async function rawRpc(method,params){ for(const u of CFG.rpcs){ try{ const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:method,params:params})}); const j=await r.json(); if(j&&j.result!==undefined&&!j.error)return j.result; }catch(_){} } return null; }
-  const TL_TOPIC="0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607";
-  let _launchIdx=null;
-  // Scan TokenLaunched once, read each token's creatorFeeRecipient + symbol, group by recipient.
-  function launchIndex(){ if(_launchIdx)return _launchIdx; _launchIdx=(async function(){
-    const map={}; try{
-      const latestHex=await rawRpc("eth_blockNumber",[]); if(!latestHex)return map;
-      const latest=BigInt(latestHex), lookback=400000n, chunk=9000n, start=latest>lookback?latest-lookback:0n; const tokens=[];
-      for(let to=latest; to>=start; to-=chunk){ const from=(to-chunk+1n>start)?(to-chunk+1n):start;
-        const logs=await rawRpc("eth_getLogs",[{address:CFG.v2Factory,fromBlock:"0x"+from.toString(16),toBlock:"0x"+to.toString(16),topics:[TL_TOPIC]}]);
-        if(Array.isArray(logs))for(const lg of logs){ try{ const tok="0x"+lg.topics[1].slice(-40); tokens.push({token:tok,block:parseInt(lg.blockNumber,16)}); }catch(_){}}
-        if(tokens.length>=80||from===start)break; }
-      // newest first, read recipient + symbol for each (bounded)
-      tokens.sort((a,b)=>b.block-a.block);
-      await Promise.all(tokens.slice(0,80).map(async t=>{ try{
-        const info=await rpcCall(CFG.v2Factory,"0x3cf28b5a"+argAddr(t.token)); // getLaunchedToken(address)
-        const rcpt=("0x"+info.slice(2+3*64+24,2+4*64)).toLowerCase(); // struct field #3 = creatorFeeRecipient
-        let sym=""; try{ const s=await rpcCall(t.token,"0x95d89b41"); sym=decodeStr(s); }catch(_){}
-        (map[rcpt]=map[rcpt]||[]).push({token:t.token,sym:sym||short(t.token)});
-      }catch(_){} }));
-    }catch(_){}
-    return map; })(); return _launchIdx; }
-  function decodeStr(hex){ try{ hex=hex.slice(2); const len=parseInt(hex.slice(64,128),16); const bytes=hex.slice(128,128+len*2); let s=""; for(let i=0;i<bytes.length;i+=2)s+=String.fromCharCode(parseInt(bytes.substr(i,2),16)); return s; }catch(_){ return ""; } }
-  async function loadLaunched(id,tba){
-    const el=document.querySelector('.ac-launched[data-id="'+id+'"]'); if(!el)return;
-    try{ const map=await launchIndex(); const list=(map[(tba||"").toLowerCase()]||[]);
-      if(!list.length){ el.innerHTML=''; return; }
-      el.innerHTML='<span class="acw-lbl">LAUNCHED</span>'+list.slice(0,8).map(t=>'<a class="acl-tok" href="/curve?ca='+t.token+'" title="'+t.token+'">$'+esc(t.sym)+' ↗</a>').join('');
-    }catch(_){ el.innerHTML=''; }
   }
   async function createWallet(id,btn){
     if(!window.ethereum||!mAddr){toast("Connect wallet first");return}
@@ -320,7 +288,7 @@
         +(tier?'<span class="ac-tier" style="color:'+col+'">'+tier+'</span>':'')
         +'<img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"></a>'
         +'<div class="ac-meta"><span class="ac-name">#'+id+'</span><a href="'+url+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div>'
-        +(TBA_ON?'<div class="ac-wallet" data-id="'+id+'"><span class="acw-lbl">WALLET</span><span class="acw-addr" style="color:var(--ink-3)">…</span></div><div class="ac-holds" data-id="'+id+'"></div><div class="ac-launched" data-id="'+id+'"></div><button class="ac-open" data-open="'+id+'">Open wallet →</button>':'')
+        +(TBA_ON?'<div class="ac-wallet" data-id="'+id+'"><span class="acw-lbl">WALLET</span><span class="acw-addr" style="color:var(--ink-3)">…</span></div><div class="ac-holds" data-id="'+id+'"></div><button class="ac-open" data-open="'+id+'">Open wallet →</button>':'')
         +'</div>';
     }).join("");
     summaryEl.innerHTML=Object.keys(counts).sort().map(t=>'<span class="sm" style="color:'+tierColor(t)+'">'+counts[t]+' '+t+'</span>').join("");
