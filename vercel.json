@@ -171,6 +171,11 @@
       "permanent": true
     },
     {
+      "source": "/roadmap.html",
+      "destination": "/roadmap",
+      "permanent": true
+    },
+    {
       "source": "/stock.html",
       "destination": "/stock",
       "permanent": true
@@ -286,6 +291,10 @@
     {
       "source": "/box",
       "destination": "/box.html"
+    },
+    {
+      "source": "/roadmap",
+      "destination": "/roadmap.html"
     },
     {
       "source": "/stock",
