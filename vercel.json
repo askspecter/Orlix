@@ -176,6 +176,11 @@
       "permanent": true
     },
     {
+      "source": "/certificate.html",
+      "destination": "/certificate",
+      "permanent": true
+    },
+    {
       "source": "/stock.html",
       "destination": "/stock",
       "permanent": true
@@ -295,6 +300,14 @@
     {
       "source": "/box",
       "destination": "/box.html"
+    },
+    {
+      "source": "/certificate",
+      "destination": "/certificate.html"
+    },
+    {
+      "source": "/cert",
+      "destination": "/certificate.html"
     },
     {
       "source": "/stock",
