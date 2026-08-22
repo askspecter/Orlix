@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Profile — ORLIX · Robinhood Chain</title>
+<meta name="description" content="An ORLIX Agent's on-chain profile — wallet, tokens launched, Boxes opened, creator fees, and live portfolio on Robinhood Chain.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://orlixai.xyz/agent">
+<meta property="og:title" content="Agent Profile — ORLIX">
+<meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#050505">
+<link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
+<link rel="stylesheet" href="/assets/nft/app.css">
+<script src="/assets/nft/tokens.js"></script>
+<style>
+  .ap-head{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin:8px 0 6px}
+  .ap-av{width:120px;height:120px;border-radius:20px;overflow:hidden;background:#12140d;flex:none;border:1px solid var(--line);image-rendering:pixelated}
+  .ap-av img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+  .ap-id{min-width:0}
+  .ap-id h1{font-size:clamp(2rem,6vw,3.2rem);margin:0}
+  .ap-tier{display:inline-block;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:100px;border:1px solid currentColor;margin-bottom:8px}
+  .ap-addr{display:inline-flex;align-items:center;gap:9px;margin-top:12px;font-size:.72rem;color:var(--ink-3);flex-wrap:wrap}
+  .ap-addr code{color:var(--green)}
+  .ap-owner{font-size:.72rem;color:var(--ink-3);margin-top:6px}
+  .ap-owner code{color:var(--ink-2)}
+  .ap-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+  .ap-lookup{display:flex;gap:10px;flex-wrap:wrap;max-width:420px;margin:14px auto 0}
+  .ap-lookup input{flex:1 1 200px;background:#0a0c07;border:1px solid var(--line-soft);border-radius:11px;color:var(--ink);font-family:var(--mono);font-size:.9rem;padding:13px 15px;outline:none}
+  .ap-lookup input:focus{border-color:var(--green)}
+  .ap-list{display:flex;flex-wrap:wrap;gap:8px}
+  .ap-chip{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;color:var(--green);background:rgba(207,246,5,.06);border:1px solid var(--line);border-radius:9px;padding:7px 11px;text-decoration:none}
+  .ap-chip:hover{background:rgba(207,246,5,.14)}
+  .ap-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:.82rem}
+  .ap-row:last-child{border-bottom:0}
+  .ap-row .t{flex:none;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;padding:3px 8px;border-radius:100px;border:1px solid var(--line-soft);color:var(--ink-2)}
+  .ap-row .nm{flex:1;min-width:0;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ap-row .amt{color:var(--green);font-weight:600;font-variant-numeric:tabular-nums}
+  .ap-empty{color:var(--ink-3);font-size:.8rem;padding:14px 0}
+  .ap-load{color:var(--ink-3);font-size:.8rem;padding:10px 0}
+</style>
+</head>
+<body>
+<div class="scanlines" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="/"><img src="/assets/nft/orlix-mark.png" alt="ORLIX" width="30" height="30"><b>ORLIX<sup>®</sup></b></a>
+    <div class="top-nav">
+      <a class="ghost hide-sm" href="/agents">Agent Wallets</a>
+      <a class="btn" href="/nft">MINT</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">⋮</button>
+    </div>
+  </div>
+  <nav class="menu-panel" id="menuPanel" aria-label="Menu">
+    <a href="/">Home</a><a href="/nft">Mint NFT</a><a href="/amm">NFT AMM</a>
+    <a href="/agents">Agent Wallets</a><a href="/stock">Stock Desk</a><a href="/distributions">Distributions</a>
+    <a href="/launcher">Agent Launcher</a><a href="/box">Agent Box</a>
+    <a href="https://app.orlixai.xyz">App</a><a href="https://x.com/orlixai" target="_blank" rel="noopener">X / Twitter</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero" id="apLookupWrap" style="padding:52px 0 10px;display:none">
+    <span class="kicker"><span class="dot"></span>AGENT PROFILE</span>
+    <h1>Agent <em>Profiles</em>.</h1>
+    <p class="lead">Every ORLIX Agent's on-chain story — wallet, tokens it launched, Boxes it opened, fees earned, live portfolio. Enter an Agent #.</p>
+    <div class="ap-lookup">
+      <input id="apInput" inputmode="numeric" placeholder="Agent # (e.g. 48)" spellcheck="false">
+      <button class="btn" id="apGo">VIEW →</button>
+    </div>
+  </section>
+
+  <section class="block" id="apProfile" style="display:none;margin-top:34px">
+    <a href="/agents" style="font-size:.72rem;color:var(--ink-3)">&larr; All Agent Wallets</a>
+    <div class="ap-head" style="margin-top:14px">
+      <div class="ap-av"><img id="apImg" src="" alt="" onerror="this.style.display='none'"></div>
+      <div class="ap-id">
+        <span class="ap-tier" id="apTier" style="display:none"></span>
+        <h1>Agent <em id="apNum">#—</em></h1>
+        <div class="ap-addr"><span>WALLET</span> <code id="apTba">—</code> <button class="copy" id="apCopy">COPY</button> <a id="apScan" href="#" target="_blank" rel="noopener" style="color:var(--ink-3)">explorer ↗</a></div>
+        <div class="ap-owner">Held by <code id="apOwner">—</code></div>
+      </div>
+    </div>
+
+    <div class="ap-stats">
+      <div class="stat"><b id="apOrlix">—</b><span>$ORLIX IN WALLET</span></div>
+      <div class="stat"><b id="apPf">—</b><span>PORTFOLIO (USDG)</span></div>
+      <div class="stat"><b id="apLaunched">—</b><span>TOKENS LAUNCHED</span></div>
+      <div class="stat"><b id="apBoxes">—</b><span>BOXES OPENED</span></div>
+    </div>
+
+    <div class="term" style="margin-bottom:18px">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — agent.sh</span></div>
+      <div class="term-body">
+        <div class="sec-head" style="margin-bottom:12px"><span class="n">HOLDINGS</span></div>
+        <div id="apHoldings"><div class="ap-load">Reading wallet…</div></div>
+      </div>
+    </div>
+
+    <div class="term" style="margin-bottom:18px">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — launches.sh</span></div>
+      <div class="term-body">
+        <div class="sec-head" style="margin-bottom:12px"><span class="n">TOKENS LAUNCHED</span></div>
+        <div id="apLaunchList"><div class="ap-load">Scanning launches…</div></div>
+      </div>
+    </div>
+
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — box.sh</span></div>
+      <div class="term-body">
+        <div class="sec-head" style="margin-bottom:12px"><span class="n">BOXES OPENED</span></div>
+        <div id="apBoxList"><div class="ap-load">Scanning Boxes…</div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="fl"><a href="/">Home</a><a href="/agents">Agent Wallets</a><a href="/launcher">Launcher</a><a href="/box">Agent Box</a></div>
+    <small>© 2026 ORLIX · Robinhood Chain · not financial advice</small>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var $=function(s){return document.querySelector(s)};
+  (function(){var b=$("#menuBtn"),p=$("#menuPanel");if(!b||!p)return;b.addEventListener('click',function(e){e.stopPropagation();var o=p.classList.toggle('open');b.setAttribute('aria-expanded',o)});document.addEventListener('click',function(e){if(!p.contains(e.target)&&e.target!==b){p.classList.remove('open');b.setAttribute('aria-expanded','false')}})})();
+
+  var CFG={
+    rpc:"https://rpc.mainnet.chain.robinhood.com/", explorer:"https://robinhoodchain.blockscout.com",
+    chainId:4663,
+    token:"0x1efdd871f052900d88e4dc2d49bcd32bf77e333c",
+    agentNft:"0x20567CfDeee57ED9C6E74e5598ab75b986F1C47c",
+    registry:"0x2FF9ac10dcd2bFEB3485a8e2dCC0AcE1Dea1C1A3",
+    accountImpl:"0x3eA3F3569BDdb1566daeA721C11C7D8595935A06",
+    v2Factory:"0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e",
+    feeEscrow:"0xd3AFEB2a57f70eF218Aa82451c51B2fb0416Ac9e",
+    boxContract:"0x654bE4BAC47de86FA1011DaE67768a5117979b7B",
+    quoter:"0x8dc178efb8111bb0973dd9d722ebeff267c98f94",
+    usdg:"0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168", fee:3000, tick:60
+  };
+  var ZERO="0x0000000000000000000000000000000000000000";
+  var TL_TOPIC="0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607";
+  var BOX_TOPIC="0x5987764b3e27ff1dbb61b0354d172598eae58672d206bcca5a7d2c0fc0c8d3d1";
+  var STOCKSET=new Set(["0xaf3d76f1834a1d425780943c99ea8a608f8a93f9","0xe93237c50d904957cf27e7b1133b510c669c2e74","0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec","0x12f190a9f9d7d37a250758b26824b97ce941bf54","0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3","0xc0d6457c16cc70d6790dd43521c899c87ce02f35","0x322f0929c4625ed5bad873c95208d54e1c003b2d","0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a","0x86923f96303d656e4aa86d9d42d1e57ad2023fdc","0x1b0e319c6a659f002271b69db8a7df2f911c153e","0x4a0e65a3eccec6dbe60ae065f2e7bb85fae35eea"]);
+  var USDGL=CFG.usdg.toLowerCase();
+
+  function rpc(m,p){ return fetch(CFG.rpc,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:m,params:p||[]})}).then(function(r){return r.json()}).then(function(j){if(j&&j.error)throw new Error(j.error.message||"rpc");return j.result}); }
+  function call(to,data){ return rpc("eth_call",[{to:to,data:data},"latest"]); }
+  function argAddr(a){return (a||ZERO).toLowerCase().replace(/^0x/,"").padStart(64,"0")}
+  function argUint(n){return BigInt(n).toString(16).padStart(64,"0")}
+  function bi(h){try{return BigInt(h)}catch(_){return 0n}}
+  function short(a){return a?a.slice(0,6)+"…"+a.slice(-4):"—"}
+  function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1800)}
+  function fmtUnits(wei,dec){dec=dec||18;var neg=wei<0n;if(neg)wei=-wei;var p=10n**BigInt(dec);var whole=wei/p;var frac=Number((wei%p)*10000n/p)/10000;var n=Number(whole)+frac;return (neg?"-":"")+n.toLocaleString("en",{maximumFractionDigits:n<1?4:(n<1000?2:0)})}
+  function fmtUsd(v6){var p=10n**6n,w=bi(v6);return (Number(w/p)+Number(w%p)/1e6).toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2})}
+  function decStr(hex){try{hex=hex.slice(2);var len=parseInt(hex.slice(64,128),16);var b=hex.slice(128,128+len*2),s="";for(var i=0;i<b.length;i+=2)s+=String.fromCharCode(parseInt(b.substr(i,2),16));return s}catch(_){return""}}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])})}
+
+  async function tbaOf(id){ try{ var d="0x246a0021"+argAddr(CFG.accountImpl)+argUint(0)+argUint(CFG.chainId)+argAddr(CFG.agentNft)+argUint(id); var r=await call(CFG.registry,d); return "0x"+r.slice(-40); }catch(_){return null} }
+  async function ownerOf(id){ try{ var r=await call(CFG.agentNft,"0x6352211e"+argUint(id)); return "0x"+r.slice(-40); }catch(_){return null} }
+  async function erc20Bal(token,who){ try{ var r=await call(token,"0x70a08231"+argAddr(who)); return bi(r); }catch(_){return 0n} }
+  async function quoteToUsdg(tokenAddr,amtWei){ if(amtWei<=0n)return 0n; try{
+    var s=[CFG.usdg,tokenAddr].sort(function(a,b){return a.toLowerCase()<b.toLowerCase()?-1:1}); var c0=s[0],c1=s[1];
+    var z=(c0.toLowerCase()===tokenAddr.toLowerCase());
+    var tuple=argAddr(c0)+argAddr(c1)+argUint(CFG.fee)+argUint(CFG.tick)+argAddr(ZERO)+argUint(z?1:0)+argUint(amtWei)+argUint(0x100)+argUint(0);
+    var r=await call(CFG.quoter,"0xaa9d21cb"+argUint(0x20)+tuple); return bi("0x"+r.slice(2,66));
+  }catch(_){return 0n} }
+
+  async function getLogs(address,topics,cap){
+    var latestHex=await rpc("eth_blockNumber",[]); if(!latestHex)return [];
+    var latest=bi(latestHex), lookback=500000n, chunk=9000n, start=latest>lookback?latest-lookback:0n, out=[];
+    for(var to=latest; to>=start; to-=chunk){ var from=(to-chunk+1n>start)?(to-chunk+1n):start;
+      var flt={address:address,fromBlock:"0x"+from.toString(16),toBlock:"0x"+to.toString(16),topics:topics};
+      var logs=null; try{logs=await rpc("eth_getLogs",[flt]);}catch(_){}
+      if(Array.isArray(logs))for(var i=logs.length-1;i>=0;i--)out.push(logs[i]);
+      if(out.length>=(cap||120)||from===start)break; }
+    return out;
+  }
+
+  async function loadHoldings(tba){
+    var el=$("#apHoldings"); var pfEl=$("#apPf");
+    try{
+      var r=await fetch(CFG.explorer+"/api/v2/addresses/"+tba+"/token-balances");
+      if(!r.ok){el.innerHTML='<div class="ap-empty">— empty</div>';return}
+      var arr=await r.json();
+      var toks=(Array.isArray(arr)?arr:[]).map(function(x){var t=(x&&x.token)||{};var v=0n;try{v=BigInt(x.value)}catch(_){}return {sym:t.symbol||"?",dec:parseInt(t.decimals||"18")||18,addr:(t.address||t.address_hash||"").toLowerCase(),type:t.type||"",val:v}}).filter(function(t){return t.type.indexOf("ERC-20")>=0&&t.val>0n});
+      if(!toks.length){el.innerHTML='<div class="ap-empty">No tokens yet.</div>';pfEl.textContent="$0.00";return}
+      var imgFn=window.tokenImg||function(){return""};
+      el.innerHTML=toks.slice(0,20).map(function(t){return '<div class="ap-row"><span style="width:18px;flex:none">'+imgFn(t.sym,16,t.addr)+'</span><span class="nm">'+esc(t.sym)+'</span><span class="amt">'+esc(fmtUnits(t.val,t.dec))+'</span></div>'}).join("");
+      var val6=0n;
+      for(var i=0;i<toks.length;i++){ var t=toks[i]; if(t.addr===USDGL)val6+=t.val; else if(STOCKSET.has(t.addr))val6+=await quoteToUsdg(t.addr,t.val); }
+      pfEl.textContent="$"+fmtUsd(val6);
+    }catch(_){el.innerHTML='<div class="ap-empty">Couldn\'t read wallet.</div>';}
+  }
+
+  async function loadLaunched(tba){
+    var el=$("#apLaunchList"); var cnt=$("#apLaunched");
+    try{
+      var logs=await getLogs(CFG.v2Factory,[TL_TOPIC],120);
+      var seen={}, toks=[];
+      for(var i=0;i<logs.length;i++){ try{ var tok="0x"+logs[i].topics[1].slice(-40); if(seen[tok])continue; seen[tok]=1; toks.push(tok); }catch(_){}}
+      var mine=[];
+      await Promise.all(toks.slice(0,120).map(async function(tok){ try{
+        var info=await call(CFG.v2Factory,"0x3cf28b5a"+argAddr(tok));
+        var rcpt=("0x"+info.slice(2+3*64+24,2+4*64)).toLowerCase();
+        if(rcpt===tba.toLowerCase()){ var sym=""; try{sym=decStr(await call(tok,"0x95d89b41"))}catch(_){} mine.push({tok:tok,sym:sym||short(tok)}); }
+      }catch(_){} }));
+      cnt.textContent=mine.length;
+      el.innerHTML=mine.length? '<div class="ap-list">'+mine.map(function(m){return '<a class="ap-chip" href="/curve?ca='+m.tok+'">$'+esc(m.sym)+' ↗</a>'}).join("")+'</div>' : '<div class="ap-empty">No launches under this Agent yet. <a href="/launcher" style="color:var(--green)">Launch one ↗</a></div>';
+    }catch(_){ cnt.textContent="0"; el.innerHTML='<div class="ap-empty">Couldn\'t scan launches.</div>'; }
+  }
+
+  async function loadBoxes(tba){
+    var el=$("#apBoxList"); var cnt=$("#apBoxes");
+    try{
+      // rewardTo is indexed (topic[2]) → filter directly
+      var logs=await getLogs(CFG.boxContract,[BOX_TOPIC,null,"0x"+argAddr(tba)],80);
+      cnt.textContent=logs.length;
+      if(!logs.length){ el.innerHTML='<div class="ap-empty">No Boxes opened to this Agent yet. <a href="/box" style="color:var(--green)">Open one ↗</a></div>'; return; }
+      var rows=logs.slice(0,40).map(function(lg){ try{
+        // data: tier(0),tierName(off),rewardToken(2),rewardAmount(3),roll(4) ... tierName dynamic
+        var d=lg.data.slice(2);
+        var tier=parseInt(d.slice(0,64),16);
+        var rewardToken="0x"+d.slice(2*64+24,3*64);
+        var rewardAmount=bi("0x"+d.slice(3*64,4*64));
+        var nameOff=parseInt(d.slice(64,128),16)*2;
+        var nameLen=parseInt(d.slice(nameOff,nameOff+64),16);
+        var nb=d.slice(nameOff+64,nameOff+64+nameLen*2),nm="";for(var k=0;k<nb.length;k+=2)nm+=String.fromCharCode(parseInt(nb.substr(k,2),16));
+        var won=rewardToken!==ZERO&&rewardAmount>0n;
+        return '<div class="ap-row"><span class="t">'+esc(nm||("Tier "+tier))+'</span><span class="nm">'+(won?'certificate':'no drop')+'</span><span class="amt">'+(won?'✓':'—')+'</span></div>';
+      }catch(_){return ''} }).join("");
+      el.innerHTML=rows;
+    }catch(_){ cnt.textContent="0"; el.innerHTML='<div class="ap-empty">Couldn\'t scan Boxes.</div>'; }
+  }
+
+  async function loadProfile(id){
+    $("#apLookupWrap").style.display="none"; $("#apProfile").style.display="block";
+    $("#apNum").textContent="#"+id;
+    $("#apImg").src="/assets/nft/phase2/images/"+id+".png";
+    $("#apScan").href=CFG.explorer+"/token/"+CFG.agentNft+"/instance/"+id;
+    // tier from metadata
+    try{ var m=await fetch("/assets/nft/phase2/meta/"+id+".json").then(function(r){return r.ok?r.json():null}); if(m&&m.attributes){var t=m.attributes.find(function(a){return String(a.trait_type).toLowerCase()==="tier"}); if(t){var el=$("#apTier");el.textContent=t.value;el.style.display="inline-block";el.style.color=tierColor(t.value);}} }catch(_){}
+    var tba=await tbaOf(id);
+    if(!tba){ $("#apTba").textContent="unresolved"; return; }
+    $("#apTba").textContent=short(tba); $("#apTba").title=tba; window._tba=tba;
+    $("#apScan").href=CFG.explorer+"/address/"+tba;
+    ownerOf(id).then(function(o){ $("#apOwner").textContent=o?short(o):"—"; $("#apOwner").title=o||""; });
+    erc20Bal(CFG.token,tba).then(function(b){ $("#apOrlix").textContent=fmtUnits(b,18); });
+    loadHoldings(tba);
+    loadLaunched(tba);
+    loadBoxes(tba);
+  }
+  function tierColor(t){ t=String(t||"").toLowerCase(); if(t.indexOf("legend")>=0)return"#ffd166"; if(t.indexOf("epic")>=0||t.indexOf("myth")>=0)return"#c77dff"; if(t.indexOf("rare")>=0)return"#57d0ff"; return"#CFF605"; }
+
+  $("#apCopy").addEventListener("click",function(){ if(window._tba){navigator.clipboard.writeText(window._tba);toast("Wallet copied")} });
+  $("#apGo").addEventListener("click",function(){ var v=($("#apInput").value||"").replace(/[^0-9]/g,""); if(v){location.search="?id="+v} });
+  $("#apInput").addEventListener("keydown",function(e){ if(e.key==="Enter")$("#apGo").click(); });
+
+  var id=new URLSearchParams(location.search).get("id");
+  if(id&&/^[0-9]+$/.test(id)){ loadProfile(id); } else { $("#apLookupWrap").style.display="block"; }
+})();
+</script>
+</body>
+</html>

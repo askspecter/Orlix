@@ -287,7 +287,7 @@
       return '<div class="agent-card"><a class="ac-media" href="'+url+'" target="_blank" rel="noopener">'
         +(tier?'<span class="ac-tier" style="color:'+col+'">'+tier+'</span>':'')
         +'<img src="/assets/nft/phase2/images/'+id+'.png" alt="ORLIX Agent #'+id+'" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/nft/orlix-mark.png\'"></a>'
-        +'<div class="ac-meta"><span class="ac-name">#'+id+'</span><a href="'+url+'" target="_blank" rel="noopener" title="View on Blockscout">↗</a></div>'
+        +'<div class="ac-meta"><a class="ac-name" href="/agent?id='+id+'" title="View Agent profile">#'+id+'</a><a href="/agent?id='+id+'" title="Agent profile" style="color:var(--green)">profile →</a></div>'
         +(TBA_ON?'<div class="ac-wallet" data-id="'+id+'"><span class="acw-lbl">WALLET</span><span class="acw-addr" style="color:var(--ink-3)">…</span></div><div class="ac-holds" data-id="'+id+'"></div><button class="ac-open" data-open="'+id+'">Open wallet →</button>':'')
         +'</div>';
     }).join("");

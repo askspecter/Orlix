@@ -146,6 +146,11 @@
       "permanent": true
     },
     {
+      "source": "/agent.html",
+      "destination": "/agent",
+      "permanent": true
+    },
+    {
       "source": "/amm.html",
       "destination": "/amm",
       "permanent": true
@@ -262,6 +267,10 @@
     {
       "source": "/agents",
       "destination": "/agents.html"
+    },
+    {
+      "source": "/agent",
+      "destination": "/agent.html"
     },
     {
       "source": "/amm",
