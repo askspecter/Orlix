@@ -262,10 +262,35 @@
             return '<div class="bx-odd"><span class="dot" style="background:'+c+'"></span><span class="nm">'+esc(t.name||("Tier "+i))+'</span><span class="pay">'+drop+'</span><span class="pct">'+(pct>=10?pct.toFixed(0):pct.toFixed(1))+'%</span></div>'; }).join("")+'</div>'
         +'<div class="bx-note">Odds are the on-chain tier weights. Each drop is a <b>token certificate</b> — the exact ERC-20 shown, paid from the prize pool straight to the recipient wallet you choose.</div>'
       +'</div>'
-      +'</div>';
+      +'</div>'
+      +'<div class="bx-card" style="margin-top:20px"><span class="bx-lbl">Recent pulls · on-chain</span><div id="bxFeed"><div class="bx-load" style="padding:18px 0">Loading pulls…</div></div></div>';
     $("#bxBox").addEventListener("click",openBox);
     $("#openBtn").addEventListener("click",openBox);
     renderRecipient();
+    loadFeed();
+  }
+  // ── recent pulls feed (from BoxOpened events) ──
+  async function loadFeed(){
+    var el=$("#bxFeed"); if(!el)return;
+    try{
+      var latestHex=await rrpc("eth_blockNumber",[]); var latest=BigInt(latestHex), lookback=400000n, chunk=9000n, start=latest>lookback?latest-lookback:0n, logs=[];
+      var TOPIC=boxI.getEvent("BoxOpened").topicHash;
+      for(var to=latest; to>=start; to-=chunk){ var from=(to-chunk+1n>start)?(to-chunk+1n):start;
+        var part=await rrpc("eth_getLogs",[{address:CFG.boxContract,fromBlock:"0x"+from.toString(16),toBlock:"0x"+to.toString(16),topics:[TOPIC]}]).catch(function(){return[]});
+        if(Array.isArray(part))for(var i=part.length-1;i>=0;i--)logs.push(part[i]);
+        if(logs.length>=60||from===start)break; }
+      var pulls=[];
+      for(var j=0;j<logs.length;j++){ try{ var pl=boxI.parseLog(logs[j]); if(!pl)continue; var a=pl.args;
+        var tok=String(a.rewardToken), won=(tok!==ZERO&&a.rewardAmount>0n); var m=won?await tokenMeta(tok):{sym:"",dec:18};
+        pulls.push({opener:String(a.opener),tier:a.tierName,won:won,amt:won?fmtTok(a.rewardAmount,m.dec):"",sym:won?m.sym:"",id:Number(a.boxId)}); }catch(_){}}
+      if(!pulls.length){ el.innerHTML='<div class="bx-note" style="padding:10px 0">No pulls yet — be the first to open the Box. 🎁</div>'; return; }
+      pulls.sort(function(x,y){return y.id-x.id});
+      el.innerHTML=pulls.slice(0,20).map(function(p){
+        return '<div class="bx-odd"><span class="dot" style="background:'+(p.won?'var(--green)':'#5c6657')+'"></span>'
+          +'<span class="nm">'+short(p.opener)+' · '+esc(p.tier||"pull")+'</span>'
+          +'<span class="pay">'+(p.won?('+'+esc(p.amt)+' '+esc(p.sym)):'<span style="color:var(--ink-3)">no drop</span>')+'</span></div>';
+      }).join("");
+    }catch(_){ el.innerHTML='<div class="bx-note" style="padding:10px 0">Couldn\'t load pulls.</div>'; }
   }
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])})}
 
@@ -331,9 +356,12 @@
       var amt=ev.rewardAmount, tok=String(ev.rewardToken||ZERO), won=(tok!==ZERO&&amt>0n);
       var m=TMETA[tok.toLowerCase()]||{sym:"",dec:18};
       var cert = won ? certificateHtml(ev.tierName, fmtTok(amt,m.dec), m.sym||"TOKEN", String(ev.rewardTo), Number(ev.boxId)) : '';
+      var share='';
+      if(won){ var txt="I just pulled "+ev.tierName+" — +"+fmtTok(amt,m.dec)+" "+(m.sym||"tokens")+" from the ORLIX Agent Box 🎁 provably random, on Robinhood Chain. Open yours:";
+        share=' · <a href="https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent("https://orlixai.xyz/box")+'" target="_blank" rel="noopener">share on X ↗</a>'; }
       res.innerHTML='<div class="tier" style="color:'+c+'">'+esc(ev.tierName||("Tier "+idx))+(won?' · certificate minted':'')+'</div>'
         +(won?cert:'<div class="amt">No drop</div>')
-        +'<div class="sub">'+(won?('Sealed in '+short(String(ev.rewardTo))+"'s wallet"):'Better luck next pull')+' · <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a></div>';
+        +'<div class="sub">'+(won?('Sealed in '+short(String(ev.rewardTo))+"'s wallet"):'Better luck next pull')+' · <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a>'+share+'</div>';
       res.classList.add("show");
       $("#bxMsg").textContent="";
       toast(won?("You pulled "+ev.tierName+" ✓"):"Opened — no drop");
