@@ -89,6 +89,23 @@
     </div>
   </section>
 
+  <section class="block" id="ammOwnerBlock" style="display:none;margin-top:20px">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>orlix — owner.sh</span></div>
+      <div class="term-body">
+        <div class="r-grid">
+          <div class="r-cell"><u>POOL · $ORLIX</u><b id="ammOwnTok">—</b></div>
+          <div class="r-cell"><u>POOL · AGENTS</u><b id="ammOwnNft">—</b></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+          <button class="btn outline" id="ammPauseBtn" style="flex:1;min-width:150px">PAUSE POOL</button>
+          <button class="btn mint-cta" id="ammWithdrawBtn" style="flex:1;min-width:150px">WITHDRAW ALL LIQUIDITY</button>
+        </div>
+        <p class="hint" id="ammOwnMsg" style="margin-top:10px">Owner-only. Withdraw sends all pool $ORLIX + Agents to your wallet. Pause first so no one trades an empty pool.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="block">
     <div class="sec-head"><span class="n">[01]</span><h2>How the AMM works</h2></div>
     <div class="steps">
@@ -140,6 +157,7 @@
   const nftEl=$("#ammNft"),tokEl=$("#ammTok"),buy1El=$("#ammBuy1"),statusEl=$("#ammStatus"),widget=$("#ammWidget"),soon=$("#ammSoon");
   const qtyEl=$("#ammQty"),quoteEl=$("#ammQuote"),quoteLbl=$("#ammQuoteLbl"),actBtn=$("#ammAction"),actMsg=$("#ammActionMsg"),tabBuy=$("#ammTabBuy"),tabSell=$("#ammTabSell");
   let mode="buy",qty=1,nftReserve=0;
+  let ammOwner=null,poolTokWei=0n,ammPaused=false,ownBusy=false;
 
   function refreshAction(){
     if(!AMM_SET||!actBtn)return;
@@ -156,15 +174,58 @@
   async function loadAmm(){
     if(!AMM_SET){statusEl.textContent="LAUNCHING SOON";return}
     try{
-      const [nr,tr]=await Promise.all([rpcCall(CFG.ammContract,"0x475489d3").catch(()=>null),rpcCall(CFG.ammContract,"0xcbcb3171").catch(()=>null)]);
+      const [nr,tr,ow,pd]=await Promise.all([rpcCall(CFG.ammContract,"0x475489d3").catch(()=>null),rpcCall(CFG.ammContract,"0xcbcb3171").catch(()=>null),rpcCall(CFG.ammContract,"0x8da5cb5b").catch(()=>null),rpcCall(CFG.ammContract,"0x5c975abb").catch(()=>null)]);
       const dec=await getDecimals();
       nftReserve=nr!=null?Number(bi(nr)):0;nftEl.textContent=fmt(nftReserve);
-      if(tr!=null)tokEl.textContent=fmt(toTokens(tr,dec));
+      poolTokWei=tr!=null?bi(tr):0n;if(tr!=null)tokEl.textContent=fmt(toTokens(tr,dec));
+      ammOwner=ow?("0x"+ow.slice(-40)).toLowerCase():null;ammPaused=pd!=null&&bi(pd)===1n;
       const live=nftReserve>0;statusEl.textContent=live?"LIVE":"NO LIQUIDITY";statusEl.className=live?"green":"";
       if(nftReserve>1){const b1=await rpcCall(CFG.ammContract,"0x08d4db14"+argUint(1)).catch(()=>null);if(b1)buy1El.textContent=fmt(toTokens(b1,dec))+" $ORLIX"}
       widget.style.display="block";if(soon)soon.style.display="none";tab("buy");
+      maybeShowOwner(dec);
     }catch(_){}
   }
+  // ---- owner-only liquidity controls ----
+  function isAmmOwner(){return !!(mAddr&&ammOwner&&mAddr.toLowerCase()===ammOwner)}
+  async function maybeShowOwner(dec){
+    const blk=$("#ammOwnerBlock");if(!blk)return;
+    if(!isAmmOwner()){blk.style.display="none";return;}
+    if(dec==null)dec=await getDecimals();
+    blk.style.display="block";
+    $("#ammOwnTok").textContent=fmt(toTokens("0x"+poolTokWei.toString(16),dec))+" $ORLIX";
+    $("#ammOwnNft").textContent=fmt(nftReserve)+" Agents";
+    const pb=$("#ammPauseBtn");if(pb)pb.textContent=ammPaused?"UNPAUSE POOL":"PAUSE POOL";
+  }
+  async function ownerSwitchChain(){try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}}
+  async function togglePause(){
+    if(ownBusy||!isAmmOwner())return;const b=$("#ammPauseBtn"),msg=$("#ammOwnMsg");ownBusy=true;
+    try{await ownerSwitchChain();b.disabled=true;b.textContent=ammPaused?"UNPAUSING…":"PAUSING…";msg.textContent="";
+      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to:CFG.ammContract,data:"0x16c38b3c"+argUint(ammPaused?0:1)}]});
+      await waitReceipt(tx);ammPaused=!ammPaused;toast(ammPaused?"Pool paused":"Pool live");loadAmm();
+    }catch(e){msg.innerHTML='<span style="color:#ff6b6b">'+String(e&&e.message||"Failed").slice(0,110)+'</span>';b.disabled=false;b.textContent=ammPaused?"UNPAUSE POOL":"PAUSE POOL";}
+    ownBusy=false;
+  }
+  async function withdrawAll(){
+    if(ownBusy||!isAmmOwner())return;const b=$("#ammWithdrawBtn"),msg=$("#ammOwnMsg");ownBusy=true;
+    try{
+      await ownerSwitchChain();msg.textContent="";
+      const [tr,nr]=await Promise.all([rpcCall(CFG.ammContract,"0xcbcb3171").catch(()=>null),rpcCall(CFG.ammContract,"0x475489d3").catch(()=>null)]);
+      const tokWei=tr!=null?bi(tr):0n,nftN=nr!=null?bi(nr):0n;
+      if(tokWei<=0n&&nftN<=0n){toast("Pool already empty");ownBusy=false;return;}
+      const dec=await getDecimals();
+      if(!confirm("Withdraw "+fmt(toTokens("0x"+tokWei.toString(16),dec))+" $ORLIX + "+nftN.toString()+" Agents to your wallet?")){ownBusy=false;return;}
+      b.disabled=true;b.textContent="WITHDRAWING…";
+      const data="0x2188230f"+argUint(tokWei)+argUint(nftN)+argAddr(mAddr);
+      const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to:CFG.ammContract,data}]});
+      await waitReceipt(tx);
+      msg.innerHTML='Withdrawn ✓ — <a href="'+CFG.explorer+'/tx/'+tx+'" target="_blank" rel="noopener" style="color:var(--green)">view ↗</a>';
+      toast("Liquidity withdrawn");loadAmm();
+    }catch(e){msg.innerHTML='<span style="color:#ff6b6b">'+String(e&&e.message||"Failed").slice(0,110)+'</span>';b.disabled=false;b.textContent="WITHDRAW ALL LIQUIDITY";}
+    ownBusy=false;
+  }
+  if($("#ammPauseBtn"))$("#ammPauseBtn").addEventListener("click",togglePause);
+  if($("#ammWithdrawBtn"))$("#ammWithdrawBtn").addEventListener("click",withdrawAll);
+
   if($("#ammPlus"))$("#ammPlus").addEventListener("click",()=>{const cap=mode==="buy"?Math.max(1,nftReserve-1):Math.max(1,agentOwnedIds.length);if(qty<Math.min(cap,10)){qty++;qtyEl.textContent=qty;quote()}});
   if($("#ammMinus"))$("#ammMinus").addEventListener("click",()=>{if(qty>1){qty--;qtyEl.textContent=qty;quote()}});
   if(tabBuy)tabBuy.addEventListener("click",()=>tab("buy"));
@@ -172,7 +233,7 @@
 
   async function doTrade(){
     if(!AMM_SET){toast("AMM launching soon");return}
-    if(!mAddr){connect(a=>{mAddr=a;loadOwned(a);refreshAction()},actBtn);return}
+    if(!mAddr){connect(a=>{mAddr=a;loadOwned(a);refreshAction();maybeShowOwner()},actBtn);return}
     if(!window.ethereum){toast("Open in a wallet browser");return}
     try{
       try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:CFG.chainIdHex}]})}catch(sw){if(sw&&sw.code===4902){try{await window.ethereum.request({method:"wallet_addEthereumChain",params:[CFG.chainParams]})}catch(_){}}}
@@ -201,7 +262,7 @@
 
   menuInit();
   loadAmm();
-  if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0]){mAddr=a[0];loadOwned(a[0]);refreshAction()}}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{mAddr=(a&&a[0])||null;if(mAddr){loadOwned(mAddr)}refreshAction()})}
+  if(window.ethereum){window.ethereum.request({method:"eth_accounts"}).then(a=>{if(a&&a[0]){mAddr=a[0];loadOwned(a[0]);refreshAction();maybeShowOwner()}}).catch(()=>{});if(window.ethereum.on)window.ethereum.on("accountsChanged",a=>{mAddr=(a&&a[0])||null;if(mAddr){loadOwned(mAddr)}refreshAction();maybeShowOwner()})}
 })();
 </script>
 </body>

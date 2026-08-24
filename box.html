@@ -158,6 +158,9 @@
     "function tiersCount() view returns (uint256)",
     "function tier(uint256) view returns (uint256 weight,address token,uint256 amount,string name)",
     "function open(address rewardTo) returns (uint256,address,uint256)",
+    "function owner() view returns (address)",
+    "function setPaused(bool p)",
+    "function withdraw(address token,address to,uint256 amount)",
     "event BoxOpened(address indexed opener,address indexed rewardTo,uint256 indexed boxId,uint256 tier,string tierName,address rewardToken,uint256 rewardAmount,uint256 roll)"
   ];
   var ERC20_ABI=["function decimals() view returns (uint8)","function symbol() view returns (string)","function balanceOf(address) view returns (uint256)","function allowance(address,address) view returns (uint256)","function approve(address,uint256) returns (bool)"];
@@ -182,7 +185,7 @@
   function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
   function fmtTok(wei,dec){ dec=dec||18; var neg=wei<0n; if(neg)wei=-wei; var p=10n**BigInt(dec); var whole=wei/p; var frac=Number((wei%p)*10000n/p)/10000; var n=Number(whole)+frac; return (neg?"-":"")+n.toLocaleString("en",{maximumFractionDigits:n<1?4:(n<1000?2:0)}); }
 
-  var S={addr:null, dec:18, price:0n, pool:0n, paused:false, tiers:[], totalWeight:0, opened:0, agents:[], agentId:null, agentAddr:null, opening:false};
+  var S={addr:null, dec:18, price:0n, pool:0n, paused:false, tiers:[], totalWeight:0, opened:0, agents:[], agentId:null, agentAddr:null, opening:false, owner:null, ownBusy:false};
 
   // token symbol + decimals resolver (cached)
   var TMETA={};
@@ -193,7 +196,7 @@
   function tokIcon(sym,addr){ if(window.tokenImg&&sym)return window.tokenImg(sym,16,addr); return ''; }
 
   // ── wallet ──
-  function setConnected(a){ S.addr=a; $("#connectBtn").style.display="none"; var c=$("#walletChip"); c.style.display="inline-flex"; $("#walletAddr").textContent=short(a); loadAgents(a); renderRecipient(); }
+  function setConnected(a){ S.addr=a; $("#connectBtn").style.display="none"; var c=$("#walletChip"); c.style.display="inline-flex"; $("#walletAddr").textContent=short(a); loadAgents(a); renderRecipient(); renderOwner(); }
   function connect(){ if(window.ORLIX_WALLET){ORLIX_WALLET.connect(function(a){toast("Wallet connected");setConnected(a)});return;} if(!window.ethereum){toast("No wallet found — open in a wallet browser");return;} window.ethereum.request({method:"eth_requestAccounts"}).then(function(a){if(a&&a[0])setConnected(a[0])}); }
   $("#connectBtn").addEventListener("click",connect);
 
@@ -220,8 +223,9 @@
       TMETA[CFG.token.toLowerCase()]={sym:"ORLIX",dec:18};
       var dec=18; try{ dec=Number(await new ethers.Contract(CFG.token,ERC20_ABI,ro).decimals()); }catch(_){}
       S.dec=dec; TMETA[CFG.token.toLowerCase()].dec=dec;
-      var base=await Promise.all([box.boxPrice(),box.poolBalance(CFG.token),box.paused(),box.totalOpened(),box.tiersCount()]);
+      var base=await Promise.all([box.boxPrice(),box.poolBalance(CFG.token),box.paused(),box.totalOpened(),box.tiersCount(),box.owner().catch(function(){return null})]);
       S.price=base[0]; S.pool=base[1]; S.paused=base[2]; S.opened=Number(base[3]); var n=Number(base[4]);
+      S.owner=base[5]?String(base[5]).toLowerCase():null;
       var tiers=[]; var tw=0n;
       for(var i=0;i<n;i++){ try{ var t=await box.tier(i); var m=await tokenMeta(t[1]); tiers.push({weight:t[0],token:t[1],amount:t[2],name:t[3],sym:m.sym,dec:m.dec}); tw+=t[0]; }catch(_){} }
       S.tiers=tiers; S.totalWeight=Number(tw);
@@ -264,11 +268,57 @@
         +'<div class="bx-note">Odds are the on-chain tier weights. Each drop is a <b>token certificate</b> — the exact ERC-20 shown, paid from the prize pool straight to the recipient wallet you choose.</div>'
       +'</div>'
       +'</div>'
-      +'<div class="bx-card" style="margin-top:20px"><span class="bx-lbl">Recent pulls · on-chain</span><div id="bxFeed"><div class="bx-load" style="padding:18px 0">Loading pulls…</div></div></div>';
+      +'<div class="bx-card" style="margin-top:20px"><span class="bx-lbl">Recent pulls · on-chain</span><div id="bxFeed"><div class="bx-load" style="padding:18px 0">Loading pulls…</div></div></div>'
+      +'<div id="bxOwner"></div>';
     $("#bxBox").addEventListener("click",openBox);
     $("#openBtn").addEventListener("click",openBox);
     renderRecipient();
+    renderOwner();
     loadFeed();
+  }
+
+  // ── owner-only liquidity controls ──
+  function isOwner(){ return !!(S.addr&&S.owner&&S.addr.toLowerCase()===S.owner); }
+  function renderOwner(){
+    var el=$("#bxOwner"); if(!el)return;
+    if(!isOwner()){ el.innerHTML=''; return; }
+    el.innerHTML='<div class="bx-card" style="margin-top:20px;border-color:rgba(207,246,5,.3)">'
+      +'<span class="bx-lbl">Owner · liquidity</span>'
+      +'<div class="bx-rows">'
+        +'<div class="bx-row"><u>$ORLIX IN POOL</u><b>'+fmtTok(S.pool,S.dec)+' $ORLIX</b></div>'
+        +'<div class="bx-row"><u>STATUS</u><b>'+(S.paused?'PAUSED':'LIVE')+'</b></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">'
+        +'<button class="btn outline" id="bxPauseBtn" style="flex:1;min-width:150px">'+(S.paused?'UNPAUSE BOX':'PAUSE BOX')+'</button>'
+        +'<button class="btn" id="bxWithdrawBtn" style="flex:1;min-width:150px">WITHDRAW ALL $ORLIX</button>'
+      +'</div>'
+      +'<div class="bx-msg" id="bxOwnMsg" style="text-align:left"></div>'
+      +'<div class="bx-note">Withdraw sends the pool $ORLIX to your wallet ('+short(S.addr)+'). Pause the Box first so no one opens an empty Box. Owner-only.</div>'
+    +'</div>';
+    $("#bxPauseBtn").addEventListener("click",togglePause);
+    $("#bxWithdrawBtn").addEventListener("click",withdrawPool);
+  }
+  async function togglePause(){
+    if(!isOwner()||S.ownBusy)return; var b=$("#bxPauseBtn"), msg=$("#bxOwnMsg"); S.ownBusy=true;
+    try{ await ensureChain(); b.disabled=true; b.textContent=S.paused?"UNPAUSING…":"PAUSING…"; msg.textContent="";
+      await rawSend(CFG.boxContract, boxI.encodeFunctionData("setPaused",[!S.paused]), 90000n);
+      S.paused=!S.paused; toast(S.paused?"Box paused":"Box live"); loadBox();
+    }catch(e){ msg.innerHTML='<span style="color:#ff6b6b">'+esc(((e&&(e.shortMessage||e.message))||"Failed")+"").slice(0,140)+'</span>'; b.disabled=false; b.textContent=S.paused?'UNPAUSE BOX':'PAUSE BOX'; }
+    S.ownBusy=false;
+  }
+  async function withdrawPool(){
+    if(!isOwner()||S.ownBusy)return; var b=$("#bxWithdrawBtn"), msg=$("#bxOwnMsg"); S.ownBusy=true;
+    try{
+      await ensureChain(); msg.textContent="";
+      var pool=await new ethers.Contract(CFG.boxContract,BOX_ABI,ro).poolBalance(CFG.token);
+      if(pool<=0n){ toast("Pool is empty"); S.ownBusy=false; return; }
+      if(!confirm("Withdraw "+fmtTok(pool,S.dec)+" $ORLIX to your wallet ("+short(S.addr)+")?")){ S.ownBusy=false; return; }
+      b.disabled=true; b.textContent="WITHDRAWING…";
+      var rc=await rawSend(CFG.boxContract, boxI.encodeFunctionData("withdraw",[CFG.token,S.addr,pool]), 120000n);
+      msg.innerHTML='Withdrawn '+esc(fmtTok(pool,S.dec))+' $ORLIX ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a>';
+      toast("Withdrawn "+fmtTok(pool,S.dec)+" $ORLIX"); loadBox();
+    }catch(e){ msg.innerHTML='<span style="color:#ff6b6b">'+esc(((e&&(e.shortMessage||e.message))||"Failed")+"").slice(0,140)+'</span>'; b.disabled=false; b.textContent="WITHDRAW ALL $ORLIX"; }
+    S.ownBusy=false;
   }
   // ── recent pulls feed (from BoxOpened events) ──
   async function loadFeed(){
