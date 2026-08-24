@@ -306,13 +306,18 @@
     }catch(e){ msg.innerHTML='<span style="color:#ff6b6b">'+esc(((e&&(e.shortMessage||e.message))||"Failed")+"").slice(0,140)+'</span>'; b.disabled=false; b.textContent=S.paused?'UNPAUSE BOX':'PAUSE BOX'; }
     S.ownBusy=false;
   }
+  var wdArmed=false, wdTimer=null;
   async function withdrawPool(){
-    if(!isOwner()||S.ownBusy)return; var b=$("#bxWithdrawBtn"), msg=$("#bxOwnMsg"); S.ownBusy=true;
+    if(!isOwner()||S.ownBusy)return; var b=$("#bxWithdrawBtn"), msg=$("#bxOwnMsg");
+    if(!wdArmed){ wdArmed=true; b.classList.add("outline"); b.textContent="TAP AGAIN TO CONFIRM";
+      msg.innerHTML='<span style="color:var(--green)">This sends all pool $ORLIX to your wallet. Tap again to confirm.</span>';
+      clearTimeout(wdTimer); wdTimer=setTimeout(function(){wdArmed=false; if($("#bxWithdrawBtn")){$("#bxWithdrawBtn").classList.remove("outline");$("#bxWithdrawBtn").textContent="WITHDRAW ALL $ORLIX";} if($("#bxOwnMsg"))$("#bxOwnMsg").textContent="";},6000);
+      return; }
+    clearTimeout(wdTimer); wdArmed=false; b.classList.remove("outline"); S.ownBusy=true;
     try{
       await ensureChain(); msg.textContent="";
       var pool=await new ethers.Contract(CFG.boxContract,BOX_ABI,ro).poolBalance(CFG.token);
-      if(pool<=0n){ toast("Pool is empty"); S.ownBusy=false; return; }
-      if(!confirm("Withdraw "+fmtTok(pool,S.dec)+" $ORLIX to your wallet ("+short(S.addr)+")?")){ S.ownBusy=false; return; }
+      if(pool<=0n){ toast("Pool is empty"); b.textContent="WITHDRAW ALL $ORLIX"; S.ownBusy=false; return; }
       b.disabled=true; b.textContent="WITHDRAWING…";
       var rc=await rawSend(CFG.boxContract, boxI.encodeFunctionData("withdraw",[CFG.token,S.addr,pool]), 120000n);
       msg.innerHTML='Withdrawn '+esc(fmtTok(pool,S.dec))+' $ORLIX ✓ — <a href="'+CFG.explorer+'/tx/'+rc.hash+'" target="_blank" rel="noopener">view tx ↗</a>';

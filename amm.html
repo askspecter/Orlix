@@ -205,15 +205,19 @@
     }catch(e){msg.innerHTML='<span style="color:#ff6b6b">'+String(e&&e.message||"Failed").slice(0,110)+'</span>';b.disabled=false;b.textContent=ammPaused?"UNPAUSE POOL":"PAUSE POOL";}
     ownBusy=false;
   }
+  let wdArmed=false,wdTimer=null;
   async function withdrawAll(){
-    if(ownBusy||!isAmmOwner())return;const b=$("#ammWithdrawBtn"),msg=$("#ammOwnMsg");ownBusy=true;
+    if(ownBusy||!isAmmOwner())return;const b=$("#ammWithdrawBtn"),msg=$("#ammOwnMsg");
+    if(!wdArmed){wdArmed=true;b.classList.add("outline");b.textContent="TAP AGAIN TO CONFIRM";
+      msg.innerHTML='<span style="color:var(--green)">This sends all pool $ORLIX + Agents to your wallet. Tap again to confirm.</span>';
+      clearTimeout(wdTimer);wdTimer=setTimeout(()=>{wdArmed=false;const x=$("#ammWithdrawBtn");if(x){x.classList.remove("outline");x.textContent="WITHDRAW ALL LIQUIDITY";}const m=$("#ammOwnMsg");if(m)m.textContent="";},6000);
+      return;}
+    clearTimeout(wdTimer);wdArmed=false;b.classList.remove("outline");ownBusy=true;
     try{
       await ownerSwitchChain();msg.textContent="";
       const [tr,nr]=await Promise.all([rpcCall(CFG.ammContract,"0xcbcb3171").catch(()=>null),rpcCall(CFG.ammContract,"0x475489d3").catch(()=>null)]);
       const tokWei=tr!=null?bi(tr):0n,nftN=nr!=null?bi(nr):0n;
-      if(tokWei<=0n&&nftN<=0n){toast("Pool already empty");ownBusy=false;return;}
-      const dec=await getDecimals();
-      if(!confirm("Withdraw "+fmt(toTokens("0x"+tokWei.toString(16),dec))+" $ORLIX + "+nftN.toString()+" Agents to your wallet?")){ownBusy=false;return;}
+      if(tokWei<=0n&&nftN<=0n){toast("Pool already empty");b.textContent="WITHDRAW ALL LIQUIDITY";ownBusy=false;return;}
       b.disabled=true;b.textContent="WITHDRAWING…";
       const data="0x2188230f"+argUint(tokWei)+argUint(nftN)+argAddr(mAddr);
       const tx=await window.ethereum.request({method:"eth_sendTransaction",params:[{from:mAddr,to:CFG.ammContract,data}]});
