@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ORLIX Agent — Mint · 1,111 NFTs on Robinhood Chain</title>
-<meta name="description" content="1,111 ORLIX Agent NFTs — each its own autonomous agent wallet. Burn 300,000 $ORLIX to mint on Robinhood Chain. Mint is live — up to 5 per wallet.">
+<title>ORLIX Agent — Mint · Phase 1 · 250 NFTs on Robinhood Chain</title>
+<meta name="description" content="Phase 1 — 250 ORLIX Agent NFTs, each its own autonomous agent wallet. Burn 300,000 $ORLIX to mint on Robinhood Chain. Mint is live — up to 5 per wallet.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://orlixai.xyz/nft">
-<meta property="og:title" content="ORLIX Agent — 1,111 NFTs · Mint Live">
+<meta property="og:title" content="ORLIX Agent — Phase 1 · 250 NFTs · Mint Live">
 <meta property="og:description" content="Burn 300,000 $ORLIX to mint an Agent on Robinhood Chain. Up to 5 per wallet. Live now.">
 <meta property="og:image" content="https://orlixai.xyz/og-image.png?v=2">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ORLIX Agent — 1,111 NFTs">
+<meta name="twitter:title" content="ORLIX Agent — Phase 1 · 250 NFTs">
 <meta name="twitter:image" content="https://orlixai.xyz/og-image.png?v=2">
 <meta name="theme-color" content="#050505">
 <link rel="stylesheet" href="/assets/cinematic/fonts/fonts.css">
@@ -56,12 +56,13 @@
   <!-- HERO -->
   <section class="hero" style="padding-top:40px">
     <div class="stats">
-      <div class="stat"><b>1,111</b><span>TOTAL SUPPLY</span></div>
+      <div class="stat"><b>250</b><span>PHASE 1 SUPPLY</span></div>
       <div class="stat"><b>300,000</b><span>$ORLIX / MINT · BURNED</span></div>
       <div class="stat"><b>ROBINHOOD</b><span>CHAIN · 4663</span></div>
       <div class="stat"><b>5</b><span>MAX / WALLET</span></div>
     </div>
     <div class="mint-terms">
+      <span class="mt-chip solid">PHASE 1</span>
       <span class="mt-chip"><b>300K</b> $ORLIX / MINT</span>
       <span class="mt-chip"><b>🔥</b> BURN TO MINT</span>
       <span class="mt-chip"><b>5</b> MAX / WALLET</span>
@@ -142,7 +143,7 @@
         </div>
       </div>
       <div class="meta"><u>CHAIN</u><b>Robinhood Chain · 4663</b></div>
-      <div class="meta"><u>COLLECTION SUPPLY</u><b>1,111 NFTs</b></div>
+      <div class="meta"><u>PHASE 1 SUPPLY</u><b>250 NFTs</b></div>
       <div class="meta"><u>MINT COST</u><b>300,000 $ORLIX · burned</b></div>
       <div class="meta"><u>MARKETPLACE</u><b><a href="https://opensea.io/collection/orlix-agent" target="_blank" rel="noopener" style="color:var(--green)">OpenSea ↗</a></b></div>
     </div>
@@ -175,7 +176,7 @@
     ammContract: "",                         // OrlixAgentAMM — set after deploy to activate Trade
     burnPerMint: 300000,                     // $ORLIX burned per mint
     maxPerWallet: 5,
-    supply: 1111,
+    supply: 250,                             // Phase 1 supply (frontend cap)
     nftContract: "0x45bf9d8cdbd7d80bb44e5f9e131c7878ac11a11e",   // ORLIX Agent NFT contract (Robinhood Chain)
     holderReward: 500000,                    // $ORLIX per NFT held
     claimContract: "0x2740F7Fb5481EB6d85E2aC90026dBb52EA1EB75e", // OrlixAgentClaim (Robinhood Chain)
@@ -316,8 +317,12 @@
       mOpen = o!=null && bi(o)===1n;
       mStatus.textContent = mOpen ? "LIVE" : "SOON";
       mStatus.className = mOpen ? "green" : "";
-      if(r!=null){ mRemainSupply = Number(bi(r)); mRemain.textContent = fmt(mRemainSupply); }
-      if(t!=null) mMinted.textContent = fmt(Number(bi(t)))+" / "+fmt(CFG.supply);
+      // Phase 1 caps the frontend at CFG.supply (250), even if the contract allows more.
+      const mintedTot = t!=null ? Number(bi(t)) : 0;
+      const phaseRemain = Math.max(0, CFG.supply - mintedTot);
+      mRemainSupply = r!=null ? Math.min(Number(bi(r)), phaseRemain) : phaseRemain;
+      mRemain.textContent = fmt(mRemainSupply);
+      if(t!=null) mMinted.textContent = fmt(mintedTot)+" / "+fmt(CFG.supply);
       updateCost();
     }catch(_){}
   }
