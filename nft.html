@@ -66,7 +66,7 @@
       <span class="mt-chip"><b>300K</b> $ORLIX / MINT</span>
       <span class="mt-chip"><b>🔥</b> BURN TO MINT</span>
       <span class="mt-chip"><b>5</b> MAX / WALLET</span>
-      <span class="mt-chip solid">MINT LIVE</span>
+      <span class="mt-chip solid" id="mLiveChip">MINT LIVE</span>
     </div>
     <a class="btn mint-cta" href="#mint" data-cursor="MINT">▸ MINT NOW</a>
   </section>
@@ -296,8 +296,8 @@
   function renderMintBtn(){
     if(!MINT_SET){ mintBtn.disabled=true; mintBtn.textContent="MINT CONTRACT PENDING"; return; }
     if(!mAddr){ mintBtn.disabled=false; mintBtn.textContent="CONNECT WALLET TO MINT"; return; }
-    if(!mOpen){ mintBtn.disabled=true; mintBtn.textContent="MINT OPENS SOON"; return; }
     if(mRemainSupply<=0){ mintBtn.disabled=true; mintBtn.textContent="SOLD OUT"; return; }
+    if(!mOpen){ mintBtn.disabled=true; mintBtn.textContent="SOLD OUT"; return; }
     if(mMintedYou>=CFG.maxPerWallet){ mintBtn.disabled=true; mintBtn.textContent="MAX MINTED ("+mMintedYou+"/"+CFG.maxPerWallet+")"; return; }
     if(mBalTok < CFG.burnPerMint*mQty){ mintBtn.disabled=true; mintBtn.textContent="NOT ENOUGH $ORLIX"; return; }
     mintBtn.disabled=false;
@@ -315,14 +315,17 @@
         rpcCall(CFG.mintContract,"0xa2309ff8").catch(()=>null), // totalMinted()
       ]);
       mOpen = o!=null && bi(o)===1n;
-      mStatus.textContent = mOpen ? "LIVE" : "SOON";
-      mStatus.className = mOpen ? "green" : "";
       // Phase 1 caps the frontend at CFG.supply (210), even if the contract allows more.
       const mintedTot = t!=null ? Number(bi(t)) : 0;
       const phaseRemain = Math.max(0, CFG.supply - mintedTot);
       mRemainSupply = r!=null ? Math.min(Number(bi(r)), phaseRemain) : phaseRemain;
       mRemain.textContent = fmt(mRemainSupply);
       if(t!=null) mMinted.textContent = fmt(mintedTot)+" / "+fmt(CFG.supply);
+      // Phase 1 is done when it's full or the owner has closed the mint → SOLD OUT (not "soon").
+      const soldOut = mRemainSupply<=0 || !mOpen;
+      mStatus.textContent = soldOut ? "SOLD OUT" : "LIVE";
+      mStatus.className = soldOut ? "" : "green";
+      const liveChip=$("#mLiveChip"); if(liveChip) liveChip.textContent = soldOut ? "SOLD OUT" : "MINT LIVE";
       updateCost();
     }catch(_){}
   }
